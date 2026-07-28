@@ -1,0 +1,201 @@
+/* ============================================================
+   design-tokens.css
+   متغيرات الهوية البصرية الكاملة — منصة إدارة مشاريع التخرج
+   مستخرجة من جميع ملفات HTML المرفقة سابقًا (نظام موحّد بكل الصفحات)
+
+   طريقة الاستخدام مع Vue/Vite:
+   1) ضعي هذا الملف في: src/styles/design-tokens.css
+   2) استوردي في main.css قبل أي شي آخر:
+        @import './design-tokens.css';
+        @tailwind base;
+        @tailwind components;
+        @tailwind utilities;
+   3) اربطيه بـ tailwind.config.js عبر var(--...) (مثال بالأسفل)
+   ============================================================ */
+
+:root{
+
+  /* ============ 1) الألوان الأساسية (Brand) ============ */
+
+  /* Primary — أزرق (الإجراءات الرئيسية، الروابط، الحالة النشطة) */
+  --color-primary-50:  #EFF6FF;
+  --color-primary-100: #DBEAFE;
+  --color-primary-200: #BFDBFE;
+  --color-primary-300: #93C5FD;
+  --color-primary-400: #60A5FA;
+  --color-primary-500: #3B82F6;
+  --color-primary-600: #2563EB;   /* اللون الأساسي للأزرار والحالة النشطة */
+  --color-primary-700: #1D4ED8;
+  --color-primary-800: #1E40AF;
+  --color-primary-900: #1E3A8A;
+
+  /* Secondary — أخضر زمردي (الإجراءات الإيجابية، أزرار "إضافة طالب"، النجاح) */
+  --color-secondary-50:  #ECFDF5;
+  --color-secondary-100: #D1FAE5;
+  --color-secondary-200: #A7F3D0;
+  --color-secondary-300: #6EE7B7;
+  --color-secondary-400: #34D399;
+  --color-secondary-500: #10B981;
+  --color-secondary-600: #059669;
+  --color-secondary-700: #047857;
+  --color-secondary-800: #065F46;
+  --color-secondary-900: #064E3B;
+
+  /* Accent — سماوي (تدرّجات الشعار، الرسوم البيانية، لمسات ثانوية) */
+  --color-accent-50:  #ECFEFF;
+  --color-accent-100: #CFFAFE;
+  --color-accent-200: #A5F3FC;
+  --color-accent-300: #67E8F9;
+  --color-accent-400: #22D3EE;
+  --color-accent-500: #06B6D4;
+  --color-accent-600: #0891B2;
+  --color-accent-700: #0E7490;
+  --color-accent-800: #155E75;
+  --color-accent-900: #164E63;
+
+
+  /* ============ 2) ألوان دلالية (Semantic) ============ */
+
+  --color-success:     #10B981;
+  --color-success-bg:  #ECFDF5;
+  --color-success-border: #D1FAE5;
+
+  --color-warning:     #F59E0B;
+  --color-warning-text:#B45309;   /* نص فوق خلفية warning-bg الفاتحة */
+  --color-warning-bg:  #FFFBEB;
+  --color-warning-border: #FDE7B8;
+
+  --color-error:       #EF4444;
+  --color-error-bg:    #FEF2F2;
+  --color-error-border:#F9C7C7;
+
+  --color-info:        #3B82F6;
+  --color-info-bg:     #EFF6FF;
+
+  --color-whatsapp:    #22B558;   /* لون علامة واتساب التجارية — يُستخدم فقط لأيقونة/زر واتساب */
+  --color-whatsapp-bg: #E4F7EA;
+
+
+  /* ============ 3) الخلفيات والأسطح (Surfaces) ============ */
+
+  --color-bg:          #F6F8FB;   /* خلفية الصفحة العامة */
+  --color-surface:     #FFFFFF;   /* البطاقات، الجداول، المودالات */
+  --color-border:      #E7ECF3;   /* حدود قياسية */
+  --color-border-soft: #F0F3F8;   /* حدود خفيفة (فواصل صفوف الجدول) */
+
+
+  /* ============ 4) النصوص (Text) ============ */
+
+  --color-text-900: #0F172A;  /* عناوين، نص أساسي غامق */
+  --color-text-700: #334155;  /* نص ثانوي متوسط */
+  --color-text-600: #475569;  /* نص وصفي */
+  --color-text-400: #94A3B8;  /* نص باهت/placeholder/metadata */
+
+
+  /* ============ 5) الخطوط (Typography) ============ */
+
+  --font-heading: 'Cairo', sans-serif;     /* العناوين، الأرقام الكبيرة، أسماء العلامة */
+  --font-body:    'Tajawal', sans-serif;   /* كل النصوص العادية (الافتراضي في body) */
+
+  --fs-display: 32px;  /* أرقام إحصائيات كبيرة */
+  --fs-h1: 24px;
+  --fs-h2: 20px;
+  --fs-h3: 16px;
+  --fs-h4: 14px;
+  --fs-body: 13.5px;
+  --fs-body-sm: 13px;
+  --fs-caption: 12px;
+  --fs-label: 11.5px;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-extrabold: 800;
+  --fw-black: 900;
+
+
+  /* ============ 6) الزوايا الدائرية (Radius) ============ */
+
+  --radius-sm: 10px;   /* أزرار، حقول الإدخال، شارات صغيرة */
+  --radius-md: 14px;   /* بطاقات فرعية، عناصر Modal الداخلية */
+  --radius-lg: 20px;   /* بطاقات رئيسية، Modal، أقسام كبيرة */
+  --radius-pill: 999px; /* Chips، Badges، أزرار كبسولة */
+
+
+  /* ============ 7) الظلال (Shadows) ============ */
+
+  --shadow-card:       0 1px 2px rgba(15,23,42,.04), 0 8px 24px -12px rgba(15,23,42,.08);
+  --shadow-card-hover: 0 4px 10px rgba(15,23,42,.06), 0 16px 32px -12px rgba(15,23,42,.14);
+  --shadow-modal:      0 24px 64px -12px rgba(15,23,42,.30);
+  --shadow-dropdown:   0 8px 24px rgba(15,23,42,.12);
+
+
+  /* ============ 8) نظام التباعد (Spacing Scale) ============ */
+  /* استخدمي هذا المقياس فقط بكل التصميم — بدون قيم عشوائية بينها */
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+
+  /* ============ 9) مدة الحركات (Motion) ============ */
+
+  --transition-fast: .15s ease;
+  --transition-base: .2s ease;
+  --transition-slow: .35s cubic-bezier(.22,.9,.32,1);
+
+  --ease-standard: cubic-bezier(.22,.9,.32,1);
+
+
+  /* ============ 10) الطبقات (Z-Index Scale) ============ */
+  /* مهم جدًا للـ Sidebar Drawer + Overlay + Modal + Notification Panel */
+
+  --z-dropdown: 20;
+  --z-sticky-header: 40;
+  --z-drawer-overlay: 40;
+  --z-drawer: 50;
+  --z-modal-overlay: 100;
+  --z-modal: 110;
+  --z-toast: 200;
+
+
+  /* ============ 11) نقاط الكسر (مرجعية فقط — للتوثيق، الفعلية بـ Tailwind) ============ */
+  /* sm: 640px | md: 768px | lg: 1024px (نقطة تحوّل الـ Sidebar Drawer) | xl: 1280px */
+
+
+  /* ============ 12) أبعاد ثابتة متكررة ============ */
+
+  --sidebar-width: 272px;
+  --sidebar-width-collapsed: 88px;
+  --topbar-height: 42px;
+  --icon-btn-size: 42px;
+}
+
+
+/* ============================================================
+   Dark Mode (اختياري — مُفعّل حاليًا في اللاندنج بيج فقط)
+   طريقة التفعيل: إضافة data-theme="dark" على <html>
+   ============================================================ */
+:root[data-theme="dark"]{
+  --color-bg:          #0B1220;
+  --color-surface:     #141C2E;
+  --color-border:      #22304A;
+  --color-border-soft: #1B263C;
+
+  --color-text-900: #F1F5F9;
+  --color-text-700: #CBD5E1;
+  --color-text-600: #94A3B8;
+  --color-text-400: #64748B;
+
+  --color-primary-50:  #132244;
+  --color-primary-100: #1B2E56;
+
+  --shadow-card:       0 1px 2px rgba(0,0,0,.3), 0 10px 28px -14px rgba(0,0,0,.5);
+  --shadow-card-hover: 0 8px 18px rgba(0,0,0,.4), 0 24px 44px -16px rgba(0,0,0,.6);
+}

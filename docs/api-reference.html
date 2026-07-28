@@ -1,0 +1,1588 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>دليل ربط الواجهة بالـ API — مشاريع التخرج</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f7f8fb;
+        --panel: #ffffff;
+        --border: #e5e7eb;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --brand: #0f3460;
+        --brand2: #16a085;
+        --code-bg: #0f172a;
+        --code-text: #e2e8f0;
+        --ok-bg: #ecfdf5;
+        --ok-text: #047857;
+        --ok-border: #a7f3d0;
+        --warn-bg: #fffbeb;
+        --warn-text: #b45309;
+        --warn-border: #fde68a;
+        --bad-bg: #fef2f2;
+        --bad-text: #b91c1c;
+        --bad-border: #fecaca;
+        --get: #2563eb;
+        --post: #16a085;
+        --put: #d97706;
+        --patch: #9333ea;
+        --delete: #dc2626;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Tajawal", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.8;
+        font-size: 15.5px;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: "Cairo", system-ui, sans-serif;
+        color: var(--brand);
+        margin: 0 0 0.5em;
+      }
+      a {
+        color: var(--brand2);
+      }
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+      header.top {
+        background: linear-gradient(135deg, #0f3460, #16213e);
+        color: #fff;
+        padding: 40px 0 32px;
+      }
+      header.top h1 {
+        color: #fff;
+        font-size: 1.9rem;
+      }
+      header.top p {
+        color: #cbd5e1;
+        margin: 0.3em 0;
+        font-size: 0.95rem;
+      }
+      .badge-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+      }
+      .badge {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 20px;
+        padding: 5px 14px;
+        font-size: 0.85rem;
+      }
+      nav.toc {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px 22px;
+        margin: 24px 0;
+      }
+      nav.toc h3 {
+        margin-bottom: 10px;
+        font-size: 1rem;
+      }
+      nav.toc ul {
+        columns: 2;
+        margin: 0;
+        padding-inline-start: 20px;
+        font-size: 0.92rem;
+      }
+      nav.toc li {
+        margin: 4px 0;
+      }
+      section {
+        margin: 36px 0;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 22px 24px;
+        margin: 18px 0;
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 20px;
+        padding: 3px 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        margin-inline-start: 8px;
+        vertical-align: middle;
+      }
+      .status.ok {
+        background: var(--ok-bg);
+        color: var(--ok-text);
+        border: 1px solid var(--ok-border);
+      }
+      .status.warn {
+        background: var(--warn-bg);
+        color: var(--warn-text);
+        border: 1px solid var(--warn-border);
+      }
+      .status.bad {
+        background: var(--bad-bg);
+        color: var(--bad-text);
+        border: 1px solid var(--bad-border);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 14px 0;
+        font-size: 0.92rem;
+      }
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 8px 10px;
+        text-align: right;
+        vertical-align: top;
+      }
+      th {
+        background: #f3f4f6;
+        font-family: "Cairo", sans-serif;
+        font-weight: 700;
+      }
+      .overview td:first-child {
+        font-weight: 700;
+      }
+      code {
+        background: #eef2f7;
+        padding: 1px 6px;
+        border-radius: 5px;
+        font-family: "Courier New", monospace;
+        direction: ltr;
+        display: inline-block;
+      }
+      pre {
+        background: var(--code-bg);
+        color: var(--code-text);
+        border-radius: 10px;
+        padding: 16px 18px;
+        overflow-x: auto;
+        direction: ltr;
+        text-align: left;
+        font-size: 0.85rem;
+        margin: 10px 0;
+        line-height: 1.6;
+      }
+      .endpoint {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        direction: ltr;
+        margin: 8px 0;
+        font-family: "Courier New", monospace;
+        font-size: 0.9rem;
+      }
+      .method {
+        color: #fff;
+        border-radius: 6px;
+        padding: 2px 10px;
+        font-weight: 700;
+        font-size: 0.78rem;
+        min-width: 56px;
+        text-align: center;
+      }
+      .m-get {
+        background: var(--get);
+      }
+      .m-post {
+        background: var(--post);
+      }
+      .m-put {
+        background: var(--put);
+      }
+      .m-patch {
+        background: var(--patch);
+      }
+      .m-delete {
+        background: var(--delete);
+      }
+      .path {
+        color: var(--text);
+        direction: ltr;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      @media (max-width: 800px) {
+        .grid2 {
+          grid-template-columns: 1fr;
+        }
+        nav.toc ul {
+          columns: 1;
+        }
+      }
+      .note {
+        background: #eff6ff;
+        border-inline-start: 4px solid #2563eb;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        margin: 10px 0;
+      }
+      .mismatch {
+        background: var(--warn-bg);
+        border: 1px solid var(--warn-border);
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin: 14px 0;
+      }
+      .mismatch h4 {
+        color: var(--warn-text);
+        margin-bottom: 6px;
+      }
+      .gap {
+        background: var(--bad-bg);
+        border: 1px solid var(--bad-border);
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin: 14px 0;
+      }
+      .gap h4 {
+        color: var(--bad-text);
+        margin-bottom: 6px;
+      }
+      .good {
+        background: var(--ok-bg);
+        border: 1px solid var(--ok-border);
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin: 14px 0;
+      }
+      .good h4 {
+        color: var(--ok-text);
+        margin-bottom: 6px;
+      }
+      .role-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 40px 0 4px;
+        padding-bottom: 8px;
+        border-bottom: 3px solid var(--brand2);
+      }
+      .role-header h2 {
+        margin: 0;
+      }
+      footer {
+        text-align: center;
+        color: var(--muted);
+        padding: 40px 0;
+        font-size: 0.85rem;
+      }
+      .toplink {
+        font-size: 0.8rem;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f1115;
+          --panel: #171a21;
+          --border: #2a2f3a;
+          --text: #e5e7eb;
+          --muted: #9ca3af;
+          --ok-bg: #052e22;
+          --ok-text: #34d399;
+          --ok-border: #065f46;
+          --warn-bg: #3a2a05;
+          --warn-text: #fbbf24;
+          --warn-border: #78530b;
+          --bad-bg: #3a0d0d;
+          --bad-text: #f87171;
+          --bad-border: #7f1d1d;
+        }
+        code {
+          background: #1e2430;
+          color: #e5e7eb;
+        }
+        th {
+          background: #1c202a;
+        }
+        .note {
+          background: #0e1e33;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <h1>دليل ربط الواجهة بالـ API</h1>
+        <p>
+          مرجع تنفيذي لكل شاشة من شاشات منصة مشاريع التخرج: أي API تستخدمها،
+          مثال طلب حقيقي، مثال رد حقيقي، وحالة الجاهزية الفعلية في الباك اند.
+        </p>
+        <p>
+          مبني على تحليل الـ UX الرسمي (30 شاشة موزعة على 5 أدوار + 3 شاشات
+          عامة) وتطابقه سطرًا بسطر مع الكود الفعلي المختبر في الباك اند — كل سطر
+          في التحليل تم التأكد منه فعليًا.
+        </p>
+        <div class="badge-row">
+          <span class="badge">Base URL: http://mashroui.local/api</span>
+          <span class="badge">Auth: Bearer Token</span>
+          <span class="badge">مرجع كامل بكل الحقول: docs/API.md</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <nav class="toc">
+        <h3>المحتويات</h3>
+        <ul>
+          <li><a href="#basics">أساسيات مهمة قبل ما تبدأ</a></li>
+          <li><a href="#overview">نظرة سريعة — شو جاهز وشو ناقص</a></li>
+          <li><a href="#public">الشاشات العامة (قبل تسجيل الدخول)</a></li>
+          <li><a href="#superadmin">لوحة السوبر أدمن</a></li>
+          <li><a href="#committee">لوحة لجنة الإشراف</a></li>
+          <li><a href="#supervisor">لوحة المشرف</a></li>
+          <li><a href="#leader">لوحة قائد الفريق</a></li>
+          <li><a href="#student">لوحة الطالب</a></li>
+          <li>
+            <a href="#gaps">فروقات مهمة بين خطة الـ UX والتنفيذ الفعلي</a>
+          </li>
+        </ul>
+      </nav>
+
+      <section id="basics">
+        <h2>1. أساسيات مهمة قبل ما تبدأ</h2>
+        <div class="card">
+          <h3>المصادقة (Auth)</h3>
+          <p>
+            ماني يوزين هنا CSRF. تسجيل الدخول بيرجعلك <code>token</code> خام،
+            وكل طلب بعده لازم يحمل:
+          </p>
+          <pre>
+Authorization: Bearer &lt;token&gt;
+Accept: application/json</pre
+          >
+          <p>
+            الـ CORS مفتوح بالكامل (<code>allowed_origins: *</code>) على مسارات
+            <code>/api/*</code> — تقدر تنادي الـ API من أي origin بدون أي إعداد
+            إضافي من طرفك.
+          </p>
+
+          <h3>أول تسجيل دخول (super admin أو أي حساب جديد)</h3>
+          <p>
+            الحساب المزروع بدئيًا عنده <code>must_change_password: true</code>.
+            أول ما يسجل دخول، أي طلب لأي endpoint (عدا
+            <code>/logout</code> و<code>/me/change-password</code>) بيرجعلك:
+          </p>
+          <pre>
+HTTP 423
+{"message": "يجب تغيير كلمة المرور أولاً."}</pre
+          >
+          <p>
+            لازم الفرونت يتعامل مع 423 كحالة خاصة — يوجّه المستخدم لشاشة "تغيير
+            كلمة المرور" مباشرة قبل أي شي ثاني.
+          </p>
+
+          <h3>شكل الأخطاء (كل الـ validation errors)</h3>
+          <pre>
+{
+  "message": "The email field is required.",
+  "errors": { "email": ["The email field is required."] }
+}</pre
+          >
+
+          <h3>معدّل الطلبات (Rate Limiting)</h3>
+          <table>
+            <tr>
+              <th>المسار</th>
+              <th>الحد</th>
+            </tr>
+            <tr>
+              <td><code>POST /login</code></td>
+              <td>5 محاولات / دقيقة لكل (إيميل + IP)</td>
+            </tr>
+            <tr>
+              <td><code>POST /invite/{token}/accept</code></td>
+              <td>10 / دقيقة لكل IP</td>
+            </tr>
+            <tr>
+              <td><code>GET /projects/featured</code></td>
+              <td>30 / دقيقة لكل IP</td>
+            </tr>
+            <tr>
+              <td>كل شي ثاني (مسجل دخول)</td>
+              <td>60 / دقيقة لكل مستخدم</td>
+            </tr>
+          </table>
+          <p>
+            لما توصل 429، عادةً تجاوزت الحد — مو خطأ بالكود. لكن تعرفها أثناء
+            التطوير عشان ما تخبطها حالة تانية.
+          </p>
+
+          <h3>الفصل الدراسي (Term)</h3>
+          <p>
+            أغلب البيانات (فرق، مقترحات، مهام، مناقشات) مربوطة بفصل دراسي. إذا
+            ما بعتِ <code>?term_id=</code> بالطلب، النظام تلقائيًا بياخذ الفصل
+            الحالي (<code>is_current: true</code>) — بس لازم الفرونت يبعت
+            term_id يدويًا في الوضع العادي، إلا إذا بدك تعرض بيانات فصل قديم
+            تحديدًا.
+          </p>
+        </div>
+      </section>
+
+      <section id="overview">
+        <h2>2. نظرة سريعة — شو جاهز وشو ناقص</h2>
+        <p>
+          جدول خلاصة سريعة لكل الـ 30 شاشة المذكورة بتحليل الـ UX، بعد ما
+          قارناها وحدة وحدة مع الباك اند الفعلي:
+        </p>
+        <div class="card">
+          <table class="overview">
+            <tr>
+              <th>#</th>
+              <th>الشاشة</th>
+              <th>الدور</th>
+              <th>الحالة</th>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>صفحة الهبوط</td>
+              <td>عام</td>
+              <td><span class="status ok">✅ جاهز جزئياً</span></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>تفاصيل مشروع مميز</td>
+              <td>عام</td>
+              <td><span class="status warn">⚠️ ناقص تفاصيل</span></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>تسجيل الدخول</td>
+              <td>عام</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>الرئيسية (Dashboard)</td>
+              <td>سوبر أدمن</td>
+              <td><span class="status bad">❌ غير موجود</span></td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>نجاح الإشراف (إدارة أعضاء)</td>
+              <td>سوبر أدمن</td>
+              <td><span class="status bad">❌ غير موجود</span></td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>المقترحات</td>
+              <td>سوبر أدمن</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>أرشيف المشاريع</td>
+              <td>سوبر أدمن</td>
+              <td><span class="status warn">⚠️ بديل جزئي</span></td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td>مواعيد المناقشات</td>
+              <td>سوبر أدمن</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td>تنسيق الفرق</td>
+              <td>سوبر أدمن</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td>الرئيسية (Dashboard)</td>
+              <td>لجنة الإشراف</td>
+              <td><span class="status bad">❌ غير موجود</span></td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td>الفرق (إضافة مشرفين/طلاب)</td>
+              <td>لجنة الإشراف</td>
+              <td><span class="status warn">⚠️ طلاب فقط</span></td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td>مواعيد المناقشات</td>
+              <td>لجنة الإشراف</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+            <tr>
+              <td>13</td>
+              <td>أرشيف المشاريع</td>
+              <td>لجنة الإشراف</td>
+              <td><span class="status warn">⚠️ بديل جزئي</span></td>
+            </tr>
+            <tr>
+              <td>14</td>
+              <td>نسبة تقدم المشاريع</td>
+              <td>لجنة الإشراف</td>
+              <td><span class="status warn">⚠️ per-team فقط</span></td>
+            </tr>
+            <tr>
+              <td>15</td>
+              <td>المعلومات الشخصية</td>
+              <td>المشرف</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+            <tr>
+              <td>16</td>
+              <td>الفرق</td>
+              <td>المشرف</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+            <tr>
+              <td>17</td>
+              <td>المشاريع المكتملة</td>
+              <td>المشرف</td>
+              <td><span class="status bad">❌ غير موجود</span></td>
+            </tr>
+            <tr>
+              <td>18</td>
+              <td>مراحل تقدم الفرق</td>
+              <td>المشرف</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+            <tr>
+              <td>19</td>
+              <td>الاجتماعات</td>
+              <td>المشرف</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+            <tr>
+              <td>20</td>
+              <td>مواعيد المناقشات</td>
+              <td>المشرف</td>
+              <td>
+                <span class="status warn">⚠️ عرض فقط، بلا فلتر تلقائيًا</span>
+              </td>
+            </tr>
+            <tr>
+              <td>21</td>
+              <td>الملف الشخصي</td>
+              <td>قائد الفريق</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+            <tr>
+              <td>22</td>
+              <td>المقترح / التقرير النهائي</td>
+              <td>قائد الفريق</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+            <tr>
+              <td>23</td>
+              <td>المساعد الآلي (AI)</td>
+              <td>قائد الفريق</td>
+              <td><span class="status bad">❌ خارج نطاق الباك اند</span></td>
+            </tr>
+            <tr>
+              <td>24</td>
+              <td>المهام (Kanban)</td>
+              <td>قائد الفريق</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+            <tr>
+              <td>25</td>
+              <td>الاجتماعات</td>
+              <td>قائد الفريق</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+            <tr>
+              <td>26</td>
+              <td>الملف الشخصي</td>
+              <td>الطالب</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+            <tr>
+              <td>27</td>
+              <td>البروبوزال / التقرير (عرض)</td>
+              <td>الطالب</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+            <tr>
+              <td>28</td>
+              <td>المساعد الذكي</td>
+              <td>الطالب</td>
+              <td><span class="status bad">❌ خارج نطاق الباك اند</span></td>
+            </tr>
+            <tr>
+              <td>29</td>
+              <td>المهام</td>
+              <td>الطالب</td>
+              <td>
+                <span class="status warn"
+                  >⚠️ إضافة مهمة غير مسموحة معه اليوم</span
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>30</td>
+              <td>الاجتماعات</td>
+              <td>الطالب</td>
+              <td><span class="status ok">✅ جاهز</span></td>
+            </tr>
+          </table>
+          <p style="margin-top: 14px">
+            <b>الخلاصة بالأرقام:</b> 17 شاشة جاهزة بالكامل، 8 فيها ملاحظة أو
+            بديل جزئي، 5 ناقصها API خالص لحد الآن. كل التفاصيل والأمثلة تحت،
+            وقسم <a href="#gaps">"فروقات مهمة"</a> بالآخر يشرح كل نقطة ناقصة
+            بالتفصيل.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============ PUBLIC ============ -->
+      <div class="role-header" id="public">
+        <h2>3. الشاشات العامة (قبل تسجيل الدخول)</h2>
+      </div>
+
+      <div class="card">
+        <h3>
+          1. صفحة الهبوط (Landing Page)
+          <span class="status ok">✅ جاهز جزئياً</span>
+        </h3>
+        <p>قسم "أفضل مشاريع التخرج" (حتى 6 مشاريع) جاهز بالكامل:</p>
+        <div class="endpoint">
+          <span class="method m-get">GET</span
+          ><span class="path">/projects/featured</span>
+        </div>
+        <div class="grid2">
+          <div>
+            <p><b>مثال الطلب</b></p>
+            <pre>
+curl http://mashroui.local/api/projects/featured
+# بدون أي Authorization — مفتوح للجميع
+# ترقيم صفحات: 6 بكل صفحة</pre
+            >
+          </div>
+          <div>
+            <p><b>مثال الرد</b></p>
+            <pre>
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Smart Campus",
+      "description": "نظام حرم جامعي ذكي",
+      "department_id": 1,
+      "specialization_id": 1,
+      "department": { "id": 1, "name": "قسم البرمجيات" },
+      "specialization": { "id": 1, "name": "برمجيات وقواعد بيانات" }
+    }
+  ],
+  "current_page": 1,
+  "last_page": 1,
+  "total": 1,
+  "per_page": 6
+}</pre
+            >
+          </div>
+        </div>
+        <div class="mismatch">
+          <h4>⚠️ ملاحظة مهمة</h4>
+          <p>
+            قسم "الأقسام والتخصصات" و"الإحصائيات" (عدد
+            المشاريع/الطلاب/المشرفين...) المذكورين بالتحليل
+            <b>ما إلهم API عام</b> حاليًا:
+          </p>
+          <ul>
+            <li>
+              <code>GET /departments</code> و
+              <code>GET /specializations</code> موجودين، بس محتاجين تسجيل دخول
+              (مش عامّين) — ما تقدرا تنادوهم من صفحة الهبوط قبل تسجيل الدخول
+              بالوضع الحالي.
+            </li>
+            <li>
+              ما فيه أي endpoint يرجع إحصائيات عامة (عدد المشاريع الكلي، عدد
+              الطلاب، عدد الفرق...) — ما يزوار هنا ولا للمسجلين.
+            </li>
+          </ul>
+          <p>
+            إذا بدنا نان الأقسام تعمل بصفحة الهبوط، لازم نطلب من الباك اند
+            endpoint جديد عام لهذه البيانات.
+          </p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>
+          2. تفاصيل مشروع مميز <span class="status warn">⚠️ ناقص تفاصيل</span>
+        </h3>
+        <p>
+          ما فيه endpoint يفصّل تفاصيل مشروع واحد. الحقول المتوفرة هي فقط اللي
+          برجعها <code>/projects/featured</code> أعلاه (الاسم، الوصف، القسم،
+          التخصص).
+        </p>
+        <div class="gap">
+          <h4>❌ ناقص</h4>
+          <p>
+            التحليل بيطلب "وصف كامل، القسم، المشرف، أعضاء الفريق، الفصل الدراسي"
+            بصفحة التفاصيل — المشرف وأعضاء الفريق والفصل الدراسي
+            <b>مش موجودين</b> بالرد الحالي. لازم إلا endpoint جديد
+            <code>GET /projects/{id}</code> عام، أو توسيع حقول
+            <code>/projects/featured</code>.
+          </p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>3. تسجيل الدخول (Login) <span class="status ok">✅ جاهز</span></h3>
+        <div class="endpoint">
+          <span class="method m-post">POST</span
+          ><span class="path">/login</span>
+        </div>
+        <div class="grid2">
+          <div>
+            <p><b>الطلب</b></p>
+            <pre>
+POST /login
+Content-Type: application/json
+
+{
+  "email": "leader1@mashroui.local",
+  "password": "password"
+}</pre
+            >
+          </div>
+          <div>
+            <p><b>الرد (200)</b></p>
+            <pre>
+{
+  "user": {
+    "id": 5, "name": "Leader One",
+    "email": "leader1@mashroui.local",
+    "role": "team_leader",
+    "whatsapp": "970599111111",
+    "university_number": "2021001",
+    "specialization_id": 1,
+    "term_id": null,
+    "status": "active",
+    "must_change_password": false
+  },
+  "token": "8|oXo1mrcIrZ71..."
+}</pre
+            >
+          </div>
+        </div>
+        <p>
+          الأدوار الخمسة (<code>super_admin</code>, <code>committee</code>,
+          <code>supervisor</code>, <code>team_leader</code>,
+          <code>student</code>) كلهم يسجلوا دخول من نفس الـ endpoint — الفرق بان
+          في قيمة <code>role</code> بالرد، وعليها تحدد الفرونت لأي لوحة يوجّه
+          المستخدم.
+        </p>
+        <p><b>خطأ دخول خاطئ (422):</b></p>
+        <pre>
+{"message": "بيانات الدخول غير صحيحة.", "errors": {"email": ["بيانات الدخول غير صحيحة."]}}</pre
+        >
+        <p><b>حساب مقيّد بالكامل (422):</b></p>
+        <pre>
+{"message": "تم إيقاف هذا الحساب، رجاء التواصل مع العيادة.", "errors": {"email": [...]}}</pre
+        >
+      </div>
+
+      <!-- ============ SUPER ADMIN ============ -->
+      <div class="role-header" id="superadmin">
+        <h2>4. لوحة تحكم السوبر أدمن</h2>
+      </div>
+
+      <div class="card">
+        <h3>
+          4. الرئيسية (Dashboard) <span class="status bad">❌ غير موجود</span>
+        </h3>
+        <div class="gap">
+          <h4>❌ ناقص بالكامل</h4>
+          <p>
+            ما فيه أي endpoint يرجع: نسب إنجاز المشاريع، عدد المشاريع حسب الحالة
+            (منتهي/قيد التنفيذ/مقترح)، متوسط الإنجاز، أو تفاصيل تقدم لكل مشروع
+            بشكل مجموع. أقرب شي موجود:
+          </p>
+          <ul>
+            <li>
+              <code>GET /ai/projects-source</code> (سوبر أدمن فقط) — يرجع قائمة
+              المشاريع بحالتها (<code>status</code>) فقط بدون أي نسبة تقدم أو
+              تجميع إحصائي.
+            </li>
+            <li>
+              <code>GET /teams/{team}/progress</code> — نسبة تقدم فريق واحد فقط،
+              لازم تعرف الـ team_id مسبقًا ولازم تكررها لكل فريق يدويًا (ما فيه
+              نسخة جماعية).
+            </li>
+          </ul>
+          <p>
+            <b>ينصح:</b> نطلب من الباك اند endpoint جديد مخصص للوحة القيادة يرجع
+            كل هاي الأرقام بطلب واحد.
+          </p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>
+          5. نجاح الإشراف (إضافة/إدارة أعضاء)
+          <span class="status bad">❌ غير موجود</span>
+        </h3>
+        <div class="gap">
+          <h4>❌ ناقص بالكامل — هاي أهم فجوة بين الدوّين</h4>
+          <p>
+            ما فيه أي endpoint لإنشاء أو عرض أو تعديل حساب مستخدم (سوبر أدمن،
+            لجنة إشراف، أو مشرف) بشكل مباشر. الطريقة الوحيدة الموجودة لإنشاء
+            حسابات هي استيراد الطلاب بالجملة عبر إكسل فقط
+            (<code>/teams/import/*</code>) — هاي بتنشئ طلاب حصرًا، مو أعضاء لجنة
+            ولا مشرفين.
+          </p>
+          <p>
+            يعني حاليًا: ما فيه طريقة عبر الـ API تضيف بيها عضو لجنة إشراف جديد
+            أو مشرف جديد. لازم نطلب endpoint من نوع <code>POST /users</code> (أو
+            مشابه) يقبل الدور، ويولّد رابط دعوة، ويرسله — بينس فقط
+            <code>POST /users/{user}/invite</code> الموجود حاليًا لكن بداية من
+            صفر (المستخدم مش موجود أصلاً).
+          </p>
+        </div>
+        <p>
+          الجزء الوحيد الجاهز فعلاً هو: بعد ما يصير عندك
+          <code>user_id</code> لعضو موجود، تقدر ترسل بيانات دخول:
+        </p>
+        <div class="endpoint">
+          <span class="method m-post">POST</span
+          ><span class="path">/users/{user}/invite</span>
+        </div>
+        <pre>
+// الرد 201
+{ "token": "64-حرف-عشوائي", "expires_at": "2026-07-24T07:27:04.000000Z" }</pre
+        >
+        <p>
+          وإدارة التوكن لعضو موجود عندنا جاهزة (راجع قسم التوكن بالأسفل ضمن لوحة
+          المشرف).
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>6. المقترحات <span class="status ok">✅ جاهز</span></h3>
+        <p>
+          ملاحظة: المقترحات عندنا بتتراجع من <b>لجنة الإشراف</b> (Committee) حسب
+          صلاحيات الباك اند الحالية، أو السوبر أدمن مباشرة (السوبر أدمن عنده
+          صلاحية كاملة على كل شي تلقائيًا ومن bypass، بس الدور المخصص للمراجعة
+          هو committee).
+        </p>
+        <div class="endpoint">
+          <span class="method m-post">POST</span
+          ><span class="path">/proposals/{id}/approve</span>
+        </div>
+        <div class="endpoint">
+          <span class="method m-post">POST</span
+          ><span class="path">/proposals/{id}/reject</span>
+        </div>
+        <div class="grid2">
+          <div>
+            <p><b>رفض — الطلب</b></p>
+            <pre>
+POST /proposals/12/reject
+{
+  "rejection_reason": "الوصف غير كافي، محتاج تفصيل أكثر"
+}</pre
+            >
+          </div>
+          <div>
+            <p><b>الرد</b></p>
+            <pre>
+{
+  "id": 12, "status": "rejected",
+  "rejection_reason": "الوصف غير كافي...",
+  "reviewed_by": 2, "project_id": 7
+}</pre
+            >
+          </div>
+        </div>
+        <p>
+          الموافقة <code>POST /proposals/{id}/approve</code> بدون body — بتبدّلي
+          حالة المشروع لـ <code>in_progress</code> تلقائيًا وينسخ اسم/وصف
+          المقترح لجدول المشروع.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>7. أرشيف المشاريع <span class="status warn">⚠️ بديل جزئي</span></h3>
+        <div class="gap">
+          <h4>❌ ناقص</h4>
+          <p>
+            ما فيه endpoint اسمه "أرشيف" أو حالة "منتهي" تتفعّل تلقائيًا — قيمة
+            <code>completed</code> موجودة بقاعدة البيانات كخيار بس
+            <b>ما فيه أي كود بالباك اند يحوّل مشروع لهاي الحالة</b>. يعني
+            عمليًا، شاشة "أرشيف المشاريع" رح تكون فاضية دايمًا لحد ما يبني
+            endpoint محدد "المشروع خلص" (بعد اعتماد التقرير النهائي مثلاً).
+          </p>
+        </div>
+        <p>
+          <b>البديل المتاح مؤقتًا:</b> <code>GET /teams</code> بترجع كل فريق مع
+          مشروعه المرتبط (بالحالة والاسم) — تقدرا تفلترا من طرف الفرونت على
+          <code>project.status</code>. مثال رد مختصر:
+        </p>
+        <pre>
+{
+  "data": [
+    {
+      "id": 1, "name": "Team X",
+      "project": { "id": 1, "name": "Smart Campus", "status": "in_progress", "is_featured": true }
+    }
+  ]
+}</pre
+        >
+        <div class="mismatch">
+          <h4>⚠️ ملاحظة إضافية</h4>
+          <p>
+            ما فيه endpoint لتمييز مشروع بنجمة (<code>is_featured</code>) —
+            الحقل موجود بقاعدة البيانات بس ما فيه <code>PUT/PATCH</code> يعدّله.
+            حاليًا ما فيه طريقة عبر الـ API تخلّي مشروع "مميز".
+          </p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>8. مواعيد المناقشات <span class="status ok">✅ جاهز</span></h3>
+        <div class="endpoint">
+          <span class="method m-get">GET</span
+          ><span class="path">/discussions</span>
+        </div>
+        <div class="endpoint">
+          <span class="method m-get">GET</span
+          ><span class="path">/discussions/export</span>
+        </div>
+        <p>
+          يفتره بـ <code>?department_id=</code> و
+          <code>?specialization_id=</code>. التصدير بيرجعلك ملف
+          <code>discussions.xlsx</code> جاهز للتنزيل مباشرة.
+        </p>
+        <pre>
+GET /discussions?department_id=1
+
+// الرد: مصفوفة مباشرة (بدون pagination)
+[
+  {
+    "id": 1, "project_id": 1, "supervisor_id": 3,
+    "place": "Hall A", "discussion_date": "2026-08-15T00:00:00.000000Z",
+    "discussion_time": "10:30:00", "committee": "د. X, د. Y",
+    "status": "pending",
+    "project": { "id": 1, "name": "Smart Campus", "department": {...}, "specialization": {...} },
+    "supervisor": { "id": 3, "name": "...", "email": "...", "whatsapp": "..." }
+  }
+]</pre
+        >
+      </div>
+
+      <div class="card">
+        <h3>9. تنسيق الفرق <span class="status ok">✅ جاهز</span></h3>
+        <div class="endpoint">
+          <span class="method m-get">GET</span><span class="path">/teams</span>
+        </div>
+        <p>
+          بترجع كل الفرق بالفصل الحالي، مع المشرف والقائد والأعضاء والمشروع،
+          محسوبين نسبيًا (ما احتاج طلبات إضافية):
+        </p>
+        <pre>
+{
+  "data": [
+    {
+      "id": 1, "name": "Team X", "specialization_id": 1,
+      "supervisor": { "id": 3, "name": "Supervisor One", ... },
+      "leader": { "id": 5, "name": "Leader One", ... },
+      "members": [ { "id": 1, "is_leader": true, "student": {...} } ],
+      "project": { "id": 1, "name": "Smart Campus", "status": "in_progress" }
+    }
+  ]
+}</pre
+        >
+        <div class="note">
+          حقول الإيميل/الواتساب/الرقم الجامعي للطلاب بترجع <code>null</code> إلا
+          لسوبر أدمن ولجنة الإشراف والمشرف المختص بزملاء الفريق نفسه — هاي حماية
+          "الحاجة للمعرفة" مطبّقة تلقائيًا من الباك اند، أي شي لازم الفرونت
+          يعرفه.
+        </div>
+      </div>
+
+      <!-- ============ COMMITTEE ============ -->
+      <div class="role-header" id="committee">
+        <h2>5. لوحة تحكم لجنة الإشراف</h2>
+      </div>
+
+      <div class="card">
+        <h3>
+          10. الرئيسية (لوحة التحكم)
+          <span class="status bad">❌ غير موجود</span>
+        </h3>
+        <div class="gap">
+          <h4>❌ ناقص بالكامل</h4>
+          <p>
+            نفس نجعة شاشة #4 بالضبط — "إجمالي الطلاب، عدد الشعب، عدد المشاريع
+            المنتهية، متوسط الإنجاز" ما إلها endpoint جاهز. لازم تنبني من الباك
+            اند، أو تجميع يدويًا بالفرونت من <code>GET /teams</code> (بطيء وغير
+            دقيق لأعداد كبيرة).
+          </p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>
+          11. الفرق (إضافة/إدارة مشرفين وطلاب)
+          <span class="status warn">⚠️ طلاب فقط</span>
+        </h3>
+        <p>
+          استيراد الطلاب بالجملة من إكسل جاهز بالكامل، بخطوتين (معاينة ثم
+          تأكيد):
+        </p>
+        <div class="endpoint">
+          <span class="method m-post">POST</span
+          ><span class="path">/teams/import/preview</span>
+        </div>
+        <div class="endpoint">
+          <span class="method m-post">POST</span
+          ><span class="path">/teams/import/confirm</span>
+        </div>
+        <pre>
+// preview: multipart/form-data, file=ملف xlsx
+// الرد يوضح الصفوف الصحيحة والخاطئة سطر سطر قبل أي حفظ فعلي
+{
+  "valid": [ {"name": "...", "email": "...", "university_number": "...", "whatsapp": "970599..."} ],
+  "invalid": [ {"row": 3, "data": {...}, "errors": ["البريد الإلكتروني مستخدم سبقًا."]} ]
+}</pre
+        >
+        <pre>
+// confirm: بعد التأكد من صحة الصفوف
+POST /teams/import/confirm
+{
+  "specialization_id": 1,
+  "rows": [ {"name":"...", "email":"...", "university_number":"...", "whatsapp":"970599..."} ]
+}
+// الرد: حسابات منشأة + رابط دعوة لكل واحد
+{ "valid": [], "invalid": [], "created": [ {"user": {...}, "invite_token": "..."} ] }</pre
+        >
+        <div class="gap">
+          <h4>❌ ناقص</h4>
+          <p>
+            كان الاستيراد للطلاب فقط. إضافة <b>مشرف جديد</b> ما إلها API — نفس
+            نجعة شاشة #5 (نجاح الإشراف) بالضبط، ينطبق نفس الكلام هنا.
+          </p>
+        </div>
+        <p>
+          بعد ما يصير عندك أعضاء، تقدر تنشئ فريق فعليًا (لازم يكون المشرف موجود
+          سبقًا كـuser):
+        </p>
+        <div class="endpoint">
+          <span class="method m-post">POST</span
+          ><span class="path">/teams</span>
+        </div>
+        <pre>
+{
+  "name": "Team Falcon",
+  "supervisor_id": 3,
+  "specialization_id": 5,
+  "member_ids": [10, 11, 12],
+  "leader_id": 10
+}
+// leader_id لازم يكون من ضمن member_ids، وأقصى عدد أعضاء 4</pre
+        >
+      </div>
+
+      <div class="card">
+        <h3>12. مواعيد المناقشات <span class="status ok">✅ جاهز</span></h3>
+        <p>
+          نفس شاشة #8 بالضبط (CRUD كامل + تصدير إكسل + إرسال واتساب/بريد عبر
+          endpoint الإرسال الجماعي بالأسفل).
+        </p>
+        <div class="endpoint">
+          <span class="method m-post">POST</span
+          ><span class="path">/discussions</span>
+        </div>
+        <pre>
+{
+  "project_id": 7, "supervisor_id": 3,
+  "place": "Hall A", "discussion_date": "2026-08-15",
+  "discussion_time": "10:30", "committee": "د. X, د. Y",
+  "whatsapp": "970599123456", "status": "pending"
+}
+// whatsapp لازم يبدأ بـ 970 أو 972 يتبعه رقم موباين صحيح، وإلا 422</pre
+        >
+      </div>
+
+      <div class="card">
+        <h3>
+          13. أرشيف المشاريع <span class="status warn">⚠️ بديل جزئي</span>
+        </h3>
+        <p>
+          نفس نجعة شاشة #7 بالضبط (ما حالة "منتهي" تتفعّل تلقائيًا، وما endpoint
+          يتميّز مشروع). البديل نفسه: <code>GET /teams</code> يفلتره يدويًا
+          بالفرونت.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>
+          14. نسبة تقدم المشاريع
+          <span class="status warn">⚠️ per-team فقط</span>
+        </h3>
+        <div class="endpoint">
+          <span class="method m-get">GET</span
+          ><span class="path">/teams/{team}/progress</span>
+        </div>
+        <pre>{ "total": 8, "done": 3, "percentage": 37.5 }</pre>
+        <div class="mismatch">
+          <h4>⚠️ ملاحظة</h4>
+          <p>
+            كان بترجع تقدم فريق واحد بس محتاج تعرف الـ
+            <code>team_id</code> مسبقًا. لعرض "نسبة تقدم كل المشاريع" بجدول واحد
+            زي ما بطلب التحليل، لازم تنادي هاي الـ endpoint مرة لكل فريق (بعد ما
+            تجلب قائمة الفرق من <code>GET /teams</code>) — ما فيه نسخة جماعية
+            توفر كل الرحلة بطلب واحد.
+          </p>
+        </div>
+        <p>تصدير إكسل لكل الفرق دفعة وحدة موجود:</p>
+        <div class="endpoint">
+          <span class="method m-get">GET</span
+          ><span class="path">/progress/export</span>
+        </div>
+      </div>
+
+      <!-- ============ SUPERVISOR ============ -->
+      <div class="role-header" id="supervisor">
+        <h2>6. لوحة تحكم المشرف</h2>
+      </div>
+
+      <div class="card">
+        <h3>15. المعلومات الشخصية <span class="status ok">✅ جاهز</span></h3>
+        <div class="endpoint">
+          <span class="method m-get">GET</span><span class="path">/me</span>
+        </div>
+        <pre>
+{
+  "id": 3, "name": "Supervisor One", "role": "supervisor",
+  "email": "sup1@mashroui.local", "whatsapp": null,
+  "specialization_id": 1, "specialization": {...}, "academic_term": {...}
+}</pre
+        >
+        <div class="gap">
+          <h4>❌ ناقص</h4>
+          <p>
+            "عدد الطلاب وعدد الفرق التابعة لي" مش جزء من رد <code>/me</code> —
+            لازم تحسب بالفرونت من نتيجة <code>GET /teams</code> (بعد فلترتها على
+            <code>supervisor.id == المستخدم الحالي</code>).
+          </p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>16. الفرق <span class="status ok">✅ جاهز</span></h3>
+        <p>
+          <code>GET /teams</code> بترجع كل الفرق — الباك اند ما بيفتر تلقائيًا
+          على فرق المشرف نفسه (لو مستخدم سجل دخول مشرف من الفرق، فان شاشة قراءة
+          مفتوحة بالتصميم). الفرونت لازم يفلتر محليًا على
+          <code>team.supervisor.id === current_user.id</code>.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>
+          17. المشاريع المكتملة <span class="status bad">❌ غير موجود</span>
+        </h3>
+        <div class="gap">
+          <h4>❌ ناقص بالكامل</h4>
+          <p>
+            نفس نجعة "المشروع المكتمل" (شاشات #7 و#13) — بناء إنه ما فيه مشروع
+            يوصل لحالة <code>completed</code> عمليًا، فان الشاشة رح تكون فاضية
+            على طول لحد ما تنبني النجعة من الباك اند.
+          </p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>18. مراحل تقدم الفرق <span class="status ok">✅ جاهز</span></h3>
+        <p>
+          نفس <code>GET /teams/{team}/progress</code> من شاشة #14 — لازم تكررها
+          لكل فريق تابع للمشرف.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>19. الاجتماعات <span class="status ok">✅ جاهز</span></h3>
+        <div class="endpoint">
+          <span class="method m-post">POST</span
+          ><span class="path">/teams/{team}/meetings</span>
+        </div>
+        <pre>
+{
+  "title": "متابعة أسبوعية",
+  "scheduled_at": "2026-08-01 10:00:00",
+  "google_meet_link": "https://meet.google.com/abc-defg-hij",
+  "notes": "جدول أعمال اختياري"
+}</pre
+        >
+        <div class="good">
+          <h4>✅ ملاحظة إيجابية</h4>
+          <p>
+            التحليل كان يعتبر "مين يقدر ينشئ اجتماع" نقطة خلافية غير محسومة.
+            بالباك اند الفعلي، القرار محسوم:
+            <b>المشرف وقائد الفريق الاثنين يقدروا ينشئوا اجتماع</b> (مو المشرف
+            حصرًا). لو الفرونت رح يبني شاشة اجتماعات لقائد الفريق بصلاحية "عرض
+            فقط" استنادًا لجدول الشاشات، فان هاي نجعة غلط — راجعوا قسم الفروقات
+            بالأسفل.
+          </p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>
+          20. مواعيد المناقشات
+          <span class="status warn">⚠️ عرض فقط، بلا فلتر تلقائيًا</span>
+        </h3>
+        <p>
+          نفس <code>GET /discussions</code> — بدون فلترة تلقائية على مشرف معين،
+          الفرونت لازم يفلتر محليًا على <code>supervisor_id</code>.
+        </p>
+      </div>
+
+      <!-- ============ TEAM LEADER ============ -->
+      <div class="role-header" id="leader">
+        <h2>7. لوحة تحكم قائد الفريق</h2>
+      </div>
+
+      <div class="card">
+        <h3>21. الملف الشخصي <span class="status ok">✅ جاهز</span></h3>
+        <p>
+          <code>GET /me</code> لبيانات المستخدم، و<code>GET /teams/{id}</code>
+          لبيانات الفريق والمشروع والأعضاء (لازم تعرف team_id — احصل عليها من
+          <code>GET /teams</code> بفلترة على <code>leader.id</code>).
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>
+          22. المقترح / التقرير النهائي <span class="status ok">✅ جاهز</span>
+        </h3>
+        <div class="endpoint">
+          <span class="method m-post">POST</span
+          ><span class="path">/proposals</span>
+        </div>
+        <pre>
+// multipart/form-data
+project_id=7
+name=نظام حضور ذكي
+description=...
+problems=...
+solutions=...
+features_value=...
+pdf=&lt;ملف، application/pdf، أقصى حجم 10MB&gt;</pre
+        >
+        <div class="endpoint">
+          <span class="method m-post">POST</span
+          ><span class="path">/projects/{project}/final-reports</span>
+        </div>
+        <pre>
+// multipart/form-data — pdf فقط، أقصى حجم 20MB
+file=&lt;ملف&gt;
+
+// الرد 201، ولو قبل اعتماد المقترح برجع 422:
+{"message": "الرفع متاح بعد اعتماد المقترح فقط.", "errors": {...}}</pre
+        >
+      </div>
+
+      <div class="card">
+        <h3>
+          23. المساعد الآلي
+          <span class="status bad">❌ خارج نطاق الباك اند</span>
+        </h3>
+        <div class="gap">
+          <h4>❌ ليست ضمن هذا الباك اند (قرار متعمد)</h4>
+          <p>
+            اقتراح أفكار، تحسين الوصف، مقارنة الأفكار بمشاريع سابقة — كان هذا
+            ميزات AI توليدية. الباك اند الحالي <b>ما رح يبنيها إطلاقًا</b>،
+            بيوفر فقط مصدر بيانات خام يقرأه نظام AI خارجي منفصل (Ollama):
+          </p>
+        </div>
+        <div class="endpoint">
+          <span class="method m-get">GET</span
+          ><span class="path">/ai/projects-source</span>
+        </div>
+        <p>
+          سوبر أدمن فقط، بترجع كل المشاريع بأفكارها الكاملة
+          (اسم/وصف/مشاكل/حلول/قيمة مضافة من المقترح المعتمد) — بناء أي نمط
+          مقارنة/تشابه عليها من طرف تالت، مو من طرف هذا الباك اند مباشرة.
+        </p>
+        <pre>
+{
+  "data": [
+    {
+      "id": 1, "name": "Smart Campus", "description": "...",
+      "proposal": { "problems": "...", "solutions": "...", "features_value": "..." }
+    }
+  ]
+}</pre
+        >
+      </div>
+
+      <div class="card">
+        <h3>24. المهام (Kanban) <span class="status ok">✅ جاهز</span></h3>
+        <div class="endpoint">
+          <span class="method m-post">POST</span
+          ><span class="path">/teams/{team}/tasks</span>
+        </div>
+        <div class="endpoint">
+          <span class="method m-patch">PATCH</span
+          ><span class="path">/tasks/{id}/status</span>
+        </div>
+        <pre>
+POST /teams/1/tasks
+{ "title": "تصميم قاعدة البيانات", "description": "اختياري" }
+
+PATCH /tasks/1/status
+{ "status": "in_progress" }
+// القيم المسموحة: pending, in_progress, review, done</pre
+        >
+        <p>ملفات وملاحظات المهمة الفرعية:</p>
+        <div class="endpoint">
+          <span class="method m-post">POST</span
+          ><span class="path">/tasks/{task}/files</span>
+        </div>
+        <div class="endpoint">
+          <span class="method m-post">POST</span
+          ><span class="path">/tasks/{task}/notes</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>25. الاجتماعات <span class="status ok">✅ جاهز</span></h3>
+        <div class="endpoint">
+          <span class="method m-get">GET</span
+          ><span class="path">/teams/{team}/meetings</span>
+        </div>
+        <div class="good">
+          <h4>✅ قائد الفريق يقدر ينشئ اجتماع فعلاً</h4>
+          <p>
+            راجع الملاحظة بشاشة #19 — نفس endpoint الإنشاء متاح لقائد الفريق مش
+            بس المشرف، خلافًا لما هو مكتوب بجدول الشاشات بالتحليل.
+          </p>
+        </div>
+      </div>
+
+      <!-- ============ STUDENT ============ -->
+      <div class="role-header" id="student"><h2>8. لوحة تحكم الطالب</h2></div>
+
+      <div class="card">
+        <h3>26. الملف الشخصي <span class="status ok">✅ جاهز</span></h3>
+        <p>نفس <code>GET /me</code> + <code>GET /teams/{id}</code>.</p>
+      </div>
+
+      <div class="card">
+        <h3>
+          27. البروبوزال / التقرير النهائي (عرض)
+          <span class="status ok">✅ جاهز</span>
+        </h3>
+        <div class="endpoint">
+          <span class="method m-get">GET</span
+          ><span class="path">/proposals/{id}</span>
+        </div>
+        <p>
+          عرض فقط — الطالب العادي (مش قائد الفريق) بيقدر يشوف الحالة والملف، بس
+          <code>POST/PUT</code> على المقترح محصورة بقائد الفريق فقط في الباك اند
+          (403 لغيره).
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>
+          28. المساعد الذكي
+          <span class="status bad">❌ خارج نطاق الباك اند</span>
+        </h3>
+        <p>
+          نفس شاشة #23 بالضبط — راجع <code>GET /ai/projects-source</code> أعلاه
+          لمصدر بيانات خام فقط.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>
+          29. المهام
+          <span class="status warn">⚠️ إضافة مهمة غير مسموحة معه اليوم</span>
+        </h3>
+        <div class="mismatch">
+          <h4>⚠️ فرق مهم بين التحليل والتنفيذ</h4>
+          <p>
+            نص التحليل يقول: "يمكن للطالب إضافة مهام جديدة ورفع الملفات وإضافة
+            الملاحظات". بالباك اند الفعلي:
+          </p>
+          <table>
+            <tr>
+              <th>الإجراء</th>
+              <th>مين مسموحله فعلاً</th>
+            </tr>
+            <tr>
+              <td>إنشاء مهمة جديدة (<code>POST /teams/{team}/tasks</code>)</td>
+              <td>❌ الطالب العادي ممنوع — بس قائد الفريق أو المشرف</td>
+            </tr>
+            <tr>
+              <td>رفع ملف على مهمة (<code>POST /tasks/{task}/files</code>)</td>
+              <td>✅ مسموح للطالب</td>
+            </tr>
+            <tr>
+              <td>إضافة ملاحظة (<code>POST /tasks/{task}/notes</code>)</td>
+              <td>✅ مسموح للطالب</td>
+            </tr>
+            <tr>
+              <td>تغيير حالة المهمة (<code>PATCH /tasks/{id}/status</code>)</td>
+              <td>❌ قائد الفريق فقط (كان متطابقة مع التحليل)</td>
+            </tr>
+          </table>
+          <p>
+            يعني لو الفرونت بينفّذ زر "إضافة مهمة" للطالب العادي، السيرفر برجع
+            403. إلا يعدّل توقع الفرونت (يخفي الزر للطالب العادي)، أو يرجع للباك
+            اند ويغيّر الصلاحية — قرار المفروض ينحسم قبل بناء الشاشة.
+          </p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>30. الاجتماعات <span class="status ok">✅ جاهز</span></h3>
+        <p>
+          <code>GET /teams/{team}/meetings</code> — عرض فقط، يطابق تمامًا لما هو
+          بالتحليل.
+        </p>
+      </div>
+
+      <!-- ============ GAPS SUMMARY ============ -->
+      <section id="gaps">
+        <h2>9. فروقات مهمة بين خطة الـ UX والتنفيذ الفعلي</h2>
+        <p>خلاصة كل الفروقات المذكورة أعلاه بمكان واحد، كمرجع سريع:</p>
+
+        <div class="card">
+          <h3>❌ فجوات حقيقية — ما فيها API خالص</h3>
+          <ol>
+            <li>
+              <b>ما يوجد إدارة مستخدمين عامة.</b> ما فيه طريقة تنشئ بيها حساب
+              مشرف أو عضو لجنة إشراف عبر الـ API — الاستيراد الحالي للطلاب فقط.
+            </li>
+            <li>
+              <b>ما يوجد لوحة قيادة/إحصائيات مجمّعة</b> لأي دور (سوبر أدمن، لجنة
+              إشراف، أو حتى الإحصائيات العامة بصفحة الهبوط).
+            </li>
+            <li>
+              <b>ما يوجد endpoint لتحديث مشروع.</b> ما فيه
+              <code>PUT/PATCH /projects/{id}</code> — يعني ما فيه طريقة تميّز
+              مشروع بنجمة (<code>is_featured</code>) ولا تحدّث اسمه/وصفه يدويًا.
+            </li>
+            <li>
+              <b>ما يوجد التمام لحالة "منتهي".</b> حالة
+              <code>completed</code> موجودة بقاعدة البيانات نظريًا بس ما فيه أي
+              كود يفعّلها — يعني "أرشيف المشاريع" و"المشاريع المكتملة" رح تكون
+              شاشات فاضية دائمًا حاليًا.
+            </li>
+            <li>
+              <b>ما يوجد مركز إشعارات.</b> فيه جدول
+              <code>notifications</code> بقاعدة البيانات ولكن صفر endpoints له.
+            </li>
+            <li>
+              <b>ما يوجد شات/مجموعات محادثة.</b> فيه جدول
+              <code>chat_groups</code> بقاعدة البيانات ولكن صفر endpoints له.
+            </li>
+            <li>
+              <b>ما يوجد مساعد ذكي (Chatbot / اقتراح أفكار / فحص تشابه).</b>
+              قرار متعمد — كان مسؤولية فريق الـ AI (Ollama) في طريقه، مو هذا
+              الباك اند. الباك اند بيوفر بس البيانات الخام عبر
+              <code>/ai/projects-source</code>.
+            </li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <h3>⚠️ فروقات سلوك — موجودة بس مش متطابقة مع التحليل</h3>
+          <ol>
+            <li>
+              <b>إنشاء المهام:</b> التحليل يقول الطالب العادي يقدر يضيف مهمة —
+              الباك اند الفعلي بيمنعه (بس مسموح برفع ملفات/ملاحظات). قائد الفريق
+              أو المشرف بس يقدروا ينشئوا مهمة.
+            </li>
+            <li>
+              <b>إنشاء الاجتماعات:</b> التحليل اعتبرها نقطة خلافية غير محسومة
+              (مشرف فقط ولا قائد فريق كمان) — الباك اند حسمها: الاثنين يقدروا
+              ينشئوا اجتماع.
+            </li>
+            <li>
+              <b>الأقسام والتخصصات:</b> endpoint موجود
+              (<code>/departments</code>, <code>/specializations</code>) بس
+              محتاج تسجيل دخول — مش متاح لصفحة الهبوط العامة زي ما يفترض
+              التحليل.
+            </li>
+            <li>
+              <b>نسبة تقدم المشاريع/الفرق:</b> موجودة بس على مستوى فريق واحد بكل
+              استدعاء، مو تجميعة واحدة لكل الفرق دفعة وحدة.
+            </li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <h3>
+            ✅ أخبار جيدة — تفصيلات التحليل العاجلة محقّقة أصلاً بالباك اند
+          </h3>
+          <ol>
+            <li>
+              <b>أمان كلمات المرور:</b> ما فيه إرسال كلمة مرور صريحة نهائيًا —
+              النظام يرسل رابط دعوة لمرة واحدة صالح 3 أيام، والمستخدم يحدد كلمة
+              مروره بنفسه أول دخول.
+            </li>
+            <li>
+              <b>واتساب:</b> القرار محسوم — روابط <code>wa.me</code> مباشرة (مش
+              WhatsApp Business API)، الرسائل تبنى تلقائيًا للموظف بيرسلها
+              يدويًا بضغطة.
+            </li>
+            <li>
+              <b>سجل تدقيق (Audit Log):</b> غير موجود حاليًا لكل الإجراءات
+              الحساسة (رفض مقترح، حذف، تقييد، إرسال جماعي).
+            </li>
+            <li>
+              <b>معاينة قبل استيراد إكسل:</b> موجودة بالضبط زي ما طلب التحليل —
+              خطوة <code>preview</code> منفصلة قبل <code>confirm</code> الفعلي،
+              توضح كل صف خاطئ وسببه.
+            </li>
+            <li>
+              <b>توحيد نموذج الصلاحيات:</b> ثلاث درجات بالضبط زي ما افترض
+              التحليل (كامل / عرض فقط / محظور) — لا "تقييد رؤية" و"تقييد تحكم"
+              منفصلين.
+            </li>
+            <li>
+              <b>تأكيد قبل إجراءات حساسة:</b> الحذف الآن يتطلب فحص عدم وجود
+              بيانات مرتبطة (مثلاً: ما تقدر تحذف قسم فيه تخصصات، ولا فصل دراسي
+              فيه فرق) — برجع 422 واضح بدل حذف صامت.
+            </li>
+          </ol>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      مرجع الحقول الكاملة لكل endpoint موجود بملف <code>docs/API.md</code> داخل
+      مشروع الباراميند. <br />هذا الملف تم بناؤه بمطابقة مباشرة مع كود الباك اند
+      الفعلي والاختبار الحي فقط، لا نسخ لملف التحليل فقط.
+    </footer>
+  </body>
+</html>
