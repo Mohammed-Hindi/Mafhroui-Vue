@@ -1,13 +1,5 @@
 <template>
   <div>
-    <div class="flex items-start gap-3 mb-6 p-4 rounded-lg bg-warning-bg border border-warning-border">
-      <AlertTriangle :size="18" class="text-warning shrink-0 mt-0.5" />
-      <p class="text-caption text-warning-text leading-relaxed">
-        الباك إند الحالي لا يدعم إضافة مشرف جديد، ولا تعديل/حذف فريق أو عضو بعد إنشائه — فقط استيراد طلاب وتكوين فريق جديد منهم.
-        المشرفون المتاحون بالقائمة أدناه هم فقط من لديهم فريق مسجّل بالفعل.
-      </p>
-    </div>
-
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <BaseButton :icon="Plus" @click="openCreateTeam">إنشاء فريق جديد</BaseButton>
       <BaseButton variant="outline" :icon="Upload" @click="openImport">استيراد طلاب من Excel</BaseButton>
@@ -157,8 +149,8 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Plus, Upload, Search, ChevronLeft, MessageCircle, Mail, AlertTriangle, Check } from 'lucide-vue-next'
-import { useCommitteeStore } from '@/stores/committee.store'
+import { Plus, Upload, Search, ChevronLeft, MessageCircle, Mail, Check } from 'lucide-vue-next'
+import { useSupervisorStore } from '@/stores/supervisor.store'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -180,7 +172,7 @@ export default {
 
   components: {
     BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, SkeletonLoader, ErrorState, EmptyState, FileDropzone,
-    Search, ChevronLeft, MessageCircle, Mail, AlertTriangle, Check
+    Search, ChevronLeft, MessageCircle, Mail, Check
   },
 
   data() {
@@ -206,7 +198,7 @@ export default {
   },
 
   computed: {
-    ...mapState(useCommitteeStore, [
+    ...mapState(useSupervisorStore, [
       'teams', 'teamsLoading', 'teamsError', 'departments', 'specializations',
       'studentsFromTeams', 'supervisorsFromTeams'
     ]),
@@ -244,8 +236,8 @@ export default {
   },
 
   methods: {
-    ...mapActions(useCommitteeStore, ['fetchTeams', 'fetchRefData', 'previewImport', 'createTeam']),
-    ...mapActions(useCommitteeStore, { storeConfirmImport: 'confirmImport' }),
+    ...mapActions(useSupervisorStore, ['fetchTeams', 'fetchRefData', 'previewImport', 'createTeam']),
+    ...mapActions(useSupervisorStore, { storeConfirmImport: 'confirmImport' }),
 
     loadTeams() {
       return this.fetchTeams().catch(() => {})

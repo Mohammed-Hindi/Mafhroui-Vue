@@ -1,13 +1,5 @@
 <template>
   <div>
-    <div class="flex items-start gap-3 mb-6 p-4 rounded-lg bg-warning-bg border border-warning-border">
-      <AlertTriangle :size="18" class="text-warning shrink-0 mt-0.5" />
-      <p class="text-caption text-warning-text leading-relaxed">
-        لا يوجد بالباك إند مفهوم "أرشيف" أو حالة "منتهي" تُفعَّل تلقائيًا، ولا endpoint لتمييز مشروع بنجمة أو لعرض ملفاته.
-        هذه القائمة مُشتقّة من <code class="bg-surface px-1.5 py-0.5 rounded-sm">GET /teams</code> — كل المشاريع المرتبطة بفريق، بصرف النظر عن حالتها.
-      </p>
-    </div>
-
     <div class="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-lg bg-surface border border-border shadow-card">
       <div class="relative flex-1 min-w-[220px]">
         <Search :size="16" class="pointer-events-none absolute top-1/2 -translate-y-1/2 start-3 text-text-400" />
@@ -28,8 +20,8 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Search, AlertTriangle } from 'lucide-vue-next'
-import { useCommitteeStore } from '@/stores/committee.store'
+import { Search } from 'lucide-vue-next'
+import { useSupervisorStore } from '@/stores/supervisor.store'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import DataTable from '@/components/ui/DataTable.vue'
@@ -41,7 +33,7 @@ const STATUS_LABELS = { in_progress: 'قيد التنفيذ', completed: 'مكت
 export default {
   name: 'ProjectArchivePage',
 
-  components: { BaseSelect, BaseBadge, DataTable, SkeletonLoader, ErrorState, Search, AlertTriangle },
+  components: { BaseSelect, BaseBadge, DataTable, SkeletonLoader, ErrorState, Search },
 
   data() {
     return {
@@ -59,7 +51,7 @@ export default {
   },
 
   computed: {
-    ...mapState(useCommitteeStore, ['teams', 'teamsLoading', 'teamsError', 'specializations']),
+    ...mapState(useSupervisorStore, ['teams', 'teamsLoading', 'teamsError', 'specializations']),
 
     specializationOptions() {
       return this.specializations.map((s) => ({ value: s.id, label: s.name }))
@@ -100,7 +92,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useCommitteeStore, ['fetchTeams', 'fetchRefData']),
+    ...mapActions(useSupervisorStore, ['fetchTeams', 'fetchRefData']),
 
     loadTeams() {
       return this.fetchTeams().catch(() => {})
