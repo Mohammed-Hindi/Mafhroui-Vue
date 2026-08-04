@@ -35,13 +35,13 @@
       <div class="flex items-center justify-between gap-3 px-4 h-16 shrink-0 border-b border-border-soft">
         <router-link :to="homeRoute" class="flex items-center gap-3 min-w-0">
           <span
-            class="grid place-items-center w-10 h-10 rounded-md shrink-0 bg-gradient-to-bl from-primary-600 to-accent-500 text-white font-cairo font-extrabold"
+            class="grid place-items-center w-10 h-10 rounded-md shrink-0 bg-gradient-to-bl from-primary-600 to-accent-500 text-white"
           >
-            م
+            <GraduationCap :size="20" />
           </span>
           <span class="min-w-0">
-            <span class="block font-cairo font-bold text-h4 text-text-900 truncate">مشاريع التخرج</span>
-            <span class="block text-label text-text-400 truncate">{{ roleLabel }}</span>
+            <span class="block font-cairo font-bold text-h4 text-text-900 truncate">{{ appName }}</span>
+            <span class="block text-label text-text-400 truncate">{{ appDescription }}</span>
           </span>
         </router-link>
 
@@ -110,7 +110,7 @@
           </span>
           <span class="min-w-0 flex-1">
             <span class="block text-body-sm font-semibold text-text-900 truncate">{{ userName || '—' }}</span>
-            <span class="block text-label text-text-400 truncate">{{ userEmail }}</span>
+            <span class="block text-label text-text-400 truncate">{{ roleLabel }}</span>
           </span>
         </div>
 
@@ -129,16 +129,16 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { X, LogOut } from 'lucide-vue-next'
+import { X, LogOut, GraduationCap } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
-import { SIDEBAR_BREAKPOINT } from '@/utils/constants'
+import { SIDEBAR_BREAKPOINT, APP_NAME, APP_DESCRIPTION } from '@/utils/constants'
 import { initials } from '@/utils/formatters'
 
 export default {
   name: 'AppSidebar',
 
-  components: { X, LogOut },
+  components: { X, LogOut, GraduationCap },
 
   props: {
     /**
@@ -163,7 +163,15 @@ export default {
 
   computed: {
     ...mapState(useUiStore, ['sidebarOpen', 'isDesktop']),
-    ...mapState(useAuthStore, ['userName', 'userEmail', 'homeRoute']),
+    ...mapState(useAuthStore, ['userName', 'homeRoute']),
+
+    appName() {
+      return APP_NAME
+    },
+
+    appDescription() {
+      return APP_DESCRIPTION
+    },
 
     /** توحيد الشكل: عناصر مباشرة → مجموعة واحدة بلا عنوان */
     normalizedGroups() {

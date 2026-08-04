@@ -3,11 +3,13 @@ import { authGuard, titleGuard } from './guards'
 
 import landingRoutes from './routes/landing.routes'
 import authRoutes from './routes/auth.routes'
+import committeeRoutes from './routes/committee.routes'
 import supervisorRoutes from './routes/supervisor.routes'
 
 const routes = [
   ...landingRoutes,
   ...authRoutes,
+  ...committeeRoutes,
   ...supervisorRoutes,
   {
     path: '/403',

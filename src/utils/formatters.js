@@ -73,13 +73,8 @@ export function truncate(text, length = 60) {
   return text.length > length ? `${text.slice(0, length).trimEnd()}…` : text
 }
 
-/** الأحرف الأولى للاسم — تُستخدم بالأفاتار */
+/** الحرف الأول من الاسم — يُستخدم بالأفاتار في كل الصفحات */
 export function initials(fullName) {
   if (!fullName) return '؟'
-  return fullName
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part.charAt(0))
-    .join('')
+  return fullName.trim().charAt(0)
 }
