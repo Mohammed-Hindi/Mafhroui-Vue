@@ -21,6 +21,7 @@ export const NAV_ITEMS_BY_ROLE = {
     { label: 'الفرق', to: '/committee/teams', icon: Users },
     { label: 'الأعضاء', to: '/committee/members', icon: User },
     { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList },
+    { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock },
     { label: 'أرشيف المشاريع', to: '/committee/project-archive', icon: FileCheck },
     { label: 'نسبة تقدّم المشاريع', to: '/committee/progress', icon: TrendingUp },
     { label: 'إضافة لجنة الإشراف', to: '/committee/add-committee', icon: UserPlus },
@@ -28,8 +29,7 @@ export const NAV_ITEMS_BY_ROLE = {
   ],
 
   [ROLES.SUPERVISOR]: [
-    { label: 'لوحة المعلومات', to: '/supervisor', icon: LayoutDashboard, exact: true },
-    { label: 'الملف الشخصي', to: '/supervisor/profile', icon: UserCircle },
+    { label: 'الملف الشخصي', to: '/supervisor', icon: UserCircle, exact: true },
     { label: 'الفرق', to: '/supervisor/teams', icon: Users },
     { label: 'المقترح / التقرير النهائي', to: '/supervisor/proposals', icon: ClipboardList },
     { label: 'المهام (Kanban)', to: '/supervisor/tasks', icon: ListTodo },

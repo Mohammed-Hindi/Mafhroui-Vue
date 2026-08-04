@@ -41,7 +41,7 @@ export default [
       {
         path: 'appointments',
         name: 'committee-appointments',
-        component: () => import('@/views/PlaceholderPage.vue'),
+        component: () => import('@/views/committee/AppointmentsPage.vue'),
         meta: { title: 'مواعيد المناقشات' }
       },
       {
