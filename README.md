@@ -1,6 +1,6 @@
 # منصة إدارة مشاريع التخرج — الواجهة الأمامية
 
-لوحات تحكم عربية RTL لإدارة دورة حياة مشاريع التخرج: من تقديم المقترح، إلى توزيع المشرفين، إلى متابعة التسليمات والتقييم.
+لوحة تحكم عربية RTL لمشرف مشاريع التخرج (فرق، مقترحات، مهام، اجتماعات، مواعيد مناقشات، أرشيف، نسبة تقدّم)، بالإضافة للصفحة العامة وتسجيل الدخول.
 
 ## التقنيات
 
@@ -9,8 +9,8 @@
 | Vue 3 (**Options API حصريًا**) | إطار الواجهة |
 | Vite 5 | أداة البناء وخادم التطوير |
 | Vue Router 4 | التوجيه + حراسة الأدوار |
-| Pinia | إدارة الحالة (عبر `mapState` / `mapActions` فقط) |
-| Axios | طبقة الشبكة عبر instance مركزي واحد |
+| Pinia (composition-style stores) | إدارة الحالة، تُستهلك بالمكوّنات عبر `mapState` / `mapActions` |
+| Axios | طبقة الشبكة عبر instance مركزي واحد (`services/api.js`) — تستهلكها فقط صفحات المصادقة والصفحة العامة |
 | Tailwind CSS 3 | التنسيق، مربوط بمتغيرات `design-tokens.css` |
 | lucide-vue-next | الأيقونات |
 
@@ -18,7 +18,7 @@
 
 ```bash
 npm install
-cp .env.example .env      # ثم عدّلي VITE_API_BASE_URL
+cp .env.example .env
 npm run dev               # http://localhost:5173
 npm run build             # نسخة الإنتاج في dist/
 npm run preview           # معاينة نسخة الإنتاج
@@ -29,48 +29,60 @@ npm run lint              # فحص وإصلاح الكود
 
 | المتغير | الوصف |
 |---|---|
-| `VITE_API_BASE_URL` | عنوان الـ API الأساسي، مثال: `http://localhost:8000/api` |
-| `VITE_APP_NAME` | اسم التطبيق المعروض بعنوان التبويب |
+| `VITE_APP_NAME` | اسم التطبيق المعروض بعنوان التبويب (`router/guards.js`) |
+
+`services/api.js` يهاردكود baseURL الباك إند مباشرة — لا متغيّر بيئة له حاليًا.
+
+## حالة الاتصال بالباك إند
+
+| القسم | الحالة |
+|---|---|
+| `views/auth/*` (تسجيل الدخول، الدعوة، تغيير كلمة المرور) | متصل بباك إند حقيقي عبر `stores/auth.store.js` |
+| `views/landing/*` (الصفحة العامة) | جزئي — `fetchFeaturedProjects` حقيقي، الباقي fallback على بيانات demo محلية (`utils/demoData.js`) لعدم توفّر endpoints عامة |
+| `views/supervisor/*` (لوحة المشرف بكل صفحاتها العشر) | **بيانات محلية بالكامل (placeholder)** — صفر اتصال API. `stores/supervisor.store.js` يبني/يعدّل البيانات بالذاكرة فقط |
+
+عند ربط لوحة المشرف بباك إند حقيقي لاحقًا: التعديل يقتصر على `stores/supervisor.store.js` (استبدال البيانات الثابتة بنداءات Axios) دون لمس أي `view` أو قالب.
 
 ## قواعد المشروع الملزِمة
 
-1. **Options API فقط** — ممنوع `<script setup>` أو `ref/reactive/computed/onMounted` من `vue`. الترتيب الثابت داخل كل مكوّن: `name → components → props → emits → data → computed → watch → created → mounted → beforeUnmount → methods`.
-2. **Pinia عبر الـ helpers فقط** — `mapState` / `mapActions` / `mapWritableState`. ممنوع `useStore()` مباشرة داخل مكوّن.
-3. **المنطق المشترك mixins وليس composables** — في `src/mixins/`.
-4. **صفر قيم مكتوبة يدويًا** — كل لون/مسافة/ظل/زاوية عبر كلاس Tailwind مرتبط بمتغير في `design-tokens.css`.
-5. **صفر بيانات ثابتة** — كل البيانات عبر Pinia action تستدعي Axios، مع عرض حالات `loading` / `error` / `empty`.
-6. **كل نداء شبكة** يحمل تعليق `// TODO API` يوضّح method + endpoint + شكل الـ body والـ response.
-7. **تنظيف الـ listeners** — أي listener يُضاف في `mounted()` يُزال في `beforeUnmount()`.
-8. **RTL و Responsive** على كل نقاط الكسر، في كل صفحة بلا استثناء.
+1. **Options API فقط** بكل views وcomponents — ممنوع `<script setup>`. الترتيب الثابت: `name → components → props → emits → data → computed → watch → created → mounted → beforeUnmount → methods`.
+2. **Pinia عبر الـ helpers فقط** — `mapState` / `mapActions`. الاستثناء الوحيد لـ Composition API بكامل المشروع: `composables/useClickOutside.js` (أداة صغيرة عامة) وتعريف الـ stores نفسها (Pinia setup-style).
+3. **صفر قيم مكتوبة يدويًا** — كل لون/مسافة/ظل/زاوية عبر كلاس Tailwind مرتبط بمتغير في `design-tokens.css`.
+4. **RTL و Responsive** على كل نقاط الكسر، في كل صفحة بلا استثناء.
+5. **تنظيف الـ listeners** — أي listener يُضاف في `mounted()` يُزال في `beforeUnmount()`.
 
 ## بنية المجلدات
 
 ```
 src/
 ├── components/
-│   ├── layout/     AppSidebar · AppTopbar · AppFooter
-│   ├── ui/         مكوّنات أساسية معاد استخدامها (Base*, DataTable, Modal…)
-│   ├── shared/     مكوّنات أعمال مشتركة (SemesterSelect, NotificationBell…)
-│   └── landing/    أقسام الصفحة التسويقية
-├── layouts/        قالب لكل دور + Auth + Landing
-├── views/          الصفحات، مقسّمة بمجلد لكل دور
-├── stores/         متاجر Pinia، مجلد فرعي لكل دور
-├── services/       api.js (Axios + interceptors) + endpoints/
-├── router/         index.js · guards.js · routes/ لكل دور
-├── mixins/         منطق مشترك بأسلوب Options API
-├── utils/          constants · formatters · validators
+│   ├── layout/     AppSidebar · AppTopbar (تخدم كل الأدوار عبر props)
+│   ├── ui/         مكوّنات أساسية معاد استخدامها (Base*, DataTable, Modal, Pagination…)
+│   ├── shared/     مكوّنات أعمال مشتركة (TaskBoard, MeetingsBoard, AssistantChat, SemesterSelect…)
+│   ├── auth/       مكوّنات نماذج تسجيل الدخول
+│   ├── landing/    أقسام الصفحة التسويقية
+│   └── icons/      AppIcon (غلاف أيقونات موحّد)
+├── layouts/        DashboardLayout (موحّد لكل الأدوار) · AuthLayout · LandingLayout
+├── views/          auth/ · landing/ · supervisor/ + صفحات جذر (403/404/Placeholder)
+├── stores/         auth · landing · supervisor · notifications · ui (Pinia setup-style)
+├── services/       api.js (Axios + interceptors)
+├── router/         index.js · guards.js · routes/{auth,landing,supervisor}.routes.js
+├── utils/          constants · navConfig (عناصر الشريط الجانبي لكل دور) · formatters · validators
+├── composables/    useClickOutside
+├── directives/     reveal (أنيميشن ظهور عناصر الصفحة العامة)
 └── styles/         design-tokens.css · main.css
 ```
 
-## الشريط الجانبي المتجاوب
+## الشريط الجانبي والـ Layout الموحّد
 
-`AppSidebar.vue` مكوّن واحد يخدم اللوحات الخمس (يستقبل `navItems` و`roleLabel`):
+`DashboardLayout.vue` قالب واحد يخدم كل الأدوار (حاليًا: المشرف فقط) — يقرأ دور المستخدم من `auth.store` ويشتق `navItems`/`roleLabel` من `utils/navConfig.js`. لا يوجد layout منفصل لكل دور.
 
+`AppSidebar.vue`:
 - **≥ 1024px:** ثابت بالتخطيط، بلا Drawer ولا Overlay.
 - **< 1024px:** Drawer منزلق **من اليمين** (RTL) فوق المحتوى، مع Overlay داكن.
 - **أربع طرق للإغلاق:** الضغط على الـ Overlay · زر ✕ داخل الشريط · زر ☰ في الـ Topbar (Toggle) · مفتاح Escape.
 - **إغلاق تلقائي** عند تغيّر المسار، ومنع تمرير الصفحة خلفه وهو مفتوح.
 
-## سير العمل
+## صفحات لوحة المشرف (`/supervisor/*`)
 
-الصفحات تُبنى **واحدة تلو الأخرى**: وصف الصفحة (المحتوى، الحقول، الجداول، التفاعلات، مرجع التصميم) ← بناء View + Store + Endpoint ← مراجعة ← الصفحة التالية.
+الملف الشخصي، الفرق، المقترح/التقرير النهائي، المهام (Kanban)، الاجتماعات، مواعيد المناقشات، أرشيف المشاريع، نسبة تقدّم الفرق، المساعد الآلي — بالإضافة للوحة المعلومات الرئيسية.
