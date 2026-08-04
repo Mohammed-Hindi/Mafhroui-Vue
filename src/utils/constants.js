@@ -1,3 +1,7 @@
+/** هوية المنصة — اسم موحّد ووصف موحّد تُستهلَك بكل الصفحات (السايدبار، صفحات الدخول، اللاندنج) */
+export const APP_NAME = 'مسار'
+export const APP_DESCRIPTION = 'منصة إدارة مشاريع التخرج'
+
 /** أدوار المستخدمين — المصدر الوحيد للحقيقة، تُستخدم بالراوتر والـ guards والـ stores */
 export const ROLES = {
   COMMITTEE: 'committee',

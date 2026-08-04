@@ -6,10 +6,10 @@
           <span class="grid place-items-center w-[34px] h-[34px] rounded-sm bg-gradient-to-bl from-primary-500 to-accent-500 text-white">
             <AppIcon name="graduation" :size="17" :stroke-width="2.2" />
           </span>
-          <span class="font-cairo font-extrabold text-[14.5px] text-white">منصة إدارة مشاريع التخرج</span>
+          <span class="font-cairo font-extrabold text-[14.5px] text-white">{{ APP_NAME }}</span>
         </router-link>
         <p class="max-w-[300px] text-[12.5px] leading-[1.9]">
-          منصة متقدمة لإدارة ومتابعة مشاريع التخرج في تخصصات البرمجيات والوسائط، تقدم تجربة استخدام عربية احترافية بواجهة حديثة.
+          {{ APP_DESCRIPTION }}
         </p>
       </div>
 
@@ -55,7 +55,7 @@
     </div>
 
     <p class="text-center py-5 text-label text-white/50">
-      © {{ year }} منصة إدارة مشاريع التخرج — جميع الحقوق محفوظة
+      © {{ year }} {{ APP_NAME }} — جميع الحقوق محفوظة
     </p>
   </footer>
 </template>
@@ -63,7 +63,7 @@
 <script setup>
 import { computed } from 'vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
-import { CONTACT } from '@/utils/constants'
+import { CONTACT, APP_NAME, APP_DESCRIPTION } from '@/utils/constants'
 
 const contact = CONTACT
 const year = computed(() => new Date().getFullYear())

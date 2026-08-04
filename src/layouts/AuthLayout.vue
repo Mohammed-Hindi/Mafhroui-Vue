@@ -8,7 +8,7 @@
           <span class="grid place-items-center w-[42px] h-[42px] rounded-md bg-gradient-to-bl from-primary-600 to-accent-500 text-white shadow-[0_6px_14px_-4px_rgba(37,99,235,.4)] shrink-0">
             <AppIcon name="graduation" :size="21" :stroke-width="2.2" />
           </span>
-          <span class="font-cairo font-extrabold text-h4 text-text-900">منصة إدارة مشاريع التخرج</span>
+          <span class="font-cairo font-extrabold text-h4 text-text-900">{{ APP_NAME }}</span>
         </router-link>
 
         <router-view />
@@ -20,9 +20,13 @@
 <script>
 import AuthBrandPanel from '@/components/auth/AuthBrandPanel.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
+import { APP_NAME } from '@/utils/constants'
 
 export default {
   name: 'AuthLayout',
-  components: { AuthBrandPanel, AppIcon }
+  components: { AuthBrandPanel, AppIcon },
+  data() {
+    return { APP_NAME }
+  }
 }
 </script>

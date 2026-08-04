@@ -1,5 +1,5 @@
 import { useAuthStore } from '@/stores/auth.store'
-import { ROLE_HOME_ROUTE } from '@/utils/constants'
+import { ROLE_HOME_ROUTE, APP_NAME } from '@/utils/constants'
 
 /**
  * حارس عام واحد يغطي:
@@ -32,7 +32,7 @@ export async function authGuard(to) {
 
 /** عنوان التبويب لكل صفحة */
 export function titleGuard(to) {
-  const appName = import.meta.env.VITE_APP_NAME || 'منصة إدارة مشاريع التخرج'
+  const appName = import.meta.env.VITE_APP_NAME || APP_NAME
   document.title = to.meta.title ? `${to.meta.title} · ${appName}` : appName
 }
 
