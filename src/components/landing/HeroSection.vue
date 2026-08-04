@@ -5,7 +5,7 @@
       <div class="reveal order-2 lg:order-1">
         <span class="inline-flex items-center gap-2 mb-5 px-4 py-1.5 rounded-pill bg-surface border border-border shadow-card text-caption font-bold text-primary-700">
           <AppIcon name="graduation" :size="13" :stroke-width="2.2" />
-          منصة إدارة مشاريع التخرج — الأكاديمية
+          {{ APP_NAME }} — الأكاديمية
         </span>
 
         <h1 class="font-cairo font-extrabold text-hero-sm sm:text-hero leading-[1.28] mb-5 text-text-900">
@@ -90,6 +90,7 @@
 import { storeToRefs } from 'pinia'
 import { useLandingStore } from '@/stores/landing.store'
 import { formatNumber } from '@/utils/formatters'
+import { APP_NAME } from '@/utils/constants'
 import AppIcon from '@/components/icons/AppIcon.vue'
 
 const landingStore = useLandingStore()

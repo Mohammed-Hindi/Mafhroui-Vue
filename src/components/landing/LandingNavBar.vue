@@ -12,7 +12,7 @@
         <span class="grid place-items-center w-[34px] h-[34px] rounded-sm bg-gradient-to-bl from-primary-600 to-accent-500 text-white shrink-0">
           <AppIcon name="graduation" :size="17" :stroke-width="2.2" />
         </span>
-        <span class="hidden sm:block">منصة إدارة مشاريع التخرج</span>
+        <span class="hidden sm:block">{{ APP_NAME }}</span>
       </router-link>
 
       <div class="flex items-center gap-2.5">
@@ -41,6 +41,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useUiStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
+import { APP_NAME } from '@/utils/constants'
 import AppIcon from '@/components/icons/AppIcon.vue'
 
 const uiStore = useUiStore()

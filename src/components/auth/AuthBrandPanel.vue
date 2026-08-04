@@ -8,7 +8,7 @@
       <span class="grid place-items-center w-12 h-12 rounded-md bg-white/15 backdrop-blur-sm shrink-0">
         <AppIcon name="graduation" :size="24" :stroke-width="2.2" />
       </span>
-      <h1 class="font-cairo font-extrabold text-[16px] text-white">منصة إدارة مشاريع التخرج</h1>
+      <h1 class="font-cairo font-extrabold text-[16px] text-white">{{ APP_NAME }}</h1>
     </div>
 
     <div class="relative z-10 max-w-[460px]">
@@ -47,6 +47,7 @@
 import { mapState, mapActions } from 'pinia'
 import { useLandingStore } from '@/stores/landing.store'
 import { formatNumber } from '@/utils/formatters'
+import { APP_NAME } from '@/utils/constants'
 import AppIcon from '@/components/icons/AppIcon.vue'
 
 export default {
@@ -56,6 +57,7 @@ export default {
 
   data() {
     return {
+      APP_NAME,
       /* محتوى تسويقي ثابت — لا يُجلب من الـ API */
       features: [
         { icon: 'teams', text: 'إدارة الفرق والمشرفين والطلاب في مكان واحد' },
