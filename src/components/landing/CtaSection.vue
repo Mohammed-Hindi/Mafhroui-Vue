@@ -8,7 +8,7 @@
           جاهز لانطلاق رحلة تخرجك؟
         </h2>
         <p class="text-[13.5px] text-text-600 mb-7">
-          انضم الآن إلى منصة إدارة مشاريع التخرج وابدأ إدارة مشروع تخرجك باحترافية
+          انضم الآن إلى {{ APP_NAME }} وابدأ إدارة مشروع تخرجك باحترافية
         </p>
 
         <div class="flex flex-wrap gap-3.5 justify-center">
@@ -34,7 +34,7 @@
 
 <script setup>
 import AppIcon from '@/components/icons/AppIcon.vue'
-import { CONTACT } from '@/utils/constants'
+import { CONTACT, APP_NAME } from '@/utils/constants'
 
 // استخدام القيمة المباشرة مع fallback أمان
 const EMAIL = CONTACT?.EMAIL || 'academy@ucas.edu.ps'
