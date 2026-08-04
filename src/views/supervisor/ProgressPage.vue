@@ -1,13 +1,5 @@
 <template>
   <div>
-    <div class="flex items-start gap-3 mb-6 p-4 rounded-lg bg-warning-bg border border-warning-border">
-      <AlertTriangle :size="18" class="text-warning shrink-0 mt-0.5" />
-      <p class="text-caption text-warning-text leading-relaxed">
-        لا يوجد استدعاء جماعي لنسبة تقدّم كل الفرق — هذه الصفحة تستدعي
-        <code class="bg-surface px-1.5 py-0.5 rounded-sm">GET /teams/{id}/progress</code> لكل فريق على حدة، فقد تستغرق ثوانٍ إضافية مع كثرة الفرق.
-      </p>
-    </div>
-
     <div class="flex items-center justify-between gap-4 mb-6">
       <div v-if="!progressLoading && averagePercent !== null" class="bg-surface rounded-lg border border-border shadow-card px-6 py-4 flex items-center gap-4">
         <span class="grid place-items-center w-11 h-11 rounded-pill bg-primary-50 text-primary-600"><TrendingUp :size="20" /></span>
@@ -41,8 +33,8 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Search, AlertTriangle, TrendingUp, Download } from 'lucide-vue-next'
-import { useCommitteeStore } from '@/stores/committee.store'
+import { Search, TrendingUp, Download } from 'lucide-vue-next'
+import { useSupervisorStore } from '@/stores/supervisor.store'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import DataTable from '@/components/ui/DataTable.vue'
@@ -52,7 +44,7 @@ import ErrorState from '@/components/ui/ErrorState.vue'
 export default {
   name: 'ProgressPage',
 
-  components: { BaseSelect, BaseButton, DataTable, SkeletonLoader, ErrorState, Search, AlertTriangle, TrendingUp },
+  components: { BaseSelect, BaseButton, DataTable, SkeletonLoader, ErrorState, Search, TrendingUp },
 
   data() {
     return {
@@ -71,7 +63,7 @@ export default {
   },
 
   computed: {
-    ...mapState(useCommitteeStore, ['teams', 'teamsLoading', 'teamsError', 'teamProgress', 'progressLoading', 'progressError', 'specializations']),
+    ...mapState(useSupervisorStore, ['teams', 'teamsLoading', 'teamsError', 'teamProgress', 'progressLoading', 'progressError', 'specializations']),
 
     specializationOptions() {
       return this.specializations.map((s) => ({ value: s.id, label: s.name }))
@@ -111,7 +103,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useCommitteeStore, ['fetchTeams', 'fetchRefData', 'fetchAllTeamsProgress', 'exportProgress']),
+    ...mapActions(useSupervisorStore, ['fetchTeams', 'fetchRefData', 'fetchAllTeamsProgress', 'exportProgress']),
 
     loadAll() {
       this.fetchAllTeamsProgress().catch(() => {})

@@ -1,13 +1,5 @@
 <template>
   <div>
-    <div class="flex items-start gap-3 mb-6 p-4 rounded-lg bg-warning-bg border border-warning-border">
-      <AlertTriangle :size="18" class="text-warning shrink-0 mt-0.5" />
-      <p class="text-caption text-warning-text leading-relaxed">
-        الباك إند يدعم إنشاء موعد وعرض القائمة وتصديرها فقط — لا يوجد تعديل أو حذف لموعد بعد إنشائه، ولا سجل متعدد الطلاب
-        (رقم واتساب واحد فقط لكل موعد).
-      </p>
-    </div>
-
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <BaseButton :icon="Plus" @click="openCreate">تسجيل موعد مناقشة جديد</BaseButton>
       <BaseButton variant="outline" :icon="Download" :loading="exporting" @click="exportFile">تصدير Excel</BaseButton>
@@ -51,8 +43,8 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Plus, Download, MessageCircle, AlertTriangle, Send } from 'lucide-vue-next'
-import { useCommitteeStore } from '@/stores/committee.store'
+import { Plus, Download, MessageCircle, Send } from 'lucide-vue-next'
+import { useSupervisorStore } from '@/stores/supervisor.store'
 import { formatDate } from '@/utils/formatters'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -70,7 +62,7 @@ function digitsOnly(value) {
 export default {
   name: 'AppointmentsPage',
 
-  components: { BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, DataTable, MessageCircle, AlertTriangle },
+  components: { BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, DataTable, MessageCircle },
 
   data() {
     return {
@@ -93,7 +85,7 @@ export default {
   },
 
   computed: {
-    ...mapState(useCommitteeStore, ['discussions', 'discussionsLoading', 'discussionsError', 'departments', 'specializations', 'teams']),
+    ...mapState(useSupervisorStore, ['discussions', 'discussionsLoading', 'discussionsError', 'departments', 'specializations', 'teams']),
 
     departmentOptions() {
       return this.departments.map((d) => ({ value: d.id, label: d.name }))
@@ -113,7 +105,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useCommitteeStore, ['fetchDiscussions', 'fetchRefData', 'fetchTeams', 'createDiscussion', 'exportDiscussions']),
+    ...mapActions(useSupervisorStore, ['fetchDiscussions', 'fetchRefData', 'fetchTeams', 'createDiscussion', 'exportDiscussions']),
     formatDate,
 
     loadDiscussions() {

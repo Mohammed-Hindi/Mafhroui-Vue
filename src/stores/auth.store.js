@@ -19,8 +19,6 @@ export const useAuthStore = defineStore('auth', () => {
   const homeRoute = computed(() => {
     const role = user.value?.role
     switch (role) {
-      case 'super_admin':
-        return { name: 'super-admin-dashboard' }
       case 'committee':
         return { name: 'committee-dashboard' }
       case 'supervisor':
