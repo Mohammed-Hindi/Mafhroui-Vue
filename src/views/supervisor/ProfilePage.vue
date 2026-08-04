@@ -3,21 +3,21 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       <!-- بيانات المشرف -->
       <div class="bg-surface rounded-lg border border-border shadow-card p-6">
-        <div class="flex items-center gap-4 mb-6">
+        <div class="flex items-center gap-4 mb-6 flex-wrap">
           <span class="grid place-items-center w-16 h-16 rounded-pill shrink-0 text-white font-cairo font-black text-h2" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
             {{ initials }}
           </span>
-          <div>
+          <div class="min-w-0">
             <span class="inline-block text-label font-bold text-primary-700 bg-primary-50 px-3 py-1 rounded-pill mb-1.5">{{ profile.roleLabel }}</span>
-            <div class="text-h3 font-bold text-text-900">{{ profile.name }}</div>
-            <div class="text-caption text-text-400">{{ profile.subRole }}</div>
+            <div class="text-h3 font-bold text-text-900 truncate">{{ profile.name }}</div>
+            <div class="text-caption text-text-400 truncate">{{ profile.subRole }}</div>
           </div>
         </div>
 
         <div class="flex flex-col">
           <div v-for="row in infoRows" :key="row.k" class="flex items-center justify-between gap-4 py-3 border-b border-border-soft last:border-b-0 last:pb-0">
-            <span class="text-caption text-text-400">{{ row.k }}</span>
-            <span class="text-body-sm font-bold text-text-900">{{ row.v }}</span>
+            <span class="text-caption text-text-400 shrink-0">{{ row.k }}</span>
+            <span class="text-body-sm font-bold text-text-900 text-end break-words">{{ row.v }}</span>
           </div>
         </div>
       </div>
@@ -34,7 +34,7 @@
             v-for="team in visibleTeams" :key="team.id"
             class="border border-border-soft rounded-md p-4 transition-shadow duration-fast hover:shadow-card"
           >
-            <div class="flex items-center justify-between gap-3 mb-2">
+            <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
               <span class="font-bold text-body-sm text-text-900">{{ team.name }}</span>
               <BaseBadge :variant="team.status === 'completed' ? 'success' : team.status === 'proposed' ? 'warning' : 'info'" dot>{{ statusLabel(team.status) }}</BaseBadge>
             </div>

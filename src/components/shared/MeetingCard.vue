@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-surface rounded-lg border border-border shadow-card p-4 flex flex-col gap-2.5">
+  <div class="h-full bg-surface rounded-lg border border-border shadow-card p-4 flex flex-col gap-2.5">
     <div class="flex items-start justify-between gap-2">
       <h4 class="font-cairo font-bold text-body-sm text-text-900">{{ meeting.title }}</h4>
       <span
@@ -12,10 +12,10 @@
       </span>
     </div>
 
-    <span v-if="meeting.team" class="inline-flex items-center gap-1.5 self-start text-label font-bold text-primary-700 bg-primary-50 px-2.5 py-1 rounded-pill">
-      <Users :size="12" />
+    <div v-if="meeting.team" class="flex items-center justify-end gap-1.5 text-label font-bold text-primary-700 bg-primary-50 px-3 py-1.5 rounded-sm">
       {{ meeting.team }}
-    </span>
+      <Users :size="12" />
+    </div>
 
     <div class="flex items-center gap-1.5 text-caption text-text-600">
       <CalendarDays :size="13" class="text-text-400 shrink-0" />
@@ -30,7 +30,7 @@
       {{ meeting.notes }}
     </div>
 
-    <div class="flex items-center gap-2 mt-1.5 pt-2.5 border-t border-border-soft">
+    <div class="flex items-center gap-2 mt-auto pt-2.5 border-t border-border-soft">
       <a
         v-if="meeting.link"
         :href="`https://${meeting.link}`"

@@ -1,5 +1,13 @@
 <template>
   <div>
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <BaseButton :icon="Plus" @click="openAddModal">تسجيل موعد مناقشة جديد</BaseButton>
+      <div class="flex flex-wrap gap-2">
+        <BaseButton variant="outline" :icon="Upload" @click="importPlaceholder">استيراد من Excel</BaseButton>
+        <BaseButton variant="outline" :icon="Download" @click="exportCsv">تصدير Excel</BaseButton>
+      </div>
+    </div>
+
     <div class="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-lg bg-surface border border-border shadow-card">
       <div class="relative flex-1 min-w-[220px]">
         <Search :size="16" class="pointer-events-none absolute top-1/2 -translate-y-1/2 start-3 text-text-400" />
@@ -134,8 +142,8 @@
       <Pagination :current-page="page" :last-page="totalPages" :total="filteredGroups.length" @change="page = $event" />
     </div>
 
-    <!-- تعديل موعد مناقشة -->
-    <BaseModal v-model="apptModal" :title="`تعديل موعد مجموعة ${apptForm.grp}`" description="سيُرسل إشعار للطالب عبر واتساب والبريد فور الحفظ" size="lg">
+    <!-- تسجيل / تعديل موعد مناقشة -->
+    <BaseModal v-model="apptModal" :title="isEditing ? `تعديل موعد مجموعة ${apptForm.grp}` : 'تسجيل موعد مناقشة جديد'" description="سيُرسل إشعار للطالب عبر واتساب والبريد فور الحفظ" size="lg">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <BaseInput v-model="apptForm.grp" label="رقم المجموعة" placeholder="مثال: 31" />
         <BaseInput v-model="apptForm.proj" label="اسم المشروع" placeholder="اسم مشروع التخرج" />
@@ -146,10 +154,14 @@
         <BaseInput v-model="apptForm.date" type="date" label="تاريخ المناقشة" />
         <BaseInput v-model="apptForm.time" type="time" label="موعد المناقشة" />
         <BaseInput v-model="apptForm.committee" label="لجنة المناقشة" placeholder="مثال: د. سارة الحربي، د. يوسف المحطاني" class="sm:col-span-2" />
+        <template v-if="!isEditing">
+          <BaseInput v-model="apptForm.studentName" label="اسم الطالب (الأول)" placeholder="اسم أول طالب في المجموعة" />
+          <BaseInput v-model="apptForm.studentWhats" label="رقم واتس الطالب" placeholder="مثال: 966501234567" />
+        </template>
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="apptModal = false">إلغاء</BaseButton>
-        <BaseButton :icon="Check" @click="saveAppointment">حفظ التعديلات</BaseButton>
+        <BaseButton :icon="Check" @click="saveAppointment">{{ isEditing ? 'حفظ التعديلات' : 'حفظ وإرسال البيانات' }}</BaseButton>
       </template>
     </BaseModal>
 
@@ -194,7 +206,7 @@
 </template>
 
 <script>
-import { Plus, Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, MapPin, Clock, Users } from 'lucide-vue-next'
+import { Plus, Upload, Download, Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, MapPin, Clock, Users } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -212,17 +224,17 @@ function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
 }
 
-const emptyApptForm = () => ({ grp: '', proj: '', sup: '', dept: '', spec: '', place: '', date: '', time: '', committee: '' })
+const emptyApptForm = () => ({ grp: '', proj: '', sup: '', dept: '', spec: '', place: '', date: '', time: '', committee: '', studentName: '', studentWhats: '' })
 const emptyStudentForm = () => ({ name: '', whats: '', mail: '' })
 
 export default {
-  name: 'SupervisorAppointmentsPage',
+  name: 'CommitteeAppointmentsPage',
 
   components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, MapPin, Clock, Users, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, Pagination },
 
   data() {
     return {
-      Plus, Check, Trash2,
+      Plus, Upload, Download, Check, Trash2,
       search: '',
       deptFilter: '',
       specFilter: '',
@@ -230,6 +242,7 @@ export default {
       openStudentKeys: [],
 
       apptModal: false,
+      isEditing: false,
       editTargetId: null,
       apptForm: emptyApptForm(),
 
@@ -247,7 +260,7 @@ export default {
       deleteLabel: '',
       deleteReason: '',
 
-      /* بيانات ثابتة — بانتظار GET /supervisor/appointments */
+      /* بيانات ثابتة — بانتظار GET /committee/appointments */
       groups: [
         {
           id: 'A1', grp: '31', proj: 'منصة إدارة مشاريع التخرج', sup: 'د. محمد العتيبي', dept: 'قسم البرمجيات', spec: 'هندسة حاسوب',
@@ -274,31 +287,6 @@ export default {
           students: [
             { name: 'مروان الجهني', whats: '962790000002', mail: 'marwan.jahni@academy.edu.sa' },
             { name: 'نواف الحربي', whats: '962790000015', mail: 'nawaf.harbi@academy.edu.sa' }
-          ]
-        },
-        {
-          id: 'A4', grp: '61', proj: 'نظام تحليل بيانات جامعي', sup: 'د. أحمد الشريف', dept: 'قسم البرمجيات', spec: 'هندسة حاسوب',
-          place: 'قاعة المناقشات 2', date: '2027-06-22', time: '11:00', committee: 'د. سلمى نصار، د. أحمد النبريص',
-          students: [
-            { name: 'عبدالله الجهني', whats: '962790000016', mail: 'abdullah.jahni@academy.edu.sa' },
-            { name: 'أحمد الحربي', whats: '962790000017', mail: 'ahmad.harbi@academy.edu.sa' }
-          ]
-        },
-        {
-          id: 'A5', grp: '62', proj: 'منصة تسجيل حضور بالوجه', sup: 'د. سلمى نصار', dept: 'قسم البرمجيات', spec: 'نظم معلومات',
-          place: 'قاعة المناقشات 1', date: '2027-06-24', time: '13:00', committee: 'د. خالد الغامدي، د. فهد العتيبي، د. رنا الدوسري',
-          students: [
-            { name: 'نورة الدوسري', whats: '962790000018', mail: 'noura.dosari@academy.edu.sa' },
-            { name: 'عمر الجهني', whats: '962790000019', mail: 'omar.jahni@academy.edu.sa' }
-          ]
-        },
-        {
-          id: 'A6', grp: '63', proj: 'أداة كشف الثغرات الأمنية', sup: 'د. أحمد النبريص', dept: 'قسم البرمجيات', spec: 'أمن سيبراني',
-          place: 'قاعة المناقشات 2', date: '2027-06-26', time: '10:30', committee: 'د. محمد العتيبي، د. سارة الحربي',
-          students: [
-            { name: 'هدى الجهني', whats: '962790000020', mail: 'huda.jahni@academy.edu.sa' },
-            { name: 'رامي الحربي', whats: '962790000021', mail: 'rami.harbi@academy.edu.sa' },
-            { name: 'مني الحربي', whats: '962790000022', mail: 'muna.harbi@academy.edu.sa' }
           ]
         }
       ],
@@ -371,9 +359,16 @@ export default {
       this.openStudentKeys = this.isStudentOpen(groupId, idx) ? this.openStudentKeys.filter((k) => k !== key) : [...this.openStudentKeys, key]
     },
 
+    openAddModal() {
+      this.isEditing = false
+      this.editTargetId = null
+      this.apptForm = emptyApptForm()
+      this.apptModal = true
+    },
     openEditGroup(group) {
+      this.isEditing = true
       this.editTargetId = group.id
-      this.apptForm = { grp: group.grp, proj: group.proj, sup: group.sup, dept: group.dept, spec: group.spec, place: group.place, date: group.date, time: group.time, committee: group.committee }
+      this.apptForm = { grp: group.grp, proj: group.proj, sup: group.sup, dept: group.dept, spec: group.spec, place: group.place, date: group.date, time: group.time, committee: group.committee, studentName: '', studentWhats: '' }
       this.apptModal = true
     },
     saveAppointment() {
@@ -383,10 +378,26 @@ export default {
         return
       }
 
-      const group = this.groups.find((g) => g.id === this.editTargetId)
-      if (group) Object.assign(group, { grp: f.grp, proj: f.proj, sup: f.sup, dept: f.dept, spec: f.spec, place: f.place, date: f.date, time: f.time, committee: f.committee })
+      if (this.isEditing) {
+        const group = this.groups.find((g) => g.id === this.editTargetId)
+        if (group) Object.assign(group, { grp: f.grp, proj: f.proj, sup: f.sup, dept: f.dept, spec: f.spec, place: f.place, date: f.date, time: f.time, committee: f.committee })
+        this.apptModal = false
+        this.$toast?.success('تم حفظ التعديلات')
+        return
+      }
+
+      if (!f.studentName || !f.studentWhats) {
+        this.$toast?.error('يرجى تعبئة بيانات الطالب الأول')
+        return
+      }
+      const mail = `${f.studentName.split(' ')[0].toLowerCase()}@academy.edu.sa`
+      this.groups.push({
+        id: `A${this.groups.length + 1}`, grp: f.grp, proj: f.proj, sup: f.sup, dept: f.dept, spec: f.spec,
+        place: f.place, date: f.date, time: f.time, committee: f.committee,
+        students: [{ name: f.studentName, whats: f.studentWhats, mail }]
+      })
       this.apptModal = false
-      this.$toast?.success('تم حفظ التعديلات')
+      this.$toast?.success('تم تسجيل موعد المناقشة وإرسال البيانات')
     },
 
     openAddStudent(group) {
@@ -465,6 +476,25 @@ export default {
       const emails = this.groups.flatMap((g) => g.students.map((s) => s.mail))
       const url = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${encodeURIComponent(emails.join(','))}&su=${encodeURIComponent('تم حجز موعد مناقشتك')}`
       window.open(url, '_blank')
+    },
+
+    importPlaceholder() {
+      this.$toast?.info('استيراد من Excel — قريبًا')
+    },
+    exportCsv() {
+      const header = ['رقم المجموعة', 'اسم المشروع', 'المشرف', 'المكان', 'التاريخ', 'الوقت', 'لجنة المناقشة', 'اسم الطالب', 'الواتس', 'البريد']
+      const lines = [header]
+      this.groups.forEach((g) => {
+        g.students.forEach((s) => lines.push([g.grp, g.proj, g.sup, g.place, g.date, g.time, g.committee, s.name, s.whats, s.mail]))
+      })
+      const csv = lines.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\r\n')
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'مواعيد-المناقشات.csv'
+      link.click()
+      URL.revokeObjectURL(url)
     }
   }
 }
