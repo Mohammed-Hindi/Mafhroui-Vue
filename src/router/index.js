@@ -5,12 +5,14 @@ import landingRoutes from './routes/landing.routes'
 import authRoutes from './routes/auth.routes'
 import committeeRoutes from './routes/committee.routes'
 import supervisorRoutes from './routes/supervisor.routes'
+import teamLeaderRoutes from './routes/team-leader.routes'
 
 const routes = [
   ...landingRoutes,
   ...authRoutes,
   ...committeeRoutes,
   ...supervisorRoutes,
+  ...teamLeaderRoutes,
   {
     path: '/403',
     name: 'forbidden',

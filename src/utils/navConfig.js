@@ -38,5 +38,13 @@ export const NAV_ITEMS_BY_ROLE = {
     { label: 'أرشيف المشاريع', to: '/supervisor/project-archive', icon: FileCheck },
     { label: 'نسبة تقدّم الفرق', to: '/supervisor/progress', icon: TrendingUp },
     { label: 'المساعد الآلي', to: '/supervisor/assistant', icon: Bot }
+  ],
+
+  [ROLES.TEAM_LEADER]: [
+    { label: 'الملف الشخصي', to: '/team-leader', icon: UserCircle, exact: true },
+    { label: 'المقترح / التقرير النهائي', to: '/team-leader/proposal', icon: ClipboardList },
+    { label: 'المساعد الآلي', to: '/team-leader/assistant', icon: Bot },
+    { label: 'المهام (Kanban)', to: '/team-leader/tasks', icon: ListTodo },
+    { label: 'الاجتماعات', to: '/team-leader/meetings', icon: CalendarDays }
   ]
 }
