@@ -25,6 +25,17 @@
           <AppIcon :name="isDark ? 'sun' : 'moon'" :size="16" />
         </button>
 
+        <button
+          v-if="isAuthenticated"
+          type="button"
+          class="grid place-items-center w-[38px] h-[38px] rounded-pill border border-border bg-surface text-text-600 hover:-translate-y-px hover:text-error hover:border-error-bg transition-all duration-fast"
+          aria-label="تسجيل الخروج"
+          title="تسجيل الخروج"
+          @click="handleLogout"
+        >
+          <LogOut :size="16" />
+        </button>
+
         <router-link
           :to="loginTarget"
           class="flex items-center gap-2 h-10 px-5 rounded-pill bg-gradient-to-bl from-primary-600 to-primary-700 text-white font-bold text-caption shadow-[0_8px_18px_-8px_rgba(37,99,235,.5)] hover:-translate-y-px transition-transform duration-fast"
@@ -39,6 +50,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { LogOut } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { APP_NAME } from '@/utils/constants'
@@ -58,6 +70,10 @@ const loginTarget = computed(() => {
 
 const toggleTheme = () => {
   uiStore.toggleTheme()
+}
+
+const handleLogout = () => {
+  authStore.logout()
 }
 
 const handleScroll = () => {

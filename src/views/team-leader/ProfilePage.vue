@@ -2,7 +2,7 @@
   <div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
       <!-- بيانات الطالب -->
-      <div class="bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col">
+      <div class="reveal bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col transition-all duration-base hover:shadow-card-hover">
         <div class="flex items-center gap-3 mb-6">
           <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><User :size="18" /></span>
           <h3 class="text-h3 font-bold text-text-900">بيانات الطالب</h3>
@@ -30,7 +30,7 @@
       </div>
 
       <!-- فريقي -->
-      <div class="bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col">
+      <div class="reveal reveal-delay-1 bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col transition-all duration-base hover:shadow-card-hover">
         <div class="flex items-center gap-3 mb-6">
           <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><Users :size="18" /></span>
           <h3 class="text-h3 font-bold text-text-900">فريقي</h3>
@@ -59,7 +59,7 @@
           <div class="text-caption text-text-400 mb-2.5">أعضاء الفريق</div>
           <div class="flex flex-wrap gap-2">
             <span
-              v-for="m in team.members" :key="m.name"
+              v-for="m in teamMembers" :key="m.name"
               class="inline-flex items-center gap-1.5 text-caption font-semibold px-3 py-1.5 rounded-pill"
               :class="m.leader ? 'bg-warning-bg text-warning-text' : 'bg-border-soft text-text-700'"
             >
@@ -92,8 +92,8 @@
       </div>
 
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div v-for="stat in kanbanStats" :key="stat.key" class="bg-bg rounded-md border border-border-soft p-4 text-center">
-          <div class="font-cairo font-extrabold text-h3" :class="stat.colorClass">{{ stat.value }}</div>
+        <div v-for="stat in kanbanStats" :key="stat.key" class="group bg-bg rounded-md border border-border-soft p-4 text-center transition-all duration-fast hover:-translate-y-0.5 hover:bg-surface hover:shadow-card hover:border-primary-200">
+          <div class="font-cairo font-extrabold text-h3 transition-transform duration-fast group-hover:scale-110" :class="stat.colorClass">{{ stat.value }}</div>
           <div class="text-label text-text-600 mt-1">{{ stat.label }}</div>
         </div>
       </div>
@@ -140,6 +140,15 @@ export default {
   computed: {
     initials() {
       return initials(this.profile.name)
+    },
+
+    // يعكس علامة "قائد الفريق" فوق العضو الصحيح دائمًا بناءً على profile.isLeader بدل الاعتماد على قيمة ثابتة قد تتعارض معها
+    teamMembers() {
+      const otherLeaderName = this.team.members.find((m) => m.leader && m.name !== this.profile.name)?.name
+      return this.team.members.map((m) => ({
+        ...m,
+        leader: m.name === this.profile.name ? this.profile.isLeader : (m.name === otherLeaderName && !this.profile.isLeader)
+      }))
     },
 
     infoRows() {

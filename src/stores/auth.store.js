@@ -21,6 +21,12 @@ const DEMO_ACCOUNTS = [
     password: 'anas2',
     token: 'demo-token-team-leader',
     user: { id: -2, name: 'admin anas', email: 'admin@mashroui.local', role: 'team_leader', must_change_password: false }
+  },
+  {
+    email: 'admin@mashroui.local',
+    password: 'anas3',
+    token: 'demo-token-student',
+    user: { id: -3, name: 'يوسف الدوسري', email: 'admin@mashroui.local', role: 'student', must_change_password: false }
   }
 ]
 

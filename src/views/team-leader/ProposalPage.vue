@@ -33,7 +33,14 @@
         <BaseButton block :icon="Send" :loading="proposalGenerating" :disabled="proposalGenerating" class="mt-auto pt-2" @click="submitProposal">إرسال المقترح</BaseButton>
       </div>
 
-      <SubmittedState v-else class="flex-1 flex flex-col justify-center" title="تم تسليم الملف، بانتظار الموافقة" description="بانتظار اعتماد المشرف للمقترح المُرسل." :items="proposalItems" />
+      <SubmittedState
+        v-else class="flex-1 flex flex-col justify-center"
+        :rejected="proposalStatus === 'rejected'"
+        :title="proposalStatus === 'rejected' ? 'تم رفض المقترح' : 'تم تسليم الملف، بانتظار الموافقة'"
+        :description="proposalStatus === 'rejected' ? 'يرجى مراجعة الملاحظات وإعادة الإرسال.' : 'بانتظار اعتماد المشرف للمقترح المُرسل.'"
+        :reject-reason="proposalRejectReason"
+        :items="proposalItems"
+      />
     </div>
 
     <!-- التقرير النهائي -->
@@ -75,7 +82,14 @@
         <BaseButton block :icon="Send" class="mt-auto pt-2" @click="submitReport">إرسال التقرير النهائي</BaseButton>
       </div>
 
-      <SubmittedState v-else class="flex-1 flex flex-col justify-center" title="تم تسليم التقرير النهائي" description="بانتظار اعتماد المشرف واللجنة للتقرير والمخرج النهائي." :items="reportItems" />
+      <SubmittedState
+        v-else class="flex-1 flex flex-col justify-center"
+        :rejected="reportStatus === 'rejected'"
+        :title="reportStatus === 'rejected' ? 'تم رفض التقرير النهائي' : 'تم تسليم التقرير النهائي'"
+        :description="reportStatus === 'rejected' ? 'يرجى مراجعة الملاحظات وإعادة الرفع.' : 'بانتظار اعتماد المشرف واللجنة للتقرير والمخرج النهائي.'"
+        :reject-reason="reportRejectReason"
+        :items="reportItems"
+      />
     </div>
   </div>
 </template>
@@ -117,6 +131,9 @@ export default {
       proposalPdfUrl: '',
       proposalAttachment: null,
       showMoreFields: false,
+      // TODO API — GET /team-leader/proposal | حالة اعتماد المشرف: pending | approved | rejected
+      proposalStatus: 'pending',
+      proposalRejectReason: '',
       proposalForm: {
         name: 'منصة إدارة مشاريع التخرج',
         desc: 'منصة تفاعلية لإدارة مشاريع التخرج تربط الطلاب بالمشرفين ولجنة الإشراف.',
@@ -130,7 +147,10 @@ export default {
       reportFile: null,
       videoMode: 'file',
       videoFile: null,
-      videoLink: ''
+      videoLink: '',
+      // TODO API — GET /team-leader/report | حالة اعتماد المشرف واللجنة: pending | approved | rejected
+      reportStatus: 'pending',
+      reportRejectReason: ''
     }
   },
 

@@ -1,9 +1,18 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import api from '@/services/api'
 import { STORAGE_KEYS, SIDEBAR_BREAKPOINT } from '@/utils/constants'
 
 let toastSeq = 0
+
+/** بيانات ثابتة — بانتظار GET /semesters */
+const SEMESTERS = (() => {
+  const list = []
+  for (let year = 2026; year <= 2029; year++) {
+    list.push({ id: `${year}-1`, name: `الفصل الأول ${year}/${year + 1}`, is_active: year === 2026 })
+    list.push({ id: `${year}-2`, name: `الفصل الثاني ${year}/${year + 1}`, is_active: false })
+  }
+  return list
+})()
 
 export const useUiStore = defineStore('ui', () => {
   const isLoading = ref(false)
@@ -14,8 +23,11 @@ export const useUiStore = defineStore('ui', () => {
 
   const toasts = ref([])
 
-  const semesters = ref([])
-  const activeSemesterId = ref(localStorage.getItem(STORAGE_KEYS.SEMESTER) || null)
+  const semesters = ref(SEMESTERS)
+  // الفصل الحالي محدَّد افتراضيًا فور تشغيل المتجر (بيانات ثابتة، لا حاجة لانتظار fetchSemesters)
+  const activeSemesterId = ref(
+    localStorage.getItem(STORAGE_KEYS.SEMESTER) || SEMESTERS.find((s) => s.is_active)?.id || SEMESTERS[0]?.id || null
+  )
   const semestersLoading = ref(false)
 
   const setLoading = (status) => {
@@ -23,7 +35,7 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   function applyTheme() {
-    document.documentElement.classList.toggle('dark', isDark.value)
+    document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
   }
 
   const initTheme = () => {
@@ -59,20 +71,13 @@ export const useUiStore = defineStore('ui', () => {
     toasts.value = toasts.value.filter((toast) => toast.id !== id)
   }
 
-  // GET /semesters | response: [{ id, name, is_active }]
+  // بيانات ثابتة محليًا (SEMESTERS) بانتظار GET /semesters الفعلي من الباك إند
   const fetchSemesters = async () => {
-    semestersLoading.value = true
-    try {
-      const response = await api.get('/semesters')
-      semesters.value = response.data
-      if (!activeSemesterId.value) {
-        const active = semesters.value.find((s) => s.is_active) || semesters.value[0]
-        if (active) setActiveSemester(active.id)
-      }
-      return semesters.value
-    } finally {
-      semestersLoading.value = false
+    if (!activeSemesterId.value) {
+      const active = semesters.value.find((s) => s.is_active) || semesters.value[0]
+      if (active) setActiveSemester(active.id)
     }
+    return semesters.value
   }
 
   const setActiveSemester = (id) => {

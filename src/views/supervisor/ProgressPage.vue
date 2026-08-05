@@ -83,6 +83,9 @@ import { TrendingUp, Search, ExternalLink } from 'lucide-vue-next'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import DataTable from '@/components/ui/DataTable.vue'
+import { SPECIALIZATIONS } from '@/utils/specializations'
+
+const [SPEC_WEB, SPEC_MOBILE, SPEC_DB, SPEC_MEDIA_D, SPEC_MEDIA_B] = SPECIALIZATIONS
 
 const STATUS_LABELS = {
   completed: { label: 'مكتمل', variant: 'success' },
@@ -117,14 +120,14 @@ export default {
       averagePercent: 68,
       page: 1,
       rows: [
-        { id: 1, project: 'رقيب - نظام مراقبة بالذكاء الاصطناعي', team: 'فريق نوفا', grp: '31', dept: 'قسم البرمجيات', spec: 'هندسة حاسوب', members: ['سلطان', 'علي', 'يوسف'], status: 'completed', pct: 100 },
-        { id: 2, project: 'منصة توصيل جامعية ذكية', team: 'فريق كوانتم', grp: '52', dept: 'قسم البرمجيات', spec: 'نظم معلومات', members: ['سعد', 'فيصل', 'إبراهيم'], status: 'in_progress', pct: 72 },
-        { id: 3, project: 'منصة إدارة مشاريع التخرج', team: 'فريق الابتكار', grp: '54', dept: 'قسم البرمجيات', spec: 'أمن سيبراني', members: ['رانا', 'سارة', 'ماجد'], status: 'in_progress', pct: 18 },
-        { id: 4, project: 'نظام تحليل بيانات جامعي', team: 'فريق نوفا', grp: '31', dept: 'قسم البرمجيات', spec: 'هندسة حاسوب', members: ['عبدالله', 'أحمد'], status: 'proposed', pct: 0 },
-        { id: 5, project: 'متجر إلكتروني بتقنيات AR', team: 'فريق كوانتم', grp: '52', dept: 'قسم الوسائط', spec: 'نظم معلومات', members: ['مروان', 'نواف'], status: 'in_progress', pct: 45 },
-        { id: 6, project: 'أداة كشف الثغرات الأمنية', team: 'فريق الابتكار', grp: '54', dept: 'قسم البرمجيات', spec: 'أمن سيبراني', members: ['حسين', 'ماجد'], status: 'completed', pct: 100 },
-        { id: 7, project: 'منصة تسجيل حضور بالوجه', team: 'فريق نوفا', grp: '31', dept: 'قسم البرمجيات', spec: 'هندسة حاسوب', members: ['هدى', 'رامي'], status: 'in_progress', pct: 60 },
-        { id: 8, project: 'تطبيق تحليل الصور الطبية', team: 'فريق كوانتم', grp: '52', dept: 'قسم الوسائط', spec: 'نظم معلومات', members: ['مني', 'ريم'], status: 'proposed', pct: 0 }
+        { id: 1, project: 'رقيب - نظام مراقبة بالذكاء الاصطناعي', team: 'فريق نوفا', grp: '31', dept: 'قسم البرمجيات', spec: SPEC_WEB, members: ['سلطان', 'علي', 'يوسف'], status: 'completed', pct: 100 },
+        { id: 2, project: 'منصة توصيل جامعية ذكية', team: 'فريق كوانتم', grp: '52', dept: 'قسم البرمجيات', spec: SPEC_MOBILE, members: ['سعد', 'فيصل', 'إبراهيم'], status: 'in_progress', pct: 72 },
+        { id: 3, project: 'منصة إدارة مشاريع التخرج', team: 'فريق الابتكار', grp: '54', dept: 'قسم البرمجيات', spec: SPEC_DB, members: ['رانا', 'سارة', 'ماجد'], status: 'in_progress', pct: 18 },
+        { id: 4, project: 'نظام تحليل بيانات جامعي', team: 'فريق نوفا', grp: '31', dept: 'قسم البرمجيات', spec: SPEC_WEB, members: ['عبدالله', 'أحمد'], status: 'proposed', pct: 0 },
+        { id: 5, project: 'متجر إلكتروني بتقنيات AR', team: 'فريق كوانتم', grp: '52', dept: 'قسم الوسائط', spec: SPEC_MOBILE, members: ['مروان', 'نواف'], status: 'in_progress', pct: 45 },
+        { id: 6, project: 'أداة كشف الثغرات الأمنية', team: 'فريق الابتكار', grp: '54', dept: 'قسم البرمجيات', spec: SPEC_DB, members: ['حسين', 'ماجد'], status: 'completed', pct: 100 },
+        { id: 7, project: 'منصة تسجيل حضور بالوجه', team: 'فريق نوفا', grp: '31', dept: 'قسم البرمجيات', spec: SPEC_WEB, members: ['هدى', 'رامي'], status: 'in_progress', pct: 60 },
+        { id: 8, project: 'تطبيق تحليل الصور الطبية', team: 'فريق كوانتم', grp: '52', dept: 'قسم الوسائط', spec: SPEC_MOBILE, members: ['مني', 'ريم'], status: 'proposed', pct: 0 }
       ]
     }
   },
