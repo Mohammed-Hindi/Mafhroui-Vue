@@ -132,7 +132,6 @@ export default {
 
       try {
         const { user } = await this.login({ ...this.form })
-        console.log('DEBUG must_change_password:', user?.must_change_password, user)
 
         if (user?.must_change_password) {
           this.$router.replace({ name: 'change-password' })

@@ -7,30 +7,40 @@
         <h3 class="text-h3 font-bold text-text-900">المقترح (Proposal)</h3>
       </div>
 
-      <div v-if="!proposalSubmitted" class="flex-1 flex flex-col gap-4">
-        <FileDropzone ref="attachmentDropzone" label="مرفق إضافي (اختياري)" :accept="attachmentAccept" hint="PDF, Word, PowerPoint أو صورة — بحد أقصى 10 ميجابايت" @change="proposalAttachment = $event" />
+      <div v-if="!proposalSubmitted" class="relative flex-1 flex flex-col">
+        <div v-if="!isTeamLeader" class="absolute inset-0 z-10 flex items-center justify-center p-6">
+          <div class="flex flex-col items-center gap-2.5 bg-surface border border-border rounded-lg shadow-modal px-7 py-6 max-w-[260px] text-center">
+            <span class="grid place-items-center w-12 h-12 rounded-pill bg-bg border border-border text-text-400"><Lock :size="20" /></span>
+            <p class="text-body-sm font-bold text-text-900">بانتظار قائد الفريق</p>
+            <p class="text-caption text-text-600">لتعبئة المقترح وإرساله</p>
+          </div>
+        </div>
 
-        <template v-for="(field, i) in fieldsMeta" :key="field.key">
-          <BaseInput v-if="i < visibleFieldsCount && field.type === 'input'" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" />
-          <ClauseTextarea v-else-if="i < visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
-        </template>
+        <div class="flex-1 flex flex-col gap-4" :class="{ 'opacity-30 grayscale pointer-events-none select-none': !isTeamLeader }">
+          <FileDropzone ref="attachmentDropzone" label="مرفق إضافي (اختياري)" :accept="attachmentAccept" hint="PDF, Word, PowerPoint أو صورة — بحد أقصى 10 ميجابايت" @change="proposalAttachment = $event" />
 
-        <button
-          type="button"
-          class="flex items-center justify-center gap-1.5 h-10 rounded-sm border border-border bg-bg text-primary-700 text-body-sm font-bold hover:bg-primary-50 transition-colors duration-fast"
-          @click="showMoreFields = !showMoreFields"
-        >
-          {{ showMoreFields ? 'عرض أقل' : 'عرض المزيد' }}
-          <ChevronDown :size="14" :class="['transition-transform duration-fast', showMoreFields && 'rotate-180']" />
-        </button>
-
-        <template v-if="showMoreFields">
           <template v-for="(field, i) in fieldsMeta" :key="field.key">
-            <ClauseTextarea v-if="i >= visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
+            <BaseInput v-if="i < visibleFieldsCount && field.type === 'input'" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" />
+            <ClauseTextarea v-else-if="i < visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
           </template>
-        </template>
 
-        <BaseButton block :icon="Send" :loading="proposalGenerating" :disabled="proposalGenerating" class="mt-auto pt-2" @click="submitProposal">إرسال المقترح</BaseButton>
+          <button
+            type="button"
+            class="flex items-center justify-center gap-1.5 h-10 rounded-sm border border-border bg-bg text-primary-700 text-body-sm font-bold hover:bg-primary-50 transition-colors duration-fast"
+            @click="showMoreFields = !showMoreFields"
+          >
+            {{ showMoreFields ? 'عرض أقل' : 'عرض المزيد' }}
+            <ChevronDown :size="14" :class="['transition-transform duration-fast', showMoreFields && 'rotate-180']" />
+          </button>
+
+          <template v-if="showMoreFields">
+            <template v-for="(field, i) in fieldsMeta" :key="field.key">
+              <ClauseTextarea v-if="i >= visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
+            </template>
+          </template>
+
+          <BaseButton block :icon="Send" :loading="proposalGenerating" :disabled="proposalGenerating" class="mt-auto pt-2" @click="submitProposal">إرسال المقترح</BaseButton>
+        </div>
       </div>
 
       <SubmittedState
@@ -50,36 +60,46 @@
         <h3 class="text-h3 font-bold text-text-900">التقرير النهائي للمشروع</h3>
       </div>
 
-      <div v-if="!reportSubmitted" class="flex-1 flex flex-col">
-        <p class="text-body-sm text-text-600 leading-relaxed mb-5">
-          التقرير النهائي هو التوثيق الرسمي لمشروع تخرجكم، ويُسلَّم بعد استكمال جميع مراحل التطوير. راجعوا المتطلبات أدناه قبل الرفع.
-        </p>
-
-        <FileDropzone ref="reportDropzone" label="ملف التقرير النهائي (PDF)" accept="application/pdf" hint="PDF — بحد أقصى 10 ميجابايت" class="mb-4" @change="reportFile = $event" />
-
-        <div class="mb-4">
-          <label class="block mb-2 text-label font-semibold text-text-700">فيديو العرض النهائي</label>
-          <div class="inline-flex items-center gap-1 bg-bg border border-border rounded-md p-1 mb-3">
-            <button
-              type="button" class="h-8 px-3.5 rounded-sm text-caption font-bold transition-colors duration-fast"
-              :class="videoMode === 'file' ? 'bg-primary-600 text-white shadow-card' : 'text-text-600 hover:text-primary-700'"
-              @click="videoMode = 'file'"
-            >
-              رفع ملف
-            </button>
-            <button
-              type="button" class="h-8 px-3.5 rounded-sm text-caption font-bold transition-colors duration-fast"
-              :class="videoMode === 'link' ? 'bg-primary-600 text-white shadow-card' : 'text-text-600 hover:text-primary-700'"
-              @click="videoMode = 'link'"
-            >
-              إدخال رابط
-            </button>
+      <div v-if="!reportSubmitted" class="relative flex-1 flex flex-col">
+        <div v-if="!isTeamLeader" class="absolute inset-0 z-10 flex items-center justify-center p-6">
+          <div class="flex flex-col items-center gap-2.5 bg-surface border border-border rounded-lg shadow-modal px-7 py-6 max-w-[260px] text-center">
+            <span class="grid place-items-center w-12 h-12 rounded-pill bg-bg border border-border text-text-400"><Lock :size="20" /></span>
+            <p class="text-body-sm font-bold text-text-900">بانتظار قائد الفريق</p>
+            <p class="text-caption text-text-600">لرفع التقرير النهائي والمخرج</p>
           </div>
-          <FileDropzone v-if="videoMode === 'file'" ref="videoDropzone" accept="video/*" hint="MP4 — بحد أقصى 10 ميجابايت" @change="videoFile = $event" />
-          <BaseInput v-else v-model="videoLink" :icon="Link2" placeholder="https://drive.google.com/..." />
         </div>
 
-        <BaseButton block :icon="Send" class="mt-auto pt-2" @click="submitReport">إرسال التقرير النهائي</BaseButton>
+        <div class="flex-1 flex flex-col" :class="{ 'opacity-30 grayscale pointer-events-none select-none': !isTeamLeader }">
+          <p class="text-body-sm text-text-600 leading-relaxed mb-5">
+            التقرير النهائي هو التوثيق الرسمي لمشروع تخرجكم، ويُسلَّم بعد استكمال جميع مراحل التطوير. راجعوا المتطلبات أدناه قبل الرفع.
+          </p>
+
+          <FileDropzone ref="reportDropzone" label="ملف التقرير النهائي (PDF)" accept="application/pdf" hint="PDF — بحد أقصى 10 ميجابايت" class="mb-4" @change="reportFile = $event" />
+
+          <div class="mb-4">
+            <label class="block mb-2 text-label font-semibold text-text-700">فيديو العرض النهائي</label>
+            <div class="inline-flex items-center gap-1 bg-bg border border-border rounded-md p-1 mb-3">
+              <button
+                type="button" class="h-8 px-3.5 rounded-sm text-caption font-bold transition-colors duration-fast"
+                :class="videoMode === 'file' ? 'bg-primary-600 text-white shadow-card' : 'text-text-600 hover:text-primary-700'"
+                @click="videoMode = 'file'"
+              >
+                رفع ملف
+              </button>
+              <button
+                type="button" class="h-8 px-3.5 rounded-sm text-caption font-bold transition-colors duration-fast"
+                :class="videoMode === 'link' ? 'bg-primary-600 text-white shadow-card' : 'text-text-600 hover:text-primary-700'"
+                @click="videoMode = 'link'"
+              >
+                إدخال رابط
+              </button>
+            </div>
+            <FileDropzone v-if="videoMode === 'file'" ref="videoDropzone" accept="video/*" hint="MP4 — بحد أقصى 10 ميجابايت" @change="videoFile = $event" />
+            <BaseInput v-else v-model="videoLink" :icon="Link2" placeholder="https://drive.google.com/..." />
+          </div>
+
+          <BaseButton block :icon="Send" class="mt-auto pt-2" @click="submitReport">إرسال التقرير النهائي</BaseButton>
+        </div>
       </div>
 
       <SubmittedState
@@ -95,7 +115,7 @@
 </template>
 
 <script>
-import { FileText, FileCheck, Send, Link2, Video, ChevronDown } from 'lucide-vue-next'
+import { FileText, FileCheck, Send, Link2, Video, ChevronDown, Lock } from 'lucide-vue-next'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
@@ -115,13 +135,14 @@ const PROPOSAL_FIELDS = [
 const ATTACHMENT_ACCEPT = '.pdf,.doc,.docx,.ppt,.pptx,image/*'
 
 export default {
-  name: 'TeamLeaderProposalPage',
+  name: 'StudentProposalPage',
 
-  components: { FileText, FileCheck, ChevronDown, BaseInput, BaseButton, FileDropzone, SubmittedState, ClauseTextarea },
+  components: { FileText, FileCheck, ChevronDown, Lock, BaseInput, BaseButton, FileDropzone, SubmittedState, ClauseTextarea },
 
   data() {
     return {
       Send, Link2,
+      isTeamLeader: false,
       fieldsMeta: PROPOSAL_FIELDS,
       visibleFieldsCount: 2,
       attachmentAccept: ATTACHMENT_ACCEPT,
@@ -131,12 +152,12 @@ export default {
       proposalPdfUrl: '',
       proposalAttachment: null,
       showMoreFields: false,
-      // TODO API — GET /team-leader/proposal | حالة اعتماد المشرف: pending | approved | rejected
+      // TODO API — GET /student/proposal | حالة اعتماد المشرف: pending | approved | rejected
       proposalStatus: 'pending',
       proposalRejectReason: '',
       proposalForm: {
-        name: 'منصة إدارة مشاريع التخرج',
-        desc: 'منصة تفاعلية لإدارة مشاريع التخرج تربط الطلاب بالمشرفين ولجنة الإشراف.',
+        name: 'رقيب — نظام مراقبة بالذكاء الاصطناعي',
+        desc: 'نظام مراقبة ذكي يعتمد على الذكاء الاصطناعي لرصد الأحداث وتحليلها في الوقت الفعلي، وإصدار تنبيهات فورية عند اكتشاف أي سلوك غير اعتيادي.',
         challenges: '',
         solutions: '',
         features: '',
@@ -148,7 +169,7 @@ export default {
       videoMode: 'file',
       videoFile: null,
       videoLink: '',
-      // TODO API — GET /team-leader/report | حالة اعتماد المشرف واللجنة: pending | approved | rejected
+      // TODO API — GET /student/report | حالة اعتماد المشرف واللجنة: pending | approved | rejected
       reportStatus: 'pending',
       reportRejectReason: ''
     }
@@ -207,6 +228,7 @@ export default {
 
   methods: {
     async submitProposal() {
+      if (!this.isTeamLeader) return
       if (!this.proposalForm.name.trim() || !this.proposalForm.desc.trim()) {
         this.$toast?.error('يرجى تعبئة اسم المشروع ووصفه على الأقل')
         return
@@ -224,6 +246,7 @@ export default {
     },
 
     submitReport() {
+      if (!this.isTeamLeader) return
       if (!this.reportFile) {
         this.$toast?.error('يرجى إرفاق ملف التقرير النهائي قبل الإرسال')
         return

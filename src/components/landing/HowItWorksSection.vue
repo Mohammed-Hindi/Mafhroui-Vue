@@ -1,6 +1,7 @@
 <template>
-  <section class="py-14 sm:py-20">
-    <div class="max-w-content mx-auto px-6">
+  <section class="relative overflow-hidden py-14 sm:py-20">
+    <span aria-hidden="true" data-parallax="-0.08" class="animate-blob pointer-events-none absolute rounded-pill w-[240px] h-[240px] bg-secondary-500/[0.06] top-1/3 -end-20" style="animation-delay:1.5s" />
+    <div class="relative max-w-content mx-auto px-6">
       <div class="reveal text-center max-w-[640px] mx-auto mb-11">
         <span class="inline-block px-4 py-1.5 rounded-pill bg-primary-50 text-primary-700 text-label font-bold mb-3.5">
           كيف يعمل النظام

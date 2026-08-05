@@ -4,7 +4,8 @@
       <BaseButton :icon="Plus" @click="openAddModal">تسجيل موعد مناقشة جديد</BaseButton>
       <div class="flex flex-wrap gap-2">
         <BaseButton variant="outline" :icon="Upload" @click="importPlaceholder">استيراد من Excel</BaseButton>
-        <BaseButton variant="outline" :icon="Download" @click="exportCsv">تصدير Excel</BaseButton>
+        <BaseButton variant="outline" :icon="Download" :loading="exportingExcel" @click="exportExcel">تصدير Excel</BaseButton>
+        <BaseButton variant="outline" :icon="FileDown" :loading="exportingPdf" @click="exportPdf">تصدير PDF</BaseButton>
       </div>
     </div>
 
@@ -206,7 +207,7 @@
 </template>
 
 <script>
-import { Plus, Upload, Download, Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, MapPin, Clock, Users } from 'lucide-vue-next'
+import { Plus, Upload, Download, FileDown, Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, MapPin, Clock, Users } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -215,9 +216,11 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { formatDate } from '@/utils/formatters'
+import { exportStyledExcel, exportGroupsPdf } from '@/utils/exportReport'
+import { SPECIALIZATIONS, DEPARTMENTS } from '@/utils/specializations'
 
-const DEPTS = ['قسم البرمجيات', 'قسم الوسائط']
-const SPECS = ['هندسة حاسوب', 'نظم معلومات', 'أمن سيبراني', 'تقنية وسائط']
+const DEPTS = DEPARTMENTS
+const SPECS = SPECIALIZATIONS
 const APPTS_PAGE_SIZE = 4
 
 function digitsOnly(value) {
@@ -234,7 +237,9 @@ export default {
 
   data() {
     return {
-      Plus, Upload, Download, Check, Trash2,
+      Plus, Upload, Download, FileDown, Check, Trash2,
+      exportingExcel: false,
+      exportingPdf: false,
       search: '',
       deptFilter: '',
       specFilter: '',
@@ -263,7 +268,7 @@ export default {
       /* بيانات ثابتة — بانتظار GET /committee/appointments */
       groups: [
         {
-          id: 'A1', grp: '31', proj: 'منصة إدارة مشاريع التخرج', sup: 'د. محمد العتيبي', dept: 'قسم البرمجيات', spec: 'هندسة حاسوب',
+          id: 'A1', grp: '31', proj: 'منصة إدارة مشاريع التخرج', sup: 'د. محمد العتيبي', dept: DEPTS[0], spec: SPECS[0],
           place: 'قاعة المناقشات 1', date: '2027-06-15', time: '10:00', committee: 'د. سارة الحربي، د. يوسف المحطاني، د. فهد العتيبي',
           students: [
             { name: 'أحمد السلمي', whats: '962790000000', mail: 'ahmed.salmi@academy.edu.sa' },
@@ -272,7 +277,7 @@ export default {
           ]
         },
         {
-          id: 'A2', grp: '52', proj: 'تطبيق تحليل الصور الطبية', sup: 'د. علي الشمري', dept: 'قسم البرمجيات', spec: 'نظم معلومات',
+          id: 'A2', grp: '52', proj: 'تطبيق تحليل الصور الطبية', sup: 'د. علي الشمري', dept: DEPTS[0], spec: SPECS[1],
           place: 'قاعة المناقشات 2', date: '2027-06-17', time: '12:30', committee: 'د. خالد الغامدي، د. رنا الدوسري',
           students: [
             { name: 'نورة الزهراني', whats: '962790000001', mail: 'noura.zahrani@academy.edu.sa' },
@@ -282,7 +287,7 @@ export default {
           ]
         },
         {
-          id: 'A3', grp: '54', proj: 'متجر إلكتروني بتقنيات AR', sup: 'د. نوال الحربي', dept: 'قسم الوسائط', spec: 'تقنية وسائط',
+          id: 'A3', grp: '54', proj: 'متجر إلكتروني بتقنيات AR', sup: 'د. نوال الحربي', dept: DEPTS[1], spec: SPECS[3],
           place: 'قاعة المناقشات 1', date: '2027-06-20', time: '09:30', committee: 'د. هدى الجهني، د. رامي الحربي، د. جود الدوسري',
           students: [
             { name: 'مروان الجهني', whats: '962790000002', mail: 'marwan.jahni@academy.edu.sa' },
@@ -481,20 +486,66 @@ export default {
     importPlaceholder() {
       this.$toast?.info('استيراد من Excel — قريبًا')
     },
-    exportCsv() {
-      const header = ['رقم المجموعة', 'اسم المشروع', 'المشرف', 'المكان', 'التاريخ', 'الوقت', 'لجنة المناقشة', 'اسم الطالب', 'الواتس', 'البريد']
-      const lines = [header]
-      this.groups.forEach((g) => {
-        g.students.forEach((s) => lines.push([g.grp, g.proj, g.sup, g.place, g.date, g.time, g.committee, s.name, s.whats, s.mail]))
-      })
-      const csv = lines.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\r\n')
-      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = 'مواعيد-المناقشات.csv'
-      link.click()
-      URL.revokeObjectURL(url)
+
+    async exportExcel() {
+      this.exportingExcel = true
+      try {
+        const rowGroups = this.groups.map((g) => g.students.map((s) => ({
+          grp: g.grp, proj: g.proj, sup: g.sup, dept: g.dept, spec: g.spec, place: g.place, date: g.date, time: g.time, committee: g.committee, name: s.name, whats: s.whats, mail: s.mail
+        })))
+        await exportStyledExcel({
+          fileName: 'مواعيد-المناقشات.xlsx',
+          sheetTitle: 'مواعيد المناقشات',
+          columns: [
+            { key: 'grp', label: 'رقم المجموعة', width: 14 },
+            { key: 'proj', label: 'اسم المشروع', width: 30 },
+            { key: 'sup', label: 'المشرف', width: 20 },
+            { key: 'dept', label: 'القسم', width: 16 },
+            { key: 'spec', label: 'التخصص', width: 16 },
+            { key: 'place', label: 'المكان', width: 18 },
+            { key: 'date', label: 'التاريخ', width: 14 },
+            { key: 'time', label: 'الوقت', width: 12 },
+            { key: 'committee', label: 'لجنة المناقشة', width: 32 },
+            { key: 'name', label: 'اسم الطالب', width: 22 },
+            { key: 'whats', label: 'الواتس', width: 16 },
+            { key: 'mail', label: 'البريد', width: 28 }
+          ],
+          rowGroups,
+          mergeKeys: ['grp', 'proj', 'sup', 'dept', 'spec', 'place', 'date', 'time', 'committee']
+        })
+      } finally {
+        this.exportingExcel = false
+      }
+    },
+
+    async exportPdf() {
+      this.exportingPdf = true
+      try {
+        await exportGroupsPdf({
+          fileName: 'مواعيد-المناقشات.pdf',
+          title: 'تقرير مواعيد المناقشات',
+          subtitle: `${this.groups.length} مجموعة — ${this.totalStudents} طالبًا`,
+          sections: this.groups.map((g) => ({
+            heading: `${g.proj} — مجموعة ${g.grp}`,
+            meta: [
+              { label: 'المشرف', value: g.sup },
+              { label: 'القسم', value: g.dept },
+              { label: 'التخصص', value: g.spec },
+              { label: 'المكان', value: g.place },
+              { label: 'التاريخ', value: `${g.date} — ${g.time}` },
+              { label: 'لجنة المناقشة', value: g.committee }
+            ],
+            tableColumns: [
+              { key: 'name', label: 'اسم الطالب' },
+              { key: 'whats', label: 'الواتس' },
+              { key: 'mail', label: 'البريد' }
+            ],
+            tableRows: g.students
+          }))
+        })
+      } finally {
+        this.exportingPdf = false
+      }
     }
   }
 }

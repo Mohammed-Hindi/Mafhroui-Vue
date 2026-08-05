@@ -1,6 +1,8 @@
 <template>
-  <section class="py-14 sm:py-20 bg-surface border-y border-border-soft">
-    <div class="max-w-content mx-auto px-6">
+  <section class="relative overflow-hidden py-14 sm:py-20 bg-surface border-y border-border-soft">
+    <span aria-hidden="true" data-parallax="0.09" class="animate-blob pointer-events-none absolute rounded-pill w-[260px] h-[260px] bg-accent-500/[0.06] -top-20 -end-20" style="animation-delay:3.5s" />
+    <span aria-hidden="true" data-parallax="-0.07" class="animate-blob pointer-events-none absolute rounded-pill w-[200px] h-[200px] bg-primary-500/[0.05] bottom-0 -start-16" style="animation-delay:1s" />
+    <div class="relative max-w-content mx-auto px-6">
       <div class="reveal text-center max-w-[640px] mx-auto mb-11">
         <span class="inline-block px-4 py-1.5 rounded-pill bg-primary-50 text-primary-700 text-label font-bold mb-3.5">
           الأقسام والتخصصات

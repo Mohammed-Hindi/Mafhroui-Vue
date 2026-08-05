@@ -83,6 +83,9 @@ import { TrendingUp, Search, ExternalLink } from 'lucide-vue-next'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import DataTable from '@/components/ui/DataTable.vue'
+import { SPECIALIZATIONS } from '@/utils/specializations'
+
+const [SPEC_WEB, SPEC_MOBILE, SPEC_DB, SPEC_MEDIA_D, SPEC_MEDIA_B] = SPECIALIZATIONS
 
 const STATUS_LABELS = {
   completed: { label: 'مكتمل', variant: 'success' },
@@ -117,14 +120,14 @@ export default {
       averagePercent: 68,
       page: 1,
       rows: [
-        { id: 1, project: 'رقيب - نظام مراقبة بالذكاء الاصطناعي', team: 'فريق نوفا', grp: '31', spec: 'هندسة حاسوب', sup: 'د. أحمد الشريف', members: ['سلطان', 'علي', 'يوسف'], status: 'completed', pct: 100 },
-        { id: 2, project: 'منصة توصيل جامعية ذكية', team: 'فريق كوانتم', grp: '52', spec: 'نظم معلومات', sup: 'د. سلمى نصار', members: ['سعد', 'فيصل', 'إبراهيم'], status: 'in_progress', pct: 72 },
-        { id: 3, project: 'منصة إدارة مشاريع التخرج', team: 'فريق الابتكار', grp: '54', spec: 'أمن سيبراني', sup: 'د. أحمد النبريص', members: ['رانا', 'سارة', 'ماجد'], status: 'in_progress', pct: 18 },
-        { id: 4, project: 'نظام تحليل بيانات جامعي', team: 'فريق نوفا', grp: '31', spec: 'هندسة حاسوب', sup: 'د. أحمد الشريف', members: ['عبدالله', 'أحمد'], status: 'proposed', pct: 0 },
-        { id: 5, project: 'متجر إلكتروني بتقنيات AR', team: 'فريق كوانتم', grp: '52', spec: 'نظم معلومات', sup: 'د. سلمى نصار', members: ['مروان', 'نواف'], status: 'in_progress', pct: 45 },
-        { id: 6, project: 'أداة كشف الثغرات الأمنية', team: 'فريق الابتكار', grp: '54', spec: 'أمن سيبراني', sup: 'د. أحمد النبريص', members: ['حسين', 'ماجد'], status: 'completed', pct: 100 },
-        { id: 7, project: 'منصة تسجيل حضور بالوجه', team: 'فريق نوفا', grp: '31', spec: 'هندسة حاسوب', sup: 'د. أحمد الشريف', members: ['هدى', 'رامي'], status: 'in_progress', pct: 60 },
-        { id: 8, project: 'تطبيق تحليل الصور الطبية', team: 'فريق كوانتم', grp: '52', spec: 'نظم معلومات', sup: 'د. سلمى نصار', members: ['مني', 'ريم'], status: 'proposed', pct: 0 }
+        { id: 1, project: 'رقيب - نظام مراقبة بالذكاء الاصطناعي', team: 'فريق نوفا', grp: '31', spec: SPEC_WEB, sup: 'د. أحمد الشريف', members: ['سلطان', 'علي', 'يوسف'], status: 'completed', pct: 100 },
+        { id: 2, project: 'منصة توصيل جامعية ذكية', team: 'فريق كوانتم', grp: '52', spec: SPEC_MOBILE, sup: 'د. سلمى نصار', members: ['سعد', 'فيصل', 'إبراهيم'], status: 'in_progress', pct: 72 },
+        { id: 3, project: 'منصة إدارة مشاريع التخرج', team: 'فريق الابتكار', grp: '54', spec: SPEC_DB, sup: 'د. أحمد النبريص', members: ['رانا', 'سارة', 'ماجد'], status: 'in_progress', pct: 18 },
+        { id: 4, project: 'نظام تحليل بيانات جامعي', team: 'فريق نوفا', grp: '31', spec: SPEC_WEB, sup: 'د. أحمد الشريف', members: ['عبدالله', 'أحمد'], status: 'proposed', pct: 0 },
+        { id: 5, project: 'متجر إلكتروني بتقنيات AR', team: 'فريق كوانتم', grp: '52', spec: SPEC_MOBILE, sup: 'د. سلمى نصار', members: ['مروان', 'نواف'], status: 'in_progress', pct: 45 },
+        { id: 6, project: 'أداة كشف الثغرات الأمنية', team: 'فريق الابتكار', grp: '54', spec: SPEC_DB, sup: 'د. أحمد النبريص', members: ['حسين', 'ماجد'], status: 'completed', pct: 100 },
+        { id: 7, project: 'منصة تسجيل حضور بالوجه', team: 'فريق نوفا', grp: '31', spec: SPEC_WEB, sup: 'د. أحمد الشريف', members: ['هدى', 'رامي'], status: 'in_progress', pct: 60 },
+        { id: 8, project: 'تطبيق تحليل الصور الطبية', team: 'فريق كوانتم', grp: '52', spec: SPEC_MOBILE, sup: 'د. سلمى نصار', members: ['مني', 'ريم'], status: 'proposed', pct: 0 }
       ]
     }
   },

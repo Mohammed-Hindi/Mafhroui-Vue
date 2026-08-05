@@ -1,17 +1,17 @@
 <template>
   <div>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-      <div class="bg-surface rounded-lg border border-border shadow-card p-5 flex items-center gap-4">
+      <div class="reveal group bg-surface rounded-lg border border-border shadow-card p-5 flex items-center gap-4 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200">
         <span class="grid place-items-center w-11 h-11 rounded-md bg-primary-50 text-primary-600 shrink-0"><Archive :size="20" /></span>
-        <div><div class="font-cairo font-extrabold text-h1 text-text-900">{{ archive.length }}</div><div class="text-body-sm font-bold text-text-600 mt-0.5">إجمالي المشاريع</div></div>
+        <div><div class="font-cairo font-extrabold text-h1 text-text-900 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="archive.length" /></div><div class="text-body-sm font-bold text-text-600 mt-0.5">إجمالي المشاريع</div></div>
       </div>
-      <div class="bg-surface rounded-lg border border-border shadow-card p-5 flex items-center gap-4">
+      <div class="reveal group bg-surface rounded-lg border border-border shadow-card p-5 flex items-center gap-4 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200">
         <span class="grid place-items-center w-11 h-11 rounded-md bg-success-bg text-success shrink-0"><CheckCircle2 :size="20" /></span>
-        <div><div class="font-cairo font-extrabold text-h1 text-text-900">{{ archive.length }}</div><div class="text-body-sm font-bold text-text-600 mt-0.5">مشاريع مكتملة</div></div>
+        <div><div class="font-cairo font-extrabold text-h1 text-text-900 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="archive.length" /></div><div class="text-body-sm font-bold text-text-600 mt-0.5">مشاريع مكتملة</div></div>
       </div>
-      <div class="bg-surface rounded-lg border border-border shadow-card p-5 flex items-center gap-4">
+      <div class="reveal group bg-surface rounded-lg border border-border shadow-card p-5 flex items-center gap-4 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200">
         <span class="grid place-items-center w-11 h-11 rounded-md bg-warning-bg text-warning-text shrink-0"><Star :size="20" /></span>
-        <div><div class="font-cairo font-extrabold text-h1 text-text-900">{{ featuredCount }}</div><div class="text-body-sm font-bold text-text-600 mt-0.5">مشاريع مميزة</div></div>
+        <div><div class="font-cairo font-extrabold text-h1 text-text-900 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="featuredCount" /></div><div class="text-body-sm font-bold text-text-600 mt-0.5">مشاريع مميزة</div></div>
       </div>
     </div>
 
@@ -21,9 +21,12 @@
           <h3 class="font-cairo font-bold text-h4 text-text-900">المشاريع المؤرشفة مؤخرًا</h3>
           <p class="text-caption text-text-600 mt-0.5">سجلّ المشاريع المكتملة عبر جميع الفصول الدراسية</p>
         </div>
-        <div class="relative flex-1 max-w-[320px] min-w-[200px]">
-          <Search :size="16" class="pointer-events-none absolute top-1/2 -translate-y-1/2 start-3 text-text-400" />
-          <input v-model.trim="search" type="search" placeholder="بحث في المشاريع..." class="w-full h-icon-btn ps-10 pe-3 rounded-pill border border-border bg-bg text-body text-text-900 focus:border-primary-600 transition-colors duration-fast">
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="relative flex-1 min-w-[200px] max-w-[320px]">
+            <Search :size="16" class="pointer-events-none absolute top-1/2 -translate-y-1/2 start-3 text-text-400" />
+            <input v-model.trim="search" type="search" placeholder="بحث في المشاريع..." class="w-full h-icon-btn ps-10 pe-3 rounded-pill border border-border bg-bg text-body text-text-900 focus:border-primary-600 transition-colors duration-fast">
+          </div>
+          <BaseSelect v-model="specFilter" class="min-w-[220px]" placeholder="جميع التخصصات" include-placeholder-option :options="specOptions" />
         </div>
       </div>
 
@@ -61,17 +64,20 @@
 import { Archive, CheckCircle2, Star, Search, FileText, ExternalLink } from 'lucide-vue-next'
 import { PROJECT_ARCHIVE } from '@/data/projectArchive'
 import DataTable from '@/components/ui/DataTable.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
+import CountUp from '@/components/ui/CountUp.vue'
 
 const PAGE_SIZE = 5
 
 export default {
   name: 'CommitteeProjectArchivePage',
 
-  components: { Archive, CheckCircle2, Star, Search, FileText, ExternalLink, DataTable },
+  components: { Archive, CheckCircle2, Star, Search, FileText, ExternalLink, DataTable, BaseSelect, CountUp },
 
   data() {
     return {
       search: '',
+      specFilter: '',
       page: 1,
 
       columns: [
@@ -93,9 +99,17 @@ export default {
       return this.archive.filter((a) => a.featured).length
     },
 
+    specOptions() {
+      return [...new Set(this.archive.map((a) => a.spec))].map((s) => ({ value: s, label: s }))
+    },
+
     filteredArchive() {
       const q = this.search.trim()
-      return this.archive.filter((a) => !q || `${a.proj}${a.team}${a.members}${a.spec}${a.dept}`.includes(q))
+      return this.archive.filter((a) => {
+        const matchQ = !q || `${a.proj}${a.team}${a.members}${a.spec}${a.dept}`.includes(q)
+        const matchSpec = !this.specFilter || a.spec === this.specFilter
+        return matchQ && matchSpec
+      })
     },
 
     totalPages() {
@@ -105,6 +119,12 @@ export default {
     pageRows() {
       const start = (this.page - 1) * PAGE_SIZE
       return this.filteredArchive.slice(start, start + PAGE_SIZE)
+    }
+  },
+
+  watch: {
+    filteredArchive() {
+      this.page = 1
     }
   },
 

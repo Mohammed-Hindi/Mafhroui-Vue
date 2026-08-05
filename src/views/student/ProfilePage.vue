@@ -15,7 +15,7 @@
           <div class="min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-h3 font-bold text-text-900 truncate">{{ profile.name }}</span>
-              <span v-if="profile.isLeader" class="shrink-0 text-label font-bold text-warning-text bg-warning-bg px-2.5 py-1 rounded-pill">قائد الفريق</span>
+              <span class="shrink-0 text-label font-bold px-2.5 py-1 rounded-pill" :class="profile.isLeader ? 'text-warning-text bg-warning-bg' : 'text-text-600 bg-border-soft'">{{ profile.isLeader ? 'قائد الفريق' : 'عضو' }}</span>
             </div>
             <div class="text-caption text-text-400 mt-0.5">{{ profile.roleLabel }}</div>
           </div>
@@ -78,7 +78,7 @@
           <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><BarChart3 :size="18" /></span>
           <h3 class="text-h3 font-bold text-text-900">مخطط تقدم المشروع</h3>
         </div>
-        <router-link :to="{ name: 'team-leader-tasks' }" class="inline-flex items-center gap-1.5 text-caption font-bold text-text-600 bg-border-soft px-3 py-1.5 rounded-pill hover:text-primary-700 transition-colors duration-fast">
+        <router-link :to="{ name: 'student-tasks' }" class="inline-flex items-center gap-1.5 text-caption font-bold text-text-600 bg-border-soft px-3 py-1.5 rounded-pill hover:text-primary-700 transition-colors duration-fast">
           <Kanban :size="13" /> انتقل إلى لوحة Kanban
         </router-link>
       </div>
@@ -104,33 +104,33 @@
 <script>
 import { User, Users, Crown, BarChart3, Kanban } from 'lucide-vue-next'
 import { initials } from '@/utils/formatters'
+import { SPECIALIZATIONS } from '@/utils/specializations'
 
 export default {
-  name: 'TeamLeaderProfilePage',
+  name: 'StudentProfilePage',
 
   components: { User, Users, Crown, BarChart3, Kanban },
 
   data() {
     return {
       profile: {
-        name: 'admin anas',
+        name: 'يوسف الدوسري',
         roleLabel: 'الطالب',
-        isLeader: true,
-        uid: 'STU9000',
-        mail: 'admin.anas@academy.edu.jo',
-        spec: 'تصميم وتطوير مواقع الويب "دبلوم"',
+        isLeader: false,
+        uid: '3175000',
+        mail: 'student1@academy.edu.sa',
+        spec: SPECIALIZATIONS[0],
         semester: '2026/2027-1'
       },
       team: {
-        name: 'فريق الابتكار',
-        sup: 'د. أحمد الحربي',
-        proj: 'منصة إدارة مشاريع التخرج',
-        projDesc: 'منصة تفاعلية لإدارة مشاريع التخرج تربط الطلاب بالمشرفين ولجنة الإشراف، وتتيح متابعة المقترحات والمهام والاجتماعات في مكان واحد.',
+        name: 'فريق نوفا',
+        sup: 'د. أحمد الشريف',
+        proj: 'رقيب — نظام مراقبة بالذكاء الاصطناعي',
+        projDesc: 'نظام مراقبة ذكي يعتمد على الذكاء الاصطناعي لرصد الأحداث وتحليلها في الوقت الفعلي، وإصدار تنبيهات فورية عند اكتشاف أي سلوك غير اعتيادي.',
         members: [
-          { name: 'admin anas', leader: true },
-          { name: 'anas', leader: false },
-          { name: 'هدى الجهني', leader: false },
-          { name: 'جود الدوسري', leader: false }
+          { name: 'سلطان الدوسري', leader: true },
+          { name: 'يوسف الدوسري', leader: false },
+          { name: 'علي الحربي', leader: false }
         ]
       },
       kanban: { total: 4, done: 1, review: 1, progress: 1, pending: 1 }

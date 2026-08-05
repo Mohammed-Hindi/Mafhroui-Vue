@@ -54,6 +54,7 @@
                   <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">الرقم الجامعي</th>
                   <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">الواتس</th>
                   <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">البريد</th>
+                  <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">تعيين قائد الفريق</th>
                   <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">إجراءات</th>
                 </tr>
               </thead>
@@ -64,11 +65,22 @@
                   <td class="px-5 py-3 mono">{{ member.whats }}</td>
                   <td class="px-5 py-3 mono whitespace-nowrap">{{ member.mail }}</td>
                   <td class="px-5 py-3">
+                    <button
+                      type="button"
+                      class="grid place-items-center w-8 h-8 rounded-pill transition-colors duration-fast"
+                      :class="member.leader ? 'bg-warning-bg text-warning-text' : 'border border-border text-text-400 hover:bg-warning-bg hover:text-warning-text'"
+                      :title="member.leader ? 'قائد الفريق الحالي' : 'تعيين قائدًا للفريق'"
+                      @click="setTeamLeader(group, idx)"
+                    >
+                      <Crown :size="14" :fill="member.leader ? 'currentColor' : 'none'" />
+                    </button>
+                  </td>
+                  <td class="px-5 py-3">
                     <div class="flex gap-2">
-                      <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
-                      <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
-                      <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEditMember(group, idx)"><Pencil :size="14" /></button>
-                      <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDeleteMember(group, idx)"><Trash2 :size="14" /></button>
+                      <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
+                      <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
+                      <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEditMember(group, idx)"><Pencil :size="14" /></button>
+                      <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-error-bg text-error hover:brightness-95" title="حذف" @click="openDeleteMember(group, idx)"><Trash2 :size="14" /></button>
                     </div>
                   </td>
                 </tr>
@@ -96,13 +108,25 @@
                 <div class="flex items-start justify-between gap-3"><span class="text-label font-semibold text-text-400 shrink-0">الرقم الجامعي</span><span class="mono text-body-sm text-text-700">{{ member.uid }}</span></div>
                 <div class="flex items-start justify-between gap-3"><span class="text-label font-semibold text-text-400 shrink-0">رقم الواتس</span><span class="mono text-body-sm text-text-700">{{ member.whats }}</span></div>
                 <div class="flex items-start justify-between gap-3"><span class="text-label font-semibold text-text-400 shrink-0">البريد الإلكتروني</span><span class="mono text-body-sm text-text-700 whitespace-nowrap">{{ member.mail }}</span></div>
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-label font-semibold text-text-400 shrink-0">تعيين قائد الفريق</span>
+                  <button
+                    type="button"
+                    class="grid place-items-center w-8 h-8 rounded-pill transition-colors duration-fast"
+                    :class="member.leader ? 'bg-warning-bg text-warning-text' : 'border border-border text-text-400 hover:bg-warning-bg hover:text-warning-text'"
+                    :title="member.leader ? 'قائد الفريق الحالي' : 'تعيين قائدًا للفريق'"
+                    @click="setTeamLeader(group, idx)"
+                  >
+                    <Crown :size="14" :fill="member.leader ? 'currentColor' : 'none'" />
+                  </button>
+                </div>
                 <div class="flex items-start justify-between gap-3">
                   <span class="text-label font-semibold text-text-400 shrink-0">إجراءات</span>
                   <div class="flex gap-1.5">
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEditMember(group, idx)"><Pencil :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDeleteMember(group, idx)"><Trash2 :size="14" /></button>
+                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
+                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
+                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEditMember(group, idx)"><Pencil :size="14" /></button>
+                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-error-bg text-error hover:brightness-95" title="حذف" @click="openDeleteMember(group, idx)"><Trash2 :size="14" /></button>
                   </div>
                 </div>
               </div>
@@ -157,7 +181,7 @@
 </template>
 
 <script>
-import { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check } from 'lucide-vue-next'
+import { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Crown } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -165,8 +189,9 @@ import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import Pagination from '@/components/ui/Pagination.vue'
+import { SPECIALIZATIONS } from '@/utils/specializations'
 
-const SPECS = ['هندسة حاسوب', 'نظم معلومات', 'أمن سيبراني']
+const SPECS = SPECIALIZATIONS
 const SUPS = ['د. أحمد الشريف', 'د. سلمى نصار', 'د. أحمد النبريص']
 const GROUPS_PAGE_SIZE = 5
 
@@ -177,7 +202,7 @@ function digitsOnly(value) {
 export default {
   name: 'SupervisorTeamsPage',
 
-  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, Pagination },
+  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, Pagination },
 
   data() {
     return {
@@ -203,57 +228,57 @@ export default {
       /* بيانات ثابتة — بانتظار GET /supervisor/teams */
       groups: [
         {
-          id: 'G1', num: '31', shu: 'شعبة 1', name: 'فريق نوفا', spec: 'هندسة حاسوب', sup: 'د. أحمد الشريف',
+          id: 'G1', num: '31', shu: 'شعبة 1', name: 'فريق نوفا', spec: SPECS[0], sup: 'د. أحمد الشريف',
           members: [
-            { name: 'يوسف الدوسري', uid: '3175000', whats: '0551110001', mail: 'student1@academy.edu.sa' },
-            { name: 'علي الحربي', uid: '3175001', whats: '0551110002', mail: 'student2@academy.edu.sa' },
-            { name: 'سلطان الدوسري', uid: '3175006', whats: '0551110003', mail: 'student3@academy.edu.sa' }
+            { name: 'يوسف الدوسري', uid: '3175000', whats: '0551110001', mail: 'student1@academy.edu.sa', leader: false },
+            { name: 'علي الحربي', uid: '3175001', whats: '0551110002', mail: 'student2@academy.edu.sa', leader: false },
+            { name: 'سلطان الدوسري', uid: '3175006', whats: '0551110003', mail: 'student3@academy.edu.sa', leader: true }
           ]
         },
         {
-          id: 'G2', num: '52', shu: 'شعبة 2', name: 'فريق كوانتم', spec: 'نظم معلومات', sup: 'د. سلمى نصار',
+          id: 'G2', num: '52', shu: 'شعبة 2', name: 'فريق كوانتم', spec: SPECS[1], sup: 'د. سلمى نصار',
           members: [
-            { name: 'فيصل الحربي', uid: '3175018', whats: '0551110004', mail: 'student4@academy.edu.sa' },
-            { name: 'إبراهيم الدوسري', uid: '3175019', whats: '0551110005', mail: 'student5@academy.edu.sa' },
-            { name: 'سعد الحربي', uid: '3175020', whats: '0551110006', mail: 'student6@academy.edu.sa' }
+            { name: 'فيصل الحربي', uid: '3175018', whats: '0551110004', mail: 'student4@academy.edu.sa', leader: false },
+            { name: 'إبراهيم الدوسري', uid: '3175019', whats: '0551110005', mail: 'student5@academy.edu.sa', leader: false },
+            { name: 'سعد الحربي', uid: '3175020', whats: '0551110006', mail: 'student6@academy.edu.sa', leader: false }
           ]
         },
         {
-          id: 'G3', num: '54', shu: 'شعبة 3', name: 'فريق الابتكار', spec: 'أمن سيبراني', sup: 'د. أحمد النبريص',
+          id: 'G3', num: '54', shu: 'شعبة 3', name: 'فريق الابتكار', spec: SPECS[2], sup: 'د. أحمد النبريص',
           members: [
-            { name: 'حسين الحربي', uid: '3175022', whats: '0551110007', mail: 'student7@academy.edu.sa' },
-            { name: 'ماجد الحربي', uid: '3175023', whats: '0551110008', mail: 'student8@academy.edu.sa' },
-            { name: 'سارة الحربي', uid: '3175024', whats: '0551110009', mail: 'student9@academy.edu.sa' },
-            { name: 'رانا الحربي', uid: '3175025', whats: '0551110010', mail: 'student10@academy.edu.sa' }
+            { name: 'حسين الحربي', uid: '3175022', whats: '0551110007', mail: 'student7@academy.edu.sa', leader: false },
+            { name: 'ماجد الحربي', uid: '3175023', whats: '0551110008', mail: 'student8@academy.edu.sa', leader: false },
+            { name: 'سارة الحربي', uid: '3175024', whats: '0551110009', mail: 'student9@academy.edu.sa', leader: false },
+            { name: 'رانا الحربي', uid: '3175025', whats: '0551110010', mail: 'student10@academy.edu.sa', leader: false }
           ]
         },
         {
-          id: 'G4', num: '61', shu: 'شعبة 4', name: 'فريق فوكال', spec: 'نظم معلومات', sup: 'د. سلمى نصار',
+          id: 'G4', num: '61', shu: 'شعبة 4', name: 'فريق فوكال', spec: SPECS[3], sup: 'د. سلمى نصار',
           members: [
-            { name: 'عبدالله الجهني', uid: '3175026', whats: '0551110011', mail: 'student11@academy.edu.sa' },
-            { name: 'أحمد الحربي', uid: '3175027', whats: '0551110012', mail: 'student12@academy.edu.sa' }
+            { name: 'عبدالله الجهني', uid: '3175026', whats: '0551110011', mail: 'student11@academy.edu.sa', leader: false },
+            { name: 'أحمد الحربي', uid: '3175027', whats: '0551110012', mail: 'student12@academy.edu.sa', leader: false }
           ]
         },
         {
-          id: 'G5', num: '62', shu: 'شعبة 5', name: 'فريق أورانج', spec: 'هندسة حاسوب', sup: 'د. أحمد الشريف',
+          id: 'G5', num: '62', shu: 'شعبة 5', name: 'فريق أورانج', spec: SPECS[4], sup: 'د. أحمد الشريف',
           members: [
-            { name: 'نورة الدوسري', uid: '3175028', whats: '0551110013', mail: 'student13@academy.edu.sa' },
-            { name: 'عمر الجهني', uid: '3175029', whats: '0551110014', mail: 'student14@academy.edu.sa' }
+            { name: 'نورة الدوسري', uid: '3175028', whats: '0551110013', mail: 'student13@academy.edu.sa', leader: false },
+            { name: 'عمر الجهني', uid: '3175029', whats: '0551110014', mail: 'student14@academy.edu.sa', leader: false }
           ]
         },
         {
-          id: 'G6', num: '63', shu: 'شعبة 6', name: 'فريق الأمن السيبراني', spec: 'أمن سيبراني', sup: 'د. أحمد النبريص',
+          id: 'G6', num: '63', shu: 'شعبة 6', name: 'فريق الأمن السيبراني', spec: SPECS[2], sup: 'د. أحمد النبريص',
           members: [
-            { name: 'هدى الجهني', uid: '3175030', whats: '0551110015', mail: 'student15@academy.edu.sa' },
-            { name: 'رامي الحربي', uid: '3175031', whats: '0551110016', mail: 'student16@academy.edu.sa' },
-            { name: 'مني الحربي', uid: '3175032', whats: '0551110017', mail: 'student17@academy.edu.sa' }
+            { name: 'هدى الجهني', uid: '3175030', whats: '0551110015', mail: 'student15@academy.edu.sa', leader: false },
+            { name: 'رامي الحربي', uid: '3175031', whats: '0551110016', mail: 'student16@academy.edu.sa', leader: false },
+            { name: 'مني الحربي', uid: '3175032', whats: '0551110017', mail: 'student17@academy.edu.sa', leader: false }
           ]
         },
         {
-          id: 'G7', num: '64', shu: 'شعبة 7', name: 'فريق سبعة', spec: 'نظم معلومات', sup: 'د. سلمى نصار',
+          id: 'G7', num: '64', shu: 'شعبة 7', name: 'فريق سبعة', spec: SPECS[1], sup: 'د. سلمى نصار',
           members: [
-            { name: 'جود الدوسري', uid: '3175033', whats: '0551110018', mail: 'student18@academy.edu.sa' },
-            { name: 'لينا الجهني', uid: '3175034', whats: '0551110019', mail: 'student19@academy.edu.sa' }
+            { name: 'جود الدوسري', uid: '3175033', whats: '0551110018', mail: 'student18@academy.edu.sa', leader: false },
+            { name: 'لينا الجهني', uid: '3175034', whats: '0551110019', mail: 'student19@academy.edu.sa', leader: false }
           ]
         }
       ],
@@ -379,6 +404,14 @@ export default {
       }
       this.deleteModal = false
       this.$toast?.success('تم الحذف')
+    },
+
+    setTeamLeader(group, idx) {
+      const target = group.members[idx]
+      if (target.leader) return
+      group.members.forEach((m) => { m.leader = false })
+      target.leader = true
+      this.$toast?.success(`تم تعيين ${target.name} قائدًا لـ${group.name}`)
     },
 
     sendWhats(whats) {

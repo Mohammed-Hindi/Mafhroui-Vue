@@ -203,9 +203,10 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { formatDate } from '@/utils/formatters'
+import { SPECIALIZATIONS, DEPARTMENTS } from '@/utils/specializations'
 
-const DEPTS = ['قسم البرمجيات', 'قسم الوسائط']
-const SPECS = ['هندسة حاسوب', 'نظم معلومات', 'أمن سيبراني', 'تقنية وسائط']
+const DEPTS = DEPARTMENTS
+const SPECS = SPECIALIZATIONS
 const APPTS_PAGE_SIZE = 4
 
 function digitsOnly(value) {
@@ -250,7 +251,7 @@ export default {
       /* بيانات ثابتة — بانتظار GET /supervisor/appointments */
       groups: [
         {
-          id: 'A1', grp: '31', proj: 'منصة إدارة مشاريع التخرج', sup: 'د. محمد العتيبي', dept: 'قسم البرمجيات', spec: 'هندسة حاسوب',
+          id: 'A1', grp: '31', proj: 'منصة إدارة مشاريع التخرج', sup: 'د. محمد العتيبي', dept: DEPTS[0], spec: SPECS[0],
           place: 'قاعة المناقشات 1', date: '2027-06-15', time: '10:00', committee: 'د. سارة الحربي، د. يوسف المحطاني، د. فهد العتيبي',
           students: [
             { name: 'أحمد السلمي', whats: '962790000000', mail: 'ahmed.salmi@academy.edu.sa' },
@@ -259,7 +260,7 @@ export default {
           ]
         },
         {
-          id: 'A2', grp: '52', proj: 'تطبيق تحليل الصور الطبية', sup: 'د. علي الشمري', dept: 'قسم البرمجيات', spec: 'نظم معلومات',
+          id: 'A2', grp: '52', proj: 'تطبيق تحليل الصور الطبية', sup: 'د. علي الشمري', dept: DEPTS[0], spec: SPECS[1],
           place: 'قاعة المناقشات 2', date: '2027-06-17', time: '12:30', committee: 'د. خالد الغامدي، د. رنا الدوسري',
           students: [
             { name: 'نورة الزهراني', whats: '962790000001', mail: 'noura.zahrani@academy.edu.sa' },
@@ -269,7 +270,7 @@ export default {
           ]
         },
         {
-          id: 'A3', grp: '54', proj: 'متجر إلكتروني بتقنيات AR', sup: 'د. نوال الحربي', dept: 'قسم الوسائط', spec: 'تقنية وسائط',
+          id: 'A3', grp: '54', proj: 'متجر إلكتروني بتقنيات AR', sup: 'د. نوال الحربي', dept: DEPTS[1], spec: SPECS[3],
           place: 'قاعة المناقشات 1', date: '2027-06-20', time: '09:30', committee: 'د. هدى الجهني، د. رامي الحربي، د. جود الدوسري',
           students: [
             { name: 'مروان الجهني', whats: '962790000002', mail: 'marwan.jahni@academy.edu.sa' },
@@ -277,7 +278,7 @@ export default {
           ]
         },
         {
-          id: 'A4', grp: '61', proj: 'نظام تحليل بيانات جامعي', sup: 'د. أحمد الشريف', dept: 'قسم البرمجيات', spec: 'هندسة حاسوب',
+          id: 'A4', grp: '61', proj: 'نظام تحليل بيانات جامعي', sup: 'د. أحمد الشريف', dept: DEPTS[0], spec: SPECS[0],
           place: 'قاعة المناقشات 2', date: '2027-06-22', time: '11:00', committee: 'د. سلمى نصار، د. أحمد النبريص',
           students: [
             { name: 'عبدالله الجهني', whats: '962790000016', mail: 'abdullah.jahni@academy.edu.sa' },
@@ -285,7 +286,7 @@ export default {
           ]
         },
         {
-          id: 'A5', grp: '62', proj: 'منصة تسجيل حضور بالوجه', sup: 'د. سلمى نصار', dept: 'قسم البرمجيات', spec: 'نظم معلومات',
+          id: 'A5', grp: '62', proj: 'منصة تسجيل حضور بالوجه', sup: 'د. سلمى نصار', dept: DEPTS[0], spec: SPECS[1],
           place: 'قاعة المناقشات 1', date: '2027-06-24', time: '13:00', committee: 'د. خالد الغامدي، د. فهد العتيبي، د. رنا الدوسري',
           students: [
             { name: 'نورة الدوسري', whats: '962790000018', mail: 'noura.dosari@academy.edu.sa' },
@@ -293,7 +294,7 @@ export default {
           ]
         },
         {
-          id: 'A6', grp: '63', proj: 'أداة كشف الثغرات الأمنية', sup: 'د. أحمد النبريص', dept: 'قسم البرمجيات', spec: 'أمن سيبراني',
+          id: 'A6', grp: '63', proj: 'أداة كشف الثغرات الأمنية', sup: 'د. أحمد النبريص', dept: DEPTS[0], spec: SPECS[2],
           place: 'قاعة المناقشات 2', date: '2027-06-26', time: '10:30', committee: 'د. محمد العتيبي، د. سارة الحربي',
           students: [
             { name: 'هدى الجهني', whats: '962790000020', mail: 'huda.jahni@academy.edu.sa' },

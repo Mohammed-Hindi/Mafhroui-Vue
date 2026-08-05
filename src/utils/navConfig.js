@@ -46,5 +46,13 @@ export const NAV_ITEMS_BY_ROLE = {
     { label: 'المساعد الآلي', to: '/team-leader/assistant', icon: Bot },
     { label: 'المهام (Kanban)', to: '/team-leader/tasks', icon: ListTodo },
     { label: 'الاجتماعات', to: '/team-leader/meetings', icon: CalendarDays }
+  ],
+
+  [ROLES.STUDENT]: [
+    { label: 'الملف الشخصي', to: '/student', icon: UserCircle, exact: true },
+    { label: 'المقترح / التقرير النهائي', to: '/student/proposal', icon: ClipboardList },
+    { label: 'المساعد الآلي', to: '/student/assistant', icon: Bot },
+    { label: 'المهام (Kanban)', to: '/student/tasks', icon: ListTodo },
+    { label: 'الاجتماعات', to: '/student/meetings', icon: CalendarDays }
   ]
 }

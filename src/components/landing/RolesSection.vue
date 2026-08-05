@@ -1,6 +1,8 @@
 <template>
-  <section class="py-14 sm:py-20 bg-surface border-y border-border-soft">
-    <div class="max-w-content mx-auto px-6">
+  <section class="relative overflow-hidden py-14 sm:py-20 bg-surface border-y border-border-soft">
+    <span aria-hidden="true" data-parallax="0.06" class="animate-blob pointer-events-none absolute rounded-pill w-[280px] h-[280px] bg-primary-500/[0.06] -top-24 -start-24" />
+    <span aria-hidden="true" data-parallax="0.1" class="animate-blob pointer-events-none absolute rounded-pill w-[220px] h-[220px] bg-accent-500/[0.06] -bottom-16 -end-16" style="animation-delay:2.5s" />
+    <div class="relative max-w-content mx-auto px-6">
       <div class="reveal text-center max-w-[640px] mx-auto mb-11">
         <span class="inline-block px-4 py-1.5 rounded-pill bg-primary-50 text-primary-700 text-label font-bold mb-3.5">
           ميزات المنصة
