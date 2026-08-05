@@ -1,14 +1,25 @@
 <template>
   <section id="projects" class="py-14 sm:py-20 scroll-mt-20">
     <div class="max-w-content mx-auto px-6">
-      <div class="reveal mb-9">
-        <span class="inline-block px-4 py-1.5 rounded-pill bg-primary-50 text-primary-700 text-label font-bold">
-          أفضل مشاريع التخرج
-        </span>
-        <h2 class="font-cairo font-extrabold text-sec-title-sm sm:text-sec-title text-text-900 mt-2">
-          مشاريع مميزة من طلابنا
-        </h2>
-        <p class="text-[13.5px] text-text-600 mt-1.5">أعمال متميزة تمت أرشفتها في المنصة</p>
+      <div class="flex flex-wrap items-end justify-between gap-5 mb-9">
+        <div class="reveal">
+          <span class="inline-block px-4 py-1.5 rounded-pill bg-primary-50 text-primary-700 text-label font-bold">
+            أفضل مشاريع التخرج
+          </span>
+          <h2 class="font-cairo font-extrabold text-sec-title-sm sm:text-sec-title text-text-900 mt-2">
+            مشاريع مميزة من طلابنا
+          </h2>
+          <p class="text-[13.5px] text-text-600 mt-1.5">أعمال متميزة تمت أرشفتها في المنصة</p>
+        </div>
+
+        <router-link
+          v-magnetic
+          :to="{ name: 'projects-archive' }"
+          class="reveal reveal-delay-1 inline-flex items-center gap-2 h-[38px] px-[18px] rounded-pill border border-border bg-surface shadow-card text-[12.5px] font-bold text-text-700 hover:text-primary-700 hover:border-primary-200 transition-colors duration-fast"
+        >
+          عرض الكل<span v-if="projects.length"> ({{ projects.length }})</span>
+          <AppIcon name="chevronStart" :size="14" :stroke-width="2.2" />
+        </router-link>
       </div>
 
       <!-- فارغ -->
