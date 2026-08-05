@@ -74,7 +74,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-border-soft">
-                <tr v-for="(student, idx) in group.students" :key="idx" class="divide-x divide-border-soft">
+                <tr v-for="(student, idx) in group.students" :key="idx" class="row-interactive divide-x divide-border-soft">
                   <td class="px-5 py-3 font-bold text-text-900">{{ student.name }}</td>
                   <td class="px-5 py-3 mono">{{ student.whats }}</td>
                   <td class="px-5 py-3 mono whitespace-nowrap">{{ student.mail }}</td>

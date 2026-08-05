@@ -36,7 +36,7 @@
         </thead>
         <tbody class="divide-y divide-border-soft">
           <template v-for="(row, index) in rows" :key="rowKey ? row[rowKey] : index">
-            <tr class="hover:bg-border-soft/50 transition-colors duration-fast divide-x divide-border-soft">
+            <tr class="row-interactive divide-x divide-border-soft">
               <td
                 v-for="column in columns"
                 :key="column.key"
