@@ -26,14 +26,14 @@
 
 <script setup>
 import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useLandingStore } from '@/stores/landing.store'
 import { formatNumber } from '@/utils/formatters'
 import AppIcon from '@/components/icons/AppIcon.vue'
 
 const landingStore = useLandingStore()
-const { bannerStats, statsLoading, statsError } = landingStore
+const { bannerStats, statsLoading, statsError } = storeToRefs(landingStore)
 
-// فجوة باك إند: لا يوجد GET /stats عام — fetchStats تضبط statsError فورًا (راجعي API_REFERENCE.md)
 const loadStats = async () => {
   try {
     await landingStore.fetchStats()

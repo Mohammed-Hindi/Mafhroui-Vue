@@ -60,12 +60,21 @@ export const useLandingStore = defineStore('landing', () => {
     { key: 'avg_completion', label: 'متوسط الإنجاز', value: stats.value?.avg_completion ?? null, suffix: '%' }
   ])
 
-  /** لا يوجد endpoint عام للإحصائيات — تُضبط حالة الفجوة فورًا بدل نداء وهمي */
+  /** جلب إحصائيات النظام */
   const fetchStats = async () => {
-    statsError.value = NO_PUBLIC_STATS_API
-    stats.value = null
-    return null
+  statsLoading.value = true
+  statsError.value = null
+  try {
+    const { data } = await api.get('/stats')
+    stats.value = data
+    return data
+  } catch (err) {
+    statsError.value = err.normalized?.message || 'تعذّر تحميل الإحصائيات'
+    throw err
+  } finally {
+    statsLoading.value = false
   }
+}
 
   // GET /projects/featured → { data: [Project], total, current_page, last_page, per_page }
   const fetchFeaturedProjects = async () => {

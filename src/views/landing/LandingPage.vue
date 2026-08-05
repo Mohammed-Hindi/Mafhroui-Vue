@@ -48,7 +48,7 @@ const fetchFeaturedProjects = async () => {
   isLoading.value = true
   errorMessage.value = ''
   try {
-    const response = await api.get('http://23.95.13.99/api/projects/featured')
+    const response = await api.get('/projects/featured')
     projects.value = response.data?.data || response.data || []
   } catch (error) {
     console.error('خطأ في جلب المشاريع المميزة:', error)
