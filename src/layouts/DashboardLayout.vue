@@ -16,11 +16,9 @@
       <main class="flex-1 px-4 lg:px-6 py-6">
         <router-view v-slot="{ Component }">
           <transition
-            enter-active-class="transition duration-slow ease-standard"
-            enter-from-class="opacity-0 translate-y-1.5 blur-[2px]"
-            leave-active-class="transition duration-fast ease-standard"
-            leave-to-class="opacity-0"
-            mode="out-in"
+            enter-active-class="transition duration-fast ease-standard"
+            enter-from-class="opacity-0 translate-y-1"
+            leave-active-class="hidden"
           >
             <component :is="Component" />
           </transition>

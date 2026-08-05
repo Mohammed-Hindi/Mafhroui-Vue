@@ -15,13 +15,13 @@ let ctx, raf, width, height, droplets = []
 let mouseX = 0
 let mouseY = 0
 
-function makeDroplet() {
+function makeDroplet(onScreen) {
   const r = 8 + Math.random() * 26
   return {
     x: Math.random() * width,
-    y: height + Math.random() * height,
+    y: onScreen ? Math.random() * height : height + Math.random() * height,
     r,
-    speedY: 0.12 + Math.random() * 0.3,
+    speedY: 0.3 + Math.random() * 0.5,
     swayAmp: 12 + Math.random() * 28,
     swaySpeed: 0.2 + Math.random() * 0.35,
     swayOffset: Math.random() * Math.PI * 2,
@@ -50,7 +50,7 @@ function resize() {
   width = canvasEl.value.width = window.innerWidth
   height = canvasEl.value.height = window.innerHeight
   const count = Math.min(30, Math.round((width * height) / 42000))
-  droplets = Array.from({ length: count }, makeDroplet)
+  droplets = Array.from({ length: count }, () => makeDroplet(true))
 }
 
 let t = 0

@@ -1,5 +1,10 @@
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { ROLES } from '@/utils/constants'
+import ProfilePageStudent from '@/views/student/ProfilePage.vue'
+import ProposalPageStudent from '@/views/student/ProposalPage.vue'
+import TasksPageStudent from '@/views/student/TasksPage.vue'
+import MeetingsPageStudent from '@/views/student/MeetingsPage.vue'
+import AssistantPageStudent from '@/views/student/AssistantPage.vue'
 
 /** مسارات لوحة الطالب — تُضاف صفحة بصفحة حسب الوصف */
 export default [
@@ -11,31 +16,31 @@ export default [
       {
         path: '',
         name: 'student-dashboard',
-        component: () => import('@/views/student/ProfilePage.vue'),
+        component: ProfilePageStudent,
         meta: { title: 'الملف الشخصي' }
       },
       {
         path: 'proposal',
         name: 'student-proposal',
-        component: () => import('@/views/student/ProposalPage.vue'),
+        component: ProposalPageStudent,
         meta: { title: 'المقترح / التقرير النهائي' }
       },
       {
         path: 'tasks',
         name: 'student-tasks',
-        component: () => import('@/views/student/TasksPage.vue'),
+        component: TasksPageStudent,
         meta: { title: 'المهام (Kanban)' }
       },
       {
         path: 'meetings',
         name: 'student-meetings',
-        component: () => import('@/views/student/MeetingsPage.vue'),
+        component: MeetingsPageStudent,
         meta: { title: 'الاجتماعات' }
       },
       {
         path: 'assistant',
         name: 'student-assistant',
-        component: () => import('@/views/student/AssistantPage.vue'),
+        component: AssistantPageStudent,
         meta: { title: 'المساعد الآلي' }
       }
     ]
