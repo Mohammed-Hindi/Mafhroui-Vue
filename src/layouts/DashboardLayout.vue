@@ -1,6 +1,7 @@
 <template>
   <div class="min-h-screen bg-bg flex relative">
-    <!-- خلفية متحركة زخرفية — خلف كل المحتوى، لا تتفاعل مع الفأرة -->
+    <!-- خلفية متحركة زخرفية — قطرات ماء + فقاعات، خلف كل المحتوى، لا تتفاعل مع الفأرة -->
+    <WaterBackground />
     <div aria-hidden="true" class="pointer-events-none fixed inset-0 overflow-hidden">
       <span class="animate-blob absolute rounded-pill w-[420px] h-[420px] bg-primary-500/[0.05] -top-40 -end-32" />
       <span class="animate-blob absolute rounded-pill w-[340px] h-[340px] bg-accent-500/[0.05] top-1/2 -start-28" style="animation-delay:3s" />
@@ -33,6 +34,7 @@
 import { mapState } from 'pinia'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import WaterBackground from '@/components/shared/WaterBackground.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { NAV_ITEMS_BY_ROLE } from '@/utils/navConfig'
 import { ROLE_LABELS } from '@/utils/constants'
@@ -44,7 +46,7 @@ import { ROLE_LABELS } from '@/utils/constants'
 export default {
   name: 'DashboardLayout',
 
-  components: { AppSidebar, AppTopbar },
+  components: { AppSidebar, AppTopbar, WaterBackground },
 
   computed: {
     ...mapState(useAuthStore, ['userRole']),

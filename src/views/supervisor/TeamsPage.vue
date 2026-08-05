@@ -59,7 +59,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-border-soft">
-                <tr v-for="(member, idx) in group.members" :key="idx" class="divide-x divide-border-soft">
+                <tr v-for="(member, idx) in group.members" :key="idx" class="row-interactive divide-x divide-border-soft">
                   <td class="px-5 py-3 font-bold text-text-900">{{ member.name }}</td>
                   <td class="px-5 py-3 mono">{{ member.uid }}</td>
                   <td class="px-5 py-3 mono">{{ member.whats }}</td>

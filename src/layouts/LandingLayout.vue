@@ -22,5 +22,5 @@
 <script setup>
 import LandingNavBar from '@/components/landing/LandingNavBar.vue'
 import LandingFooter from '@/components/landing/LandingFooter.vue'
-import WaterBackground from '@/components/landing/WaterBackground.vue'
+import WaterBackground from '@/components/shared/WaterBackground.vue'
 </script>
