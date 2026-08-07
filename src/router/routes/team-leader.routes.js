@@ -1,6 +1,13 @@
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { ROLES } from '@/utils/constants'
 
+// استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
+import ProfilePage from '@/views/team-leader/ProfilePage.vue'
+import ProposalPage from '@/views/team-leader/ProposalPage.vue'
+import TasksPage from '@/views/team-leader/TasksPage.vue'
+import MeetingsPage from '@/views/team-leader/MeetingsPage.vue'
+import AssistantPage from '@/views/team-leader/AssistantPage.vue'
+
 /** مسارات لوحة قائد الفريق — تُضاف صفحة بصفحة حسب الوصف */
 export default [
   {
@@ -11,31 +18,31 @@ export default [
       {
         path: '',
         name: 'team-leader-dashboard',
-        component: () => import('@/views/team-leader/ProfilePage.vue'),
+        component: ProfilePage,
         meta: { title: 'الملف الشخصي' }
       },
       {
         path: 'proposal',
         name: 'team-leader-proposal',
-        component: () => import('@/views/team-leader/ProposalPage.vue'),
+        component: ProposalPage,
         meta: { title: 'المقترح / التقرير النهائي' }
       },
       {
         path: 'tasks',
         name: 'team-leader-tasks',
-        component: () => import('@/views/team-leader/TasksPage.vue'),
+        component: TasksPage,
         meta: { title: 'المهام (Kanban)' }
       },
       {
         path: 'meetings',
         name: 'team-leader-meetings',
-        component: () => import('@/views/team-leader/MeetingsPage.vue'),
+        component: MeetingsPage,
         meta: { title: 'الاجتماعات' }
       },
       {
         path: 'assistant',
         name: 'team-leader-assistant',
-        component: () => import('@/views/team-leader/AssistantPage.vue'),
+        component: AssistantPage,
         meta: { title: 'المساعد الآلي' }
       }
     ]

@@ -15,11 +15,12 @@ let ctx, raf, width, height, droplets = []
 let mouseX = 0
 let mouseY = 0
 
-function makeDroplet() {
+function makeDroplet(initial = false) {
   const r = 8 + Math.random() * 26
   return {
     x: Math.random() * width,
-    y: height + Math.random() * height,
+    // عند فتح الصفحة تظهر الفقاعات موزّعة بكامل الشاشة فورًا؛ بعدها تُعاد ولادتها أسفل الشاشة لتصعد بشكل طبيعي
+    y: initial ? Math.random() * height : height + Math.random() * height,
     r,
     speedY: 0.12 + Math.random() * 0.3,
     swayAmp: 12 + Math.random() * 28,
@@ -47,10 +48,14 @@ function paintDroplet(d, x, y) {
 }
 
 function resize() {
+  const firstRun = !width
   width = canvasEl.value.width = window.innerWidth
   height = canvasEl.value.height = window.innerHeight
-  const count = Math.min(30, Math.round((width * height) / 42000))
-  droplets = Array.from({ length: count }, makeDroplet)
+  // كثافة متوسطة: لا تُعاد الفقاعات الموجودة عند تغيير حجم الشاشة، تُنشأ فقط أول مرة
+  if (firstRun) {
+    const count = Math.min(26, Math.round((width * height) / 46000))
+    droplets = Array.from({ length: count }, () => makeDroplet(true))
+  }
 }
 
 let t = 0
