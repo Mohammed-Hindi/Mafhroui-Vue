@@ -1,10 +1,12 @@
-# هيكل المشروع الكامل — Mafhroui-Vue
+# هيكل المشروع الكامل — Mafhroui-Vue (مسار)
 
 Vue 3 (Options API) + Vue Router + Pinia + Tailwind. `src/` فقط، مرتّب بالمجلد.
 
-> ملاحظة: `stores/*.js` مكتوبة بـ Pinia setup-style (دوال `ref`/`computed` داخل `defineStore(...، () => {})`), وليست Options API — الاستثناء الوحيد بالمشروع عن بقية الملفات.
+> ملاحظة: `stores/*.js` مكتوبة بـ Pinia setup-style (دوال `ref`/`computed` داخل `defineStore('x', () => {...})`) — الاستثناء الوحيد عن Options API بمعظم بقية الملفات.
 
-> **أدوار المشروع حاليًا: COMMITTEE (لجنة الإشراف) + SUPERVISOR (المشرف/المدرس) فقط.** أدوار SUPER_ADMIN / TEAM_LEADER / STUDENT كانت لوحات placeholder محلية بلا باك إند حقيقي — حُذفت بالكامل (views + routes) بناءً على طلب صريح، للتركيز على الأدوار الفعلية فقط. `ROLES`/`ROLE_LABELS` بـ `constants.js` ما زالت تحتوي كل الأدوار الخمسة لأنها عقد بيانات مع الباك إند (تسجيل الدخول)، لم تُمس.
+> **زيرو باك إند حقيقي.** كل بيانات المشروع (فرق، طلاب، مشرفون، مقترحات، مهام، اجتماعات، مواعيد مناقشات، أرشيف مشاريع، إحصائيات، إشعارات، فصول دراسية) بيانات ثابتة مكتوبة مباشرة بـ `data()` كل صفحة أو بملفات `src/data/*.js` مشتركة. `services/api.js` موجود لكن غير مستهلَك فعليًا إلا بمخطط `auth.store.js` (تسجيل الدخول يعتمد فعليًا على `DEMO_ACCOUNTS` ثابتة، لا نداء شبكة حقيقي).
+
+> **الأدوار الأربعة الفعلية:** COMMITTEE (لجنة الإشراف)، SUPERVISOR (المشرف)، TEAM_LEADER (قائد الفريق)، STUDENT (الطالب). كل دور له مجلد `views/<role>/` ومسارات `router/routes/<role>.routes.js` مستقلة، تشترك جميعًا بـ `layouts/DashboardLayout.vue`.
 
 ---
 
@@ -12,8 +14,8 @@ Vue 3 (Options API) + Vue Router + Pinia + Tailwind. `src/` فقط، مرتّب 
 
 | ملف | وظيفة |
 |---|---|
-| `src/main.js` | نقطة الإقلاع: ينشئ `app`، يركّب Pinia + Router + Toast plugin + `main.css`، يشغّل `initRevealObserver()` (أنيميشن ظهور العناصر عند التمرير) |
-| `src/App.vue` | الجذر — `<router-view>` فقط |
+| `src/main.js` | نقطة الإقلاع: ينشئ `app`، يركّب Pinia + Router + Toast plugin + `main.css`، يسجّل directives `v-magnetic`/`v-tilt` عالميًا، يشغّل `initRevealObserver()` و`initParallax()` |
+| `src/App.vue` | الجذر — `dir="rtl"`، يركّب `ScrollProgressBar` + `CursorSpotlight` (عالميًا لكل الصفحات) + `<router-view>` + `ToastContainer`، يهيّئ الوضع الداكن عبر `ui.store.initTheme()` عند `onMounted` |
 
 ---
 
@@ -21,12 +23,16 @@ Vue 3 (Options API) + Vue Router + Pinia + Tailwind. `src/` فقط، مرتّب 
 
 | ملف | وظيفة |
 |---|---|
-| `index.js` | يجمع `landing + auth + committee + supervisor` routes فقط، يضيف `/403` و `catch-all 404`، يركّب `authGuard` + `titleGuard` كـ `beforeEach` |
-| `guards.js` | `authGuard(to)`: يتحقق `requiresAuth`/`roles`/`guestOnly`، يستعيد المستخدم بعد Reload عبر `fetchCurrentUser()`. `titleGuard(to)`: يضبط عنوان التبويب |
-| `routes/landing.routes.js` | مسارات الصفحة العامة (لا مصادقة) — ملك فريق ربط الباك، لم يُمس |
-| `routes/auth.routes.js` | تسجيل دخول، نسيت كلمة المرور، إعادة تعيين، تغيير كلمة المرور — ملك فريق ربط الباك، لم يُمس |
-| `routes/committee.routes.js` | `/committee` — dashboard, teams, members, proposals, appointments, project-archive, progress |
-| `routes/supervisor.routes.js` | `/supervisor` — dashboard, assistant, tasks, meetings |
+| `index.js` | يجمع كل مجموعات المسارات (`landing + auth + committee + supervisor + team-leader + student`)، يضيف `/403` و`catch-all 404`، يركّب `authGuard` + `titleGuard` كـ `beforeEach`/`afterEach` |
+| `guards.js` | `authGuard(to)`: يتحقق `requiresAuth`/`roles`. `titleGuard(to)`: يضبط عنوان التبويب من `meta.title` |
+| `routes/landing.routes.js` | مسارات الصفحة العامة (لا مصادقة): `landing`, `projects-archive`, `project-showcase/:id` |
+| `routes/auth.routes.js` | تسجيل دخول، نسيت كلمة المرور، إعادة تعيين/قبول دعوة، تغيير كلمة المرور |
+| `routes/committee.routes.js` | `/committee/*` — **استيراد مباشر (static import)، لا lazy** |
+| `routes/supervisor.routes.js` | `/supervisor/*` — **استيراد مباشر** |
+| `routes/team-leader.routes.js` | `/team-leader/*` — **استيراد مباشر** |
+| `routes/student.routes.js` | `/student/*` — **استيراد مباشر** |
+
+كل مسارات لوحات التحكم الأربعة `component:` تشير لمكوّن مستورد ثابتًا أعلى الملف (ليس `() => import(...)`) — قرار متعمّد لتنقّل فوري بلا وميض تحميل عند كل ضغطة بالقائمة الجانبية.
 
 ---
 
@@ -34,9 +40,9 @@ Vue 3 (Options API) + Vue Router + Pinia + Tailwind. `src/` فقط، مرتّب 
 
 | ملف | وظيفة |
 |---|---|
-| `AuthLayout.vue` | إطار صفحات تسجيل الدخول/كلمة المرور — لم يُمس |
-| `LandingLayout.vue` | إطار الصفحة العامة (Navbar + Footer) — لم يُمس |
-| `DashboardLayout.vue` | إطار موحّد للوحتي التحكم المتبقيتين (committee/supervisor) — `Sidebar + Topbar + router-view`. يقرأ `userRole` من `auth.store` ويشتق `navItems`/`roleLabel` من `utils/navConfig.js` + `ROLE_LABELS` |
+| `AuthLayout.vue` | إطار صفحات تسجيل الدخول/كلمة المرور — يحتوي `AuthBrandPanel` |
+| `LandingLayout.vue` | إطار الصفحة العامة — `WaterBackground` + `LandingNavBar` + `<router-view>` بانتقال fade/blur + `LandingFooter` |
+| `DashboardLayout.vue` | إطار موحّد للأدوار الأربعة — `WaterBackground` + كتل ضبابية عائمة (`animate-blob`) + `AppSidebar` + `AppTopbar` + `<router-view>` بانتقال fade سريع (150ms). يقرأ `userRole` من `auth.store` ويشتق `navItems`/`roleLabel` من `utils/navConfig.js` |
 
 ---
 
@@ -47,128 +53,144 @@ Vue 3 (Options API) + Vue Router + Pinia + Tailwind. `src/` فقط، مرتّب 
 |---|---|
 | `ForbiddenPage.vue` | 403 — دور بلا صلاحية |
 | `NotFoundPage.vue` | 404 |
-| `PlaceholderPage.vue` | صفحة نائبة لمسارات لم تُبنَ بعد |
 
-### `auth/` — ملك فريق ربط الباك، لم تُمس
+### `auth/`
 | ملف | وظيفة |
 |---|---|
-| `LoginPage.vue` | نموذج دخول → `authStore.login()` |
-| `ForgotPasswordPage.vue` | لا نموذج/API — صفحة معلومات ثابتة توجّه لمراسلة لجنة الإشراف (`mailto:`) لطلب رابط دعوة |
-| `ResetPasswordPage.vue` | تُستخدم أيضًا لقبول الدعوة الأولى (`POST /invite/{token}/accept`) |
-| `ChangePasswordPage.vue` | تغيير كلمة المرور — تُستدعى تلقائيًا عبر بوابة 423 (`must_change_password`) |
+| `LoginPage.vue` | نموذج دخول → `authStore.login()`، حسابات تجريبية ثابتة (`DEMO_ACCOUNTS`) |
+| `ForgotPasswordPage.vue` | صفحة معلومات ثابتة توجّه لمراسلة لجنة الإشراف (`mailto:`) |
+| `ResetPasswordPage.vue` | تُستخدم أيضًا لقبول الدعوة الأولى |
+| `ChangePasswordPage.vue` | تغيير كلمة المرور |
 
-### `landing/` — ملك فريق ربط الباك، لم تُمس
+### `landing/`
 | ملف | وظيفة |
 |---|---|
-| `LandingPage.vue` | الصفحة الرئيسية العامة — تجمّع مكوّنات `components/landing/*` |
-| `ProjectShowcasePage.vue` | صفحة عرض مشروع مفرد للزوار |
-| `ProjectsArchivePage.vue` | أرشيف عام للمشاريع (بلا مصادقة) |
+| `LandingPage.vue` | الصفحة الرئيسية العامة — تجمّع مكوّنات `components/landing/*`، تقرأ `featured` من `landing.store` |
+| `ProjectsArchivePage.vue` | أرشيف عام للمشاريع (بلا مصادقة) — بحث + فلترة قسم/درجة + ترقيم صفحات محلي |
+| `ProjectShowcasePage.vue` | صفحة عرض مشروع مفرد — بطاقة فيديو على هويّة "مسار" البصرية (بدون تضمين يوتيوب حقيقي)، شبكة معلومات المشروع |
 
-### `committee/` (role: COMMITTEE، `/committee/*`) — متصلة بباك إند حقيقي، لم تُمس
+### `committee/` (role: COMMITTEE، `/committee/*`)
 | ملف | Route name | وظيفة |
 |---|---|---|
-| `DashboardPage.vue` | `committee-dashboard` | إحصائيات محسوبة محليًا من `GET /teams` (فرق، طلاب، مشرفين، توزيع حالات) |
-| `TeamsPage.vue` | `committee-teams` | إنشاء فريق + استيراد طلاب بالجملة (preview/confirm) + عرض قوائم |
-| `MembersPage.vue` | `committee-members` | طلاب ومشرفون مُشتقّون من `GET /teams` (getters بالـ store)، إعادة إرسال دعوة |
-| `ProposalsPage.vue` | `committee-proposals` | موافقة/رفض مقترح بإدخال رقمه يدويًا — لا يوجد endpoint قائمة مقترحات |
-| `AppointmentsPage.vue` | `committee-appointments` | مواعيد المناقشات: عرض + إنشاء (`POST /discussions`) + تصدير xlsx |
-| `ProjectArchivePage.vue` | `committee-project-archive` | كل المشاريع من `GET /teams` |
-| `ProgressPage.vue` | `committee-progress` | `GET /teams/{id}/progress` بالتوازي لكل فريق + تصدير `GET /progress/export` |
+| `DashboardPage.vue` | `committee-dashboard` | إحصائيات + توزيع حالات المشاريع + متوسط الإنجاز |
+| `TeamsPage.vue` | `committee-teams` | إدارة الفرق: إضافة طالب/مشرف، تعيين قائد فريق، تصدير Excel/PDF |
+| `MembersPage.vue` | `committee-members` | طلاب + مشرفون، تقييد دخول، توليد كلمات سر |
+| `DeletedMembersPage.vue` | `committee-deleted-members` | سجل الأعضاء المحذوفين |
+| `ProposalsPage.vue` | `committee-proposals` | موافقة/رفض مقترحات وتقارير نهائية |
+| `AppointmentsPage.vue` | `committee-appointments` | مواعيد المناقشات: عرض + إنشاء + تصدير Excel/PDF |
+| `ProjectArchivePage.vue` / `ProjectDetailPage.vue` | `committee-project-archive` / `committee-project-detail` | أرشيف المشاريع المكتملة، تفاصيل مشروع مفرد |
+| `ProgressPage.vue` | `committee-progress` | نسبة تقدّم كل المشاريع |
+| `AddCommitteePage.vue` | `committee-add-committee` | إدارة أعضاء لجنة الإشراف |
+| `AssistantPage.vue` | `committee-assistant` | مساعد آلي (شات) |
 
-### `supervisor/` (role: SUPERVISOR، `/supervisor/*`) — بيانات محلية placeholder، لا API
+### `supervisor/` (role: SUPERVISOR، `/supervisor/*`)
 | ملف | Route | وظيفة |
 |---|---|---|
-| `DashboardPage.vue` | `supervisor-dashboard` | لوحة رئيسية للمشرف |
-| `AssistantPage.vue` | `supervisor-assistant` | يغلّف `AssistantChat.vue` — اقتراحات وردود مخصّصة (متابعة تقدّم الفرق، صياغة ملاحظات) |
-| `TasksPage.vue` | `supervisor-tasks` | يغلّف `TaskBoard.vue` بوضع `read-only` — نظرة عامة على مهام كل الفرق |
-| `MeetingsPage.vue` | `supervisor-meetings` | يغلّف `MeetingsBoard.vue` بوضع `can-create=false` — عرض مُجمّع لاجتماعات كل الفرق |
+| `ProfilePage.vue` | `supervisor-dashboard` (الرئيسية) | الملف الشخصي + الفرق المُشرَف عليها + إحصائيات |
+| `TeamsPage.vue` | `supervisor-teams` | نفس بنية لجنة الإشراف، بلا إضافة/حذف |
+| `ProposalsPage.vue` | `supervisor-proposals` | موافقة/رفض المقترحات والتقارير |
+| `TasksPage.vue` | `supervisor-tasks` | لوحة Kanban (حاليًا صفحة فارغة — لم تُبنَ بعد) |
+| `MeetingsPage.vue` | `supervisor-meetings` | الاجتماعات |
+| `AppointmentsPage.vue` | `supervisor-appointments` | مواعيد المناقشات |
+| `ProjectArchivePage.vue` / `ProjectDetailPage.vue` | `supervisor-project-archive` / `supervisor-project-detail` | أرشيف المشاريع |
+| `ProgressPage.vue` | `supervisor-progress` | نسبة تقدّم الفرق |
+| `AssistantPage.vue` | `supervisor-assistant` | مساعد آلي |
 
-**محذوف بالكامل (بناءً على طلب صريح):** `views/super-admin/`, `views/team-leader/`, `views/student/` + `router/routes/{super-admin,team-leader,student}.routes.js` — كانت لوحات placeholder بلا باك إند حقيقي.
+### `team-leader/` (role: TEAM_LEADER، `/team-leader/*`)
+| ملف | Route | وظيفة |
+|---|---|---|
+| `ProfilePage.vue` | `team-leader-dashboard` (الرئيسية) | الملف الشخصي + فريقي + مخطط تقدّم المشروع |
+| `ProposalPage.vue` | `team-leader-proposal` | تسليم المقترح والتقرير النهائي — نظام بنود تلقائي بالحقول، إرفاق ملف، توليد PDF رسمي فعلي |
+| `TasksPage.vue` | `team-leader-tasks` | لوحة Kanban (فارغة — لم تُبنَ بعد) |
+| `MeetingsPage.vue` | `team-leader-meetings` | إنشاء/عرض اجتماعات |
+| `AssistantPage.vue` | `team-leader-assistant` | مساعد آلي |
+
+### `student/` (role: STUDENT، `/student/*`)
+| ملف | Route | وظيفة |
+|---|---|---|
+| `ProfilePage.vue` | `student-dashboard` (الرئيسية) | نفس بنية قائد الفريق، وسم "عضو" بدل "قائد الفريق" |
+| `ProposalPage.vue` | `student-proposal` | نفس فورم قائد الفريق، لكن **مقفل/معتم بصريًا** إن لم يكن الطالب قائد الفريق |
+| `TasksPage.vue` | `student-tasks` | لوحة Kanban (فارغة — لم تُبنَ بعد) |
+| `MeetingsPage.vue` | `student-meetings` | عرض الاجتماعات، زر "اجتماع جديد" يظهر فقط لقائد الفريق |
+| `AssistantPage.vue` | `student-assistant` | مساعد آلي |
 
 ---
 
 ## `components/ui/` — عناصر أساس (Design System)
 
-| ملف | props رئيسية | وظيفة |
-|---|---|---|
-| `BaseButton.vue` | `variant, size, icon, loading, to/href` | زر عام، يتحوّل تلقائيًا لـ `router-link`/`a`/`button` |
-| `BaseInput.vue` | `modelValue, label, type, icon, error, hint` | حقل نص عام مع `v-model` |
-| `BaseTextarea.vue` | نفس `BaseInput` + `rows` | حقل نص متعدد الأسطر |
-| `BaseSelect.vue` | — | قائمة اختيار عامة |
-| `BaseCheckbox.vue` | `modelValue, label, disabled` | مربع اختيار — يُستخدم بـ `LoginPage.vue` |
-| `BaseBadge.vue` | `variant, dot` | شارة حالة ملوّنة |
-| `BaseModal.vue` | `modelValue, title, size, closeOnOverlay` | مودال عام — Teleport + إغلاق بـ Esc/الخلفية |
-| `DataTable.vue` | `columns, rows, rowKey, loading` | جدول بيانات عام قابل لإعادة الاستخدام |
-| `Pagination.vue` | `currentPage, lastPage, total` | ترقيم صفحات عام، يصدر `change` |
-| `EmptyState.vue` | `title, description, icon` | حالة "لا توجد بيانات" |
-| `ErrorState.vue` | `title, message` | حالة خطأ + زر إعادة محاولة (`retry`) |
-| `LoadingSpinner.vue` | `size, inline` | مؤشر تحميل |
-| `SkeletonLoader.vue` | `rows, height` | هيكل تحميل وهمي (skeleton) |
-| `ToastContainer.vue` | — | يعرض قائمة التنبيهات من `ui.store` عبر `$toast` |
-
-**محذوف (orphan، صفر استخدام بأي صفحة):** `BaseChip.vue`, `ConfirmDialog.vue`
+| ملف | وظيفة |
+|---|---|
+| `BaseButton.vue` | زر عام (`variant, size, icon, loading, to/href`) — `v-magnetic` مطبّق على الجذر |
+| `BaseInput.vue` / `BaseTextarea.vue` / `BaseSelect.vue` / `BaseCheckbox.vue` | حقول نماذج عامة |
+| `BaseBadge.vue` | شارة حالة ملوّنة |
+| `BaseModal.vue` | مودال عام — Teleport + إغلاق بـ Esc/الخلفية |
+| `DataTable.vue` | جدول بيانات عام — يتحول تلقائيًا لبطاقات موبايل، صفوف بكلاس `row-interactive` (هفر/ضغط احترافي موحّد) |
+| `Pagination.vue` | ترقيم صفحات عام، يصدر `change` |
+| `EmptyState.vue` / `ErrorState.vue` | حالات فارغة/خطأ |
+| `LoadingSpinner.vue` / `SkeletonLoader.vue` | مؤشرات تحميل |
+| `CountUp.vue` | عدّاد يتحرك من 0 إلى القيمة النهائية عند دخوله الشاشة (مرة واحدة) |
+| `ScrollProgressBar.vue` | شريط تقدّم رفيع أعلى الصفحة يعكس نسبة التمرير |
+| `ToastContainer.vue` | يعرض قائمة التنبيهات من `ui.store` عبر `$toast` |
 
 ## `components/shared/`
 
 | ملف | وظيفة |
 |---|---|
-| `AssistantChat.vue` | مكوّن شات مساعد آلي عام — `props: title, emptyHint, suggestions, replies`. تُستخدم بـ `supervisor/AssistantPage.vue` |
-| `TaskBoard.vue` | لوحة Kanban عامة — 4 أعمدة، سحب-وإفلات، تخزين `localStorage`. `readOnly` تُستخدم بنظرة المشرف العامة |
-| `MeetingsBoard.vue` | لوحة اجتماعات عامة — قوائم قادمة/منتهية مع Pagination، مودال طلب اجتماع (`canCreate`)، تذكير واتساب، تخزين `localStorage` |
-| `MeetingCard.vue` | بطاقة اجتماع مفردة — داخل `MeetingsBoard` |
-| `StatCard.vue` | بطاقة إحصائية (`label, value, icon, tone, loading`) |
-| `SemesterSelect.vue` | قائمة اختيار الفصل الدراسي — تُستخدم بـ `AppTopbar.vue` (تصميم فقط، لا `GET /semesters` بالباك إند) |
-| `NotificationBell.vue` | جرس إشعارات بـ `AppTopbar.vue` (تصميم فقط، لا endpoints بعد) |
-| `FileDropzone.vue` | سحب-وإفلات ملفات — تُستخدم بـ `committee/TeamsPage.vue` (استيراد Excel) |
-| `PasswordRevealInput.vue` | حقل كلمة مرور بزر إظهار/إخفاء |
+| `AssistantChat.vue` | مكوّن شات مساعد آلي عام، تُستخدم بصفحات `*/AssistantPage.vue` الأربع |
+| `TaskBoard.vue` | لوحة Kanban عامة (غير موصولة بعد بصفحات المهام الفعلية) |
+| `MeetingCard.vue` | بطاقة اجتماع مفردة |
+| `ClauseTextarea.vue` | حقل نص بنظام "بند" تلقائي — Enter أو مسافتين يبدأ بندًا جديدًا (فورم المقترح) |
+| `SubmittedState.vue` | حالة نجاح/رفض بعد تسليم مقترح/تقرير، مع عناصر ملف/فيديو قابلة للفتح |
+| `SemesterSelect.vue` | قائمة اختيار الفصل الدراسي بالـ Topbar — بيانات ثابتة، تُحدَّد تلقائيًا للفصل النشط |
+| `NotificationBell.vue` | جرس إشعارات بالـ Topbar — بيانات ثابتة |
+| `FileDropzone.vue` | سحب-وإفلات ملفات |
 | `PasswordStrengthMeter.vue` | مؤشر قوة كلمة المرور |
+| `WaterBackground.vue` | خلفية فقاعات ماء (canvas) — مثبّتة بكل لوحات التحكم واللاندنج، متجاوبة مع الوضع الداكن وحركة الفأرة |
+| `CursorSpotlight.vue` | إضاءة خفيفة تتبع الفأرة — سطح المكتب فقط |
 
-**محذوف (orphan):** `InlineEditableRow.vue`, `TruncatableText.vue`
-
-## `components/auth/` — ملك فريق ربط الباك، لم تُمس
+## `components/auth/`
 
 | ملف | وظيفة |
 |---|---|
-| `AuthBrandPanel.vue` | اللوحة الجانبية بهوية المنصة بصفحات تسجيل الدخول |
-| `AuthTextField.vue` | حقل نص مخصص لنماذج المصادقة |
-| `AuthPasswordField.vue` | حقل كلمة مرور مخصص لنماذج المصادقة |
+| `AuthBrandPanel.vue` | اللوحة الجانبية بهوية المنصة بصفحات تسجيل الدخول — كتل ضبابية عائمة |
+| `AuthTextField.vue` / `AuthPasswordField.vue` | حقول نماذج مخصصة للمصادقة |
 
-## `components/landing/` — ملك فريق ربط الباك، لم تُمس
+## `components/landing/`
 
-`HeroSection`, `StatsBanner`, `RolesSection`, `HowItWorksSection`, `FeaturedProjects` (+ `ProjectCard`)، `DepartmentsSection`, `CtaSection`, `LandingNavBar`, `LandingFooter`.
+`HeroSection` (فيديو تعريفي على الهوية البصرية + إحصائيات)، `FeaturedProjects` (+ `ProjectCard`، سلايدر 3 مشاريع/سلايد)، `RolesSection`, `HowItWorksSection`, `DepartmentsSection`, `StatsBanner`, `CtaSection`, `LandingNavBar` (زر الوضع الداكن + تسجيل الدخول), `LandingFooter`.
 
 ## `components/committee/`
 
 | ملف | وظيفة |
 |---|---|
-| `StatusOverviewCard.vue` | بطاقة توزيع حالات مشاريع — تُستخدم بـ `committee/DashboardPage.vue` |
-
-**محذوف (orphan):** `CompletionDonut.vue`
+| `StatusOverviewCard.vue` | بطاقة توزيع حالات مشاريع |
 
 ## `components/layout/`
 
 | ملف | وظيفة |
 |---|---|
-| `AppSidebar.vue` | القائمة الجانبية العامة — تقبل `navItems`/`roleLabel` |
-| `AppTopbar.vue` | الشريط العلوي — يحتوي `SemesterSelect` + `NotificationBell` |
+| `AppSidebar.vue` | القائمة الجانبية العامة — تقبل `navItems`/`roleLabel`، Drawer على الموبايل |
+| `AppTopbar.vue` | الشريط العلوي — "مرحبًا، {الاسم}" بالصفحة الرئيسية لكل دور، عنوان الصفحة بالباقي، زر الوضع الداكن، `SemesterSelect`, `NotificationBell` |
 
 ## `components/icons/`
 
 | ملف | وظيفة |
 |---|---|
-| `AppIcon.vue` | غلاف أيقونات موحّد — `name` يُطابَق بقاموس `ICON_PATHS` داخلي، مستخدَم 19+ مرة |
+| `AppIcon.vue` | غلاف أيقونات موحّد للصفحة العامة — `name` يُطابَق بقاموس `ICON_PATHS` داخلي |
 
 ---
 
 ## `stores/` (Pinia، composition-style)
 
-| ملف | الحالة/الأفعال | وظيفة |
-|---|---|---|
-| `auth.store.js` | `login, acceptInvite, changePassword, fetchCurrentUser, logout, hasRole` | ملك فريق ربط الباك، لم يُمس |
-| `committee.store.js` | `fetchTeams, createTeam, previewImport, confirmImport, fetchAllTeamsProgress, exportProgress, fetchDiscussions, exportDiscussions, createDiscussion, fetchRefData` | كل بيانات لوحة لجنة الإشراف — باك إند حقيقي، لم يُمس |
-| `landing.store.js` | `fetchStats, fetchFeaturedProjects, fetchProjects, fetchDepartments` | ملك فريق ربط الباك، لم يُمس |
-| `notifications.store.js` | `fetchNotifications` | معلّقة (`TODO API`)، لا endpoint حقيقي بعد |
-| `ui.store.js` | `isSidebarOpen, isLoading, toggleSidebar, setLoading` | حالة واجهة عامة |
+| ملف | وظيفة |
+|---|---|
+| `auth.store.js` | `DEMO_ACCOUNTS` ثابتة (4 حسابات، دور لكل واحد)، `login, logout, hasRole, homeRoute` |
+| `landing.store.js` | كل بيانات الصفحة العامة مبنية من `data/projectArchive.js` + `utils/specializations.js` — `stats, featured, projects (أرشيف مفلتر/مرقّم محليًا), departments` — **بلا أي نداء API** |
+| `committee.store.js` | بيانات مساعدة للجنة الإشراف |
+| `supervisor.store.js` | بيانات مساعدة للمشرف |
+| `deletedMembers.store.js` | سجل الأعضاء المحذوفين (`deleteStudent`, `deleteSupervisor`) |
+| `notifications.store.js` | إشعارات ثابتة (5 عناصر تجريبية)، `markAsRead`/`markAllAsRead` محليًا |
+| `ui.store.js` | `isDark`/`toggleTheme` (الوضع الداكن)، `sidebarOpen`, `semesters` (بيانات ثابتة)، `activeSemesterId`، Toasts |
 
 ---
 
@@ -176,7 +198,7 @@ Vue 3 (Options API) + Vue Router + Pinia + Tailwind. `src/` فقط، مرتّب 
 
 | ملف | وظيفة |
 |---|---|
-| `api.js` | نسخة Axios واحدة — يستهلكها `auth.store`/`landing.store`/`committee.store`. ملك فريق ربط الباك، لم يُمس |
+| `api.js` | نسخة Axios واحدة — موجودة للتوافق المستقبلي، غير مستهلَكة فعليًا بأي صفحة/متجر حاليًا |
 
 ---
 
@@ -184,19 +206,32 @@ Vue 3 (Options API) + Vue Router + Pinia + Tailwind. `src/` فقط، مرتّب 
 
 | ملف | وظيفة |
 |---|---|
-| `constants.js` | `ROLES`, `ROLE_LABELS`, `ROLE_HOME_ROUTE`, `STORAGE_KEYS`, `SIDEBAR_BREAKPOINT`, `PAGE_SIZE_OPTIONS` — لم يُمس (عقد بيانات مع تسجيل الدخول، يحتوي كل الأدوار الخمسة رغم حذف 3 لوحات) |
-| `navConfig.js` | `NAV_ITEMS_BY_ROLE` — الآن COMMITTEE + SUPERVISOR فقط، يستهلكها `DashboardLayout.vue` |
-| `formatters.js` | `formatDate, formatDateTime, formatRelativeTime, formatNumber, formatFileSize, truncate, initials` |
+| `constants.js` | `ROLES`, `ROLE_LABELS`, `STORAGE_KEYS`, `SIDEBAR_BREAKPOINT`, `APP_NAME`, `CONTACT` |
+| `navConfig.js` | `NAV_ITEMS_BY_ROLE` — عناصر الشريط الجانبي للأدوار الأربعة |
+| `formatters.js` | `formatDate, formatDateTime, formatNumber, truncate, initials`… |
 | `validators.js` | `passwordStrength(value)` |
+| `password.js` | `genPass()` — توليد كلمة سر عشوائية |
+| `specializations.js` | `SPECIALIZATIONS` (5 تخصصات) + `DEPARTMENTS` (قسمان) — القائمة الموحّدة المستخدمة بكل فلاتر التخصص بالتطبيق |
+| `exportReport.js` | `exportStyledExcel()` (ExcelJS، دمج خلايا، تنسيق احترافي) + `exportGroupsPdf()` (jsPDF عبر html2canvas) — تحميل كسول للمكتبتين |
+| `filePreview.js` | `openPlaceholderPdf()`, `openPlaceholderVideo()`, `generateOfficialPdf()` — توليد/فتح ملفات PDF ومعاينات فيديو تجريبية |
 
----
-
-## `composables/` و `directives/`
+## `data/`
 
 | ملف | وظيفة |
 |---|---|
-| `composables/useClickOutside.js` | Composable (استثناء وحيد Composition API) |
-| `directives/reveal.js` | `initRevealObserver()` — أنيميشن الصفحة العامة عند التمرير |
+| `projectArchive.js` | `PROJECT_ARCHIVE` — أرشيف المشاريع المشترك (9 مشاريع)، مصدر بيانات صفحات الأرشيف بكل الأدوار + الصفحة العامة |
+
+## `composables/` و`directives/`
+
+| ملف | وظيفة |
+|---|---|
+| `composables/useClickOutside.js` | Composable (استثناء Composition API) |
+| `directives/reveal.js` | `initRevealObserver()` — ظهور تدريجي لأي عنصر بكلاس `.reveal` عند دخوله الشاشة (IntersectionObserver + MutationObserver لعناصر SPA الجديدة) |
+| `directives/parallax.js` | `initParallax()` — حركة خفيفة مرتبطة بالتمرير لأي عنصر بـ `data-parallax="السرعة"` |
+| `directives/magnetic.js` | `v-magnetic` — الزر يتبع الفأرة (حتى 10px) وينضغط بصريًا عند الضغط |
+| `directives/tilt.js` | `v-tilt` — إمالة 3D خفيفة (حتى 6°) تتبع موضع الفأرة داخل البطاقة |
+
+جميع التأثيرات أعلاه تحترم `prefers-reduced-motion` وتُعطَّل تلقائيًا على `pointer: coarse` (اللمس) عند الحاجة.
 
 ---
 
@@ -208,17 +243,16 @@ Vue 3 (Options API) + Vue Router + Pinia + Tailwind. `src/` فقط، مرتّب 
 
 ---
 
-## خلاصة آخر تنظيف (هذه الجولة)
+## `styles/`
 
-- حُذفت لوحات SUPER_ADMIN / TEAM_LEADER / STUDENT بالكامل (views + routes + navConfig entries) — كانت placeholder محلي بلا باك إند.
-- حُذفت 5 مكوّنات orphan صفر استخدام: `CompletionDonut.vue`, `InlineEditableRow.vue`, `TruncatableText.vue`, `BaseChip.vue`, `ConfirmDialog.vue`.
-- حُذف `API_REFERENCE.md`, `HANDOFF.md` (وثائق باك إند، مش شغل فرونت).
-- ملفات فريق ربط الباك (`auth/`, `landing/`, `services/api.js`, الـ 3 stores المرتبطة) **لم تُمس إطلاقًا**.
-- `committee` module (باك إند حقيقي، منشور Vercel) **لم يُمس إطلاقًا**.
+| ملف | وظيفة |
+|---|---|
+| `design-tokens.css` | كل متغيرات الهوية البصرية (ألوان، مسافات، ظلال، خطوط) — نسختان: `:root` (فاتح) و`:root[data-theme="dark"]` (داكن، تغطية كاملة لكل الألوان الدلالية) |
+| `main.css` | Tailwind base/components/utilities + كلاسات مشتركة: `.reveal`, `.row-interactive`, `.animate-blob`/`.animate-float`/`.animate-pulse-glow`, دعم `prefers-reduced-motion` |
 
-## فجوات باقية (خارج نطاق هذه الجولة)
+---
 
-- لا endpoint لقائمة المقترحات (`ProposalsPage`)
-- لا تعديل/حذف فريق أو عضو بعد إنشائه
-- لا `GET /semesters`، لا endpoints إشعارات
-- `supervisor/*` بالكامل بيانات محلية (`localStorage`) — لا اتصال باك إند حقيقي
+## فجوات معروفة (خارج النطاق الحالي)
+
+- صفحات المهام (Kanban) الثلاث (`*/TasksPage.vue` لقائد الفريق/المشرف/الطالب) فارغة — لم تُبنَ بعد، `TaskBoard.vue` جاهز لكن غير موصول.
+- `services/api.js` موجود بدون استهلاك فعلي — أي ربط مستقبلي بباك إند حقيقي يبدأ من هنا.
