@@ -2,7 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import api from '@/services/api'
 import { PROJECT_ARCHIVE } from '@/data/projectArchive'
-import { SPECIALIZATIONS, DEPARTMENTS } from '@/utils/specializations'
+import { DEPARTMENTS } from '@/utils/specializations'
 
 /** أرشيف المشاريع (الفلترة/الترقيم) لسا محلي — لا يوجد API عام لتصفحه بالكامل */
 
