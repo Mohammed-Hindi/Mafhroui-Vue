@@ -1,5 +1,15 @@
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { ROLES } from '@/utils/constants'
+import ProfilePageSupervisor from '@/views/supervisor/ProfilePage.vue'
+import TeamsPageSupervisor from '@/views/supervisor/TeamsPage.vue'
+import ProposalsPageSupervisor from '@/views/supervisor/ProposalsPage.vue'
+import TasksPageSupervisor from '@/views/supervisor/TasksPage.vue'
+import MeetingsPageSupervisor from '@/views/supervisor/MeetingsPage.vue'
+import AppointmentsPageSupervisor from '@/views/supervisor/AppointmentsPage.vue'
+import ProjectArchivePageSupervisor from '@/views/supervisor/ProjectArchivePage.vue'
+import ProjectDetailPageSupervisor from '@/views/supervisor/ProjectDetailPage.vue'
+import ProgressPageSupervisor from '@/views/supervisor/ProgressPage.vue'
+import AssistantPageSupervisor from '@/views/supervisor/AssistantPage.vue'
 
 // استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
 import ProfilePage from '@/views/supervisor/ProfilePage.vue'
@@ -23,61 +33,61 @@ export default [
       {
         path: '',
         name: 'supervisor-dashboard',
-        component: ProfilePage,
+        component: ProfilePageSupervisor,
         meta: { title: 'الملف الشخصي' }
       },
       {
         path: 'teams',
         name: 'supervisor-teams',
-        component: TeamsPage,
+        component: TeamsPageSupervisor,
         meta: { title: 'الفرق' }
       },
       {
         path: 'proposals',
         name: 'supervisor-proposals',
-        component: ProposalsPage,
+        component: ProposalsPageSupervisor,
         meta: { title: 'المقترح / التقرير النهائي' }
       },
       {
         path: 'tasks',
         name: 'supervisor-tasks',
-        component: TasksPage,
+        component: TasksPageSupervisor,
         meta: { title: 'المهام (Kanban)' }
       },
       {
         path: 'meetings',
         name: 'supervisor-meetings',
-        component: MeetingsPage,
+        component: MeetingsPageSupervisor,
         meta: { title: 'الاجتماعات' }
       },
       {
         path: 'appointments',
         name: 'supervisor-appointments',
-        component: AppointmentsPage,
+        component: AppointmentsPageSupervisor,
         meta: { title: 'مواعيد المناقشات' }
       },
       {
         path: 'project-archive',
         name: 'supervisor-project-archive',
-        component: ProjectArchivePage,
+        component: ProjectArchivePageSupervisor,
         meta: { title: 'أرشيف المشاريع' }
       },
       {
         path: 'project-archive/:id',
         name: 'supervisor-project-detail',
-        component: ProjectDetailPage,
+        component: ProjectDetailPageSupervisor,
         meta: { title: 'تفاصيل المشروع' }
       },
       {
         path: 'progress',
         name: 'supervisor-progress',
-        component: ProgressPage,
+        component: ProgressPageSupervisor,
         meta: { title: 'نسبة تقدّم الفرق' }
       },
       {
         path: 'assistant',
         name: 'supervisor-assistant',
-        component: AssistantPage,
+        component: AssistantPageSupervisor,
         meta: { title: 'المساعد الآلي' }
       }
     ]

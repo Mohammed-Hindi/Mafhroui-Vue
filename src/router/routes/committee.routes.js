@@ -1,5 +1,16 @@
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { ROLES } from '@/utils/constants'
+import DashboardPageCommittee from '@/views/committee/DashboardPage.vue'
+import TeamsPageCommittee from '@/views/committee/TeamsPage.vue'
+import MembersPageCommittee from '@/views/committee/MembersPage.vue'
+import ProposalsPageCommittee from '@/views/committee/ProposalsPage.vue'
+import DeletedMembersPageCommittee from '@/views/committee/DeletedMembersPage.vue'
+import AppointmentsPageCommittee from '@/views/committee/AppointmentsPage.vue'
+import ProjectArchivePageCommittee from '@/views/committee/ProjectArchivePage.vue'
+import ProjectDetailPageCommittee from '@/views/committee/ProjectDetailPage.vue'
+import ProgressPageCommittee from '@/views/committee/ProgressPage.vue'
+import AddCommitteePageCommittee from '@/views/committee/AddCommitteePage.vue'
+import AssistantPageCommittee from '@/views/committee/AssistantPage.vue'
 
 // استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
 import DashboardPage from '@/views/committee/DashboardPage.vue'
@@ -24,67 +35,67 @@ export default [
       {
         path: '',
         name: 'committee-dashboard',
-        component: DashboardPage,
+        component: DashboardPageCommittee,
         meta: { title: 'لوحة التحكم' }
       },
       {
         path: 'teams',
         name: 'committee-teams',
-        component: TeamsPage,
+        component: TeamsPageCommittee,
         meta: { title: 'الفرق' }
       },
       {
         path: 'members',
         name: 'committee-members',
-        component: MembersPage,
+        component: MembersPageCommittee,
         meta: { title: 'الأعضاء' }
       },
       {
         path: 'proposals',
         name: 'committee-proposals',
-        component: ProposalsPage,
+        component: ProposalsPageCommittee,
         meta: { title: 'المقترحات' }
       },
       {
         path: 'members/deleted',
         name: 'committee-deleted-members',
-        component: DeletedMembersPage,
+        component: DeletedMembersPageCommittee,
         meta: { title: 'الأعضاء المحذوفون' }
       },
       {
         path: 'appointments',
         name: 'committee-appointments',
-        component: AppointmentsPage,
+        component: AppointmentsPageCommittee,
         meta: { title: 'مواعيد المناقشات' }
       },
       {
         path: 'project-archive',
         name: 'committee-project-archive',
-        component: ProjectArchivePage,
+        component: ProjectArchivePageCommittee,
         meta: { title: 'أرشيف المشاريع' }
       },
       {
         path: 'project-archive/:id',
         name: 'committee-project-detail',
-        component: ProjectDetailPage,
+        component: ProjectDetailPageCommittee,
         meta: { title: 'تفاصيل المشروع' }
       },
       {
         path: 'progress',
         name: 'committee-progress',
-        component: ProgressPage,
+        component: ProgressPageCommittee,
         meta: { title: 'نسبة تقدّم المشاريع' }
       },
       {
         path: 'add-committee',
         name: 'committee-add-committee',
-        component: AddCommitteePage,
+        component: AddCommitteePageCommittee,
         meta: { title: 'إضافة لجنة الإشراف' }
       },
       {
         path: 'assistant',
         name: 'committee-assistant',
-        component: AssistantPage,
+        component: AssistantPageCommittee,
         meta: { title: 'المساعد الآلي' }
       }
     ]

@@ -28,13 +28,14 @@
 
 <script setup>
 import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useLandingStore } from '@/stores/landing.store'
 import { formatNumber } from '@/utils/formatters'
 import AppIcon from '@/components/icons/AppIcon.vue'
 import CountUp from '@/components/ui/CountUp.vue'
 
 const landingStore = useLandingStore()
-const { bannerStats, statsLoading, statsError } = landingStore
+const { bannerStats, statsLoading, statsError } = storeToRefs(landingStore)
 
 const withPlus = (n) => `+${formatNumber(n)}`
 
