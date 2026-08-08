@@ -6,6 +6,13 @@ import TasksPageTeamLeader from '@/views/team-leader/TasksPage.vue'
 import MeetingsPageTeamLeader from '@/views/team-leader/MeetingsPage.vue'
 import AssistantPageTeamLeader from '@/views/team-leader/AssistantPage.vue'
 
+// استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
+import ProfilePage from '@/views/team-leader/ProfilePage.vue'
+import ProposalPage from '@/views/team-leader/ProposalPage.vue'
+import TasksPage from '@/views/team-leader/TasksPage.vue'
+import MeetingsPage from '@/views/team-leader/MeetingsPage.vue'
+import AssistantPage from '@/views/team-leader/AssistantPage.vue'
+
 /** مسارات لوحة قائد الفريق — تُضاف صفحة بصفحة حسب الوصف */
 export default [
   {
