@@ -1,5 +1,10 @@
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { ROLES } from '@/utils/constants'
+import ProfilePageTeamLeader from '@/views/team-leader/ProfilePage.vue'
+import ProposalPageTeamLeader from '@/views/team-leader/ProposalPage.vue'
+import TasksPageTeamLeader from '@/views/team-leader/TasksPage.vue'
+import MeetingsPageTeamLeader from '@/views/team-leader/MeetingsPage.vue'
+import AssistantPageTeamLeader from '@/views/team-leader/AssistantPage.vue'
 
 // استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
 import ProfilePage from '@/views/team-leader/ProfilePage.vue'
@@ -18,31 +23,31 @@ export default [
       {
         path: '',
         name: 'team-leader-dashboard',
-        component: ProfilePage,
+        component: ProfilePageTeamLeader,
         meta: { title: 'الملف الشخصي' }
       },
       {
         path: 'proposal',
         name: 'team-leader-proposal',
-        component: ProposalPage,
+        component: ProposalPageTeamLeader,
         meta: { title: 'المقترح / التقرير النهائي' }
       },
       {
         path: 'tasks',
         name: 'team-leader-tasks',
-        component: TasksPage,
+        component: TasksPageTeamLeader,
         meta: { title: 'المهام (Kanban)' }
       },
       {
         path: 'meetings',
         name: 'team-leader-meetings',
-        component: MeetingsPage,
+        component: MeetingsPageTeamLeader,
         meta: { title: 'الاجتماعات' }
       },
       {
         path: 'assistant',
         name: 'team-leader-assistant',
-        component: AssistantPage,
+        component: AssistantPageTeamLeader,
         meta: { title: 'المساعد الآلي' }
       }
     ]
