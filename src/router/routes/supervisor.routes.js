@@ -1,5 +1,15 @@
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { ROLES } from '@/utils/constants'
+import ProfilePageSupervisor from '@/views/supervisor/ProfilePage.vue'
+import TeamsPageSupervisor from '@/views/supervisor/TeamsPage.vue'
+import ProposalsPageSupervisor from '@/views/supervisor/ProposalsPage.vue'
+import TasksPageSupervisor from '@/views/supervisor/TasksPage.vue'
+import MeetingsPageSupervisor from '@/views/supervisor/MeetingsPage.vue'
+import AppointmentsPageSupervisor from '@/views/supervisor/AppointmentsPage.vue'
+import ProjectArchivePageSupervisor from '@/views/supervisor/ProjectArchivePage.vue'
+import ProjectDetailPageSupervisor from '@/views/supervisor/ProjectDetailPage.vue'
+import ProgressPageSupervisor from '@/views/supervisor/ProgressPage.vue'
+import AssistantPageSupervisor from '@/views/supervisor/AssistantPage.vue'
 
 /** مسارات لوحة المشرف — تُضاف صفحة بصفحة حسب الوصف */
 export default [
@@ -11,61 +21,61 @@ export default [
       {
         path: '',
         name: 'supervisor-dashboard',
-        component: () => import('@/views/supervisor/ProfilePage.vue'),
+        component: ProfilePageSupervisor,
         meta: { title: 'الملف الشخصي' }
       },
       {
         path: 'teams',
         name: 'supervisor-teams',
-        component: () => import('@/views/supervisor/TeamsPage.vue'),
+        component: TeamsPageSupervisor,
         meta: { title: 'الفرق' }
       },
       {
         path: 'proposals',
         name: 'supervisor-proposals',
-        component: () => import('@/views/supervisor/ProposalsPage.vue'),
+        component: ProposalsPageSupervisor,
         meta: { title: 'المقترح / التقرير النهائي' }
       },
       {
         path: 'tasks',
         name: 'supervisor-tasks',
-        component: () => import('@/views/supervisor/TasksPage.vue'),
+        component: TasksPageSupervisor,
         meta: { title: 'المهام (Kanban)' }
       },
       {
         path: 'meetings',
         name: 'supervisor-meetings',
-        component: () => import('@/views/supervisor/MeetingsPage.vue'),
+        component: MeetingsPageSupervisor,
         meta: { title: 'الاجتماعات' }
       },
       {
         path: 'appointments',
         name: 'supervisor-appointments',
-        component: () => import('@/views/supervisor/AppointmentsPage.vue'),
+        component: AppointmentsPageSupervisor,
         meta: { title: 'مواعيد المناقشات' }
       },
       {
         path: 'project-archive',
         name: 'supervisor-project-archive',
-        component: () => import('@/views/supervisor/ProjectArchivePage.vue'),
+        component: ProjectArchivePageSupervisor,
         meta: { title: 'أرشيف المشاريع' }
       },
       {
         path: 'project-archive/:id',
         name: 'supervisor-project-detail',
-        component: () => import('@/views/supervisor/ProjectDetailPage.vue'),
+        component: ProjectDetailPageSupervisor,
         meta: { title: 'تفاصيل المشروع' }
       },
       {
         path: 'progress',
         name: 'supervisor-progress',
-        component: () => import('@/views/supervisor/ProgressPage.vue'),
+        component: ProgressPageSupervisor,
         meta: { title: 'نسبة تقدّم الفرق' }
       },
       {
         path: 'assistant',
         name: 'supervisor-assistant',
-        component: () => import('@/views/supervisor/AssistantPage.vue'),
+        component: AssistantPageSupervisor,
         meta: { title: 'المساعد الآلي' }
       }
     ]

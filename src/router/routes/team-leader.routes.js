@@ -1,5 +1,10 @@
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { ROLES } from '@/utils/constants'
+import ProfilePageTeamLeader from '@/views/team-leader/ProfilePage.vue'
+import ProposalPageTeamLeader from '@/views/team-leader/ProposalPage.vue'
+import TasksPageTeamLeader from '@/views/team-leader/TasksPage.vue'
+import MeetingsPageTeamLeader from '@/views/team-leader/MeetingsPage.vue'
+import AssistantPageTeamLeader from '@/views/team-leader/AssistantPage.vue'
 
 /** مسارات لوحة قائد الفريق — تُضاف صفحة بصفحة حسب الوصف */
 export default [
@@ -11,31 +16,31 @@ export default [
       {
         path: '',
         name: 'team-leader-dashboard',
-        component: () => import('@/views/team-leader/ProfilePage.vue'),
+        component: ProfilePageTeamLeader,
         meta: { title: 'الملف الشخصي' }
       },
       {
         path: 'proposal',
         name: 'team-leader-proposal',
-        component: () => import('@/views/team-leader/ProposalPage.vue'),
+        component: ProposalPageTeamLeader,
         meta: { title: 'المقترح / التقرير النهائي' }
       },
       {
         path: 'tasks',
         name: 'team-leader-tasks',
-        component: () => import('@/views/team-leader/TasksPage.vue'),
+        component: TasksPageTeamLeader,
         meta: { title: 'المهام (Kanban)' }
       },
       {
         path: 'meetings',
         name: 'team-leader-meetings',
-        component: () => import('@/views/team-leader/MeetingsPage.vue'),
+        component: MeetingsPageTeamLeader,
         meta: { title: 'الاجتماعات' }
       },
       {
         path: 'assistant',
         name: 'team-leader-assistant',
-        component: () => import('@/views/team-leader/AssistantPage.vue'),
+        component: AssistantPageTeamLeader,
         meta: { title: 'المساعد الآلي' }
       }
     ]

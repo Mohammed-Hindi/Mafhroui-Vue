@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-      <div v-for="stat in stats" :key="stat.label" class="reveal group bg-surface rounded-lg border border-border shadow-card p-6 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200">
+      <div v-for="stat in stats" :key="stat.label" class="reveal group bg-surface rounded-lg border border-border shadow-card p-6 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200 active:scale-[0.98]">
         <span class="grid place-items-center w-11 h-11 rounded-md mb-4" :class="stat.bg + ' ' + stat.color">
           <component :is="stat.icon" :size="20" />
         </span>
