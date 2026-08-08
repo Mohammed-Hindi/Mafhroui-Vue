@@ -1,7 +1,7 @@
 /** رابط فيديو عام (Creative Commons) يُستخدم كمعاينة تجريبية بانتظار الفيديوهات الفعلية */
 const SAMPLE_VIDEO_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
 
-/** يبني Blob لملف PDF صالح بأقل حجم ممكن من مجموعة أسطر نصية — بديل مؤقت لملفات حقيقية من الباك إند */
+/** يبني Blob لملف PDF صالح بأقل حجم ممكن من مجموعة أسطر نصية — بديلjs مؤقت لملفات حقيقية من الباك إند */
 function buildPlaceholderPdfBlob(lines) {
   const clean = lines.filter(Boolean).map((line) => String(line).replace(/[()\\]/g, ' '))
   const height = Math.max(300, 80 + clean.length * 24)

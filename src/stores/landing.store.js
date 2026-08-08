@@ -1,9 +1,10 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
+import api from '@/services/api'
 import { PROJECT_ARCHIVE } from '@/data/projectArchive'
 import { SPECIALIZATIONS, DEPARTMENTS } from '@/utils/specializations'
 
-/** بيانات ثابتة — لا يوجد باك إند حقيقي، كل سكاشن اللاندنج تعتمد على أرشيف المشاريع المشترك */
+/** أرشيف المشاريع (الفلترة/الترقيم) لسا محلي — لا يوجد API عام لتصفحه بالكامل */
 
 const SUP_BY_TEAM = {
   'فريق نوفا': 'د. أحمد الشريف',
@@ -42,29 +43,21 @@ const PROJECTS = PROJECT_ARCHIVE.map((p) => {
 
 const DEPARTMENT_LIST = DEPARTMENTS.map((name, index) => ({ id: index + 1, name }))
 
-const STATS = {
-  projects: PROJECTS.length,
-  supervisors: new Set(Object.values(SUP_BY_TEAM)).size,
-  students: 42,
-  departments: DEPARTMENT_LIST.length,
-  teams: new Set(PROJECTS.map((p) => p.team_name)).size,
-  avg_completion: 82
-}
-
 const ARCHIVE_PAGE_SIZE = 6
 
 export const useLandingStore = defineStore('landing', () => {
-  const stats = ref(STATS)
+  /* إحصائيات المنصة — GET /stats، حقيقي */
+  const stats = ref(null)
   const statsLoading = ref(false)
   const statsError = ref(null)
 
-  /* أفضل المشاريع (اللاندنج + السلايدر) — كل الأرشيف */
-  const featured = ref(PROJECTS)
-  const featuredTotal = ref(PROJECTS.length)
+  /* أفضل المشاريع (اللاندنج + السلايدر) — GET /projects/featured، حقيقي */
+  const featured = ref([])
+  const featuredTotal = ref(0)
   const featuredLoading = ref(false)
   const featuredError = ref(null)
 
-  /* أرشيف المشاريع (صفحة مستقلة، فلاتر + ترقيم صفحات محليًا) */
+  /* أرشيف المشاريع (صفحة مستقلة، فلاتر + ترقيم صفحات محليًا) — لا يوجد API عام */
   const projects = ref(PROJECTS.slice(0, ARCHIVE_PAGE_SIZE))
   const projectsMeta = ref({ current_page: 1, last_page: Math.max(1, Math.ceil(PROJECTS.length / ARCHIVE_PAGE_SIZE)), total: PROJECTS.length })
   const projectsLoading = ref(false)
@@ -96,10 +89,40 @@ export const useLandingStore = defineStore('landing', () => {
     { key: 'avg_completion', label: 'متوسط الإنجاز', value: stats.value?.avg_completion ?? null, suffix: '%' }
   ])
 
-  const fetchStats = async () => stats.value
-  const fetchFeaturedProjects = async () => featured.value
+  // GET /stats → { departments, teams, projects, supervisors, committee, students }
+  const fetchStats = async () => {
+    statsLoading.value = true
+    statsError.value = null
+    try {
+      const { data } = await api.get('/stats')
+      stats.value = data
+      return data
+    } catch (err) {
+      statsError.value = err.normalized?.message || 'تعذّر تحميل الإحصائيات'
+      throw err
+    } finally {
+      statsLoading.value = false
+    }
+  }
 
-  /** فلترة وترقيم صفحات محليان على البيانات الثابتة */
+  // GET /projects/featured → { data: [Project], total, ... }
+  const fetchFeaturedProjects = async () => {
+    featuredLoading.value = true
+    featuredError.value = null
+    try {
+      const { data } = await api.get('/projects/featured')
+      featured.value = data.data || data
+      featuredTotal.value = data.total ?? featured.value.length
+      return featured.value
+    } catch (err) {
+      featuredError.value = err.normalized?.message || 'تعذّر تحميل المشاريع المميزة'
+      throw err
+    } finally {
+      featuredLoading.value = false
+    }
+  }
+
+  /** فلترة وترقيم صفحات محليًا على البيانات الثابتة — لا يوجد API عام للأرشيف الكامل */
   const fetchProjects = async (params = {}) => {
     let list = PROJECTS
 
