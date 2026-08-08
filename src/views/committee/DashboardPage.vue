@@ -1,12 +1,12 @@
 <template>
   <div>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-      <div v-for="stat in stats" :key="stat.label" class="bg-surface rounded-lg border border-border shadow-card p-6">
+      <div v-for="stat in stats" :key="stat.label" class="reveal group bg-surface rounded-lg border border-border shadow-card p-6 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200">
         <span class="grid place-items-center w-11 h-11 rounded-md mb-4" :class="stat.bg + ' ' + stat.color">
           <component :is="stat.icon" :size="20" />
         </span>
         <div class="text-body-sm text-text-600 font-medium">{{ stat.label }}</div>
-        <div class="font-cairo font-extrabold text-h1 text-text-900 mt-2">{{ stat.value }}</div>
+        <div class="font-cairo font-extrabold text-h1 text-text-900 mt-2 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="stat.value" /></div>
         <div class="text-caption text-text-400 mt-0.5">{{ stat.hint }}</div>
       </div>
     </div>
@@ -58,11 +58,12 @@
 
 <script>
 import { Users, GraduationCap, UserCog, LayoutGrid } from 'lucide-vue-next'
+import CountUp from '@/components/ui/CountUp.vue'
 
 export default {
   name: 'CommitteeDashboardPage',
 
-  components: { LayoutGrid },
+  components: { LayoutGrid, CountUp },
 
   data() {
     return {

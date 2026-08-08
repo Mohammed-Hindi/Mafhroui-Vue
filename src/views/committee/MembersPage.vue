@@ -1,15 +1,14 @@
 <template>
   <div>
-    <div class="flex justify-end mb-5">
+    <!-- ===================== الطلاب ===================== -->
+    <div class="flex items-center justify-between gap-3 mb-5 flex-wrap">
+      <div class="flex items-center gap-3">
+        <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><GraduationCap :size="18" /></span>
+        <div><h3 class="text-h3 font-bold text-text-900">أعضاء الطلاب</h3><p class="text-caption text-text-600">{{ filteredStudents.length }} من أصل {{ students.length }} طالبًا</p></div>
+      </div>
       <router-link :to="{ name: 'committee-deleted-members' }" class="inline-flex items-center gap-2 h-10 px-4 rounded-sm border border-border bg-surface text-text-600 text-caption font-bold hover:bg-border-soft hover:text-error transition-colors duration-fast">
         <Archive :size="15" /> الأعضاء المحذوفون
       </router-link>
-    </div>
-
-    <!-- ===================== الطلاب ===================== -->
-    <div class="flex items-center gap-3 mb-5">
-      <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><GraduationCap :size="18" /></span>
-      <div><h3 class="text-h3 font-bold text-text-900">أعضاء الطلاب</h3><p class="text-caption text-text-600">{{ filteredStudents.length }} من أصل {{ students.length }} طالبًا</p></div>
     </div>
 
     <div class="flex flex-wrap gap-3 mb-4">
@@ -208,12 +207,11 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import DataTable from '@/components/ui/DataTable.vue'
 import Pagination from '@/components/ui/Pagination.vue'
+import { SPECIALIZATIONS } from '@/utils/specializations'
 
 function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
 }
-
-const SPECIALIZATIONS = ['هندسة حاسوب', 'نظم معلومات', 'أمن سيبراني']
 const PAGE_SIZE = 4
 
 export default {
@@ -263,16 +261,16 @@ export default {
 
       /* بيانات ثابتة — بانتظار GET /committee/students و GET /committee/supervisors */
       students: [
-        { id: 1, grp: '31', spec: 'هندسة حاسوب', name: 'يوسف الدوسري', uid: '3175000', whats: '0551110001', mail: 'student1@academy.edu.sa', pw: '', sup: 'د. أحمد الشريف', restricted: false },
-        { id: 2, grp: '31', spec: 'هندسة حاسوب', name: 'علي الحربي', uid: '3175001', whats: '0551110002', mail: 'student2@academy.edu.sa', pw: '', sup: 'د. أحمد الشريف', restricted: false },
-        { id: 3, grp: '31', spec: 'هندسة حاسوب', name: 'سلطان الدوسري', uid: '3175006', whats: '0551110003', mail: 'student3@academy.edu.sa', pw: '', sup: 'د. أحمد الشريف', restricted: true },
-        { id: 4, grp: '52', spec: 'نظم معلومات', name: 'فيصل الحربي', uid: '3175018', whats: '0551110004', mail: 'student4@academy.edu.sa', pw: '', sup: 'د. سلمى نصار', restricted: false },
-        { id: 5, grp: '52', spec: 'نظم معلومات', name: 'إبراهيم الدوسري', uid: '3175019', whats: '0551110005', mail: 'student5@academy.edu.sa', pw: '', sup: 'د. سلمى نصار', restricted: false },
-        { id: 6, grp: '52', spec: 'نظم معلومات', name: 'سعد الحربي', uid: '3175020', whats: '0551110006', mail: 'student6@academy.edu.sa', pw: '', sup: 'د. سلمى نصار', restricted: false },
-        { id: 7, grp: '54', spec: 'أمن سيبراني', name: 'حسين الحربي', uid: '3175022', whats: '0551110007', mail: 'student7@academy.edu.sa', pw: '', sup: 'د. أحمد النبريص', restricted: false },
-        { id: 8, grp: '54', spec: 'أمن سيبراني', name: 'ماجد الحربي', uid: '3175023', whats: '0551110008', mail: 'student8@academy.edu.sa', pw: '', sup: 'د. أحمد النبريص', restricted: false },
-        { id: 9, grp: '54', spec: 'أمن سيبراني', name: 'سارة الحربي', uid: '3175024', whats: '0551110009', mail: 'student9@academy.edu.sa', pw: '', sup: 'د. أحمد النبريص', restricted: false },
-        { id: 10, grp: '54', spec: 'أمن سيبراني', name: 'رانا الحربي', uid: '3175025', whats: '0551110010', mail: 'student10@academy.edu.sa', pw: '', sup: 'د. أحمد النبريص', restricted: false }
+        { id: 1, grp: '31', spec: SPECIALIZATIONS[0], name: 'يوسف الدوسري', uid: '3175000', whats: '0551110001', mail: 'student1@academy.edu.sa', pw: '', sup: 'د. أحمد الشريف', restricted: false },
+        { id: 2, grp: '31', spec: SPECIALIZATIONS[0], name: 'علي الحربي', uid: '3175001', whats: '0551110002', mail: 'student2@academy.edu.sa', pw: '', sup: 'د. أحمد الشريف', restricted: false },
+        { id: 3, grp: '31', spec: SPECIALIZATIONS[0], name: 'سلطان الدوسري', uid: '3175006', whats: '0551110003', mail: 'student3@academy.edu.sa', pw: '', sup: 'د. أحمد الشريف', restricted: true },
+        { id: 4, grp: '52', spec: SPECIALIZATIONS[1], name: 'فيصل الحربي', uid: '3175018', whats: '0551110004', mail: 'student4@academy.edu.sa', pw: '', sup: 'د. سلمى نصار', restricted: false },
+        { id: 5, grp: '52', spec: SPECIALIZATIONS[1], name: 'إبراهيم الدوسري', uid: '3175019', whats: '0551110005', mail: 'student5@academy.edu.sa', pw: '', sup: 'د. سلمى نصار', restricted: false },
+        { id: 6, grp: '52', spec: SPECIALIZATIONS[1], name: 'سعد الحربي', uid: '3175020', whats: '0551110006', mail: 'student6@academy.edu.sa', pw: '', sup: 'د. سلمى نصار', restricted: false },
+        { id: 7, grp: '54', spec: SPECIALIZATIONS[2], name: 'حسين الحربي', uid: '3175022', whats: '0551110007', mail: 'student7@academy.edu.sa', pw: '', sup: 'د. أحمد النبريص', restricted: false },
+        { id: 8, grp: '54', spec: SPECIALIZATIONS[2], name: 'ماجد الحربي', uid: '3175023', whats: '0551110008', mail: 'student8@academy.edu.sa', pw: '', sup: 'د. أحمد النبريص', restricted: false },
+        { id: 9, grp: '54', spec: SPECIALIZATIONS[2], name: 'سارة الحربي', uid: '3175024', whats: '0551110009', mail: 'student9@academy.edu.sa', pw: '', sup: 'د. أحمد النبريص', restricted: false },
+        { id: 10, grp: '54', spec: SPECIALIZATIONS[2], name: 'رانا الحربي', uid: '3175025', whats: '0551110010', mail: 'student10@academy.edu.sa', pw: '', sup: 'د. أحمد النبريص', restricted: false }
       ],
       supervisors: [
         { id: 101, name: 'د. أحمد الشريف', empId: 'EMP1001', mail: 'a.alsharif@academy.edu.sa', whats: '966501110011', pw: '', restricted: false },

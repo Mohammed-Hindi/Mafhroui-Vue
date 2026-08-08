@@ -15,6 +15,18 @@ const DEMO_ACCOUNTS = [
     password: 'anas1',
     token: 'demo-token-supervisor',
     user: { id: -1, name: 'د. محمد العتيبي', email: 'admin@mashroui.local', role: 'supervisor', must_change_password: false }
+  },
+  {
+    email: 'admin@mashroui.local',
+    password: 'anas2',
+    token: 'demo-token-team-leader',
+    user: { id: -2, name: 'admin anas', email: 'admin@mashroui.local', role: 'team_leader', must_change_password: false }
+  },
+  {
+    email: 'admin@mashroui.local',
+    password: 'anas3',
+    token: 'demo-token-student',
+    user: { id: -3, name: 'يوسف الدوسري', email: 'admin@mashroui.local', role: 'student', must_change_password: false }
   }
 ]
 

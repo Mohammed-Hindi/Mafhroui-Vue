@@ -1,13 +1,13 @@
 <template>
-  <div class="flex flex-col gap-8">
-    <div v-if="canCreate" class="flex justify-end">
+  <div>
+    <div v-if="isTeamLeader" class="flex justify-end mb-6">
       <BaseButton :icon="Plus" @click="openCreate">اجتماع جديد</BaseButton>
     </div>
 
-    <section>
-      <h3 class="font-cairo font-bold text-h4 text-text-900 mb-4 flex items-center gap-2">
-        <Clock :size="18" class="text-primary-600" />
+    <section class="mb-10">
+      <h3 class="font-cairo font-bold text-h4 text-text-900 mb-4 flex items-center gap-2.5">
         الاجتماعات القادمة
+        <span class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600"><Clock :size="16" /></span>
       </h3>
       <EmptyState v-if="!upcoming.length" title="لا توجد اجتماعات قادمة حاليًا" />
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -24,9 +24,9 @@
     </section>
 
     <section>
-      <h3 class="font-cairo font-bold text-h4 text-text-900 mb-4 flex items-center gap-2">
-        <CheckCircle2 :size="18" class="text-success" />
+      <h3 class="font-cairo font-bold text-h4 text-text-900 mb-4 flex items-center gap-2.5">
         الاجتماعات المنتهية
+        <span class="grid place-items-center w-8 h-8 rounded-pill bg-success-bg text-success"><CheckCircle2 :size="16" /></span>
       </h3>
       <EmptyState v-if="!completed.length" title="لا توجد اجتماعات منتهية بعد" />
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -42,7 +42,7 @@
       />
     </section>
 
-    <BaseModal v-model="modalOpen" title="طلب موعد اجتماع جديد" description="سيُرسل الطلب للمشرف لاعتماده وإنشائه على Google Meet">
+    <BaseModal v-model="modalOpen" title="اجتماع جديد" description="سيتم إنشاؤه على Google Meet وإشعار الفريق المعني">
       <div class="flex flex-col gap-4">
         <BaseInput v-model="form.title" label="اسم الاجتماع" placeholder="مثال: مراجعة الفصل الثاني من التقرير" required />
         <div class="grid grid-cols-2 gap-4">
@@ -54,7 +54,7 @@
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="modalOpen = false">إلغاء</BaseButton>
-        <BaseButton :disabled="!canSubmit" @click="submitMeeting">إرسال طلب الاجتماع</BaseButton>
+        <BaseButton :disabled="!canSubmit" @click="submitMeeting">إنشاء الاجتماع</BaseButton>
       </template>
     </BaseModal>
   </div>
@@ -68,34 +68,42 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
-import MeetingCard from './MeetingCard.vue'
+import MeetingCard from '@/components/shared/MeetingCard.vue'
 
-const PAGE_SIZE = 4
+const PAGE_SIZE = 2
+const REMINDER_NUMBER = '962790000000'
 
 let uid = 0
+function nextId() {
+  uid += 1
+  return `mt${uid}`
+}
 
 export default {
-  name: 'MeetingsBoard',
+  name: 'StudentMeetingsPage',
 
   components: { BaseButton, BaseModal, BaseInput, BaseTextarea, Pagination, EmptyState, MeetingCard },
 
-  props: {
-    storageKey: { type: String, required: true },
-    seed: { type: Array, default: () => [] },
-    canCreate: { type: Boolean, default: true },
-    reminderNumber: { type: String, default: '962790000000' }
-  },
-
   data() {
     return {
-      Plus,
-      Clock,
-      CheckCircle2,
-      meetings: [],
+      Plus, Clock, CheckCircle2,
+      isTeamLeader: false,
       modalOpen: false,
       upcomingPage_: 1,
       completedPage_: 1,
-      form: this.emptyForm()
+      form: this.emptyForm(),
+
+      /* بيانات ثابتة — بانتظار GET /student/meetings */
+      meetings: [
+        { id: nextId(), title: 'اجتماع مراجعة المتطلبات', team: 'فريق نوفا', date: '2026-08-10', time: '11:00', link: 'meet.google.com/abc-defg-hij', notes: '', done: false },
+        { id: nextId(), title: 'اجتماع توزيع مهام الفريق', team: 'فريق نوفا', date: '2026-08-09', time: '12:00', link: 'meet.google.com/tlm-eetg-abc', notes: '', done: false },
+        { id: nextId(), title: 'اجتماع متابعة تصميم قاعدة البيانات', team: 'فريق نوفا', date: '2026-08-12', time: '13:00', link: 'meet.google.com/klm-nopq-rst', notes: 'مراجعة ERD قبل البدء بالتطوير', done: false },
+        { id: nextId(), title: 'اجتماع مراجعة الفصل الثالث من التقرير', team: 'فريق نوفا', date: '2026-08-14', time: '10:30', link: 'meet.google.com/xyz-abcd-efg', notes: '', done: false },
+        { id: nextId(), title: 'اجتماع مراجعة المتطلبات الأولي', team: 'فريق نوفا', date: '2026-06-10', time: '10:00', link: 'meet.google.com/qrs-tuvw-xyz', notes: 'مراجعة وثيقة SRS', done: true },
+        { id: nextId(), title: 'اجتماع تعريفي بالمشروع', team: 'فريق نوفا', date: '2026-05-25', time: '09:00', link: 'meet.google.com/tlm-intr-ghi', notes: '', done: true },
+        { id: nextId(), title: 'اجتماع مراجعة المقترح الأولي', team: 'فريق نوفا', date: '2026-05-18', time: '11:30', link: 'meet.google.com/prs-mnop-qrs', notes: 'اعتماد فكرة المشروع', done: true },
+        { id: nextId(), title: 'اجتماع تعريفي بالفريق', team: 'فريق نوفا', date: '2026-05-10', time: '09:30', link: 'meet.google.com/def-ghij-klm', notes: '', done: true }
+      ]
     }
   },
 
@@ -125,30 +133,9 @@ export default {
     }
   },
 
-  created() {
-    this.meetings = this.loadMeetings()
-  },
-
   methods: {
     emptyForm() {
       return { title: '', date: '', time: '', link: '', notes: '' }
-    },
-
-    loadMeetings() {
-      try {
-        const raw = localStorage.getItem(this.storageKey)
-        if (raw) return JSON.parse(raw)
-      } catch (_) { /* تخزين تالف — نتجاهله ونبدأ من البذرة */ }
-      return this.seed.map((meeting) => ({ ...meeting, id: this.nextId() }))
-    },
-
-    persist() {
-      localStorage.setItem(this.storageKey, JSON.stringify(this.meetings))
-    },
-
-    nextId() {
-      uid += 1
-      return `mt${Date.now()}-${uid}`
     },
 
     openCreate() {
@@ -158,9 +145,9 @@ export default {
 
     submitMeeting() {
       if (!this.canSubmit) return
-      this.meetings.unshift({ id: this.nextId(), ...this.form, team: '', done: false })
-      this.persist()
+      this.meetings.unshift({ id: nextId(), ...this.form, team: '', done: false })
       this.modalOpen = false
+      this.$toast?.success('تم إنشاء الاجتماع بنجاح')
     },
 
     sendReminder(meeting) {
@@ -171,7 +158,7 @@ export default {
         meeting.link ? `الرابط: https://${meeting.link}` : null,
         meeting.notes ? `الملاحظات: ${meeting.notes}` : null
       ].filter(Boolean).join('\n')
-      window.open(`https://wa.me/${this.reminderNumber}?text=${encodeURIComponent(text)}`, '_blank')
+      window.open(`https://wa.me/${REMINDER_NUMBER}?text=${encodeURIComponent(text)}`, '_blank')
     }
   }
 }

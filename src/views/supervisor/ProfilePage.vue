@@ -2,28 +2,28 @@
   <div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       <!-- بيانات المشرف -->
-      <div class="bg-surface rounded-lg border border-border shadow-card p-6">
-        <div class="flex items-center gap-4 mb-6">
+      <div class="reveal bg-surface rounded-lg border border-border shadow-card p-6 transition-all duration-base hover:shadow-card-hover">
+        <div class="flex items-center gap-4 mb-6 flex-wrap">
           <span class="grid place-items-center w-16 h-16 rounded-pill shrink-0 text-white font-cairo font-black text-h2" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
             {{ initials }}
           </span>
-          <div>
+          <div class="min-w-0">
             <span class="inline-block text-label font-bold text-primary-700 bg-primary-50 px-3 py-1 rounded-pill mb-1.5">{{ profile.roleLabel }}</span>
-            <div class="text-h3 font-bold text-text-900">{{ profile.name }}</div>
-            <div class="text-caption text-text-400">{{ profile.subRole }}</div>
+            <div class="text-h3 font-bold text-text-900 truncate">{{ profile.name }}</div>
+            <div class="text-caption text-text-400 truncate">{{ profile.subRole }}</div>
           </div>
         </div>
 
         <div class="flex flex-col">
           <div v-for="row in infoRows" :key="row.k" class="flex items-center justify-between gap-4 py-3 border-b border-border-soft last:border-b-0 last:pb-0">
-            <span class="text-caption text-text-400">{{ row.k }}</span>
-            <span class="text-body-sm font-bold text-text-900">{{ row.v }}</span>
+            <span class="text-caption text-text-400 shrink-0">{{ row.k }}</span>
+            <span class="text-body-sm font-bold text-text-900 text-end break-words">{{ row.v }}</span>
           </div>
         </div>
       </div>
 
       <!-- الفرق المُشرَف عليها -->
-      <div class="bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col">
+      <div class="reveal reveal-delay-1 bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col transition-all duration-base hover:shadow-card-hover">
         <div class="flex items-center justify-between mb-5">
           <h3 class="text-h3 font-bold text-text-900">فرقي الإشرافية</h3>
           <router-link :to="{ name: 'supervisor-tasks' }" class="text-caption font-bold text-primary-600 hover:underline">عرض المهام</router-link>
@@ -32,15 +32,15 @@
         <div class="flex flex-col gap-3">
           <div
             v-for="team in visibleTeams" :key="team.id"
-            class="border border-border-soft rounded-md p-4 transition-shadow duration-fast hover:shadow-card"
+            class="group border border-border-soft rounded-md p-4 transition-all duration-fast hover:shadow-card hover:-translate-y-0.5 hover:border-primary-200"
           >
-            <div class="flex items-center justify-between gap-3 mb-2">
-              <span class="font-bold text-body-sm text-text-900">{{ team.name }}</span>
+            <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
+              <span class="font-bold text-body-sm text-text-900 transition-colors duration-fast group-hover:text-primary-700">{{ team.name }}</span>
               <BaseBadge :variant="team.status === 'completed' ? 'success' : team.status === 'proposed' ? 'warning' : 'info'" dot>{{ statusLabel(team.status) }}</BaseBadge>
             </div>
             <p class="text-caption text-text-600 mb-3">{{ team.project }}</p>
-            <div class="flex items-center">
-              <span v-for="(m, i) in team.members" :key="m" class="grid place-items-center w-7 h-7 rounded-pill bg-bg border-2 border-surface text-label font-bold text-text-600" :style="{ marginInlineStart: i ? '-8px' : 0 }">{{ m }}</span>
+            <div class="flex flex-wrap gap-1.5">
+              <span v-for="m in team.members" :key="m" class="inline-flex items-center text-label font-semibold text-text-700 bg-border-soft px-2.5 py-1 rounded-pill">{{ shortName(m) }}</span>
             </div>
           </div>
         </div>
@@ -109,9 +109,9 @@ export default {
         subRole: 'قسم هندسة الحاسوب ونظم المعلومات'
       },
       teams: [
-        { id: 1, name: 'فريق الابتكار', project: 'منصة إدارة مشاريع التخرج', status: 'in_progress', percent: 70, members: ['أ.ح', 'س.ع', 'ي.ن'] },
-        { id: 2, name: 'فريق البيانات', project: 'نظام تحليل بيانات الطلاب', status: 'proposed', percent: 15, members: ['ف.د', 'ن.ز'] },
-        { id: 3, name: 'فريق الأمن السيبراني', project: 'أداة كشف الثغرات الأمنية', status: 'completed', percent: 100, members: ['خ.غ', 'ر.د', 'م.ح'] }
+        { id: 1, name: 'فريق الابتكار', project: 'منصة إدارة مشاريع التخرج', status: 'in_progress', percent: 70, members: ['أحمد سالم فهد الشريف', 'حسان عمر يوسف النجار', 'ياسر نبيل حسين الدوسري'] },
+        { id: 2, name: 'فريق البيانات', project: 'نظام تحليل بيانات الطلاب', status: 'proposed', percent: 15, members: ['فهد داود سلمان الزهراني', 'نواف زياد كامل الغامدي'] },
+        { id: 3, name: 'فريق الأمن السيبراني', project: 'أداة كشف الثغرات الأمنية', status: 'completed', percent: 100, members: ['خالد غسان مروان الدوسري', 'رامي درويش سالم الحربي', 'ماجد حمزة نبيل الشمري'] }
       ]
     }
   },
@@ -159,6 +159,12 @@ export default {
   methods: {
     statusLabel(status) {
       return STATUS_LABELS[status] || status
+    },
+
+    // يعرض أول كلمة وآخر كلمة من الاسم الرباعي الكامل — مثلاً "أحمد سالم فهد الشريف" تصبح "أحمد الشريف"
+    shortName(fullName) {
+      const parts = fullName.trim().split(/\s+/)
+      return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]}` : fullName
     }
   }
 }
