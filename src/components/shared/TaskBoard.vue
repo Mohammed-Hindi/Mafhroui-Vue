@@ -1,10 +1,8 @@
 <template>
   <div>
-    <div class="flex items-center justify-between gap-4 mb-5">
-      <p class="text-body-sm text-text-600">
-        {{ readOnly ? 'عرض فقط — لوحة مهام الفريق' : 'اسحب البطاقات بين الأعمدة لتحديث الحالة' }}
-      </p>
-      <BaseButton v-if="!readOnly" size="sm" :icon="Plus" @click="openCreate()">مهمة جديدة</BaseButton>
+    <div v-if="!readOnly" class="flex items-center justify-between gap-4 mb-5">
+      <p class="text-body-sm text-text-600">اسحب البطاقات بين الأعمدة لتحديث الحالة</p>
+      <BaseButton size="sm" :icon="Plus" @click="openCreate()">مهمة جديدة</BaseButton>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

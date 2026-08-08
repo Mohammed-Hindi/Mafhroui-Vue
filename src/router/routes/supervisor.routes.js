@@ -11,12 +11,6 @@ export default [
       {
         path: '',
         name: 'supervisor-dashboard',
-        component: () => import('@/views/supervisor/DashboardPage.vue'),
-        meta: { title: 'لوحة المشرف' }
-      },
-      {
-        path: 'profile',
-        name: 'supervisor-profile',
         component: () => import('@/views/supervisor/ProfilePage.vue'),
         meta: { title: 'الملف الشخصي' }
       },
@@ -55,6 +49,12 @@ export default [
         name: 'supervisor-project-archive',
         component: () => import('@/views/supervisor/ProjectArchivePage.vue'),
         meta: { title: 'أرشيف المشاريع' }
+      },
+      {
+        path: 'project-archive/:id',
+        name: 'supervisor-project-detail',
+        component: () => import('@/views/supervisor/ProjectDetailPage.vue'),
+        meta: { title: 'تفاصيل المشروع' }
       },
       {
         path: 'progress',

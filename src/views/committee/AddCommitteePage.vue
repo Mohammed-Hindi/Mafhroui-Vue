@@ -8,7 +8,12 @@
           <p class="text-caption text-text-600">إنشاء حسابات أعضاء لجنة الإشراف والتحكم في صلاحياتها</p>
         </div>
       </div>
-      <BaseButton :icon="UserPlus" @click="openForm">إضافة عضو جديد</BaseButton>
+      <div class="flex flex-wrap gap-2">
+        <router-link :to="{ name: 'committee-deleted-members' }" class="inline-flex items-center gap-2 h-10 px-4 rounded-sm border border-border bg-surface text-text-600 text-caption font-bold hover:bg-border-soft hover:text-error transition-colors duration-fast">
+          <Archive :size="15" /> المشرفون المحذوفون
+        </router-link>
+        <BaseButton :icon="UserPlus" @click="openForm">إضافة عضو جديد</BaseButton>
+      </div>
     </div>
 
     <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden">
@@ -126,7 +131,7 @@
 </template>
 
 <script>
-import { ShieldCheck, UserPlus, RefreshCw, MessageCircle, Mail, Pencil, Trash2, Send, Check, Eye, Lock, AlertTriangle } from 'lucide-vue-next'
+import { ShieldCheck, UserPlus, RefreshCw, MessageCircle, Mail, Pencil, Trash2, Send, Check, Eye, Lock, AlertTriangle, Archive } from 'lucide-vue-next'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -160,7 +165,7 @@ const RESTRICT_LABELS = Object.fromEntries(RESTRICT_OPTIONS.map((o) => [o.value,
 export default {
   name: 'CommitteeAddMemberPage',
 
-  components: { ShieldCheck, UserPlus, RefreshCw, MessageCircle, Mail, Pencil, Trash2, Check, Eye, Lock, AlertTriangle, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable },
+  components: { ShieldCheck, UserPlus, RefreshCw, MessageCircle, Mail, Pencil, Trash2, Check, Eye, Lock, AlertTriangle, Archive, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable },
 
   data() {
     return {

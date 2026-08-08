@@ -21,6 +21,7 @@ export const NAV_ITEMS_BY_ROLE = {
     { label: 'الفرق', to: '/committee/teams', icon: Users },
     { label: 'الأعضاء', to: '/committee/members', icon: User },
     { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList },
+    { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock },
     { label: 'أرشيف المشاريع', to: '/committee/project-archive', icon: FileCheck },
     { label: 'نسبة تقدّم المشاريع', to: '/committee/progress', icon: TrendingUp },
     { label: 'إضافة لجنة الإشراف', to: '/committee/add-committee', icon: UserPlus },
@@ -28,8 +29,7 @@ export const NAV_ITEMS_BY_ROLE = {
   ],
 
   [ROLES.SUPERVISOR]: [
-    { label: 'لوحة المعلومات', to: '/supervisor', icon: LayoutDashboard, exact: true },
-    { label: 'الملف الشخصي', to: '/supervisor/profile', icon: UserCircle },
+    { label: 'الملف الشخصي', to: '/supervisor', icon: UserCircle, exact: true },
     { label: 'الفرق', to: '/supervisor/teams', icon: Users },
     { label: 'المقترح / التقرير النهائي', to: '/supervisor/proposals', icon: ClipboardList },
     { label: 'المهام (Kanban)', to: '/supervisor/tasks', icon: ListTodo },
@@ -38,5 +38,21 @@ export const NAV_ITEMS_BY_ROLE = {
     { label: 'أرشيف المشاريع', to: '/supervisor/project-archive', icon: FileCheck },
     { label: 'نسبة تقدّم الفرق', to: '/supervisor/progress', icon: TrendingUp },
     { label: 'المساعد الآلي', to: '/supervisor/assistant', icon: Bot }
+  ],
+
+  [ROLES.TEAM_LEADER]: [
+    { label: 'الملف الشخصي', to: '/team-leader', icon: UserCircle, exact: true },
+    { label: 'المقترح / التقرير النهائي', to: '/team-leader/proposal', icon: ClipboardList },
+    { label: 'المساعد الآلي', to: '/team-leader/assistant', icon: Bot },
+    { label: 'المهام (Kanban)', to: '/team-leader/tasks', icon: ListTodo },
+    { label: 'الاجتماعات', to: '/team-leader/meetings', icon: CalendarDays }
+  ],
+
+  [ROLES.STUDENT]: [
+    { label: 'الملف الشخصي', to: '/student', icon: UserCircle, exact: true },
+    { label: 'المقترح / التقرير النهائي', to: '/student/proposal', icon: ClipboardList },
+    { label: 'المساعد الآلي', to: '/student/assistant', icon: Bot },
+    { label: 'المهام (Kanban)', to: '/student/tasks', icon: ListTodo },
+    { label: 'الاجتماعات', to: '/student/meetings', icon: CalendarDays }
   ]
 }
