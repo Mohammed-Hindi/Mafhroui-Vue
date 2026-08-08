@@ -6,6 +6,13 @@ import TasksPageStudent from '@/views/student/TasksPage.vue'
 import MeetingsPageStudent from '@/views/student/MeetingsPage.vue'
 import AssistantPageStudent from '@/views/student/AssistantPage.vue'
 
+// استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
+import ProfilePage from '@/views/student/ProfilePage.vue'
+import ProposalPage from '@/views/student/ProposalPage.vue'
+import TasksPage from '@/views/student/TasksPage.vue'
+import MeetingsPage from '@/views/student/MeetingsPage.vue'
+import AssistantPage from '@/views/student/AssistantPage.vue'
+
 /** مسارات لوحة الطالب — تُضاف صفحة بصفحة حسب الوصف */
 export default [
   {

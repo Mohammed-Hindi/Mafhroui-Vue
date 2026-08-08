@@ -11,6 +11,18 @@ import ProjectDetailPageSupervisor from '@/views/supervisor/ProjectDetailPage.vu
 import ProgressPageSupervisor from '@/views/supervisor/ProgressPage.vue'
 import AssistantPageSupervisor from '@/views/supervisor/AssistantPage.vue'
 
+// استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
+import ProfilePage from '@/views/supervisor/ProfilePage.vue'
+import TeamsPage from '@/views/supervisor/TeamsPage.vue'
+import ProposalsPage from '@/views/supervisor/ProposalsPage.vue'
+import TasksPage from '@/views/supervisor/TasksPage.vue'
+import MeetingsPage from '@/views/supervisor/MeetingsPage.vue'
+import AppointmentsPage from '@/views/supervisor/AppointmentsPage.vue'
+import ProjectArchivePage from '@/views/supervisor/ProjectArchivePage.vue'
+import ProjectDetailPage from '@/views/supervisor/ProjectDetailPage.vue'
+import ProgressPage from '@/views/supervisor/ProgressPage.vue'
+import AssistantPage from '@/views/supervisor/AssistantPage.vue'
+
 /** مسارات لوحة المشرف — تُضاف صفحة بصفحة حسب الوصف */
 export default [
   {

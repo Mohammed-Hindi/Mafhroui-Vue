@@ -17,8 +17,8 @@
         <router-view v-slot="{ Component }">
           <transition
             enter-active-class="transition duration-fast ease-standard"
-            enter-from-class="opacity-0 translate-y-1"
-            leave-active-class="hidden"
+            enter-from-class="opacity-0"
+            mode="out-in"
           >
             <component :is="Component" />
           </transition>

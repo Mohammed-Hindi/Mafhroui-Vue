@@ -12,6 +12,19 @@ import ProgressPageCommittee from '@/views/committee/ProgressPage.vue'
 import AddCommitteePageCommittee from '@/views/committee/AddCommitteePage.vue'
 import AssistantPageCommittee from '@/views/committee/AssistantPage.vue'
 
+// استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
+import DashboardPage from '@/views/committee/DashboardPage.vue'
+import TeamsPage from '@/views/committee/TeamsPage.vue'
+import MembersPage from '@/views/committee/MembersPage.vue'
+import ProposalsPage from '@/views/committee/ProposalsPage.vue'
+import DeletedMembersPage from '@/views/committee/DeletedMembersPage.vue'
+import AppointmentsPage from '@/views/committee/AppointmentsPage.vue'
+import ProjectArchivePage from '@/views/committee/ProjectArchivePage.vue'
+import ProjectDetailPage from '@/views/committee/ProjectDetailPage.vue'
+import ProgressPage from '@/views/committee/ProgressPage.vue'
+import AddCommitteePage from '@/views/committee/AddCommitteePage.vue'
+import AssistantPage from '@/views/committee/AssistantPage.vue'
+
 /** مسارات لوحة لجنة الإشراف — تعيد استخدام صفحات الفرق/المقترحات/المواعيد/الأرشيف/التقدّم من دور المشرف */
 export default [
   {
