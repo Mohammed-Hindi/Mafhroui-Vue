@@ -20,7 +20,7 @@
       <p class="reveal text-body text-text-600 max-w-2xl mb-8">{{ project.description }}</p>
 
       <!-- بطاقة الفيديو — واجهة فيديو احترافية على هويتنا البصرية، بلا تضمين خارجي -->
-      <div class="reveal bg-surface rounded-lg border border-border shadow-card overflow-hidden mb-8">
+      <div class="reveal max-w-3xl mx-auto bg-surface rounded-lg border border-border shadow-card overflow-hidden mb-8">
         <div class="flex items-center gap-2 px-4 py-3 bg-bg border-b border-border-soft">
           <span class="w-[10px] h-[10px] rounded-pill bg-error" />
           <span class="w-[10px] h-[10px] rounded-pill bg-warning" />
@@ -41,8 +41,8 @@
             <AppIcon name="graduation" :size="18" />
           </span>
 
-          <span class="relative z-[1] grid place-items-center w-20 h-20 rounded-pill bg-white text-primary-600 shadow-[0_12px_30px_rgba(0,0,0,.35)] transition-transform duration-fast group-hover:scale-110">
-            <AppIcon name="play" :size="30" class="ms-1" />
+          <span class="relative z-[1] grid place-items-center w-16 h-16 rounded-pill bg-white text-primary-600 shadow-[0_12px_30px_rgba(0,0,0,.35)] transition-transform duration-fast group-hover:scale-110">
+            <AppIcon name="play" :size="24" class="ms-1" />
           </span>
 
           <div class="absolute bottom-5 start-5 z-[2] text-white text-start">

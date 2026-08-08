@@ -31,6 +31,24 @@
 }
 
 @layer components {
+  /* هفر/ضغط احترافي موحّد لصفوف الجداول — يُطبَّق تلقائيًا على كل صفحات لوحات التحكم عبر DataTable والجداول المخصصة */
+  .row-interactive {
+    transition: background-color 150ms var(--ease-standard), transform 150ms var(--ease-standard), box-shadow 150ms var(--ease-standard);
+  }
+  .row-interactive:hover {
+    background-color: var(--color-border-soft);
+    transform: translateX(3px);
+  }
+  .row-interactive:active {
+    transform: translateX(3px) scale(0.992);
+  }
+  /* الاسم (font-bold + text-text-900) والرقم (mono) هما التوقيع الموحَّد لهذه الحقول بكل الجداول */
+  .row-interactive:hover .font-bold.text-text-900,
+  .row-interactive:hover .mono {
+    color: var(--color-primary-700);
+    transition: color 150ms var(--ease-standard);
+  }
+
   /* شريط تمرير رفيع للقوائم الجانبية واللوحات المنسدلة */
   .scrollbar-thin {
     scrollbar-width: thin;

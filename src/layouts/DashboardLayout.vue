@@ -1,6 +1,7 @@
 <template>
   <div class="min-h-screen bg-bg flex relative">
-    <!-- خلفية متحركة زخرفية — خلف كل المحتوى، لا تتفاعل مع الفأرة -->
+    <!-- خلفية متحركة زخرفية — قطرات ماء + فقاعات، خلف كل المحتوى، لا تتفاعل مع الفأرة -->
+    <WaterBackground />
     <div aria-hidden="true" class="pointer-events-none fixed inset-0 overflow-hidden">
       <span class="animate-blob absolute rounded-pill w-[420px] h-[420px] bg-primary-500/[0.05] -top-40 -end-32" />
       <span class="animate-blob absolute rounded-pill w-[340px] h-[340px] bg-accent-500/[0.05] top-1/2 -start-28" style="animation-delay:3s" />
@@ -15,11 +16,9 @@
       <main class="flex-1 px-4 lg:px-6 py-6">
         <router-view v-slot="{ Component }">
           <transition
-            enter-active-class="transition duration-slow ease-standard"
-            enter-from-class="opacity-0 translate-y-1.5 blur-[2px]"
-            leave-active-class="transition duration-fast ease-standard"
-            leave-to-class="opacity-0"
-            mode="out-in"
+            enter-active-class="transition duration-fast ease-standard"
+            enter-from-class="opacity-0 translate-y-1"
+            leave-active-class="hidden"
           >
             <component :is="Component" />
           </transition>
@@ -33,6 +32,7 @@
 import { mapState } from 'pinia'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import WaterBackground from '@/components/shared/WaterBackground.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { NAV_ITEMS_BY_ROLE } from '@/utils/navConfig'
 import { ROLE_LABELS } from '@/utils/constants'
@@ -44,7 +44,7 @@ import { ROLE_LABELS } from '@/utils/constants'
 export default {
   name: 'DashboardLayout',
 
-  components: { AppSidebar, AppTopbar },
+  components: { AppSidebar, AppTopbar, WaterBackground },
 
   computed: {
     ...mapState(useAuthStore, ['userRole']),
