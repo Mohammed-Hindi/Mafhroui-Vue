@@ -38,6 +38,13 @@ export default {
 
   computed: {
     ...mapState(useLandingStore, ['featured'])
+  },
+
+  created() {
+    const landingStore = useLandingStore()
+    landingStore.fetchFeaturedProjects().catch(() => {
+      // الخطأ يُعرض بالواجهة عبر featuredError عند الحاجة
+    })
   }
 }
 </script>
