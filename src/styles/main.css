@@ -1,0 +1,139 @@
+@import './design-tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-bg text-text-900 font-tajawal text-body antialiased;
+    margin: 0;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-cairo;
+    margin: 0;
+  }
+
+  /* حلقة التركيز الموحّدة — إلزامية للوصولية بلوحة المفاتيح */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+    --tw-ring-offset-color: var(--color-bg);
+  }
+
+  ::placeholder {
+    color: var(--color-text-400);
+  }
+}
+
+@layer components {
+  /* هفر/ضغط احترافي موحّد لصفوف الجداول — يُطبَّق تلقائيًا على كل صفحات لوحات التحكم عبر DataTable والجداول المخصصة */
+  .row-interactive {
+    transition: background-color 150ms var(--ease-standard), transform 150ms var(--ease-standard), box-shadow 150ms var(--ease-standard);
+  }
+  .row-interactive:hover {
+    background-color: var(--color-border-soft);
+    transform: translateX(3px);
+  }
+  .row-interactive:active {
+    transform: translateX(3px) scale(0.992);
+  }
+  /* الاسم (font-bold + text-text-900) والرقم (mono) هما التوقيع الموحَّد لهذه الحقول بكل الجداول */
+  .row-interactive:hover .font-bold.text-text-900,
+  .row-interactive:hover .mono {
+    color: var(--color-primary-700);
+    transition: color 150ms var(--ease-standard);
+  }
+
+  /* شريط تمرير رفيع للقوائم الجانبية واللوحات المنسدلة */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: var(--color-border);
+    border-radius: var(--radius-pill);
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/* احترام تفضيل تقليل الحركة */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  /* ظهور تدريجي عند التمرير — يفعّله animateOnScroll.mixin.js */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity 0.7s var(--ease-standard),
+      transform 0.7s var(--ease-standard);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.08s; }
+  .reveal-delay-2 { transition-delay: 0.16s; }
+  .reveal-delay-3 { transition-delay: 0.24s; }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: floatY 6s ease-in-out infinite;
+  }
+  .animate-float-delayed {
+    animation: floatY 5s ease-in-out infinite 1s;
+  }
+  .animate-pulse-glow {
+    animation: pulseGlow 2.4s ease-in-out infinite;
+  }
+  .animate-blob {
+    animation: blobFloat 9s ease-in-out infinite;
+    filter: blur(2px);
+  }
+}
+
+/* في الوضع الداكن الألوان الشفافة الخفيفة تصبح شبه غير مرئية — نرفع السطوع والتشبع للحفاظ على نفس الحضور البصري */
+:root[data-theme="dark"] .animate-blob {
+  filter: blur(2px) brightness(1.7) saturate(1.3);
+}
+
+@keyframes blobFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-16px, 14px) scale(1.06); }
+}
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35); }
+  50% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+}
+
+/* انتقال ناعم عند تبديل الوضع الداكن */
+html {
+  transition: background-color var(--transition-base);
+}
