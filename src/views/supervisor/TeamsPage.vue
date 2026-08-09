@@ -77,8 +77,8 @@
                   </td>
                   <td class="px-5 py-3">
                     <div class="flex gap-2">
-                      <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
-                      <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
+                      <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member)"><MessageCircle :size="14" /></button>
+                      <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member)"><Mail :size="14" /></button>
                       <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEditMember(group, idx)"><Pencil :size="14" /></button>
                       <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-error-bg text-error hover:brightness-95" title="حذف" @click="openDeleteMember(group, idx)"><Trash2 :size="14" /></button>
                     </div>
@@ -123,8 +123,8 @@
                 <div class="flex items-start justify-between gap-3">
                   <span class="text-label font-semibold text-text-400 shrink-0">إجراءات</span>
                   <div class="flex gap-1.5">
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
+                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member)"><MessageCircle :size="14" /></button>
+                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member)"><Mail :size="14" /></button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEditMember(group, idx)"><Pencil :size="14" /></button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-error-bg text-error hover:brightness-95" title="حذف" @click="openDeleteMember(group, idx)"><Trash2 :size="14" /></button>
                   </div>
@@ -190,6 +190,7 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { SPECIALIZATIONS } from '@/utils/specializations'
+import { APP_NAME } from '@/utils/constants'
 
 const SPECS = SPECIALIZATIONS
 const SUPS = ['د. أحمد الشريف', 'د. سلمى نصار', 'د. أحمد النبريص']
@@ -414,13 +415,32 @@ export default {
       this.$toast?.success(`تم تعيين ${target.name} قائدًا لـ${group.name}`)
     },
 
-    sendWhats(whats) {
-      const num = digitsOnly(whats)
-      const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
-      window.open(`https://wa.me/${full}`, '_blank')
+    // كلمة سر تجريبية ثابتة مشتقة من الرقم الجامعي — تُستخدم فقط لعرض بيانات الدخول التجريبية بالرسالة المرسلة للطالب
+    memberPassword(member) {
+      return `Masar@${String(member.uid || '').slice(-4)}`
     },
-    sendMail(mail) {
-      window.location.href = `mailto:${mail}`
+    credentialsMessage(member) {
+      return [
+        `مرحبًا ${member.name}،`,
+        `بيانات تسجيل الدخول لمنصة ${APP_NAME}:`,
+        `اسم المنصة: ${APP_NAME}`,
+        `رابط المنصة: ${window.location.origin}`,
+        `الاسم: ${member.name}`,
+        `الرقم الجامعي: ${member.uid}`,
+        `البريد الإلكتروني: ${member.mail}`,
+        `كلمة السر: ${this.memberPassword(member)}`
+      ].join('\n')
+    },
+
+    sendWhats(member) {
+      const num = digitsOnly(member.whats)
+      const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
+      window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.credentialsMessage(member))}`, '_blank')
+    },
+    sendMail(member) {
+      const subject = encodeURIComponent(`بيانات تسجيل الدخول لمنصة ${APP_NAME}`)
+      const body = encodeURIComponent(this.credentialsMessage(member))
+      window.location.href = `mailto:${member.mail}?subject=${subject}&body=${body}`
     }
   }
 }

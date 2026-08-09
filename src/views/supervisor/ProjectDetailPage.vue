@@ -43,7 +43,7 @@
           </span>
         </button>
 
-        <button type="button" class="flex items-center gap-3 bg-surface border border-border rounded-lg shadow-card p-4 text-start hover:-translate-y-0.5 hover:shadow-card-hover transition-all duration-fast" @click="openPlaceholderPdf(reportFile, project.proj)">
+        <button type="button" class="flex items-center gap-3 bg-surface border border-border rounded-lg shadow-card p-4 text-start hover:-translate-y-0.5 hover:shadow-card-hover transition-all duration-fast" @click="openReportPdf">
           <span class="grid place-items-center w-11 h-11 rounded-md bg-primary-50 text-primary-600 shrink-0"><FileText :size="20" /></span>
           <span>
             <span class="block text-body-sm font-bold text-text-900">التقرير النهائي</span>
@@ -51,7 +51,7 @@
           </span>
         </button>
 
-        <button type="button" class="flex items-center gap-3 bg-surface border border-border rounded-lg shadow-card p-4 text-start hover:-translate-y-0.5 hover:shadow-card-hover transition-all duration-fast" @click="openPlaceholderPdf(proposalFile, project.proj)">
+        <button type="button" class="flex items-center gap-3 bg-surface border border-border rounded-lg shadow-card p-4 text-start hover:-translate-y-0.5 hover:shadow-card-hover transition-all duration-fast" @click="openProposalPdf">
           <span class="grid place-items-center w-11 h-11 rounded-md bg-primary-50 text-primary-600 shrink-0"><FileText :size="20" /></span>
           <span>
             <span class="block text-body-sm font-bold text-text-900">البروبوزال</span>
@@ -66,7 +66,7 @@
 <script>
 import { ArrowRight, FileText, PlayCircle, ExternalLink } from 'lucide-vue-next'
 import { PROJECT_ARCHIVE } from '@/data/projectArchive'
-import { openPlaceholderPdf, openPlaceholderVideo } from '@/utils/filePreview'
+import { openOfficialPdf, openPlaceholderVideo } from '@/utils/filePreview'
 import EmptyState from '@/components/ui/EmptyState.vue'
 
 export default {
@@ -87,8 +87,25 @@ export default {
   },
 
   methods: {
-    openPlaceholderPdf,
-    openPlaceholderVideo
+    openPlaceholderVideo,
+
+    openReportPdf() {
+      openOfficialPdf('التقرير النهائي للمشروع', this.project.proj, [
+        { label: 'الفريق', value: this.project.team },
+        { label: 'القسم', value: this.project.dept },
+        { label: 'التخصص', value: this.project.spec },
+        { label: 'الوصف', value: this.project.desc }
+      ])
+    },
+
+    openProposalPdf() {
+      openOfficialPdf('مقترح المشروع', this.project.proj, [
+        { label: 'الفريق', value: this.project.team },
+        { label: 'القسم', value: this.project.dept },
+        { label: 'التخصص', value: this.project.spec },
+        { label: 'الوصف', value: this.project.desc }
+      ])
+    }
   }
 }
 </script>

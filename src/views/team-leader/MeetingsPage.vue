@@ -25,7 +25,7 @@
 
     <section>
       <h3 class="font-cairo font-bold text-h4 text-text-900 mb-4 flex items-center gap-2.5">
-        الاجتماعات المنتهية
+        الاجتماعات المكتملة
         <span class="grid place-items-center w-8 h-8 rounded-pill bg-success-bg text-success"><CheckCircle2 :size="16" /></span>
       </h3>
       <EmptyState v-if="!completed.length" title="لا توجد اجتماعات منتهية بعد" />
@@ -45,6 +45,7 @@
     <BaseModal v-model="modalOpen" title="اجتماع جديد" description="سيتم إنشاؤه على Google Meet وإشعار الفريق المعني">
       <div class="flex flex-col gap-4">
         <BaseInput v-model="form.title" label="اسم الاجتماع" placeholder="مثال: مراجعة الفصل الثاني من التقرير" required />
+        <BaseInput v-model="form.num" label="رقم المجموعة" placeholder="مثال: 31" />
         <div class="grid grid-cols-2 gap-4">
           <BaseInput v-model="form.date" type="date" label="التاريخ" required />
           <BaseInput v-model="form.time" type="time" label="الوقت" required />
@@ -94,14 +95,14 @@ export default {
 
       /* بيانات ثابتة — بانتظار GET /team-leader/meetings */
       meetings: [
-        { id: nextId(), title: 'اجتماع مراجعة المتطلبات', team: 'فريق الابتكار', date: '2026-08-10', time: '11:00', link: 'meet.google.com/abc-defg-hij', notes: '', done: false },
-        { id: nextId(), title: 'اجتماع توزيع مهام الفريق', team: 'فريق البيانات', date: '2026-08-09', time: '12:00', link: 'meet.google.com/tlm-eetg-abc', notes: '', done: false },
-        { id: nextId(), title: 'اجتماع متابعة تصميم قاعدة البيانات', team: 'فريق البيانات', date: '2026-08-12', time: '13:00', link: 'meet.google.com/klm-nopq-rst', notes: 'مراجعة ERD قبل البدء بالتطوير', done: false },
-        { id: nextId(), title: 'اجتماع مراجعة الفصل الثالث من التقرير', team: 'فريق الأمن السيبراني', date: '2026-08-14', time: '10:30', link: 'meet.google.com/xyz-abcd-efg', notes: '', done: false },
-        { id: nextId(), title: 'اجتماع مراجعة المتطلبات الأولي', team: 'فريق الابتكار', date: '2026-06-10', time: '10:00', link: 'meet.google.com/qrs-tuvw-xyz', notes: 'مراجعة وثيقة SRS', done: true },
-        { id: nextId(), title: 'اجتماع تعريفي بالمشروع', team: 'فريق البيانات', date: '2026-05-25', time: '09:00', link: 'meet.google.com/tlm-intr-ghi', notes: '', done: true },
-        { id: nextId(), title: 'اجتماع مراجعة المقترح الأولي', team: 'فريق الابتكار', date: '2026-05-18', time: '11:30', link: 'meet.google.com/prs-mnop-qrs', notes: 'اعتماد فكرة المشروع', done: true },
-        { id: nextId(), title: 'اجتماع تعريفي بالفريق', team: 'فريق الأمن السيبراني', date: '2026-05-10', time: '09:30', link: 'meet.google.com/def-ghij-klm', notes: '', done: true }
+        { id: nextId(), title: 'اجتماع مراجعة المتطلبات', num: '54', date: '2026-08-10', time: '11:00', link: 'meet.google.com/abc-defg-hij', notes: '', done: false },
+        { id: nextId(), title: 'اجتماع توزيع مهام الفريق', num: '61', date: '2026-08-09', time: '12:00', link: 'meet.google.com/tlm-eetg-abc', notes: '', done: false },
+        { id: nextId(), title: 'اجتماع متابعة تصميم قاعدة البيانات', num: '61', date: '2026-08-12', time: '13:00', link: 'meet.google.com/klm-nopq-rst', notes: 'مراجعة ERD قبل البدء بالتطوير', done: false },
+        { id: nextId(), title: 'اجتماع مراجعة الفصل الثالث من التقرير', num: '63', date: '2026-08-14', time: '10:30', link: 'meet.google.com/xyz-abcd-efg', notes: '', done: false },
+        { id: nextId(), title: 'اجتماع مراجعة المتطلبات الأولي', num: '54', date: '2026-06-10', time: '10:00', link: 'meet.google.com/qrs-tuvw-xyz', notes: 'مراجعة وثيقة SRS', done: true },
+        { id: nextId(), title: 'اجتماع تعريفي بالمشروع', num: '61', date: '2026-05-25', time: '09:00', link: 'meet.google.com/tlm-intr-ghi', notes: '', done: true },
+        { id: nextId(), title: 'اجتماع مراجعة المقترح الأولي', num: '54', date: '2026-05-18', time: '11:30', link: 'meet.google.com/prs-mnop-qrs', notes: 'اعتماد فكرة المشروع', done: true },
+        { id: nextId(), title: 'اجتماع تعريفي بالفريق', num: '63', date: '2026-05-10', time: '09:30', link: 'meet.google.com/def-ghij-klm', notes: '', done: true }
       ]
     }
   },
@@ -134,7 +135,7 @@ export default {
 
   methods: {
     emptyForm() {
-      return { title: '', date: '', time: '', link: '', notes: '' }
+      return { title: '', num: '', date: '', time: '', link: '', notes: '' }
     },
 
     openCreate() {
@@ -144,7 +145,7 @@ export default {
 
     submitMeeting() {
       if (!this.canSubmit) return
-      this.meetings.unshift({ id: nextId(), ...this.form, team: '', done: false })
+      this.meetings.unshift({ id: nextId(), ...this.form, done: false })
       this.modalOpen = false
       this.$toast?.success('تم إنشاء الاجتماع بنجاح')
     },

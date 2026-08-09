@@ -44,17 +44,6 @@
         />
       </div>
 
-      <div class="min-w-[170px]">
-        <BaseSelect
-          v-model="filters.degree"
-          label="الدرجة"
-          placeholder="جميع الدرجات"
-          include-placeholder-option
-          :options="degreeOptions"
-          @change="onFilterChange"
-        />
-      </div>
-
       <button
         v-if="hasActiveFilters"
         type="button"
