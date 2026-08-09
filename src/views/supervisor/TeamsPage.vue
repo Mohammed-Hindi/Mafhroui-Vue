@@ -63,7 +63,7 @@
                     <span v-if="member.leader" class="inline-grid place-items-center w-8 h-8 rounded-pill bg-warning-bg text-warning-text" title="قائد الفريق">
                       <Crown :size="14" fill="currentColor" />
                     </span>
-                    <span v-else class="text-text-300">—</span>
+                    <span v-else class="text-text-400">—</span>
                   </span>
                   <span class="flex items-center justify-center gap-2">
                     <button v-if="member.whats" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
