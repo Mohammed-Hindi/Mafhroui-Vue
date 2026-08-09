@@ -24,6 +24,7 @@ export const useTeamsStore = defineStore('teams', () => {
       name: team.name,
       spec: specializationName(team.specialization_id),
       sup: team.supervisor?.name || 'غير محدد',
+      supId: team.supervisor?.id ?? null,
       projectName: team.project?.name || '',
       projectStatus: team.project?.status || '',
       members: (team.members || []).map((m) => ({
@@ -68,6 +69,21 @@ export const useTeamsStore = defineStore('teams', () => {
     }
   }
 
+  // PUT /teams/{id}
+  const updateTeam = async (id, payload) => {
+    const { data } = await api.put(`/teams/${id}`, payload)
+    const updated = data.data || data
+    const index = teams.value.findIndex((t) => t.id === id)
+    if (index !== -1) teams.value[index] = updated
+    return updated
+  }
+
+  // DELETE /teams/{id}
+  const deleteTeam = async (id) => {
+    await api.delete(`/teams/${id}`)
+    teams.value = teams.value.filter((t) => t.id !== id)
+  }
+
   return {
     teams,
     teamsLoading,
@@ -77,6 +93,8 @@ export const useTeamsStore = defineStore('teams', () => {
     specializationsError,
     teamsForDisplay,
     fetchTeams,
-    fetchSpecializations
+    fetchSpecializations,
+    updateTeam,
+    deleteTeam
   }
 })
