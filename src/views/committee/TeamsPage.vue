@@ -249,6 +249,7 @@
 </template>
 
 <script>
+import { useTeamsStore } from '@/stores/teams.store'
 import { Plus, Upload, Download, FileDown, Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Send, RefreshCw, Crown } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -260,6 +261,7 @@ import Pagination from '@/components/ui/Pagination.vue'
 import { genPass } from '@/utils/password'
 import { exportStyledExcel, exportGroupsPdf } from '@/utils/exportReport'
 import { SPECIALIZATIONS } from '@/utils/specializations'
+
 
 const SPECS = SPECIALIZATIONS
 const SUPS = ['د. أحمد الشريف', 'د. سلمى نصار', 'د. أحمد النبريص']
@@ -306,69 +308,15 @@ export default {
       deleteTarget: { groupId: null, idx: null },
       deleteLabel: '',
       deleteReason: '',
-
-      /* بيانات ثابتة — بانتظار GET /committee/teams */
-      groups: [
-        {
-          id: 'G1', num: '31', shu: 'شعبة 1', name: 'فريق نوفا', spec: SPECS[0], sup: 'د. أحمد الشريف',
-          members: [
-            { name: 'يوسف الدوسري', uid: '3175000', whats: '0551110001', mail: 'student1@academy.edu.sa', leader: false },
-            { name: 'علي الحربي', uid: '3175001', whats: '0551110002', mail: 'student2@academy.edu.sa', leader: false },
-            { name: 'سلطان الدوسري', uid: '3175006', whats: '0551110003', mail: 'student3@academy.edu.sa', leader: true }
-          ]
-        },
-        {
-          id: 'G2', num: '52', shu: 'شعبة 2', name: 'فريق كوانتم', spec: SPECS[1], sup: 'د. سلمى نصار',
-          members: [
-            { name: 'فيصل الحربي', uid: '3175018', whats: '0551110004', mail: 'student4@academy.edu.sa', leader: false },
-            { name: 'إبراهيم الدوسري', uid: '3175019', whats: '0551110005', mail: 'student5@academy.edu.sa', leader: false },
-            { name: 'سعد الحربي', uid: '3175020', whats: '0551110006', mail: 'student6@academy.edu.sa', leader: false }
-          ]
-        },
-        {
-          id: 'G3', num: '54', shu: 'شعبة 3', name: 'فريق الابتكار', spec: SPECS[2], sup: 'د. أحمد النبريص',
-          members: [
-            { name: 'حسين الحربي', uid: '3175022', whats: '0551110007', mail: 'student7@academy.edu.sa', leader: false },
-            { name: 'ماجد الحربي', uid: '3175023', whats: '0551110008', mail: 'student8@academy.edu.sa', leader: false },
-            { name: 'سارة الحربي', uid: '3175024', whats: '0551110009', mail: 'student9@academy.edu.sa', leader: false },
-            { name: 'رانا الحربي', uid: '3175025', whats: '0551110010', mail: 'student10@academy.edu.sa', leader: false }
-          ]
-        },
-        {
-          id: 'G4', num: '61', shu: 'شعبة 4', name: 'فريق فوكال', spec: SPECS[3], sup: 'د. سلمى نصار',
-          members: [
-            { name: 'عبدالله الجهني', uid: '3175026', whats: '0551110011', mail: 'student11@academy.edu.sa', leader: false },
-            { name: 'أحمد الحربي', uid: '3175027', whats: '0551110012', mail: 'student12@academy.edu.sa', leader: false }
-          ]
-        },
-        {
-          id: 'G5', num: '62', shu: 'شعبة 5', name: 'فريق أورانج', spec: SPECS[4], sup: 'د. أحمد الشريف',
-          members: [
-            { name: 'نورة الدوسري', uid: '3175028', whats: '0551110013', mail: 'student13@academy.edu.sa', leader: false },
-            { name: 'عمر الجهني', uid: '3175029', whats: '0551110014', mail: 'student14@academy.edu.sa', leader: false }
-          ]
-        },
-        {
-          id: 'G6', num: '63', shu: 'شعبة 6', name: 'فريق الأمن السيبراني', spec: SPECS[2], sup: 'د. أحمد النبريص',
-          members: [
-            { name: 'هدى الجهني', uid: '3175030', whats: '0551110015', mail: 'student15@academy.edu.sa', leader: false },
-            { name: 'رامي الحربي', uid: '3175031', whats: '0551110016', mail: 'student16@academy.edu.sa', leader: false },
-            { name: 'مني الحربي', uid: '3175032', whats: '0551110017', mail: 'student17@academy.edu.sa', leader: false }
-          ]
-        },
-        {
-          id: 'G7', num: '64', shu: 'شعبة 7', name: 'فريق سبعة', spec: SPECS[1], sup: 'د. سلمى نصار',
-          members: [
-            { name: 'جود الدوسري', uid: '3175033', whats: '0551110018', mail: 'student18@academy.edu.sa', leader: false },
-            { name: 'لينا الجهني', uid: '3175034', whats: '0551110019', mail: 'student19@academy.edu.sa', leader: false }
-          ]
-        }
-      ],
+      teamsStore: useTeamsStore(),
       page: 1
     }
   },
 
   computed: {
+    groups() {
+      return this.teamsStore.teamsForDisplay
+    },
     specializationOptions() {
       return SPECS.map((s) => ({ value: s, label: s }))
     },
@@ -405,7 +353,11 @@ export default {
     }
   },
 
-  created() {
+  async created() {
+    await Promise.all([
+      this.teamsStore.fetchTeams(),
+      this.teamsStore.fetchSpecializations()
+    ])
     this.highlightFromQuery()
   },
 
@@ -624,6 +576,7 @@ export default {
         this.exportingPdf = false
       }
     }
+    
   }
 }
 </script>

@@ -10,9 +10,9 @@
         العودة إلى الرئيسية
       </router-link>
 
-      <h1 class="font-cairo font-extrabold text-sec-title-sm sm:text-sec-title text-text-900">أرشيف مشاريع التخرج</h1>
+      <h1 class="font-cairo font-extrabold text-sec-title-sm sm:text-sec-title text-text-900">المشاريع المميزة</h1>
       <p class="mt-2 text-[13.5px] text-text-600">
-        جميع المشاريع المؤرشفة في المنصة
+        جميع المشاريع المميزة  في المنصة
         <span v-if="projectsMeta?.total">— {{ formatNumber(projectsMeta.total) }} مشروع</span>
       </p>
     </div>
@@ -123,6 +123,11 @@
   </div>
 </template>
 
+تمام، فهمت — خلينا نبعد عن التفاصيل الدقيقة هلق ونركز فقط على نخلي الصفحة تعرض المشاريع الحقيقية أول شي. الفلترة (لو
+الباك اند بيدعمها أو لأ) منقدر نتأكد منها لاحقاً.
+
+بما إنه عندنا الشكل الحقيقي، هاد الكود النهائي لـ ProjectsArchivePage.vue
+vue
 <script>
 import { mapState, mapActions } from 'pinia'
 import { useLandingStore } from '@/stores/landing.store'
@@ -144,101 +149,81 @@ export default {
         department_id: '',
         degree: ''
       },
-      page: 1,
-      searchTimer: null
+      page: 1
     }
   },
 
   computed: {
-    ...mapState(useLandingStore, [
-      'projects',
-      'projectsMeta',
-      'projectsLoading',
-      'projectsError',
-      'departments'
-    ]),
+    ...mapState(useLandingStore, ['featured', 'featuredTotal', 'featuredLoading', 'featuredError']),
 
     hasActiveFilters() {
       return Boolean(this.filters.search || this.filters.department_id || this.filters.degree)
     },
 
     departmentOptions() {
-      return this.departments.map((department) => ({ value: department.id, label: department.name }))
+      const seen = new Map()
+      this.featured.forEach((p) => {
+        if (p.department) seen.set(p.department.id, p.department.name)
+      })
+      return [...seen.entries()].map(([id, name]) => ({ value: id, label: name }))
     },
 
-    degreeOptions() {
-      return [
-        { value: 'دبلوم', label: 'دبلوم' },
-        { value: 'بكالوريوس', label: 'بكالوريوس' }
-      ]
+    /** فلترة محلية مؤقتة إلى حين تأكيد دعم الباك إند لها عبر query params */
+    filteredProjects() {
+      let list = this.featured
+      if (this.filters.search) {
+        const q = this.filters.search.toLowerCase()
+        list = list.filter((p) => (p.name || '').toLowerCase().includes(q))
+      }
+      if (this.filters.department_id) {
+        list = list.filter((p) => p.department_id === this.filters.department_id)
+      }
+      return list
+    },
+
+    projects() {
+      return this.filteredProjects
+    },
+
+    projectsMeta() {
+      return { total: this.filteredProjects.length, current_page: 1, last_page: 1 }
+    },
+
+    projectsLoading() {
+      return this.featuredLoading
+    },
+
+    projectsError() {
+      return this.featuredError
     }
   },
 
   created() {
-    // استعادة الفلاتر من الرابط لتبقى المشاركة والرجوع عمليًا
-    const { search = '', department_id: departmentId = '', degree = '', page = '1' } = this.$route.query
-    this.filters.search = String(search).slice(0, 80)
-    this.filters.department_id = departmentId
-    this.filters.degree = ['دبلوم', 'بكالوريوس'].includes(degree) ? degree : ''
-    this.page = Math.max(1, Number(page) || 1)
-
-    this.fetchDepartments()
     this.loadProjects()
   },
 
-  beforeUnmount() {
-    clearTimeout(this.searchTimer)
-  },
-
   methods: {
-    ...mapActions(useLandingStore, ['fetchProjects', 'fetchDepartments']),
+    ...mapActions(useLandingStore, ['fetchFeaturedProjects']),
     formatNumber,
 
-    // فجوة باك إند: لا يوجد GET /projects عام بترقيم صفحات/فلاتر — fetchProjects تضبط projectsError فورًا
     async loadProjects() {
       try {
-        await this.fetchProjects({ page: this.page, ...this.cleanFilters() })
+        await this.fetchFeaturedProjects()
       } catch (_) {
-        // الخطأ يُعرض بالواجهة عبر projectsError
+        // الخطأ يُعرض بالواجهة عبر featuredError
       }
     },
 
-    cleanFilters() {
-      const params = {}
-      if (this.filters.search) params.search = this.filters.search
-      if (this.filters.department_id) params.department_id = this.filters.department_id
-      if (this.filters.degree) params.degree = this.filters.degree
-      return params
-    },
-
-    /** تأخير البحث لتفادي طلب مع كل حرف */
     onFilterChange() {
-      clearTimeout(this.searchTimer)
-      this.searchTimer = setTimeout(() => {
-        this.page = 1
-        this.syncQuery()
-        this.loadProjects()
-      }, 350)
+      // مؤقتًا: فلترة محلية فقط، بدون إعادة نداء للسيرفر
     },
 
-    changePage(page) {
-      this.page = page
-      this.syncQuery()
-      this.loadProjects()
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+    changePage() {
+      // لا يوجد صفحات متعددة بعد ضمن هذا الربط المبدئي
     },
 
     resetFilters() {
       this.filters = { search: '', department_id: '', degree: '' }
-      this.page = 1
-      this.syncQuery()
-      this.loadProjects()
-    },
-
-    syncQuery() {
-      const query = { ...this.cleanFilters() }
-      if (this.page > 1) query.page = this.page
-      this.$router.replace({ query })
     }
   }
 }
