@@ -95,14 +95,14 @@ export default {
 
       /* بيانات ثابتة — بانتظار GET /student/meetings */
       meetings: [
-        { id: nextId(), title: 'اجتماع مراجعة المتطلبات', team: 'فريق نوفا', date: '2026-08-10', time: '11:00', link: 'meet.google.com/abc-defg-hij', notes: '', done: false },
-        { id: nextId(), title: 'اجتماع توزيع مهام الفريق', team: 'فريق نوفا', date: '2026-08-09', time: '12:00', link: 'meet.google.com/tlm-eetg-abc', notes: '', done: false },
-        { id: nextId(), title: 'اجتماع متابعة تصميم قاعدة البيانات', team: 'فريق نوفا', date: '2026-08-12', time: '13:00', link: 'meet.google.com/klm-nopq-rst', notes: 'مراجعة ERD قبل البدء بالتطوير', done: false },
-        { id: nextId(), title: 'اجتماع مراجعة الفصل الثالث من التقرير', team: 'فريق نوفا', date: '2026-08-14', time: '10:30', link: 'meet.google.com/xyz-abcd-efg', notes: '', done: false },
-        { id: nextId(), title: 'اجتماع مراجعة المتطلبات الأولي', team: 'فريق نوفا', date: '2026-06-10', time: '10:00', link: 'meet.google.com/qrs-tuvw-xyz', notes: 'مراجعة وثيقة SRS', done: true },
-        { id: nextId(), title: 'اجتماع تعريفي بالمشروع', team: 'فريق نوفا', date: '2026-05-25', time: '09:00', link: 'meet.google.com/tlm-intr-ghi', notes: '', done: true },
-        { id: nextId(), title: 'اجتماع مراجعة المقترح الأولي', team: 'فريق نوفا', date: '2026-05-18', time: '11:30', link: 'meet.google.com/prs-mnop-qrs', notes: 'اعتماد فكرة المشروع', done: true },
-        { id: nextId(), title: 'اجتماع تعريفي بالفريق', team: 'فريق نوفا', date: '2026-05-10', time: '09:30', link: 'meet.google.com/def-ghij-klm', notes: '', done: true }
+        { id: nextId(), title: 'اجتماع مراجعة المتطلبات', num: '31', date: '2026-08-10', time: '11:00', link: 'meet.google.com/abc-defg-hij', notes: '', done: false },
+        { id: nextId(), title: 'اجتماع توزيع مهام الفريق', num: '31', date: '2026-08-09', time: '12:00', link: 'meet.google.com/tlm-eetg-abc', notes: '', done: false },
+        { id: nextId(), title: 'اجتماع متابعة تصميم قاعدة البيانات', num: '31', date: '2026-08-12', time: '13:00', link: 'meet.google.com/klm-nopq-rst', notes: 'مراجعة ERD قبل البدء بالتطوير', done: false },
+        { id: nextId(), title: 'اجتماع مراجعة الفصل الثالث من التقرير', num: '31', date: '2026-08-14', time: '10:30', link: 'meet.google.com/xyz-abcd-efg', notes: '', done: false },
+        { id: nextId(), title: 'اجتماع مراجعة المتطلبات الأولي', num: '31', date: '2026-06-10', time: '10:00', link: 'meet.google.com/qrs-tuvw-xyz', notes: 'مراجعة وثيقة SRS', done: true },
+        { id: nextId(), title: 'اجتماع تعريفي بالمشروع', num: '31', date: '2026-05-25', time: '09:00', link: 'meet.google.com/tlm-intr-ghi', notes: '', done: true },
+        { id: nextId(), title: 'اجتماع مراجعة المقترح الأولي', num: '31', date: '2026-05-18', time: '11:30', link: 'meet.google.com/prs-mnop-qrs', notes: 'اعتماد فكرة المشروع', done: true },
+        { id: nextId(), title: 'اجتماع تعريفي بالفريق', num: '31', date: '2026-05-10', time: '09:30', link: 'meet.google.com/def-ghij-klm', notes: '', done: true }
       ]
     }
   },

@@ -22,10 +22,20 @@
         </div>
 
         <div class="flex flex-col">
-          <div v-for="row in infoRows" :key="row.k" class="flex items-center justify-between gap-4 py-3 border-b border-border-soft last:border-b-0 last:pb-0">
+          <div v-for="row in infoRows" :key="row.k" class="flex items-center justify-between gap-4 py-3 border-b border-border-soft">
             <span class="text-caption text-text-400 shrink-0">{{ row.k }}</span>
             <span class="text-body-sm font-bold text-text-900 text-end break-words">{{ row.v }}</span>
           </div>
+          <button
+            type="button"
+            class="group flex items-center justify-between gap-4 py-3 text-start transition-colors duration-fast hover:text-primary-700"
+            @click="changePasswordOpen = true"
+          >
+            <span class="text-caption text-text-400 shrink-0 group-hover:text-primary-700">تغيير كلمة السر</span>
+            <span class="flex items-center gap-1.5 text-body-sm font-bold text-primary-600">
+              انقر للتغيير <ChevronLeft :size="15" />
+            </span>
+          </button>
         </div>
       </div>
 
@@ -98,21 +108,25 @@
         </div>
       </div>
     </div>
+
+    <ChangePasswordModal v-model="changePasswordOpen" />
   </div>
 </template>
 
 <script>
-import { User, Users, Crown, BarChart3, Kanban } from 'lucide-vue-next'
+import { User, Users, Crown, BarChart3, Kanban, ChevronLeft } from 'lucide-vue-next'
 import { initials } from '@/utils/formatters'
 import { SPECIALIZATIONS } from '@/utils/specializations'
+import ChangePasswordModal from '@/components/shared/ChangePasswordModal.vue'
 
 export default {
   name: 'StudentProfilePage',
 
-  components: { User, Users, Crown, BarChart3, Kanban },
+  components: { User, Users, Crown, BarChart3, Kanban, ChevronLeft, ChangePasswordModal },
 
   data() {
     return {
+      changePasswordOpen: false,
       profile: {
         name: 'يوسف الدوسري',
         roleLabel: 'الطالب',

@@ -65,7 +65,7 @@
         </template>
         <template #cell-team="{ value }"><span class="font-bold text-text-900">{{ value }}</span></template>
         <template #cell-file="{ row }">
-          <button type="button" class="inline-flex items-center gap-2 text-caption font-semibold text-primary-700 bg-primary-50 px-3 py-1.5 rounded-sm hover:bg-primary-100 transition-colors duration-fast" @click="openPlaceholderPdf(row.file, row.title)">
+          <button type="button" class="inline-flex items-center gap-2 text-caption font-semibold text-primary-700 bg-primary-50 px-3 py-1.5 rounded-sm hover:bg-primary-100 transition-colors duration-fast" @click="openProposalFile(row)">
             <FileText :size="14" /> {{ row.file }}
           </button>
         </template>
@@ -100,7 +100,7 @@
 
 <script>
 import { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, X, Check } from 'lucide-vue-next'
-import { openPlaceholderPdf } from '@/utils/filePreview'
+import { openOfficialPdf } from '@/utils/filePreview'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -178,7 +178,13 @@ export default {
   },
 
   methods: {
-    openPlaceholderPdf,
+    openProposalFile(row) {
+      openOfficialPdf(row.title, row.sub, [
+        { label: 'الفريق', value: row.team },
+        { label: 'المشرف', value: row.sup },
+        { label: 'الحالة', value: row.status }
+      ])
+    },
 
     statusVariant(status) {
       return { 'معتمد': 'success', 'مرفوض': 'error', 'قيد المراجعة': 'warning' }[status] || 'neutral'

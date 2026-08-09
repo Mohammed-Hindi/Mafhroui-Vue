@@ -15,18 +15,27 @@
         </div>
 
         <div class="flex flex-col">
-          <div v-for="row in infoRows" :key="row.k" class="flex items-center justify-between gap-4 py-3 border-b border-border-soft last:border-b-0 last:pb-0">
+          <div v-for="row in infoRows" :key="row.k" class="flex items-center justify-between gap-4 py-3 border-b border-border-soft">
             <span class="text-caption text-text-400 shrink-0">{{ row.k }}</span>
             <span class="text-body-sm font-bold text-text-900 text-end break-words">{{ row.v }}</span>
           </div>
+          <button
+            type="button"
+            class="group flex items-center justify-between gap-4 py-3 text-start transition-colors duration-fast hover:text-primary-700"
+            @click="changePasswordOpen = true"
+          >
+            <span class="text-caption text-text-400 shrink-0 group-hover:text-primary-700">تغيير كلمة السر</span>
+            <span class="flex items-center gap-1.5 text-body-sm font-bold text-primary-600">
+              انقر للتغيير <ChevronLeft :size="15" />
+            </span>
+          </button>
         </div>
       </div>
 
-      <!-- الفرق المُشرَف عليها -->
+      <!-- فريقي -->
       <div class="reveal reveal-delay-1 bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col transition-all duration-base hover:shadow-card-hover">
         <div class="flex items-center justify-between mb-5">
-          <h3 class="text-h3 font-bold text-text-900">فرقي الإشرافية</h3>
-          <router-link :to="{ name: 'supervisor-tasks' }" class="text-caption font-bold text-primary-600 hover:underline">عرض المهام</router-link>
+          <h3 class="text-h3 font-bold text-text-900">فريقي</h3>
         </div>
 
         <div class="flex flex-col gap-3">
@@ -85,23 +94,27 @@
         </div>
       </div>
     </div>
+
+    <ChangePasswordModal v-model="changePasswordOpen" />
   </div>
 </template>
 
 <script>
-import { ChevronDown } from 'lucide-vue-next'
+import { ChevronDown, ChevronLeft } from 'lucide-vue-next'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import { initials } from '@/utils/formatters'
+import ChangePasswordModal from '@/components/shared/ChangePasswordModal.vue'
 
 const STATUS_LABELS = { in_progress: 'قيد التنفيذ', completed: 'مكتمل', proposed: 'مقترح' }
 
 export default {
   name: 'SupervisorProfilePage',
 
-  components: { BaseBadge, ChevronDown },
+  components: { BaseBadge, ChevronDown, ChevronLeft, ChangePasswordModal },
 
   data() {
     return {
+      changePasswordOpen: false,
       showAllTeams: false,
       profile: {
         name: 'د. محمد العتيبي',

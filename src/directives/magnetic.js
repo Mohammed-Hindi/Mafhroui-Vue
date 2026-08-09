@@ -1,27 +1,21 @@
-/** v-magnetic — الزر يتبع الفأرة بحركة صغيرة (حد أقصى ~10px)، يرتد بنعومة عند الخروج، وينضغط بصريًا عند الضغط عليه */
-const MAX_OFFSET = 10
-
+/** v-magnetic — رفعة بسيطة وثابتة عند الهفر، وانضغاطة بصرية عند الضغط (بدون تتبّع لموضع الفأرة) */
 function applyTransform(el) {
-  const { x, y, pressed } = el._magnetic
-  const scale = pressed ? 0.94 : 1
-  el.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`
+  const { hovered, pressed } = el._magnetic
+  const lift = hovered && !pressed ? -2 : 0
+  const scale = pressed ? 0.96 : 1
+  el.style.transform = `translate3d(0, ${lift}px, 0) scale(${scale})`
 }
 
-function onMove(el, event) {
-  const rect = el.getBoundingClientRect()
-  const relX = event.clientX - (rect.left + rect.width / 2)
-  const relY = event.clientY - (rect.top + rect.height / 2)
-  el._magnetic.x = Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, relX * 0.35))
-  el._magnetic.y = Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, relY * 0.35))
-  el.style.transition = 'transform 80ms linear'
+function onEnter(el) {
+  el._magnetic.hovered = true
+  el.style.transition = 'transform 200ms cubic-bezier(.22,.9,.32,1)'
   applyTransform(el)
 }
 
 function onLeave(el) {
-  el._magnetic.x = 0
-  el._magnetic.y = 0
+  el._magnetic.hovered = false
   el._magnetic.pressed = false
-  el.style.transition = 'transform 400ms cubic-bezier(.22,.9,.32,1)'
+  el.style.transition = 'transform 200ms cubic-bezier(.22,.9,.32,1)'
   applyTransform(el)
 }
 
@@ -33,7 +27,7 @@ function onDown(el) {
 
 function onUp(el) {
   el._magnetic.pressed = false
-  el.style.transition = 'transform 250ms cubic-bezier(.22,.9,.32,1)'
+  el.style.transition = 'transform 200ms cubic-bezier(.22,.9,.32,1)'
   applyTransform(el)
 }
 
@@ -42,22 +36,22 @@ export default {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     if (window.matchMedia('(pointer: coarse)').matches) return
 
-    el._magnetic = { x: 0, y: 0, pressed: false }
-    const move = (event) => onMove(el, event)
+    el._magnetic = { hovered: false, pressed: false }
+    const enter = () => onEnter(el)
     const leave = () => onLeave(el)
     const down = () => onDown(el)
     const up = () => onUp(el)
 
-    el.addEventListener('mousemove', move)
+    el.addEventListener('mouseenter', enter)
     el.addEventListener('mouseleave', leave)
     el.addEventListener('mousedown', down)
     el.addEventListener('mouseup', up)
-    el._magneticHandlers = { move, leave, down, up }
+    el._magneticHandlers = { enter, leave, down, up }
   },
 
   unmounted(el) {
     if (!el._magneticHandlers) return
-    el.removeEventListener('mousemove', el._magneticHandlers.move)
+    el.removeEventListener('mouseenter', el._magneticHandlers.enter)
     el.removeEventListener('mouseleave', el._magneticHandlers.leave)
     el.removeEventListener('mousedown', el._magneticHandlers.down)
     el.removeEventListener('mouseup', el._magneticHandlers.up)

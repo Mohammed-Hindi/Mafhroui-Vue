@@ -112,12 +112,6 @@ export default {
         { key: 'status', label: 'الحالة' },
         { key: 'pct', label: 'نسبة الإنجاز' }
       ],
-      statusDistribution: [
-        { status: 'completed', label: 'مكتمل', count: 46, percent: 55, barClass: 'bg-success' },
-        { status: 'in_progress', label: 'قيد التنفيذ', count: 31, percent: 37, barClass: 'bg-primary-600' },
-        { status: 'proposed', label: 'مقترح', count: 7, percent: 8, barClass: 'bg-warning' }
-      ],
-      averagePercent: 68,
       page: 1,
       rows: [
         { id: 1, project: 'رقيب - نظام مراقبة بالذكاء الاصطناعي', team: 'فريق نوفا', grp: '31', spec: SPEC_WEB, sup: 'د. أحمد الشريف', members: ['سلطان', 'علي', 'يوسف'], status: 'completed', pct: 100 },
@@ -133,6 +127,20 @@ export default {
   },
 
   computed: {
+    // مخطط "متوسط نسبة الإنجاز" فعّال فعليًا — يُحسب من نسب إنجاز المشاريع الحقيقية بدل رقم ثابت
+    averagePercent() {
+      if (!this.rows.length) return 0
+      return Math.round(this.rows.reduce((sum, r) => sum + r.pct, 0) / this.rows.length)
+    },
+    statusDistribution() {
+      const total = this.rows.length || 1
+      const barClass = { completed: 'bg-success', in_progress: 'bg-primary-600', proposed: 'bg-warning' }
+      return Object.entries(STATUS_LABELS).map(([status, { label }]) => {
+        const count = this.rows.filter((r) => r.status === status).length
+        return { status, label, count, percent: Math.round((count / total) * 100), barClass: barClass[status] }
+      })
+    },
+
     circumference() {
       return 2 * Math.PI * 63
     },

@@ -89,8 +89,8 @@
                   <td class="px-5 py-3 mono whitespace-nowrap">{{ student.mail }}</td>
                   <td class="px-5 py-3">
                     <div class="flex gap-2">
-                      <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg" title="واتساب" @click="sendWhats(student.whats)"><MessageCircle :size="14" /></button>
-                      <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(student.mail)"><Mail :size="14" /></button>
+                      <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg" title="واتساب" @click="sendWhats(group, student)"><MessageCircle :size="14" /></button>
+                      <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(group, student)"><Mail :size="14" /></button>
                       <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEditStudent(group, idx)"><Pencil :size="14" /></button>
                       <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDeleteStudent(group, idx)"><Trash2 :size="14" /></button>
                     </div>
@@ -119,8 +119,8 @@
                 <div class="flex items-start justify-between gap-3">
                   <span class="text-label font-semibold text-text-400 shrink-0">إجراءات</span>
                   <div class="flex gap-1.5">
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg" title="واتساب" @click="sendWhats(student.whats)"><MessageCircle :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(student.mail)"><Mail :size="14" /></button>
+                    <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg" title="واتساب" @click="sendWhats(group, student)"><MessageCircle :size="14" /></button>
+                    <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(group, student)"><Mail :size="14" /></button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEditStudent(group, idx)"><Pencil :size="14" /></button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDeleteStudent(group, idx)"><Trash2 :size="14" /></button>
                   </div>
@@ -464,18 +464,34 @@ export default {
       this.$toast?.success('تم الحذف')
     },
 
-    sendWhats(whats) {
-      const num = digitsOnly(whats)
-      const full = num.startsWith('966') || num.startsWith('962') ? num : `966${num}`
-      window.open(`https://wa.me/${full}`, '_blank')
+    // رسالة مخصصة باسم الطالب نفسه وتفاصيل مناقشته، وليست تعميمًا عامًا باسم الفريق
+    discussionMessage(group, student) {
+      return [
+        `عزيزي/عزيزتي ${student.name}،`,
+        `تفاصيل موعد مناقشة مشروعك:`,
+        `المشروع: ${group.proj}`,
+        `المشرف: ${group.sup}`,
+        `المكان: ${group.place}`,
+        `التاريخ: ${formatDate(group.date)}`,
+        `الوقت: ${group.time}`,
+        `لجنة المناقشة: ${group.committee}`
+      ].join('\n')
     },
-    sendMail(mail) {
-      window.location.href = `mailto:${mail}`
+
+    sendWhats(group, student) {
+      const num = digitsOnly(student.whats)
+      const full = num.startsWith('966') || num.startsWith('962') ? num : `966${num}`
+      window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.discussionMessage(group, student))}`, '_blank')
+    },
+    sendMail(group, student) {
+      const subject = encodeURIComponent(`موعد مناقشة مشروعك — ${group.proj}`)
+      const body = encodeURIComponent(this.discussionMessage(group, student))
+      window.location.href = `mailto:${student.mail}?subject=${subject}&body=${body}`
     },
     sendWhatsAll() {
-      const contacts = this.groups.flatMap((g) => g.students)
+      const contacts = this.groups.flatMap((g) => g.students.map((s) => ({ group: g, student: s })))
       if (!window.confirm(`سيتم فتح ${contacts.length} محادثة واتساب في تبويبات منفصلة. متابعة؟`)) return
-      contacts.forEach((c, i) => setTimeout(() => this.sendWhats(c.whats), i * 300))
+      contacts.forEach((c, i) => setTimeout(() => this.sendWhats(c.group, c.student), i * 300))
     },
     sendMailAll() {
       const emails = this.groups.flatMap((g) => g.students.map((s) => s.mail))
