@@ -44,37 +44,34 @@
         <div v-show="isGroupOpen(group.id)" class="border-t border-border-soft">
           <!-- جدول (سطح المكتب) -->
           <div class="hidden md:block overflow-x-auto scrollbar-thin">
-            <table class="w-full border-collapse min-w-[700px]">
-              <thead>
-                <tr class="bg-bg border-b-2 border-border divide-x divide-border-soft">
-                  <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">اسم العضو</th>
-                  <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">الرقم الجامعي</th>
-                  <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">الواتس</th>
-                  <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">البريد</th>
-                  <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">قائد الفريق</th>
-                  <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">تواصل</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-border-soft">
-                <tr v-for="(member, idx) in group.members" :key="idx" class="row-interactive divide-x divide-border-soft">
-                  <td class="px-5 py-3 font-bold text-text-900">{{ member.name }}</td>
-                  <td class="px-5 py-3 mono">{{ member.uid }}</td>
-                  <td class="px-5 py-3 mono">{{ member.whats }}</td>
-                  <td class="px-5 py-3 mono whitespace-nowrap">{{ member.mail }}</td>
-                  <td class="px-5 py-3">
-                    <span v-if="member.leader" class="grid place-items-center w-8 h-8 rounded-pill bg-warning-bg text-warning-text" title="قائد الفريق">
+            <div class="min-w-[760px]">
+              <div class="grid gap-2 px-5 py-3 bg-bg border-b-2 border-border" :style="memberGridCols">
+                <span class="text-start text-label font-extrabold text-text-700">اسم العضو</span>
+                <span class="text-start text-label font-extrabold text-text-700">الرقم الجامعي</span>
+                <span class="text-start text-label font-extrabold text-text-700">الواتس</span>
+                <span class="text-start text-label font-extrabold text-text-700">البريد</span>
+                <span class="text-center text-label font-extrabold text-text-700">قائد الفريق</span>
+                <span class="text-center text-label font-extrabold text-text-700">تواصل</span>
+              </div>
+              <div class="divide-y divide-border-soft">
+                <div v-for="(member, idx) in group.members" :key="idx" class="row-interactive grid gap-2 px-5 py-3 items-center" :style="memberGridCols">
+                  <span class="font-bold text-text-900 truncate" :title="member.name">{{ member.name }}</span>
+                  <span class="mono truncate">{{ member.uid }}</span>
+                  <span class="mono truncate">{{ member.whats || '—' }}</span>
+                  <span class="mono truncate" :title="member.mail">{{ member.mail || '—' }}</span>
+                  <span class="text-center">
+                    <span v-if="member.leader" class="inline-grid place-items-center w-8 h-8 rounded-pill bg-warning-bg text-warning-text" title="قائد الفريق">
                       <Crown :size="14" fill="currentColor" />
                     </span>
-                  </td>
-                  <td class="px-5 py-3">
-                    <div class="flex gap-2">
-                      <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
-                      <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                    <span v-else class="text-text-300">—</span>
+                  </span>
+                  <span class="flex items-center justify-center gap-2">
+                    <button v-if="member.whats" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
+                    <button v-if="member.mail" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- بطاقات (موبايل) -->
@@ -187,6 +184,10 @@ export default {
 
     specializationOptions() {
       return this.specializations.map((s) => ({ value: s.id, label: s.name }))
+    },
+
+    memberGridCols() {
+      return { gridTemplateColumns: '22% 16% 16% 22% 12% 12%' }
     },
 
     groups() {
