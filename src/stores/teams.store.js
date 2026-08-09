@@ -69,6 +69,12 @@ export const useTeamsStore = defineStore('teams', () => {
     }
   }
 
+  // GET /teams/{id}/progress → { total, done, percentage }
+  const fetchTeamProgress = async (id) => {
+    const { data } = await api.get(`/teams/${id}/progress`)
+    return data
+  }
+
   // PUT /teams/{id}
   const updateTeam = async (id, payload) => {
     const { data } = await api.put(`/teams/${id}`, payload)
@@ -94,6 +100,7 @@ export const useTeamsStore = defineStore('teams', () => {
     teamsForDisplay,
     fetchTeams,
     fetchSpecializations,
+    fetchTeamProgress,
     updateTeam,
     deleteTeam
   }
