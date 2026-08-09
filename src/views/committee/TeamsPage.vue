@@ -6,7 +6,7 @@
         <BaseButton variant="secondary" :icon="Plus" @click="openStudentModal">إضافة طالب</BaseButton>
       </div>
       <div class="flex flex-wrap gap-2">
-        <BaseButton variant="outline" :icon="Upload" @click="importPlaceholder">استيراد من Excel</BaseButton>
+        <BaseButton variant="outline" :icon="Upload" @click="openImportModal">استيراد من Excel</BaseButton>
         <BaseButton variant="outline" :icon="Download" :loading="exportingExcel" @click="exportExcel">تصدير Excel</BaseButton>
         <BaseButton variant="outline" :icon="FileDown" :loading="exportingPdf" @click="exportPdf">تصدير PDF</BaseButton>
       </div>
@@ -234,6 +234,85 @@
       </template>
     </BaseModal>
 
+    <!-- استيراد من Excel -->
+    <BaseModal
+      v-model="importModal" title="استيراد طلاب من Excel" size="xl"
+      :description="importStep === 'upload' ? 'ارفعي ملف Excel بنفس تنسيق النموذج، أو نزّلي النموذج أولًا' : `${importValidRows.length} صف صالح من أصل ${importRows.length}`"
+    >
+      <template v-if="importStep === 'upload'">
+        <button
+          type="button"
+          class="w-full flex items-center justify-between gap-3 mb-4 p-4 rounded-md border border-primary-100 bg-primary-50 text-start hover:bg-primary-100 transition-colors duration-fast"
+          @click="downloadTemplate"
+        >
+          <span class="flex items-center gap-3">
+            <span class="grid place-items-center w-10 h-10 rounded-md bg-white text-primary-600 shrink-0"><FileSpreadsheet :size="18" /></span>
+            <span>
+              <span class="block text-body-sm font-bold text-text-900">تنزيل نموذج فارغ</span>
+              <span class="block text-label text-text-600 mt-0.5">يحتوي أسماء الأعمدة المطلوبة وصف مثال توضيحي</span>
+            </span>
+          </span>
+          <Download :size="16" class="text-primary-600 shrink-0" />
+        </button>
+
+        <FileDropzone
+          label="ملف الطلاب"
+          accept=".xlsx,.xls"
+          hint="Excel (.xlsx) — عمود واحد لكل حقل حسب النموذج"
+          @change="onImportFileChange"
+        />
+
+        <p v-if="importParsing" class="mt-3 text-caption text-text-600 flex items-center gap-2">
+          <LoadingSpinner :size="14" inline /> جارٍ قراءة الملف...
+        </p>
+      </template>
+
+      <template v-else>
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill bg-success-bg text-success text-caption font-bold">
+            <CheckCircle2 :size="14" /> {{ importValidRows.length }} صف صالح
+          </span>
+          <span v-if="importInvalidRows.length" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill bg-error-bg text-error text-caption font-bold">
+            <AlertTriangle :size="14" /> {{ importInvalidRows.length }} صف ناقص البيانات (سيُتجاهل)
+          </span>
+        </div>
+
+        <div class="max-h-[340px] overflow-y-auto overflow-x-auto rounded-md border border-border scrollbar-thin">
+          <table class="w-full border-collapse min-w-[640px]">
+            <thead class="sticky top-0 bg-bg">
+              <tr class="border-b-2 border-border divide-x divide-border-soft">
+                <th class="px-3 py-2.5 text-start text-label font-extrabold text-text-700">الحالة</th>
+                <th v-for="col in importColumns" :key="col.key" class="px-3 py-2.5 text-start text-label font-extrabold text-text-700">{{ col.label }}</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border-soft">
+              <tr
+                v-for="(row, index) in importRows" :key="index"
+                class="row-interactive divide-x divide-border-soft"
+                :class="!isValidImportRow(row) && 'bg-error-bg/40'"
+              >
+                <td class="px-3 py-2">
+                  <CheckCircle2 v-if="isValidImportRow(row)" :size="15" class="text-success" />
+                  <AlertTriangle v-else :size="15" class="text-error" />
+                </td>
+                <td v-for="col in importColumns" :key="col.key" class="px-3 py-2 mono text-body-sm text-text-700 whitespace-nowrap">{{ row[col.key] || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
+
+      <template #footer>
+        <template v-if="importStep === 'upload'">
+          <BaseButton variant="ghost" @click="importModal = false">إلغاء</BaseButton>
+        </template>
+        <template v-else>
+          <BaseButton variant="ghost" @click="backToUpload">رجوع</BaseButton>
+          <BaseButton :icon="Check" :disabled="!importValidRows.length" @click="confirmImport">تأكيد استيراد {{ importValidRows.length }} طالب</BaseButton>
+        </template>
+      </template>
+    </BaseModal>
+
     <!-- سبب الحذف -->
     <BaseModal v-model="deleteModal" title="سبب الحذف" :description="deleteLabel" size="sm">
       <div class="flex flex-col gap-2">
@@ -250,7 +329,7 @@
 
 <script>
 import { useTeamsStore } from '@/stores/teams.store'
-import { Plus, Upload, Download, FileDown, Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Send, RefreshCw, Crown } from 'lucide-vue-next'
+import { Plus, Upload, Download, FileDown, Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Send, RefreshCw, Crown, FileSpreadsheet, CheckCircle2, AlertTriangle } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -258,8 +337,11 @@ import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import Pagination from '@/components/ui/Pagination.vue'
+import FileDropzone from '@/components/shared/FileDropzone.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import { genPass } from '@/utils/password'
 import { exportStyledExcel, exportGroupsPdf } from '@/utils/exportReport'
+import { downloadImportTemplate, parseStudentsExcel, isValidImportRow, IMPORT_COLUMNS } from '@/utils/importExcel'
 import { SPECIALIZATIONS } from '@/utils/specializations'
 
 
@@ -277,7 +359,7 @@ const emptySupervisorForm = () => ({ name: '', empId: '', mail: '', whats: '', p
 export default {
   name: 'CommitteeTeamsPage',
 
-  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, RefreshCw, Crown, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, Pagination },
+  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, RefreshCw, Crown, FileSpreadsheet, CheckCircle2, AlertTriangle, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, Pagination, FileDropzone, LoadingSpinner },
 
   data() {
     return {
@@ -308,7 +390,15 @@ export default {
       deleteTarget: { groupId: null, idx: null },
       deleteLabel: '',
       deleteReason: '',
+
       teamsStore: useTeamsStore(),
+
+      importModal: false,
+      importStep: 'upload',
+      importRows: [],
+      importParsing: false,
+      importColumns: IMPORT_COLUMNS,
+
       page: 1
     }
   },
@@ -325,6 +415,13 @@ export default {
     },
     totalMembers() {
       return this.groups.reduce((sum, g) => sum + g.members.length, 0)
+    },
+
+    importValidRows() {
+      return this.importRows.filter(isValidImportRow)
+    },
+    importInvalidRows() {
+      return this.importRows.filter((r) => !isValidImportRow(r))
     },
 
     filteredGroups() {
@@ -518,8 +615,62 @@ export default {
       window.open(url, '_blank')
     },
 
-    importPlaceholder() {
-      this.$toast?.info('استيراد من Excel — قريبًا')
+    isValidImportRow,
+
+    openImportModal() {
+      this.importStep = 'upload'
+      this.importRows = []
+      this.importModal = true
+    },
+
+    async downloadTemplate() {
+      try {
+        await downloadImportTemplate()
+      } catch (_) {
+        this.$toast?.error('تعذّر إنشاء النموذج')
+      }
+    },
+
+    async onImportFileChange(file) {
+      if (!file) return
+      this.importParsing = true
+      try {
+        const rows = await parseStudentsExcel(file)
+        if (!rows.length) {
+          this.$toast?.error('لم يتم العثور على بيانات صالحة داخل الملف')
+          return
+        }
+        this.importRows = rows
+        this.importStep = 'preview'
+      } catch (_) {
+        this.$toast?.error('تعذّر قراءة الملف — تأكدي أنه بصيغة Excel (.xlsx) صحيحة وبنفس تنسيق النموذج')
+      } finally {
+        this.importParsing = false
+      }
+    },
+
+    backToUpload() {
+      this.importStep = 'upload'
+      this.importRows = []
+    },
+
+    confirmImport() {
+      const validRows = this.importValidRows
+      if (!validRows.length) return
+
+      let createdGroups = 0
+      validRows.forEach((r) => {
+        let group = this.groups.find((g) => g.num === r.num)
+        if (!group) {
+          group = { id: `G${this.groups.length + 1}`, num: r.num, shu: r.shu || '', name: `مجموعة ${r.num}`, spec: r.spec || SPECS[0], sup: r.sup || SUPS[0], members: [] }
+          this.groups.push(group)
+          createdGroups++
+        }
+        group.members.push({ name: r.name, uid: r.uid, whats: r.whats || '', mail: r.mail || '', leader: false })
+      })
+
+      this.importModal = false
+      this.$toast?.success(`تم استيراد ${validRows.length} طالب${createdGroups ? ` وإنشاء ${createdGroups} مجموعة جديدة` : ''}`)
     },
 
     async exportExcel() {
