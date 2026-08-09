@@ -17,27 +17,46 @@
         </div>
 
         <div class="flex-1 flex flex-col gap-4" :class="{ 'opacity-30 grayscale pointer-events-none select-none': !isTeamLeader }">
-          <FileDropzone ref="attachmentDropzone" label="مرفق إضافي (اختياري)" :accept="attachmentAccept" hint="PDF, Word, PowerPoint أو صورة — بحد أقصى 10 ميجابايت" @change="proposalAttachment = $event" />
+          <div class="inline-flex items-center gap-1 bg-bg border border-border rounded-md p-1 self-start">
+            <button
+              type="button" class="h-8 px-3.5 rounded-sm text-caption font-bold transition-colors duration-fast"
+              :class="proposalMode === 'form' ? 'bg-primary-600 text-white shadow-card' : 'text-text-600 hover:text-primary-700'"
+              @click="proposalMode = 'form'"
+            >
+              تعبئة نموذج
+            </button>
+            <button
+              type="button" class="h-8 px-3.5 rounded-sm text-caption font-bold transition-colors duration-fast"
+              :class="proposalMode === 'file' ? 'bg-primary-600 text-white shadow-card' : 'text-text-600 hover:text-primary-700'"
+              @click="proposalMode = 'file'"
+            >
+              رفع ملف
+            </button>
+          </div>
 
-          <template v-for="(field, i) in fieldsMeta" :key="field.key">
-            <BaseInput v-if="i < visibleFieldsCount && field.type === 'input'" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" />
-            <ClauseTextarea v-else-if="i < visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
-          </template>
-
-          <button
-            type="button"
-            class="flex items-center justify-center gap-1.5 h-10 rounded-sm border border-border bg-bg text-primary-700 text-body-sm font-bold hover:bg-primary-50 transition-colors duration-fast"
-            @click="showMoreFields = !showMoreFields"
-          >
-            {{ showMoreFields ? 'عرض أقل' : 'عرض المزيد' }}
-            <ChevronDown :size="14" :class="['transition-transform duration-fast', showMoreFields && 'rotate-180']" />
-          </button>
-
-          <template v-if="showMoreFields">
+          <template v-if="proposalMode === 'form'">
             <template v-for="(field, i) in fieldsMeta" :key="field.key">
-              <ClauseTextarea v-if="i >= visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
+              <BaseInput v-if="i < visibleFieldsCount && field.type === 'input'" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" />
+              <ClauseTextarea v-else-if="i < visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
+            </template>
+
+            <button
+              type="button"
+              class="flex items-center justify-center gap-1.5 h-10 rounded-sm border border-border bg-bg text-primary-700 text-body-sm font-bold hover:bg-primary-50 transition-colors duration-fast"
+              @click="showMoreFields = !showMoreFields"
+            >
+              {{ showMoreFields ? 'عرض أقل' : 'عرض المزيد' }}
+              <ChevronDown :size="14" :class="['transition-transform duration-fast', showMoreFields && 'rotate-180']" />
+            </button>
+
+            <template v-if="showMoreFields">
+              <template v-for="(field, i) in fieldsMeta" :key="field.key">
+                <ClauseTextarea v-if="i >= visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
+              </template>
             </template>
           </template>
+
+          <FileDropzone v-else ref="proposalFileDropzone" label="ملف المقترح" :accept="attachmentAccept" hint="PDF, Word أو PowerPoint — بحد أقصى 10 ميجابايت" @change="proposalFile = $event" />
 
           <BaseButton block :icon="Send" :loading="proposalGenerating" :disabled="proposalGenerating" class="mt-auto pt-2" @click="submitProposal">إرسال المقترح</BaseButton>
         </div>
@@ -121,14 +140,14 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
 import SubmittedState from '@/components/shared/SubmittedState.vue'
 import ClauseTextarea from '@/components/shared/ClauseTextarea.vue'
-import { openPlaceholderPdf, openPlaceholderVideo, generateOfficialPdf } from '@/utils/filePreview'
+import { openPlaceholderVideo, generateOfficialPdf } from '@/utils/filePreview'
 
 const PROPOSAL_FIELDS = [
   { key: 'name', hint: 'اسم المشروع', type: 'input', placeholder: 'اسم مشروع التخرج' },
   { key: 'desc', hint: 'وصف المشروع', type: 'textarea', rows: 3, placeholder: 'وصف مختصر عن فكرة المشروع...' },
-  { key: 'challenges', hint: 'التحديات', type: 'textarea', rows: 3, placeholder: 'التحديات التي يحلّها المشروع' },
   { key: 'solutions', hint: 'الحلول', type: 'textarea', rows: 3, placeholder: 'الحلول المقترحة' },
   { key: 'features', hint: 'الميزات', type: 'textarea', rows: 3, placeholder: 'أبرز ميزات المشروع' },
+  { key: 'challenges', hint: 'التحديات', type: 'textarea', rows: 3, placeholder: 'التحديات التي يحلّها المشروع' },
   { key: 'addedValue', hint: 'القيمة المضافة', type: 'textarea', rows: 3, placeholder: 'القيمة المضافة للمستخدم' }
 ]
 
@@ -144,13 +163,14 @@ export default {
       Send, Link2,
       isTeamLeader: false,
       fieldsMeta: PROPOSAL_FIELDS,
-      visibleFieldsCount: 2,
+      visibleFieldsCount: 3,
       attachmentAccept: ATTACHMENT_ACCEPT,
 
       proposalSubmitted: false,
       proposalGenerating: false,
+      proposalMode: 'form',
       proposalPdfUrl: '',
-      proposalAttachment: null,
+      proposalFile: null,
       showMoreFields: false,
       // TODO API — GET /student/proposal | حالة اعتماد المشرف: pending | approved | rejected
       proposalStatus: 'pending',
@@ -176,25 +196,25 @@ export default {
   },
 
   computed: {
+    // ملف واحد فقط للمقترح — إما الملف الناتج من تعبئة النموذج أو الملف المرفوع مباشرة، حسب proposalMode
     proposalItems() {
-      const items = []
-      if (this.proposalPdfUrl) {
-        items.push({
+      if (this.proposalMode === 'form' && this.proposalPdfUrl) {
+        return [{
           icon: FileText,
           label: 'ملف المقترح',
           fileName: `مقترح-${this.proposalForm.name || 'المشروع'}.pdf`,
           onClick: () => window.open(this.proposalPdfUrl, '_blank')
-        })
+        }]
       }
-      if (this.proposalAttachment) {
-        items.push({
+      if (this.proposalMode === 'file' && this.proposalFile) {
+        return [{
           icon: FileText,
-          label: 'مرفق إضافي',
-          fileName: this.proposalAttachment.name,
-          onClick: () => window.open(URL.createObjectURL(this.proposalAttachment), '_blank')
-        })
+          label: 'ملف المقترح',
+          fileName: this.proposalFile.name,
+          onClick: () => window.open(URL.createObjectURL(this.proposalFile), '_blank')
+        }]
       }
-      return items
+      return []
     },
 
     reportItems() {
@@ -204,7 +224,7 @@ export default {
           icon: FileText,
           label: 'ملف التقرير النهائي',
           fileName: this.reportFile.name,
-          onClick: () => openPlaceholderPdf(this.reportFile.name, 'التقرير النهائي')
+          onClick: () => window.open(URL.createObjectURL(this.reportFile), '_blank')
         })
       }
       if (this.videoMode === 'file' && this.videoFile) {
@@ -229,6 +249,17 @@ export default {
   methods: {
     async submitProposal() {
       if (!this.isTeamLeader) return
+
+      if (this.proposalMode === 'file') {
+        if (!this.proposalFile) {
+          this.$toast?.error('يرجى رفع ملف المقترح قبل الإرسال')
+          return
+        }
+        this.proposalSubmitted = true
+        this.$toast?.success('تم إرسال المقترح بنجاح، بانتظار اعتماد المشرف')
+        return
+      }
+
       if (!this.proposalForm.name.trim() || !this.proposalForm.desc.trim()) {
         this.$toast?.error('يرجى تعبئة اسم المشروع ووصفه على الأقل')
         return

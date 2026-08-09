@@ -12,8 +12,8 @@
       </span>
     </div>
 
-    <div v-if="meeting.team" class="flex items-center justify-end gap-1.5 text-label font-bold text-primary-700 bg-primary-50 px-3 py-1.5 rounded-sm">
-      {{ meeting.team }}
+    <div v-if="meeting.num" class="flex items-center justify-end gap-1.5 text-label font-bold text-primary-700 bg-primary-50 px-3 py-1.5 rounded-sm">
+      مجموعة {{ meeting.num }}
       <Users :size="12" />
     </div>
 
@@ -30,7 +30,7 @@
       {{ meeting.notes }}
     </div>
 
-    <div class="flex items-center gap-2 mt-auto pt-2.5 border-t border-border-soft">
+    <div v-if="!done" class="flex items-center gap-2 mt-auto pt-2.5 border-t border-border-soft">
       <a
         v-if="meeting.link"
         :href="`https://${meeting.link}`"
