@@ -210,6 +210,35 @@ export const useTeamsStore = defineStore('teams', () => {
     return data
   }
 
+  const projectArchive = ref([])
+  const projectArchiveLoading = ref(false)
+
+  // GET /projects/archive — مكتملة عبر كل الفصول (لجنة: الكل، مشرف: مشاريعه فقط)
+  const fetchProjectArchive = async () => {
+    projectArchiveLoading.value = true
+    try {
+      const { data } = await api.get('/projects/archive')
+      projectArchive.value = data.data || data
+      return projectArchive.value
+    } finally {
+      projectArchiveLoading.value = false
+    }
+  }
+
+  // GET /projects/{id} — يشمل الفصول السابقة أيضًا
+  const fetchProject = async (id) => {
+    const { data } = await api.get(`/projects/${id}`)
+    return data
+  }
+
+  // PATCH /projects/{id}
+  const updateProject = async (id, payload) => {
+    const { data } = await api.patch(`/projects/${id}`, payload)
+    const index = projectArchive.value.findIndex((p) => p.id === id)
+    if (index !== -1) projectArchive.value[index] = { ...projectArchive.value[index], ...data }
+    return data
+  }
+
   return {
     teams,
     specializationName,
@@ -241,6 +270,11 @@ export const useTeamsStore = defineStore('teams', () => {
     meetingsLoading,
     fetchMeetings,
     createMeeting,
-    deleteMeeting
+    deleteMeeting,
+    projectArchive,
+    projectArchiveLoading,
+    fetchProjectArchive,
+    fetchProject,
+    updateProject
   }
 })
