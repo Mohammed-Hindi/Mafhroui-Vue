@@ -14,10 +14,10 @@
           </span>
           <div class="min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-h3 font-bold text-text-900 truncate">{{ profile.name }}</span>
-              <span class="shrink-0 text-label font-bold px-2.5 py-1 rounded-pill" :class="profile.isLeader ? 'text-warning-text bg-warning-bg' : 'text-text-600 bg-border-soft'">{{ profile.isLeader ? 'قائد الفريق' : 'عضو' }}</span>
+              <span class="text-h3 font-bold text-text-900 truncate">{{ user?.name }}</span>
+              <span class="shrink-0 text-label font-bold px-2.5 py-1 rounded-pill text-text-600 bg-border-soft">عضو</span>
             </div>
-            <div class="text-caption text-text-400 mt-0.5">{{ profile.roleLabel }}</div>
+            <div class="text-caption text-text-400 mt-0.5">طالب</div>
           </div>
         </div>
 
@@ -36,43 +36,48 @@
           <h3 class="text-h3 font-bold text-text-900">فريقي</h3>
         </div>
 
-        <div class="flex flex-col">
-          <div class="flex items-center justify-between gap-4 py-3 border-b border-border-soft">
-            <span class="text-caption text-text-400 shrink-0">اسم الفريق</span>
-            <span class="text-body-sm font-bold text-text-900 text-end">{{ team.name }}</span>
+        <EmptyState v-if="!myTeam" title="لسا ما إلك فريق" />
+        <template v-else>
+          <div class="flex flex-col">
+            <div class="flex items-center justify-between gap-4 py-3 border-b border-border-soft">
+              <span class="text-caption text-text-400 shrink-0">اسم الفريق</span>
+              <span class="text-body-sm font-bold text-text-900 text-end">{{ myTeam.name }}</span>
+            </div>
+            <div class="flex items-center justify-between gap-4 py-3 border-b border-border-soft">
+              <span class="text-caption text-text-400 shrink-0">المشرف</span>
+              <span class="text-body-sm font-bold text-text-900 text-end">{{ myTeam.supervisor?.name || 'غير محدد' }}</span>
+            </div>
+            <template v-if="myTeam.project">
+              <div class="flex items-center justify-between gap-4 py-3 border-b border-border-soft">
+                <span class="text-caption text-text-400 shrink-0">اسم المشروع</span>
+                <span class="text-body-sm font-bold text-text-900 text-end">{{ myTeam.project.name || '—' }}</span>
+              </div>
+              <div v-if="myTeam.project.description" class="py-3 border-b border-border-soft">
+                <div class="text-caption text-text-400 mb-1.5">وصف المشروع</div>
+                <p class="text-body-sm text-text-700 leading-relaxed">{{ myTeam.project.description }}</p>
+              </div>
+            </template>
           </div>
-          <div class="flex items-center justify-between gap-4 py-3 border-b border-border-soft">
-            <span class="text-caption text-text-400 shrink-0">المشرف</span>
-            <span class="text-body-sm font-bold text-text-900 text-end">{{ team.sup }}</span>
-          </div>
-          <div class="flex items-center justify-between gap-4 py-3 border-b border-border-soft">
-            <span class="text-caption text-text-400 shrink-0">اسم المشروع</span>
-            <span class="text-body-sm font-bold text-text-900 text-end">{{ team.proj }}</span>
-          </div>
-          <div class="py-3 border-b border-border-soft">
-            <div class="text-caption text-text-400 mb-1.5">وصف المشروع</div>
-            <p class="text-body-sm text-text-700 leading-relaxed">{{ team.projDesc }}</p>
-          </div>
-        </div>
 
-        <div class="mt-4 flex-1">
-          <div class="text-caption text-text-400 mb-2.5">أعضاء الفريق</div>
-          <div class="flex flex-wrap gap-2">
-            <span
-              v-for="m in teamMembers" :key="m.name"
-              class="inline-flex items-center gap-1.5 text-caption font-semibold px-3 py-1.5 rounded-pill"
-              :class="m.leader ? 'bg-warning-bg text-warning-text' : 'bg-border-soft text-text-700'"
-            >
-              <Crown v-if="m.leader" :size="12" />
-              {{ m.leader ? `قائد ${m.name}` : m.name }}
-            </span>
+          <div class="mt-4 flex-1">
+            <div class="text-caption text-text-400 mb-2.5">أعضاء الفريق</div>
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="m in myTeam.members" :key="m.id"
+                class="inline-flex items-center gap-1.5 text-caption font-semibold px-3 py-1.5 rounded-pill"
+                :class="m.is_leader ? 'bg-warning-bg text-warning-text' : 'bg-border-soft text-text-700'"
+              >
+                <Crown v-if="m.is_leader" :size="12" />
+                {{ m.is_leader ? `قائد ${m.student?.name}` : m.student?.name }}
+              </span>
+            </div>
           </div>
-        </div>
+        </template>
       </div>
     </div>
 
     <!-- مخطط تقدم المشروع -->
-    <div class="bg-surface rounded-lg border border-border shadow-card p-6">
+    <div v-if="myTeam" class="bg-surface rounded-lg border border-border shadow-card p-6">
       <div class="flex items-center justify-between gap-4 mb-5 flex-wrap">
         <div class="flex items-center gap-3">
           <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><BarChart3 :size="18" /></span>
@@ -102,62 +107,47 @@
 </template>
 
 <script>
+import { mapState, mapActions } from 'pinia'
 import { User, Users, Crown, BarChart3, Kanban } from 'lucide-vue-next'
+import EmptyState from '@/components/ui/EmptyState.vue'
 import { initials } from '@/utils/formatters'
-import { SPECIALIZATIONS } from '@/utils/specializations'
+import { useTeamsStore } from '@/stores/teams.store'
+import { useAuthStore } from '@/stores/auth.store'
 
 export default {
   name: 'StudentProfilePage',
 
-  components: { User, Users, Crown, BarChart3, Kanban },
-
-  data() {
-    return {
-      profile: {
-        name: 'يوسف الدوسري',
-        roleLabel: 'الطالب',
-        isLeader: false,
-        uid: '3175000',
-        mail: 'student1@academy.edu.sa',
-        spec: SPECIALIZATIONS[0],
-        semester: '2026/2027-1'
-      },
-      team: {
-        name: 'فريق نوفا',
-        sup: 'د. أحمد الشريف',
-        proj: 'رقيب — نظام مراقبة بالذكاء الاصطناعي',
-        projDesc: 'نظام مراقبة ذكي يعتمد على الذكاء الاصطناعي لرصد الأحداث وتحليلها في الوقت الفعلي، وإصدار تنبيهات فورية عند اكتشاف أي سلوك غير اعتيادي.',
-        members: [
-          { name: 'سلطان الدوسري', leader: true },
-          { name: 'يوسف الدوسري', leader: false },
-          { name: 'علي الحربي', leader: false }
-        ]
-      },
-      kanban: { total: 4, done: 1, review: 1, progress: 1, pending: 1 }
-    }
-  },
+  components: { User, Users, Crown, BarChart3, Kanban, EmptyState },
 
   computed: {
+    ...mapState(useTeamsStore, ['teams', 'tasks']),
+    ...mapState(useAuthStore, ['user']),
+
     initials() {
-      return initials(this.profile.name)
+      return initials(this.user?.name || '')
     },
 
-    // يعكس علامة "قائد الفريق" فوق العضو الصحيح دائمًا بناءً على profile.isLeader بدل الاعتماد على قيمة ثابتة قد تتعارض معها
-    teamMembers() {
-      const otherLeaderName = this.team.members.find((m) => m.leader && m.name !== this.profile.name)?.name
-      return this.team.members.map((m) => ({
-        ...m,
-        leader: m.name === this.profile.name ? this.profile.isLeader : (m.name === otherLeaderName && !this.profile.isLeader)
-      }))
+    myTeam() {
+      return this.teams.find((t) => t.members?.some((m) => m.student?.id === this.user?.id))
     },
 
     infoRows() {
       return [
-        { k: 'الرقم الجامعي', v: this.profile.uid },
-        { k: 'البريد الإلكتروني', v: this.profile.mail },
-        { k: 'التخصص', v: this.profile.spec },
-        { k: 'الفصل الدراسي', v: this.profile.semester }
+        { k: 'البريد الإلكتروني', v: this.user?.email || '—' },
+        { k: 'الرقم الجامعي', v: this.user?.university_number || '—' },
+        { k: 'التخصص', v: this.user?.specialization?.name || '—' },
+        { k: 'الفصل الدراسي', v: this.user?.academicTerm?.name || '—' }
       ]
+    },
+
+    kanban() {
+      return {
+        total: this.tasks.length,
+        done: this.tasks.filter((t) => t.status === 'done').length,
+        review: this.tasks.filter((t) => t.status === 'review').length,
+        progress: this.tasks.filter((t) => t.status === 'in_progress').length,
+        pending: this.tasks.filter((t) => t.status === 'pending').length
+      }
     },
 
     kanbanPercent() {
@@ -173,6 +163,17 @@ export default {
         { key: 'pending', label: 'قيد الانتظار', value: this.kanban.pending, colorClass: 'text-secondary-600' }
       ]
     }
+  },
+
+  async created() {
+    await this.fetchCurrentUser()
+    await this.fetchTeams()
+    if (this.myTeam) await this.fetchTasks(this.myTeam.id)
+  },
+
+  methods: {
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchTasks']),
+    ...mapActions(useAuthStore, ['fetchCurrentUser'])
   }
 }
 </script>
