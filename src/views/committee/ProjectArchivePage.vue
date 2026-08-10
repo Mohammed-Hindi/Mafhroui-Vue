@@ -1,10 +1,6 @@
 <template>
   <div>
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-      <div class="reveal group bg-surface rounded-lg border border-border shadow-card p-5 flex items-center gap-4 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200 active:scale-[0.98]">
-        <span class="grid place-items-center w-11 h-11 rounded-md bg-primary-50 text-primary-600 shrink-0"><Archive :size="20" /></span>
-        <div><div class="font-cairo font-extrabold text-h1 text-text-900 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="archive.length" /></div><div class="text-body-sm font-bold text-text-600 mt-0.5">إجمالي المشاريع</div></div>
-      </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
       <div class="reveal group bg-surface rounded-lg border border-border shadow-card p-5 flex items-center gap-4 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200 active:scale-[0.98]">
         <span class="grid place-items-center w-11 h-11 rounded-md bg-success-bg text-success shrink-0"><CheckCircle2 :size="20" /></span>
         <div><div class="font-cairo font-extrabold text-h1 text-text-900 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="archive.length" /></div><div class="text-body-sm font-bold text-text-600 mt-0.5">مشاريع مكتملة</div></div>
@@ -18,7 +14,7 @@
     <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden">
       <div class="flex flex-wrap items-center justify-between gap-4 p-5 pb-4">
         <div>
-          <h3 class="font-cairo font-bold text-h4 text-text-900">المشاريع المؤرشفة مؤخرًا</h3>
+          <h3 class="font-cairo font-bold text-h4 text-text-900">المشاريع المؤرشفة</h3>
           <p class="text-caption text-text-600 mt-0.5">سجلّ المشاريع المكتملة عبر جميع الفصول الدراسية</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
@@ -32,6 +28,7 @@
 
       <DataTable
         :columns="columns" :rows="pageRows" row-key="id" :primary-keys="['proj', 'files']"
+        :loading="projectArchiveLoading"
         :meta="{ current_page: page, last_page: totalPages, total: filteredArchive.length }"
         empty-title="لا توجد مشاريع مطابقة"
         @page-change="page = $event"
@@ -39,7 +36,7 @@
         <template #cell-dept="{ value }"><span class="chip gray inline-block px-2.5 py-1 rounded-pill bg-border-soft text-text-600 text-caption font-semibold">{{ value }}</span></template>
         <template #cell-spec="{ value }"><span class="text-body-sm text-text-700">{{ value }}</span></template>
         <template #cell-team="{ row }">
-          <router-link :to="{ name: 'committee-teams', query: { group: row.grp } }" class="inline-flex items-center gap-1.5 text-body-sm text-primary-700 font-semibold hover:text-primary-800 hover:underline transition-colors duration-fast">
+          <router-link :to="{ name: 'committee-teams' }" class="inline-flex items-center gap-1.5 text-body-sm text-primary-700 font-semibold hover:text-primary-800 hover:underline transition-colors duration-fast">
             {{ row.team }} <ExternalLink :size="11" class="opacity-65" />
           </router-link>
         </template>
@@ -61,8 +58,10 @@
 </template>
 
 <script>
-import { Archive, CheckCircle2, Star, Search, FileText, ExternalLink } from 'lucide-vue-next'
-import { PROJECT_ARCHIVE } from '@/data/projectArchive'
+import { CheckCircle2, Star, Search, FileText, ExternalLink } from 'lucide-vue-next'
+import { mapState, mapActions } from 'pinia'
+import { useTeamsStore } from '@/stores/teams.store'
+import { formatDate } from '@/utils/formatters'
 import DataTable from '@/components/ui/DataTable.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import CountUp from '@/components/ui/CountUp.vue'
@@ -72,7 +71,7 @@ const PAGE_SIZE = 5
 export default {
   name: 'CommitteeProjectArchivePage',
 
-  components: { Archive, CheckCircle2, Star, Search, FileText, ExternalLink, DataTable, BaseSelect, CountUp },
+  components: { CheckCircle2, Star, Search, FileText, ExternalLink, DataTable, BaseSelect, CountUp },
 
   data() {
     return {
@@ -88,13 +87,25 @@ export default {
         { key: 'date', label: 'تاريخ الإنجاز' },
         { key: 'files', label: 'الملفات' },
         { key: 'featured', label: 'مميّز' }
-      ],
-
-      archive: PROJECT_ARCHIVE
+      ]
     }
   },
 
   computed: {
+    ...mapState(useTeamsStore, ['projectArchive', 'projectArchiveLoading']),
+
+    archive() {
+      return this.projectArchive.map((p) => ({
+        id: p.id,
+        dept: p.department?.name || 'غير محدد',
+        spec: p.specialization?.name || 'غير محدد',
+        team: p.team?.name || '—',
+        proj: p.name,
+        date: formatDate(p.completed_at || p.updated_at),
+        featured: !!p.is_featured
+      }))
+    },
+
     featuredCount() {
       return this.archive.filter((a) => a.featured).length
     },
@@ -106,7 +117,7 @@ export default {
     filteredArchive() {
       const q = this.search.trim()
       return this.archive.filter((a) => {
-        const matchQ = !q || `${a.proj}${a.team}${a.members}${a.spec}${a.dept}`.includes(q)
+        const matchQ = !q || `${a.proj}${a.team}${a.spec}${a.dept}`.includes(q)
         const matchSpec = !this.specFilter || a.spec === this.specFilter
         return matchQ && matchSpec
       })
@@ -128,9 +139,20 @@ export default {
     }
   },
 
+  async created() {
+    await this.fetchProjectArchive()
+  },
+
   methods: {
-    toggleFeatured(row) {
-      row.featured = !row.featured
+    ...mapActions(useTeamsStore, ['fetchProjectArchive', 'updateProject']),
+
+    async toggleFeatured(row) {
+      try {
+        await this.updateProject(row.id, { is_featured: !row.featured })
+        this.$toast?.success(row.featured ? 'تم إلغاء تمييز المشروع' : 'تم تمييز المشروع')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث المشروع')
+      }
     }
   }
 }
