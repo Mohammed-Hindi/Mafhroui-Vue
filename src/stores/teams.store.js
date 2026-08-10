@@ -132,6 +132,34 @@ export const useTeamsStore = defineStore('teams', () => {
     tasks.value = tasks.value.filter((t) => t.id !== taskId)
   }
 
+  const meetings = ref([])
+  const meetingsLoading = ref(false)
+
+  // GET /teams/{id}/meetings
+  const fetchMeetings = async (teamId) => {
+    meetingsLoading.value = true
+    try {
+      const { data } = await api.get(`/teams/${teamId}/meetings`)
+      meetings.value = data.data || data
+      return meetings.value
+    } finally {
+      meetingsLoading.value = false
+    }
+  }
+
+  // POST /teams/{id}/meetings
+  const createMeeting = async (teamId, payload) => {
+    const { data } = await api.post(`/teams/${teamId}/meetings`, payload)
+    meetings.value.unshift(data.data || data)
+    return data
+  }
+
+  // DELETE /meetings/{id}
+  const deleteMeeting = async (id) => {
+    await api.delete(`/meetings/${id}`)
+    meetings.value = meetings.value.filter((m) => m.id !== id)
+  }
+
   // POST /proposals (multipart)
   const submitProposal = async (payload) => {
     const form = new FormData()
@@ -193,6 +221,11 @@ export const useTeamsStore = defineStore('teams', () => {
     submitProposal,
     updateProposal,
     submitFinalReport,
-    openProtectedFile
+    openProtectedFile,
+    meetings,
+    meetingsLoading,
+    fetchMeetings,
+    createMeeting,
+    deleteMeeting
   }
 })

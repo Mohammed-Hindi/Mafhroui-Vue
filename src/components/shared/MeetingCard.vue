@@ -30,10 +30,10 @@
       {{ meeting.notes }}
     </div>
 
-    <div class="flex items-center gap-2 mt-auto pt-2.5 border-t border-border-soft">
+    <div v-if="meeting.link || remindNumber" class="flex items-center gap-2 mt-auto pt-2.5 border-t border-border-soft">
       <a
         v-if="meeting.link"
-        :href="`https://${meeting.link}`"
+        :href="meeting.link"
         target="_blank"
         rel="noopener"
         class="flex-1 inline-flex items-center justify-center gap-2 h-9 rounded-sm border border-primary-100 bg-primary-50 text-primary-700 text-caption font-bold hover:bg-primary-100 transition-colors duration-fast"
@@ -42,6 +42,7 @@
         دخول
       </a>
       <button
+        v-if="remindNumber"
         type="button"
         class="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-sm border border-secondary-100 bg-secondary-50 text-secondary-700 text-caption font-bold hover:bg-secondary-100 transition-colors duration-fast shrink-0"
         @click="$emit('remind', meeting)"
@@ -63,7 +64,8 @@ export default {
 
   props: {
     meeting: { type: Object, required: true },
-    done: { type: Boolean, default: false }
+    done: { type: Boolean, default: false },
+    remindNumber: { type: String, default: '' }
   },
 
   emits: ['remind']
