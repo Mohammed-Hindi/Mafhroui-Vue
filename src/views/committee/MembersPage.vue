@@ -6,9 +6,6 @@
         <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><GraduationCap :size="18" /></span>
         <div><h3 class="text-h3 font-bold text-text-900">أعضاء الطلاب</h3><p class="text-caption text-text-600">{{ filteredStudents.length }} من أصل {{ students.length }} طالبًا</p></div>
       </div>
-      <router-link :to="{ name: 'committee-deleted-members' }" class="inline-flex items-center gap-2 h-10 px-4 rounded-sm border border-border bg-surface text-text-600 text-caption font-bold hover:bg-border-soft hover:text-error transition-colors duration-fast">
-        <Archive :size="15" /> الأعضاء المحذوفون
-      </router-link>
     </div>
 
     <div class="flex flex-wrap gap-3 mb-4">
@@ -197,7 +194,7 @@
 </template>
 
 <script>
-import { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Eye, Pencil, Lock, RefreshCw, Check, Trash2, Archive, AlertTriangle } from 'lucide-vue-next'
+import { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Eye, Pencil, Lock, RefreshCw, Check, Trash2, AlertTriangle } from 'lucide-vue-next'
 import { mapActions } from 'pinia'
 import { genPass } from '@/utils/password'
 import { useDeletedMembersStore } from '@/stores/deletedMembers.store'
@@ -217,7 +214,7 @@ const PAGE_SIZE = 4
 export default {
   name: 'CommitteeMembersPage',
 
-  components: { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Eye, Pencil, Lock, RefreshCw, Check, Trash2, Archive, AlertTriangle, BaseInput, BaseSelect, BaseButton, BaseModal, DataTable, Pagination },
+  components: { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Eye, Pencil, Lock, RefreshCw, Check, Trash2, AlertTriangle, BaseInput, BaseSelect, BaseButton, BaseModal, DataTable, Pagination },
 
   data() {
     return {
