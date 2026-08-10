@@ -106,12 +106,21 @@ export const useLandingStore = defineStore('landing', () => {
   }
 
   // GET /projects/featured → { data: [Project], total, ... }
+  // شكل Project الفعلي: { id, name, description, department, specialization } — بدون بيانات مشرف/فريق (Need-to-Know حتى بمسار عام)
   const fetchFeaturedProjects = async () => {
     featuredLoading.value = true
     featuredError.value = null
     try {
       const { data } = await api.get('/projects/featured')
-      featured.value = data.data || data
+      const rows = data.data || data
+      featured.value = rows.map((p) => ({
+        id: p.id,
+        title: p.name,
+        description: p.description,
+        program_name: p.specialization?.name || '',
+        degree: '',
+        dept_name: p.department?.name || ''
+      }))
       featuredTotal.value = data.total ?? featured.value.length
       return featured.value
     } catch (err) {

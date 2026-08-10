@@ -2,34 +2,6 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import api from '@/services/api'
 
-/** حسابات تجريبية محلية بانتظار مستخدمين حقيقيين من الباك إند — تتجاوز /login فقط لهذه الأزواج بالذات (إيميل نفسه، كلمة سر مختلفة تحدد الدور) */
-const DEMO_ACCOUNTS = [
-  {
-    email: 'admin@mashroui.local',
-    password: 'Password123$',
-    token: 'demo-token-committee',
-    user: { id: 0, name: 'لجنة الإشراف', email: 'admin@mashroui.local', role: 'committee', must_change_password: false }
-  },
-  {
-    email: 'admin@mashroui.local',
-    password: 'anas1',
-    token: 'demo-token-supervisor',
-    user: { id: -1, name: 'د. محمد العتيبي', email: 'admin@mashroui.local', role: 'supervisor', must_change_password: false }
-  },
-  {
-    email: 'admin@mashroui.local',
-    password: 'anas2',
-    token: 'demo-token-team-leader',
-    user: { id: -2, name: 'admin anas', email: 'admin@mashroui.local', role: 'team_leader', must_change_password: false }
-  },
-  {
-    email: 'admin@mashroui.local',
-    password: 'anas3',
-    token: 'demo-token-student',
-    user: { id: -3, name: 'يوسف الدوسري', email: 'admin@mashroui.local', role: 'student', must_change_password: false }
-  }
-]
-
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
   const token = ref(localStorage.getItem('token') || null)
@@ -73,12 +45,6 @@ export const useAuthStore = defineStore('auth', () => {
   const login = async (credentials) => {
     isLoading.value = true
     error.value = ''
-    const demo = DEMO_ACCOUNTS.find((d) => d.email === credentials.email && d.password === credentials.password)
-    if (demo) {
-      persistSession(demo.user, demo.token)
-      isLoading.value = false
-      return { user: demo.user, token: demo.token }
-    }
     try {
       const response = await api.post('/login', credentials)
       persistSession(response.data.user, response.data.token)
@@ -128,7 +94,6 @@ export const useAuthStore = defineStore('auth', () => {
   // GET /me | Response: user object مباشرة (بدون تغليف data)
   const fetchCurrentUser = async () => {
     if (!token.value) return null
-    if (DEMO_ACCOUNTS.some((d) => d.token === token.value)) return user.value
     try {
       const response = await api.get('/me')
       user.value = response.data

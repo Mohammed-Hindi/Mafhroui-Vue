@@ -8,9 +8,9 @@
             {{ initials }}
           </span>
           <div class="min-w-0">
-            <span class="inline-block text-label font-bold text-primary-700 bg-primary-50 px-3 py-1 rounded-pill mb-1.5">{{ profile.roleLabel }}</span>
-            <div class="text-h3 font-bold text-text-900 truncate">{{ profile.name }}</div>
-            <div class="text-caption text-text-400 truncate">{{ profile.subRole }}</div>
+            <span class="inline-block text-label font-bold text-primary-700 bg-primary-50 px-3 py-1 rounded-pill mb-1.5">مشرف مشاريع تخرج</span>
+            <div class="text-h3 font-bold text-text-900 truncate">{{ user?.name }}</div>
+            <div class="text-caption text-text-400 truncate">{{ user?.specialization?.name }}</div>
           </div>
         </div>
 
@@ -29,30 +29,24 @@
           <router-link :to="{ name: 'supervisor-tasks' }" class="text-caption font-bold text-primary-600 hover:underline">عرض المهام</router-link>
         </div>
 
-        <div class="flex flex-col gap-3">
+        <!-- سكرول داخلي بسيط بدل "عرض المزيد" اللي كان يكبّر الصفحة كاملة -->
+        <div class="flex flex-col gap-3 max-h-[380px] overflow-y-auto pe-1 scrollbar-thin">
           <div
-            v-for="team in visibleTeams" :key="team.id"
+            v-for="team in myTeams" :key="team.id"
             class="group border border-border-soft rounded-md p-4 transition-all duration-fast hover:shadow-card hover:-translate-y-0.5 hover:border-primary-200"
           >
             <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
               <span class="font-bold text-body-sm text-text-900 transition-colors duration-fast group-hover:text-primary-700">{{ team.name }}</span>
-              <BaseBadge :variant="team.status === 'completed' ? 'success' : team.status === 'proposed' ? 'warning' : 'info'" dot>{{ statusLabel(team.status) }}</BaseBadge>
+              <BaseBadge :variant="team.projectStatus === 'completed' ? 'success' : team.projectStatus === 'proposed' ? 'warning' : 'info'" dot>{{ statusLabel(team.projectStatus) }}</BaseBadge>
             </div>
-            <p class="text-caption text-text-600 mb-3">{{ team.project }}</p>
+            <p class="text-caption text-text-600 mb-3">{{ team.projectName || 'بدون مشروع بعد' }}</p>
             <div class="flex flex-wrap gap-1.5">
-              <span v-for="m in team.members" :key="m" class="inline-flex items-center text-label font-semibold text-text-700 bg-border-soft px-2.5 py-1 rounded-pill">{{ shortName(m) }}</span>
+              <span v-for="m in team.members" :key="m.name" class="inline-flex items-center text-label font-semibold text-text-700 bg-border-soft px-2.5 py-1 rounded-pill">{{ shortName(m.name) }}</span>
             </div>
           </div>
-        </div>
 
-        <button
-          v-if="teams.length > 2" type="button"
-          class="mt-4 flex items-center justify-center gap-2 h-11 rounded-sm border border-border bg-bg text-primary-700 text-body-sm font-bold hover:bg-primary-50 transition-colors duration-fast"
-          @click="showAllTeams = !showAllTeams"
-        >
-          {{ showAllTeams ? 'عرض أقل' : 'عرض المزيد' }}
-          <ChevronDown :size="14" :class="{ 'rotate-180': showAllTeams }" class="transition-transform duration-fast" />
-        </button>
+          <p v-if="!myTeams.length" class="text-caption text-text-400 text-center py-6">لا توجد فرق مُسندة إليك حالياً</p>
+        </div>
       </div>
     </div>
 
@@ -83,61 +77,58 @@
             <div class="h-full rounded-pill" :class="row.status === 'completed' ? 'bg-success' : row.status === 'proposed' ? 'bg-warning' : 'bg-primary-600'" :style="{ width: row.percent + '%' }" />
           </div>
         </div>
+        <p v-if="!statusDistribution.length" class="text-caption text-text-400 text-center py-4">لا توجد بيانات بعد</p>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ChevronDown } from 'lucide-vue-next'
+import { mapState, mapActions } from 'pinia'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import { initials } from '@/utils/formatters'
+import { useAuthStore } from '@/stores/auth.store'
+import { useTeamsStore } from '@/stores/teams.store'
 
 const STATUS_LABELS = { in_progress: 'قيد التنفيذ', completed: 'مكتمل', proposed: 'مقترح' }
 
 export default {
   name: 'SupervisorProfilePage',
 
-  components: { BaseBadge, ChevronDown },
+  components: { BaseBadge },
 
   data() {
     return {
-      showAllTeams: false,
-      profile: {
-        name: 'د. محمد العتيبي',
-        roleLabel: 'مشرف مشاريع تخرج',
-        subRole: 'قسم هندسة الحاسوب ونظم المعلومات'
-      },
-      teams: [
-        { id: 1, name: 'فريق الابتكار', project: 'منصة إدارة مشاريع التخرج', status: 'in_progress', percent: 70, members: ['أحمد سالم فهد الشريف', 'حسان عمر يوسف النجار', 'ياسر نبيل حسين الدوسري'] },
-        { id: 2, name: 'فريق البيانات', project: 'نظام تحليل بيانات الطلاب', status: 'proposed', percent: 15, members: ['فهد داود سلمان الزهراني', 'نواف زياد كامل الغامدي'] },
-        { id: 3, name: 'فريق الأمن السيبراني', project: 'أداة كشف الثغرات الأمنية', status: 'completed', percent: 100, members: ['خالد غسان مروان الدوسري', 'رامي درويش سالم الحربي', 'ماجد حمزة نبيل الشمري'] }
-      ]
+      progressByTeam: {}
     }
   },
 
   computed: {
+    ...mapState(useAuthStore, ['user']),
+    ...mapState(useTeamsStore, ['teamsForDisplay']),
+
     initials() {
-      return initials(this.profile.name)
+      return initials(this.user?.name || '')
+    },
+
+    myTeams() {
+      return this.teamsForDisplay.filter((t) => t.supId === this.user?.id)
     },
 
     infoRows() {
       return [
-        { k: 'الرقم الوظيفي', v: 'SUP2049' },
-        { k: 'البريد الإلكتروني', v: 'm.alotaibi@academy.edu.sa' },
-        { k: 'التخصص', v: 'هندسة البرمجيات' },
-        { k: 'عدد الفرق المُشرَف عليها', v: `${this.teams.length} فرق` },
-        { k: 'الفصل الدراسي', v: '2026/2027 - الأول' }
+        { k: 'الرقم الوظيفي', v: this.user?.employee_number || '—' },
+        { k: 'البريد الإلكتروني', v: this.user?.email || '—' },
+        { k: 'التخصص', v: this.user?.specialization?.name || '—' },
+        { k: 'عدد الفرق المُشرَف عليها', v: `${this.myTeams.length} فرق` },
+        { k: 'الفصل الدراسي', v: this.user?.academicTerm?.name || '—' }
       ]
     },
 
-    visibleTeams() {
-      return this.showAllTeams ? this.teams : this.teams.slice(0, 2)
-    },
-
     averagePercent() {
-      if (!this.teams.length) return 0
-      return Math.round(this.teams.reduce((sum, t) => sum + t.percent, 0) / this.teams.length)
+      const values = this.myTeams.map((t) => this.progressByTeam[t.id]?.percentage).filter((v) => v !== undefined)
+      if (!values.length) return 0
+      return Math.round(values.reduce((sum, v) => sum + v, 0) / values.length)
     },
 
     circumference() {
@@ -150,20 +141,32 @@ export default {
 
     statusDistribution() {
       const counts = {}
-      this.teams.forEach((t) => { counts[t.status] = (counts[t.status] || 0) + 1 })
-      const total = this.teams.length || 1
+      this.myTeams.forEach((t) => {
+        const status = t.projectStatus || 'proposed'
+        counts[status] = (counts[status] || 0) + 1
+      })
+      const total = this.myTeams.length || 1
       return Object.entries(counts).map(([status, count]) => ({ status, count, percent: Math.round((count / total) * 100) }))
     }
   },
 
+  async created() {
+    await Promise.all([this.fetchCurrentUser(), this.fetchTeams()])
+    const results = await Promise.all(this.myTeams.map((t) => this.fetchTeamProgress(t.id).then((p) => [t.id, p])))
+    this.progressByTeam = Object.fromEntries(results)
+  },
+
   methods: {
+    ...mapActions(useAuthStore, ['fetchCurrentUser']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchTeamProgress']),
+
     statusLabel(status) {
       return STATUS_LABELS[status] || status
     },
 
     // يعرض أول كلمة وآخر كلمة من الاسم الرباعي الكامل — مثلاً "أحمد سالم فهد الشريف" تصبح "أحمد الشريف"
     shortName(fullName) {
-      const parts = fullName.trim().split(/\s+/)
+      const parts = String(fullName || '').trim().split(/\s+/)
       return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]}` : fullName
     }
   }
