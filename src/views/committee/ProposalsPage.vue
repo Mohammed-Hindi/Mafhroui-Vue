@@ -65,8 +65,8 @@
         </template>
         <template #cell-team="{ value }"><span class="font-bold text-text-900">{{ value }}</span></template>
         <template #cell-file="{ row }">
-          <button type="button" class="inline-flex items-center gap-2 text-caption font-semibold text-primary-700 bg-primary-50 px-3 py-1.5 rounded-sm hover:bg-primary-100 transition-colors duration-fast" @click="openPlaceholderPdf(row.file, row.title)">
-            <FileText :size="14" /> {{ row.file }}
+          <button type="button" class="inline-flex items-center gap-2 text-caption font-semibold text-primary-700 bg-primary-50 px-3 py-1.5 rounded-sm hover:bg-primary-100 transition-colors duration-fast" @click="openFile(row)">
+            <FileText :size="14" /> عرض المقترح
           </button>
         </template>
         <template #cell-status="{ row }"><BaseBadge :variant="statusVariant(row.status)" dot>{{ row.status }}</BaseBadge></template>
@@ -92,22 +92,24 @@
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="rejectModal = false">إلغاء</BaseButton>
-        <BaseButton variant="danger" :icon="X" @click="confirmReject">تأكيد الرفض</BaseButton>
+        <BaseButton variant="danger" :icon="X" :loading="rejecting" @click="confirmReject">تأكيد الرفض</BaseButton>
       </template>
     </BaseModal>
   </div>
 </template>
 
 <script>
+import { mapState, mapActions } from 'pinia'
 import { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, X, Check } from 'lucide-vue-next'
-import { openPlaceholderPdf } from '@/utils/filePreview'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import DataTable from '@/components/ui/DataTable.vue'
 import CountUp from '@/components/ui/CountUp.vue'
+import { useTeamsStore } from '@/stores/teams.store'
 
 const PAGE_SIZE = 5
+const STATUS_LABELS = { pending: 'قيد المراجعة', approved: 'معتمد', rejected: 'مرفوض' }
 
 export default {
   name: 'CommitteeProposalsPage',
@@ -116,6 +118,7 @@ export default {
 
   data() {
     return {
+      X,
       search: '',
       activeTab: 'all',
       page: 1,
@@ -135,22 +138,30 @@ export default {
       rejectModal: false,
       rejectTarget: null,
       rejectReason: '',
-
-      /* بيانات ثابتة — بانتظار GET /committee/proposals */
-      proposals: [
-        { id: 1, title: 'رقيب — نظام مراقبة بالذكاء الاصطناعي', sub: 'برنامج هندسة الحاسوب', team: 'فريق نوفا', sup: 'د. أحمد الشريف', file: 'proposal-1.pdf', status: 'قيد المراجعة' },
-        { id: 2, title: 'منصة توصيل جامعية ذكية', sub: 'برنامج نظم المعلومات', team: 'فريق كوانتم', sup: 'د. سلمى نصار', file: 'proposal-2.pdf', status: 'قيد المراجعة' },
-        { id: 3, title: 'منصة إدارة مشاريع التخرج', sub: 'برنامج أمن سيبراني', team: 'فريق الابتكار', sup: 'د. أحمد النبريص', file: 'proposal-3.pdf', status: 'معتمد' },
-        { id: 4, title: 'نظام تحليل بيانات جامعي', sub: 'برنامج هندسة الحاسوب', team: 'فريق فوكال', sup: 'د. أحمد الشريف', file: 'proposal-4.pdf', status: 'قيد المراجعة' },
-        { id: 5, title: 'تطبيق حجز قاعات جامعي', sub: 'برنامج تطبيقات الموبايل', team: 'فريق أورانج', sup: 'د. سلطان الدوسري', file: 'proposal-5.pdf', status: 'معتمد' },
-        { id: 6, title: 'أداة كشف الثغرات الأمنية', sub: 'برنامج أمن سيبراني', team: 'فريق الأمن السيبراني', sup: 'د. أحمد النبريص', file: 'proposal-6.pdf', status: 'مرفوض', rejectReason: 'التوثيق غير كافٍ ولا يوضح منهجية الاختبار — يرجى إعادة الصياغة مع أمثلة تطبيقية.' },
-        { id: 7, title: 'منصة تعليمية تفاعلية', sub: 'برنامج الوسائط المتعددة', team: 'فريق سبعة', sup: 'د. سلمى نصار', file: 'proposal-7.pdf', status: 'قيد المراجعة' },
-        { id: 8, title: 'نظام إدارة مكتبة رقمية', sub: 'برنامج قواعد البيانات', team: 'فريق ثمانية', sup: 'د. أحمد الشريف', file: 'proposal-8.pdf', status: 'معتمد' }
-      ]
+      rejecting: false,
+      approvingId: null
     }
   },
 
   computed: {
+    ...mapState(useTeamsStore, ['teams', 'specializationName']),
+
+    proposals() {
+      return this.teams
+        .filter((t) => t.project?.proposal)
+        .map((t) => {
+          const p = t.project.proposal
+          return {
+            id: p.id,
+            title: p.name,
+            sub: this.specializationName(t.specialization_id),
+            team: t.name,
+            status: STATUS_LABELS[p.status] || p.status,
+            rejectReason: p.rejection_reason
+          }
+        })
+    },
+
     stats() {
       const rejected = this.proposals.filter((p) => p.status === 'مرفوض').length
       const approved = this.proposals.filter((p) => p.status === 'معتمد').length
@@ -162,7 +173,7 @@ export default {
       const q = this.search.trim()
       return this.proposals.filter((p) => {
         const matchTab = this.activeTab === 'all' || p.status === this.activeTab
-        const matchQ = !q || `${p.title}${p.team}${p.sup}`.includes(q)
+        const matchQ = !q || `${p.title}${p.team}`.includes(q)
         return matchTab && matchQ
       })
     },
@@ -177,16 +188,29 @@ export default {
     }
   },
 
+  async created() {
+    await Promise.all([this.fetchTeams(), this.fetchSpecializations()])
+  },
+
   methods: {
-    openPlaceholderPdf,
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'approveProposal', 'rejectProposal', 'openProtectedFile']),
 
     statusVariant(status) {
       return { 'معتمد': 'success', 'مرفوض': 'error', 'قيد المراجعة': 'warning' }[status] || 'neutral'
     },
 
-    approve(row) {
-      row.status = 'معتمد'
-      this.$toast?.success(`تمت الموافقة على مقترح ${row.team}`)
+    openFile(row) {
+      this.openProtectedFile(`/proposals/${row.id}/download`, `مقترح-${row.title}.pdf`)
+    },
+
+    async approve(row) {
+      try {
+        await this.approveProposal(row.id)
+        await this.fetchTeams()
+        this.$toast?.success(`تمت الموافقة على مقترح ${row.team}`)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّرت الموافقة')
+      }
     },
 
     openReject(row) {
@@ -194,15 +218,23 @@ export default {
       this.rejectReason = ''
       this.rejectModal = true
     },
-    confirmReject() {
+
+    async confirmReject() {
       if (!this.rejectReason) {
         this.$toast?.error('يرجى كتابة سبب الرفض')
         return
       }
-      this.rejectTarget.status = 'مرفوض'
-      this.rejectTarget.rejectReason = this.rejectReason
-      this.rejectModal = false
-      this.$toast?.success(`تم رفض مقترح ${this.rejectTarget.team}`)
+      this.rejecting = true
+      try {
+        await this.rejectProposal(this.rejectTarget.id, this.rejectReason)
+        await this.fetchTeams()
+        this.rejectModal = false
+        this.$toast?.success(`تم رفض مقترح ${this.rejectTarget.team}`)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر الرفض')
+      } finally {
+        this.rejecting = false
+      }
     }
   }
 }

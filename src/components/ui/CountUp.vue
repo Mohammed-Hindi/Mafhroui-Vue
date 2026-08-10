@@ -15,7 +15,19 @@ export default {
   },
 
   data() {
-    return { display: '0', started: false }
+    return { display: '0', started: false, visible: false }
+  },
+
+  watch: {
+    // القيمة ممكن توصل بعد أول رسم للمكوّن (بيانات API غير متزامنة) — نعيد الرسم للقيمة الجديدة بدل التجمّد على القيمة الأولى (غالبًا 0)
+    value() {
+      if (!this.visible) return
+      if (this.reducedMotion) {
+        this.display = this.formatted(this.value)
+        return
+      }
+      this.animate()
+    }
   },
 
   computed: {
@@ -33,6 +45,7 @@ export default {
         entries.forEach((entry) => {
           if (!entry.isIntersecting || this.started) return
           this.started = true
+          this.visible = true
           this.animate()
           this.observer.disconnect()
         })
