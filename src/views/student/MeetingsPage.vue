@@ -1,164 +1,93 @@
 <template>
   <div>
-    <div v-if="isTeamLeader" class="flex justify-end mb-6">
-      <BaseButton :icon="Plus" @click="openCreate">اجتماع جديد</BaseButton>
-    </div>
-
-    <section class="mb-10">
-      <h3 class="font-cairo font-bold text-h4 text-text-900 mb-4 flex items-center gap-2.5">
-        الاجتماعات القادمة
-        <span class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600"><Clock :size="16" /></span>
-      </h3>
-      <EmptyState v-if="!upcoming.length" title="لا توجد اجتماعات قادمة حاليًا" />
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <MeetingCard v-for="meeting in upcomingPage" :key="meeting.id" :meeting="meeting" @remind="sendReminder" />
+    <EmptyState v-if="!myTeam" title="لسا ما إلك فريق" />
+    <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      <div class="bg-surface rounded-lg border border-border shadow-card p-6">
+        <MeetingCalendar :meetings="meetings" @select-day="onSelectDay" />
       </div>
-      <Pagination
-        v-if="upcoming.length"
-        class="mt-4"
-        :current-page="upcomingPage_"
-        :last-page="upcomingLastPage"
-        :total="upcoming.length"
-        @change="upcomingPage_ = $event"
-      />
-    </section>
 
-    <section>
-      <h3 class="font-cairo font-bold text-h4 text-text-900 mb-4 flex items-center gap-2.5">
-        الاجتماعات المنتهية
-        <span class="grid place-items-center w-8 h-8 rounded-pill bg-success-bg text-success"><CheckCircle2 :size="16" /></span>
-      </h3>
-      <EmptyState v-if="!completed.length" title="لا توجد اجتماعات منتهية بعد" />
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <MeetingCard v-for="meeting in completedPage" :key="meeting.id" :meeting="meeting" done @remind="sendReminder" />
-      </div>
-      <Pagination
-        v-if="completed.length"
-        class="mt-4"
-        :current-page="completedPage_"
-        :last-page="completedLastPage"
-        :total="completed.length"
-        @change="completedPage_ = $event"
-      />
-    </section>
+      <div class="bg-surface rounded-lg border border-border shadow-card p-6 min-h-[360px] flex flex-col">
+        <template v-if="dayMeetings.length">
+          <div v-for="meeting in dayMeetings" :key="meeting.id" class="flex-1 flex flex-col" :class="{ 'mb-6 pb-6 border-b border-border-soft': dayMeetings.length > 1 }">
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <h4 class="font-cairo font-bold text-h4 text-text-900">{{ meeting.title }}</h4>
+              <span :class="['shrink-0 text-label font-bold px-2.5 py-1 rounded-pill', isPast(meeting) ? 'bg-success-bg text-success' : 'bg-info-bg text-info']">
+                {{ isPast(meeting) ? 'منتهي' : 'قادم' }}
+              </span>
+            </div>
+            <div class="flex items-center gap-1.5 text-caption text-text-600 mb-1.5">
+              <CalendarDays :size="13" class="text-text-400 shrink-0" />
+              {{ formatDate(meeting.scheduled_at) }}
+            </div>
+            <div class="flex items-center gap-1.5 text-caption text-text-600 mb-1.5">
+              <Clock :size="13" class="text-text-400 shrink-0" />
+              {{ formatTime(meeting.scheduled_at) }}
+            </div>
+            <p v-if="meeting.notes" class="flex items-start gap-1.5 text-caption text-text-600 mt-2">
+              <FileText :size="13" class="text-text-400 shrink-0 mt-0.5" />
+              {{ meeting.notes }}
+            </p>
 
-    <BaseModal v-model="modalOpen" title="اجتماع جديد" description="سيتم إنشاؤه على Google Meet وإشعار الفريق المعني">
-      <div class="flex flex-col gap-4">
-        <BaseInput v-model="form.title" label="اسم الاجتماع" placeholder="مثال: مراجعة الفصل الثاني من التقرير" required />
-        <div class="grid grid-cols-2 gap-4">
-          <BaseInput v-model="form.date" type="date" label="التاريخ" required />
-          <BaseInput v-model="form.time" type="time" label="الوقت" required />
+            <a v-if="meeting.google_meet_link" :href="meeting.google_meet_link" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 h-10 mt-4 pt-4 border-t border-border-soft rounded-sm border border-primary-100 bg-primary-50 text-primary-700 text-body-sm font-bold hover:bg-primary-100 transition-colors duration-fast">
+              <Video :size="15" /> دخول
+            </a>
+          </div>
+        </template>
+        <div v-else class="flex-1 flex flex-col items-center justify-center text-center gap-2">
+          <span class="grid place-items-center w-12 h-12 rounded-pill bg-bg border border-border text-text-400"><CalendarDays :size="20" /></span>
+          <p class="text-body-sm font-bold text-text-900">اختاري يوم فيه اجتماع</p>
+          <p class="text-caption text-text-600">الأيام المعلّمة بالأحمر فيها اجتماعات</p>
         </div>
-        <BaseInput v-model="form.link" label="رابط الاجتماع (Google Meet)" placeholder="meet.google.com/xxx-xxxx-xxx" />
-        <BaseTextarea v-model="form.notes" label="ملاحظات" placeholder="أي نقاط تودّ مناقشتها في الاجتماع..." :rows="3" />
       </div>
-      <template #footer>
-        <BaseButton variant="ghost" @click="modalOpen = false">إلغاء</BaseButton>
-        <BaseButton :disabled="!canSubmit" @click="submitMeeting">إنشاء الاجتماع</BaseButton>
-      </template>
-    </BaseModal>
+    </div>
   </div>
 </template>
 
 <script>
-import { Plus, Clock, CheckCircle2 } from 'lucide-vue-next'
-import BaseButton from '@/components/ui/BaseButton.vue'
-import BaseModal from '@/components/ui/BaseModal.vue'
-import BaseInput from '@/components/ui/BaseInput.vue'
-import BaseTextarea from '@/components/ui/BaseTextarea.vue'
-import Pagination from '@/components/ui/Pagination.vue'
+import { mapState, mapActions } from 'pinia'
+import { Clock, CalendarDays, FileText, Video } from 'lucide-vue-next'
 import EmptyState from '@/components/ui/EmptyState.vue'
-import MeetingCard from '@/components/shared/MeetingCard.vue'
-
-const PAGE_SIZE = 2
-const REMINDER_NUMBER = '962790000000'
-
-let uid = 0
-function nextId() {
-  uid += 1
-  return `mt${uid}`
-}
+import MeetingCalendar from '@/components/shared/MeetingCalendar.vue'
+import { useTeamsStore } from '@/stores/teams.store'
+import { useAuthStore } from '@/stores/auth.store'
 
 export default {
   name: 'StudentMeetingsPage',
 
-  components: { BaseButton, BaseModal, BaseInput, BaseTextarea, Pagination, EmptyState, MeetingCard },
+  components: { EmptyState, MeetingCalendar, CalendarDays, Clock, FileText, Video },
 
   data() {
-    return {
-      Plus, Clock, CheckCircle2,
-      isTeamLeader: false,
-      modalOpen: false,
-      upcomingPage_: 1,
-      completedPage_: 1,
-      form: this.emptyForm(),
-
-      /* بيانات ثابتة — بانتظار GET /student/meetings */
-      meetings: [
-        { id: nextId(), title: 'اجتماع مراجعة المتطلبات', team: 'فريق نوفا', date: '2026-08-10', time: '11:00', link: 'meet.google.com/abc-defg-hij', notes: '', done: false },
-        { id: nextId(), title: 'اجتماع توزيع مهام الفريق', team: 'فريق نوفا', date: '2026-08-09', time: '12:00', link: 'meet.google.com/tlm-eetg-abc', notes: '', done: false },
-        { id: nextId(), title: 'اجتماع متابعة تصميم قاعدة البيانات', team: 'فريق نوفا', date: '2026-08-12', time: '13:00', link: 'meet.google.com/klm-nopq-rst', notes: 'مراجعة ERD قبل البدء بالتطوير', done: false },
-        { id: nextId(), title: 'اجتماع مراجعة الفصل الثالث من التقرير', team: 'فريق نوفا', date: '2026-08-14', time: '10:30', link: 'meet.google.com/xyz-abcd-efg', notes: '', done: false },
-        { id: nextId(), title: 'اجتماع مراجعة المتطلبات الأولي', team: 'فريق نوفا', date: '2026-06-10', time: '10:00', link: 'meet.google.com/qrs-tuvw-xyz', notes: 'مراجعة وثيقة SRS', done: true },
-        { id: nextId(), title: 'اجتماع تعريفي بالمشروع', team: 'فريق نوفا', date: '2026-05-25', time: '09:00', link: 'meet.google.com/tlm-intr-ghi', notes: '', done: true },
-        { id: nextId(), title: 'اجتماع مراجعة المقترح الأولي', team: 'فريق نوفا', date: '2026-05-18', time: '11:30', link: 'meet.google.com/prs-mnop-qrs', notes: 'اعتماد فكرة المشروع', done: true },
-        { id: nextId(), title: 'اجتماع تعريفي بالفريق', team: 'فريق نوفا', date: '2026-05-10', time: '09:30', link: 'meet.google.com/def-ghij-klm', notes: '', done: true }
-      ]
-    }
+    return { dayMeetings: [] }
   },
 
   computed: {
-    upcoming() {
-      return this.meetings.filter((m) => !m.done)
-    },
-    completed() {
-      return this.meetings.filter((m) => m.done)
-    },
-    upcomingLastPage() {
-      return Math.max(1, Math.ceil(this.upcoming.length / PAGE_SIZE))
-    },
-    completedLastPage() {
-      return Math.max(1, Math.ceil(this.completed.length / PAGE_SIZE))
-    },
-    upcomingPage() {
-      const start = (this.upcomingPage_ - 1) * PAGE_SIZE
-      return this.upcoming.slice(start, start + PAGE_SIZE)
-    },
-    completedPage() {
-      const start = (this.completedPage_ - 1) * PAGE_SIZE
-      return this.completed.slice(start, start + PAGE_SIZE)
-    },
-    canSubmit() {
-      return this.form.title.trim() && this.form.date && this.form.time
+    ...mapState(useTeamsStore, ['teams', 'meetings']),
+    ...mapState(useAuthStore, ['user']),
+
+    myTeam() {
+      return this.teams.find((t) => t.members?.some((m) => m.student?.id === this.user?.id))
     }
   },
 
+  async created() {
+    await this.fetchTeams()
+    if (this.myTeam) await this.fetchMeetings(this.myTeam.id)
+  },
+
   methods: {
-    emptyForm() {
-      return { title: '', date: '', time: '', link: '', notes: '' }
-    },
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchMeetings']),
 
-    openCreate() {
-      this.form = this.emptyForm()
-      this.modalOpen = true
+    onSelectDay(dayMeetings) {
+      this.dayMeetings = dayMeetings
     },
-
-    submitMeeting() {
-      if (!this.canSubmit) return
-      this.meetings.unshift({ id: nextId(), ...this.form, team: '', done: false })
-      this.modalOpen = false
-      this.$toast?.success('تم إنشاء الاجتماع بنجاح')
+    formatDate(scheduledAt) {
+      return new Date(scheduledAt).toLocaleDateString('ar-EG')
     },
-
-    sendReminder(meeting) {
-      const text = [
-        `تذكير باجتماع: ${meeting.title}`,
-        `التاريخ: ${meeting.date}`,
-        `الوقت: ${meeting.time}`,
-        meeting.link ? `الرابط: https://${meeting.link}` : null,
-        meeting.notes ? `الملاحظات: ${meeting.notes}` : null
-      ].filter(Boolean).join('\n')
-      window.open(`https://wa.me/${REMINDER_NUMBER}?text=${encodeURIComponent(text)}`, '_blank')
+    formatTime(scheduledAt) {
+      return new Date(scheduledAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+    },
+    isPast(meeting) {
+      return new Date(meeting.scheduled_at) < new Date()
     }
   }
 }
