@@ -24,6 +24,7 @@ export const useTeamsStore = defineStore('teams', () => {
       name: team.name,
       spec: specializationName(team.specialization_id),
       sup: team.supervisor?.name || 'غير محدد',
+      supId: team.supervisor?.id ?? null,
       projectName: team.project?.name || '',
       projectStatus: team.project?.status || '',
       members: (team.members || []).map((m) => ({
@@ -68,8 +69,78 @@ export const useTeamsStore = defineStore('teams', () => {
     }
   }
 
+  // GET /teams/{id}/progress → { total, done, percentage }
+  const fetchTeamProgress = async (id) => {
+    const { data } = await api.get(`/teams/${id}/progress`)
+    return data
+  }
+
+  // PUT /teams/{id}
+  const updateTeam = async (id, payload) => {
+    const { data } = await api.put(`/teams/${id}`, payload)
+    const updated = data.data || data
+    const index = teams.value.findIndex((t) => t.id === id)
+    if (index !== -1) teams.value[index] = updated
+    return updated
+  }
+
+  // DELETE /teams/{id}
+  const deleteTeam = async (id) => {
+    await api.delete(`/teams/${id}`)
+    teams.value = teams.value.filter((t) => t.id !== id)
+  }
+
+  const tasks = ref([])
+  const tasksLoading = ref(false)
+  const tasksError = ref(null)
+
+  // GET /teams/{id}/tasks
+  const fetchTasks = async (teamId) => {
+    tasksLoading.value = true
+    tasksError.value = null
+    try {
+      const { data } = await api.get(`/teams/${teamId}/tasks`)
+      tasks.value = data.data || data
+      return tasks.value
+    } catch (err) {
+      tasksError.value = err.normalized?.message || 'تعذّر تحميل المهام'
+      throw err
+    } finally {
+      tasksLoading.value = false
+    }
+  }
+
+  // POST /teams/{id}/tasks
+  const createTask = async (teamId, payload) => {
+    const { data } = await api.post(`/teams/${teamId}/tasks`, payload)
+    tasks.value.push(data.data || data)
+    return data
+  }
+
+  // PATCH /tasks/{id}/status
+  const changeTaskStatus = async (taskId, status) => {
+    const { data } = await api.patch(`/tasks/${taskId}/status`, { status })
+    const updated = data.data || data
+    const index = tasks.value.findIndex((t) => t.id === taskId)
+    if (index !== -1) tasks.value[index] = updated
+    return updated
+  }
+
+  // DELETE /tasks/{id}
+  const deleteTask = async (taskId) => {
+    await api.delete(`/tasks/${taskId}`)
+    tasks.value = tasks.value.filter((t) => t.id !== taskId)
+  }
+
   return {
     teams,
+    tasks,
+    tasksLoading,
+    tasksError,
+    fetchTasks,
+    createTask,
+    changeTaskStatus,
+    deleteTask,
     teamsLoading,
     teamsError,
     specializations,
@@ -77,6 +148,9 @@ export const useTeamsStore = defineStore('teams', () => {
     specializationsError,
     teamsForDisplay,
     fetchTeams,
-    fetchSpecializations
+    fetchSpecializations,
+    fetchTeamProgress,
+    updateTeam,
+    deleteTeam
   }
 })
