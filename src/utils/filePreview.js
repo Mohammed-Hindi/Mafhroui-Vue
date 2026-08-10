@@ -101,7 +101,7 @@ export async function generateOfficialPdf(title, subtitle, fields) {
       heightLeft -= pageHeight
     }
 
-    return pdf.output('bloburl')
+    return pdf.output('blob')
   } finally {
     document.body.removeChild(wrapper)
   }

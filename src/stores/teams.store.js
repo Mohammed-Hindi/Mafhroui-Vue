@@ -132,6 +132,44 @@ export const useTeamsStore = defineStore('teams', () => {
     tasks.value = tasks.value.filter((t) => t.id !== taskId)
   }
 
+  // POST /proposals (multipart)
+  const submitProposal = async (payload) => {
+    const form = new FormData()
+    Object.entries(payload).forEach(([key, value]) => form.append(key, value))
+    const { data } = await api.post('/proposals', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+    return data
+  }
+
+  // PUT /proposals/{id} (multipart — resubmission after rejection)
+  const updateProposal = async (id, payload) => {
+    const form = new FormData()
+    Object.entries(payload).forEach(([key, value]) => form.append(key, value))
+    form.append('_method', 'PUT')
+    const { data } = await api.post(`/proposals/${id}`, form, { headers: { 'Content-Type': 'multipart/form-data' } })
+    return data
+  }
+
+  // يفتح ملف PDF محمي بتوكن — window.open المباشر ما بيقدر يرفق Authorization header
+  const openProtectedFile = async (url, fileName) => {
+    const response = await api.get(url, { responseType: 'blob' })
+    const blobUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+    const link = document.createElement('a')
+    link.href = blobUrl
+    link.target = '_blank'
+    link.rel = 'noopener'
+    if (fileName) link.download = fileName
+    link.click()
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
+  }
+
+  // POST /projects/{id}/final-reports (multipart)
+  const submitFinalReport = async (projectId, payload) => {
+    const form = new FormData()
+    Object.entries(payload).forEach(([key, value]) => { if (value !== null && value !== undefined && value !== '') form.append(key, value) })
+    const { data } = await api.post(`/projects/${projectId}/final-reports`, form, { headers: { 'Content-Type': 'multipart/form-data' } })
+    return data
+  }
+
   return {
     teams,
     tasks,
@@ -151,6 +189,10 @@ export const useTeamsStore = defineStore('teams', () => {
     fetchSpecializations,
     fetchTeamProgress,
     updateTeam,
-    deleteTeam
+    deleteTeam,
+    submitProposal,
+    updateProposal,
+    submitFinalReport,
+    openProtectedFile
   }
 })
