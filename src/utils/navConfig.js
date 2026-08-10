@@ -16,6 +16,10 @@ import { ROLES } from '@/utils/constants'
 
 /** عناصر القائمة الجانبية لكل دور — مصدر واحد يستهلكه DashboardLayout */
 export const NAV_ITEMS_BY_ROLE = {
+  [ROLES.SUPER_ADMIN]: [
+    { label: 'إدارة الأعضاء', to: '/super-admin', icon: UserPlus, exact: true }
+  ],
+
   [ROLES.COMMITTEE]: [
     { label: 'لوحة التحكم', to: '/committee', icon: LayoutDashboard, exact: true },
     { label: 'الفرق', to: '/committee/teams', icon: Users },
@@ -24,7 +28,6 @@ export const NAV_ITEMS_BY_ROLE = {
     { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock },
     { label: 'أرشيف المشاريع', to: '/committee/project-archive', icon: FileCheck },
     { label: 'نسبة تقدّم المشاريع', to: '/committee/progress', icon: TrendingUp },
-    { label: 'إضافة لجنة الإشراف', to: '/committee/add-committee', icon: UserPlus },
     { label: 'المساعد الآلي', to: '/committee/assistant', icon: Bot }
   ],
 

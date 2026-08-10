@@ -4,12 +4,10 @@ import DashboardPageCommittee from '@/views/committee/DashboardPage.vue'
 import TeamsPageCommittee from '@/views/committee/TeamsPage.vue'
 import MembersPageCommittee from '@/views/committee/MembersPage.vue'
 import ProposalsPageCommittee from '@/views/committee/ProposalsPage.vue'
-import DeletedMembersPageCommittee from '@/views/committee/DeletedMembersPage.vue'
 import AppointmentsPageCommittee from '@/views/committee/AppointmentsPage.vue'
 import ProjectArchivePageCommittee from '@/views/committee/ProjectArchivePage.vue'
 import ProjectDetailPageCommittee from '@/views/committee/ProjectDetailPage.vue'
 import ProgressPageCommittee from '@/views/committee/ProgressPage.vue'
-import AddCommitteePageCommittee from '@/views/committee/AddCommitteePage.vue'
 import AssistantPageCommittee from '@/views/committee/AssistantPage.vue'
 
 // استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
@@ -17,12 +15,10 @@ import DashboardPage from '@/views/committee/DashboardPage.vue'
 import TeamsPage from '@/views/committee/TeamsPage.vue'
 import MembersPage from '@/views/committee/MembersPage.vue'
 import ProposalsPage from '@/views/committee/ProposalsPage.vue'
-import DeletedMembersPage from '@/views/committee/DeletedMembersPage.vue'
 import AppointmentsPage from '@/views/committee/AppointmentsPage.vue'
 import ProjectArchivePage from '@/views/committee/ProjectArchivePage.vue'
 import ProjectDetailPage from '@/views/committee/ProjectDetailPage.vue'
 import ProgressPage from '@/views/committee/ProgressPage.vue'
-import AddCommitteePage from '@/views/committee/AddCommitteePage.vue'
 import AssistantPage from '@/views/committee/AssistantPage.vue'
 
 /** مسارات لوحة لجنة الإشراف — تعيد استخدام صفحات الفرق/المقترحات/المواعيد/الأرشيف/التقدّم من دور المشرف */
@@ -57,12 +53,6 @@ export default [
         meta: { title: 'المقترحات' }
       },
       {
-        path: 'members/deleted',
-        name: 'committee-deleted-members',
-        component: DeletedMembersPageCommittee,
-        meta: { title: 'الأعضاء المحذوفون' }
-      },
-      {
         path: 'appointments',
         name: 'committee-appointments',
         component: AppointmentsPageCommittee,
@@ -85,12 +75,6 @@ export default [
         name: 'committee-progress',
         component: ProgressPageCommittee,
         meta: { title: 'نسبة تقدّم المشاريع' }
-      },
-      {
-        path: 'add-committee',
-        name: 'committee-add-committee',
-        component: AddCommitteePageCommittee,
-        meta: { title: 'إضافة لجنة الإشراف' }
       },
       {
         path: 'assistant',

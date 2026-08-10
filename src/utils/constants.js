@@ -4,6 +4,7 @@ export const APP_DESCRIPTION = 'منصة إدارة مشاريع التخرج'
 
 /** أدوار المستخدمين — المصدر الوحيد للحقيقة، تُستخدم بالراوتر والـ guards والـ stores */
 export const ROLES = {
+  SUPER_ADMIN: 'super_admin',
   COMMITTEE: 'committee',
   SUPERVISOR: 'supervisor',
   TEAM_LEADER: 'team_leader',
@@ -12,6 +13,7 @@ export const ROLES = {
 
 /** التسمية العربية المعروضة لكل دور */
 export const ROLE_LABELS = {
+  [ROLES.SUPER_ADMIN]: 'الإدارة العامة',
   [ROLES.COMMITTEE]: 'لجنة الإشراف',
   [ROLES.SUPERVISOR]: 'المشرف',
   [ROLES.TEAM_LEADER]: 'قائد الفريق',
@@ -20,6 +22,7 @@ export const ROLE_LABELS = {
 
 /** الصفحة الرئيسية لكل دور — يُوجَّه إليها بعد تسجيل الدخول */
 export const ROLE_HOME_ROUTE = {
+  [ROLES.SUPER_ADMIN]: '/super-admin',
   [ROLES.COMMITTEE]: '/committee',
   [ROLES.SUPERVISOR]: '/supervisor',
   [ROLES.TEAM_LEADER]: '/team-leader',
