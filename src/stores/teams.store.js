@@ -190,6 +190,18 @@ export const useTeamsStore = defineStore('teams', () => {
     setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
   }
 
+  // POST /proposals/{id}/approve
+  const approveProposal = async (id) => {
+    const { data } = await api.post(`/proposals/${id}/approve`)
+    return data
+  }
+
+  // POST /proposals/{id}/reject
+  const rejectProposal = async (id, reason) => {
+    const { data } = await api.post(`/proposals/${id}/reject`, { rejection_reason: reason })
+    return data
+  }
+
   // POST /projects/{id}/final-reports (multipart)
   const submitFinalReport = async (projectId, payload) => {
     const form = new FormData()
@@ -200,6 +212,7 @@ export const useTeamsStore = defineStore('teams', () => {
 
   return {
     teams,
+    specializationName,
     tasks,
     tasksLoading,
     tasksError,
@@ -222,6 +235,8 @@ export const useTeamsStore = defineStore('teams', () => {
     updateProposal,
     submitFinalReport,
     openProtectedFile,
+    approveProposal,
+    rejectProposal,
     meetings,
     meetingsLoading,
     fetchMeetings,
