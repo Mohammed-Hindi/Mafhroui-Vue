@@ -57,7 +57,7 @@
               @click="handleRead(item)"
             >
               <p class="text-body-sm font-semibold text-text-900">{{ item.title }}</p>
-              <p class="text-caption text-text-600 mt-0.5 line-clamp-2">{{ item.body }}</p>
+              <p class="text-caption text-text-600 mt-0.5 line-clamp-2">{{ item.message }}</p>
               <p class="text-label text-text-400 mt-1">{{ formatRelativeTime(item.created_at) }}</p>
             </li>
           </ul>
@@ -68,15 +68,14 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { Bell } from 'lucide-vue-next'
 import { useClickOutside } from '@/composables/useClickOutside'
 import { useNotificationsStore } from '@/stores/notifications.store'
 import { formatRelativeTime } from '@/utils/formatters'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 
-const router = useRouter()
 const notificationsStore = useNotificationsStore()
 
 const isOpen = ref(false)
@@ -84,14 +83,10 @@ const { clickOutsideRoot } = useClickOutside(() => {
   isOpen.value = false
 })
 
-const { items, unreadCount, isLoading, error, hasUnread } = notificationsStore
-
-watch(isOpen, (open) => {
-  if (open && !items.length) notificationsStore.fetchNotifications().catch(() => {})
-})
+const { items, unreadCount, isLoading, error, hasUnread } = storeToRefs(notificationsStore)
 
 onMounted(() => {
-  notificationsStore.fetchUnreadCount()
+  notificationsStore.fetchNotifications().catch(() => {})
 })
 
 const toggleOpen = () => {
@@ -104,16 +99,14 @@ const closeDropdown = () => {
 
 const handleRead = async (item) => {
   if (!item.is_read) await notificationsStore.markAsRead(item.id)
-  if (item.link) router.push(item.link)
   closeDropdown()
 }
 
 const handleMarkAll = async () => {
   try {
     await notificationsStore.markAllAsRead()
-    // TODO: Add toast notification
-  } catch (err) {
-    // TODO: Add error toast notification
+  } catch {
+    // الحالة السابقة تُستعاد تلقائيًا داخل الـ store عند الفشل
   }
 }
 </script>
