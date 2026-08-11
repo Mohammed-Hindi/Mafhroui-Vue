@@ -90,6 +90,57 @@ export const useTeamsStore = defineStore('teams', () => {
     teams.value = teams.value.filter((t) => t.id !== id)
   }
 
+  // POST /teams — { name, supervisor_id, specialization_id, member_ids, leader_id }
+  const createTeam = async (payload) => {
+    const { data } = await api.post('/teams', payload)
+    const created = data.data || data
+    teams.value.unshift(created)
+    return created
+  }
+
+  const replaceTeam = (updated) => {
+    const index = teams.value.findIndex((t) => t.id === updated.id)
+    if (index !== -1) teams.value[index] = updated
+  }
+
+  // POST /teams/{id}/members
+  const addTeamMember = async (teamId, studentId) => {
+    const { data } = await api.post(`/teams/${teamId}/members`, { student_id: studentId })
+    const updated = data.data || data
+    replaceTeam(updated)
+    return updated
+  }
+
+  // DELETE /teams/{id}/members/{memberId}
+  const removeTeamMember = async (teamId, memberId) => {
+    const { data } = await api.delete(`/teams/${teamId}/members/${memberId}`)
+    const updated = data.data || data
+    replaceTeam(updated)
+    return updated
+  }
+
+  // PATCH /teams/{id}/leader
+  const updateTeamLeader = async (teamId, studentId) => {
+    const { data } = await api.patch(`/teams/${teamId}/leader`, { student_id: studentId })
+    const updated = data.data || data
+    replaceTeam(updated)
+    return updated
+  }
+
+  // POST /teams/import/preview (multipart)
+  const previewTeamImport = async (file) => {
+    const form = new FormData()
+    form.append('file', file)
+    const { data } = await api.post('/teams/import/preview', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+    return data
+  }
+
+  // POST /teams/import/confirm
+  const confirmTeamImport = async (rows, specializationId) => {
+    const { data } = await api.post('/teams/import/confirm', { rows, specialization_id: specializationId })
+    return data
+  }
+
   const tasks = ref([])
   const tasksLoading = ref(false)
   const tasksError = ref(null)
@@ -260,6 +311,12 @@ export const useTeamsStore = defineStore('teams', () => {
     fetchTeamProgress,
     updateTeam,
     deleteTeam,
+    createTeam,
+    addTeamMember,
+    removeTeamMember,
+    updateTeamLeader,
+    previewTeamImport,
+    confirmTeamImport,
     submitProposal,
     updateProposal,
     submitFinalReport,
