@@ -8,12 +8,12 @@ export const useUsersStore = defineStore('users', () => {
   const usersLoading = ref(false)
   const usersError = ref(null)
 
-  // GET /users?role=committee|supervisor
-  const fetchUsers = async (role) => {
+  // GET /users?role=committee|supervisor|student&unassigned=1
+  const fetchUsers = async (role, params = {}) => {
     usersLoading.value = true
     usersError.value = null
     try {
-      const { data } = await api.get('/users', { params: { role } })
+      const { data } = await api.get('/users', { params: { role, ...params } })
       users.value = data.data || data
       return users.value
     } catch (err) {
