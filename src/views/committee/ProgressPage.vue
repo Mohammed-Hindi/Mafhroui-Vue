@@ -1,13 +1,16 @@
 <template>
   <div>
-    <div class="flex items-center gap-3 mb-6">
-      <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
-        <TrendingUp :size="18" />
-      </span>
-      <div>
-        <h3 class="text-h3 font-bold text-text-900">نسبة تقدّم المشاريع</h3>
-        <p class="text-caption text-text-600">متابعة تقدّم الفرق وتصفية النتائج حسب الحالة والفريق</p>
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div class="flex items-center gap-3">
+        <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
+          <TrendingUp :size="18" />
+        </span>
+        <div>
+          <h3 class="text-h3 font-bold text-text-900">نسبة تقدّم المشاريع</h3>
+          <p class="text-caption text-text-600">متابعة تقدّم الفرق وتصفية النتائج حسب الحالة والفريق</p>
+        </div>
       </div>
+      <BaseButton variant="outline" :icon="Download" :loading="exporting" @click="exportExcel">تصدير Excel</BaseButton>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 mb-6">
@@ -50,6 +53,7 @@
 
     <DataTable
       :columns="columns" :rows="pageRows" row-key="id" :primary-keys="['team', 'pct']"
+      :loading="overviewLoading"
       :meta="{ current_page: page, last_page: totalPages, total: filteredRows.length }"
       empty-title="لا توجد نتائج مطابقة"
       @page-change="page = $event"
@@ -57,7 +61,7 @@
       <template #cell-spec="{ value }"><span class="text-text-700">{{ value }}</span></template>
       <template #cell-sup="{ value }"><span class="text-text-700 font-semibold">{{ value }}</span></template>
       <template #cell-team="{ row }">
-        <router-link :to="{ name: 'committee-teams', query: { group: row.grp } }" class="inline-flex items-center gap-1.5 font-bold text-primary-700 hover:text-primary-800 hover:underline transition-colors duration-fast">
+        <router-link :to="{ name: 'committee-teams' }" class="inline-flex items-center gap-1.5 font-bold text-primary-700 hover:text-primary-800 hover:underline transition-colors duration-fast">
           {{ row.team }} <ExternalLink :size="11" class="opacity-65" />
         </router-link>
         <div class="text-label text-text-400 mt-0.5">{{ row.project }}</div>
@@ -79,13 +83,13 @@
 </template>
 
 <script>
-import { TrendingUp, Search, ExternalLink } from 'lucide-vue-next'
+import { TrendingUp, Search, ExternalLink, Download } from 'lucide-vue-next'
+import { mapState, mapActions } from 'pinia'
+import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import DataTable from '@/components/ui/DataTable.vue'
-import { SPECIALIZATIONS } from '@/utils/specializations'
-
-const [SPEC_WEB, SPEC_MOBILE, SPEC_DB, SPEC_MEDIA_D, SPEC_MEDIA_B] = SPECIALIZATIONS
+import { useProgressStore } from '@/stores/progress.store'
 
 const STATUS_LABELS = {
   completed: { label: 'مكتمل', variant: 'success' },
@@ -97,10 +101,12 @@ const PAGE_SIZE = 4
 export default {
   name: 'CommitteeProgressPage',
 
-  components: { TrendingUp, Search, ExternalLink, BaseSelect, BaseBadge, DataTable },
+  components: { TrendingUp, Search, ExternalLink, BaseButton, BaseSelect, BaseBadge, DataTable },
 
   data() {
     return {
+      Download,
+      exporting: false,
       search: '',
       statusFilter: '',
       teamFilter: '',
@@ -112,27 +118,47 @@ export default {
         { key: 'status', label: 'الحالة' },
         { key: 'pct', label: 'نسبة الإنجاز' }
       ],
-      statusDistribution: [
-        { status: 'completed', label: 'مكتمل', count: 46, percent: 55, barClass: 'bg-success' },
-        { status: 'in_progress', label: 'قيد التنفيذ', count: 31, percent: 37, barClass: 'bg-primary-600' },
-        { status: 'proposed', label: 'مقترح', count: 7, percent: 8, barClass: 'bg-warning' }
-      ],
-      averagePercent: 68,
-      page: 1,
-      rows: [
-        { id: 1, project: 'رقيب - نظام مراقبة بالذكاء الاصطناعي', team: 'فريق نوفا', grp: '31', spec: SPEC_WEB, sup: 'د. أحمد الشريف', members: ['سلطان', 'علي', 'يوسف'], status: 'completed', pct: 100 },
-        { id: 2, project: 'منصة توصيل جامعية ذكية', team: 'فريق كوانتم', grp: '52', spec: SPEC_MOBILE, sup: 'د. سلمى نصار', members: ['سعد', 'فيصل', 'إبراهيم'], status: 'in_progress', pct: 72 },
-        { id: 3, project: 'منصة إدارة مشاريع التخرج', team: 'فريق الابتكار', grp: '54', spec: SPEC_DB, sup: 'د. أحمد النبريص', members: ['رانا', 'سارة', 'ماجد'], status: 'in_progress', pct: 18 },
-        { id: 4, project: 'نظام تحليل بيانات جامعي', team: 'فريق نوفا', grp: '31', spec: SPEC_WEB, sup: 'د. أحمد الشريف', members: ['عبدالله', 'أحمد'], status: 'proposed', pct: 0 },
-        { id: 5, project: 'متجر إلكتروني بتقنيات AR', team: 'فريق كوانتم', grp: '52', spec: SPEC_MOBILE, sup: 'د. سلمى نصار', members: ['مروان', 'نواف'], status: 'in_progress', pct: 45 },
-        { id: 6, project: 'أداة كشف الثغرات الأمنية', team: 'فريق الابتكار', grp: '54', spec: SPEC_DB, sup: 'د. أحمد النبريص', members: ['حسين', 'ماجد'], status: 'completed', pct: 100 },
-        { id: 7, project: 'منصة تسجيل حضور بالوجه', team: 'فريق نوفا', grp: '31', spec: SPEC_WEB, sup: 'د. أحمد الشريف', members: ['هدى', 'رامي'], status: 'in_progress', pct: 60 },
-        { id: 8, project: 'تطبيق تحليل الصور الطبية', team: 'فريق كوانتم', grp: '52', spec: SPEC_MOBILE, sup: 'د. سلمى نصار', members: ['مني', 'ريم'], status: 'proposed', pct: 0 }
-      ]
+      page: 1
     }
   },
 
   computed: {
+    ...mapState(useProgressStore, ['overview', 'overviewLoading']),
+
+    rows() {
+      return this.overview.map((entry) => {
+        const team = entry.team
+        return {
+          id: team.id,
+          project: team.project?.name || '—',
+          team: team.name,
+          spec: team.specialization?.name || 'غير محدد',
+          sup: team.supervisor?.name || 'غير محدد',
+          members: (team.members || []).map((m) => m.student?.name).filter(Boolean),
+          status: team.project?.status || 'proposed',
+          pct: entry.progress.percentage
+        }
+      })
+    },
+
+    statusDistribution() {
+      const counts = { completed: 0, in_progress: 0, proposed: 0 }
+      this.rows.forEach((r) => { counts[r.status] = (counts[r.status] || 0) + 1 })
+      const total = this.rows.length || 1
+      return Object.entries(STATUS_LABELS).map(([status, { label }]) => ({
+        status,
+        label,
+        count: counts[status] || 0,
+        percent: Math.round(((counts[status] || 0) / total) * 100),
+        barClass: status === 'completed' ? 'bg-success' : status === 'in_progress' ? 'bg-primary-600' : 'bg-warning'
+      }))
+    },
+
+    averagePercent() {
+      if (!this.rows.length) return 0
+      return Math.round(this.rows.reduce((sum, r) => sum + r.pct, 0) / this.rows.length)
+    },
+
     circumference() {
       return 2 * Math.PI * 63
     },
@@ -177,6 +203,25 @@ export default {
   watch: {
     filteredRows() {
       this.page = 1
+    }
+  },
+
+  async created() {
+    await this.fetchProgress()
+  },
+
+  methods: {
+    ...mapActions(useProgressStore, ['fetchProgress', 'exportProgressExcel']),
+
+    async exportExcel() {
+      this.exporting = true
+      try {
+        await this.exportProgressExcel()
+      } catch {
+        this.$toast?.error('تعذّر تصدير الملف')
+      } finally {
+        this.exporting = false
+      }
     }
   }
 }
