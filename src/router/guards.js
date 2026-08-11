@@ -16,7 +16,7 @@ export async function authGuard(to) {
   }
 
   if (to.meta.guestOnly && auth.isAuthenticated) {
-    return { path: auth.homeRoute }
+    return auth.homeRoute
   }
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
