@@ -27,51 +27,34 @@
     </div>
 
     <div class="mb-12">
-    <DataTable :columns="studentColumns" :rows="studentPageRows" row-key="id" :primary-keys="['grp', 'name']" empty-title="لا توجد نتائج مطابقة">
+    <DataTable :columns="studentColumns" :rows="studentPageRows" row-key="id" :primary-keys="['grp', 'name']" :loading="teamsLoading" empty-title="لا توجد نتائج مطابقة">
       <template #cell-grp="{ row }">
-        <router-link :to="{ name: 'committee-teams', query: { group: row.grp } }" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-border-soft text-text-600 text-caption font-semibold hover:bg-primary-100 hover:text-primary-700 transition-colors duration-fast">
+        <router-link :to="{ name: 'committee-teams' }" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-border-soft text-text-600 text-caption font-semibold hover:bg-primary-100 hover:text-primary-700 transition-colors duration-fast">
           {{ row.grp }} <ExternalLink :size="11" class="opacity-65" />
         </router-link>
       </template>
       <template #cell-name="{ row }">
         <span class="font-bold text-text-900">{{ row.name }}</span>
-        <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">مقيَّد</span>
+        <span v-if="row.isLeader" class="ms-1.5 text-label font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-pill">قائد</span>
+        <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">موقوف</span>
       </template>
-      <template #cell-uid="{ value }"><span class="mono">{{ value }}</span></template>
-      <template #cell-whats="{ value }"><span class="mono">{{ value }}</span></template>
+      <template #cell-uid="{ value }"><span class="mono">{{ value || '—' }}</span></template>
+      <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
       <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value }}</span></template>
-      <template #cell-pw="{ row }">
-        <div class="flex items-center gap-2">
-          <button type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="توليد كلمة سر" @click="generatePw(row)">
-            <RefreshCw :size="13" />
-          </button>
-          <span class="mono text-caption tracking-wider min-w-[70px] inline-block">{{ row.pw ? (visiblePw.includes(row.id) ? row.pw : maskPw(row.pw)) : '—' }}</span>
-          <button v-if="row.pw" type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="إظهار/إخفاء كلمة السر" @click="togglePw(row.id)">
-            <Eye :size="13" />
-          </button>
-        </div>
-      </template>
       <template #cell-actions="{ row }">
         <div class="flex gap-1.5">
-          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
+          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
           <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
           <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, 'student')"><Pencil :size="14" /></button>
           <button
             type="button"
             class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast"
             :class="row.restricted ? 'bg-error text-white border-error hover:brightness-95' : 'border-border text-text-600 hover:bg-error-bg hover:text-error'"
-            :title="row.restricted ? 'إلغاء التقييد' : 'تقييد دخول المنصة'"
+            :title="row.restricted ? 'إلغاء الإيقاف' : 'إيقاف دخول الطالب'"
             @click="toggleRestrict(row)"
           >
             <Lock :size="14" />
           </button>
-          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete(row, 'student')"><Trash2 :size="14" /></button>
-        </div>
-      </template>
-      <template #row-extra="{ row }">
-        <div v-if="row.restricted && row.restrictReason" class="flex items-start gap-2 px-5 py-3 bg-error-bg border-t border-error-border/50">
-          <AlertTriangle :size="14" class="text-error shrink-0 mt-0.5" />
-          <p class="text-caption text-error leading-relaxed"><span class="font-bold">سبب التقييد: </span>{{ row.restrictReason }}</p>
         </div>
       </template>
     </DataTable>
@@ -100,46 +83,28 @@
       </div>
     </div>
 
-    <DataTable :columns="supervisorColumns" :rows="supervisorPageRows" row-key="id" :primary-keys="['name', 'empId']" empty-title="لا توجد نتائج مطابقة">
+    <DataTable :columns="supervisorColumns" :rows="supervisorPageRows" row-key="id" :primary-keys="['name', 'empId']" :loading="teamsLoading" empty-title="لا توجد نتائج مطابقة">
       <template #cell-name="{ row }">
         <span class="font-bold text-text-900">{{ row.name }}</span>
-        <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">مقيَّد</span>
+        <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">موقوف</span>
       </template>
-      <template #cell-empId="{ value }"><span class="mono">{{ value }}</span></template>
+      <template #cell-empId="{ value }"><span class="mono">{{ value || '—' }}</span></template>
       <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value }}</span></template>
-      <template #cell-whats="{ value }"><span class="mono">{{ value }}</span></template>
-      <template #cell-pw="{ row }">
-        <div class="flex items-center gap-2">
-          <button type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="توليد كلمة سر" @click="generatePw(row)">
-            <RefreshCw :size="13" />
-          </button>
-          <span class="mono text-caption tracking-wider min-w-[70px] inline-block">{{ row.pw ? (visiblePw.includes(row.id) ? row.pw : maskPw(row.pw)) : '—' }}</span>
-          <button v-if="row.pw" type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="إظهار/إخفاء كلمة السر" @click="togglePw(row.id)">
-            <Eye :size="13" />
-          </button>
-        </div>
-      </template>
+      <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
       <template #cell-actions="{ row }">
         <div class="flex gap-1.5">
-          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
+          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
           <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
           <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, 'supervisor')"><Pencil :size="14" /></button>
           <button
             type="button"
             class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast"
             :class="row.restricted ? 'bg-error text-white border-error hover:brightness-95' : 'border-border text-text-600 hover:bg-error-bg hover:text-error'"
-            :title="row.restricted ? 'إلغاء التقييد' : 'تقييد دخول المنصة'"
+            :title="row.restricted ? 'إلغاء الإيقاف' : 'إيقاف دخول المشرف'"
             @click="toggleRestrict(row)"
           >
             <Lock :size="14" />
           </button>
-          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete(row, 'supervisor')"><Trash2 :size="14" /></button>
-        </div>
-      </template>
-      <template #row-extra="{ row }">
-        <div v-if="row.restricted && row.restrictReason" class="flex items-start gap-2 px-5 py-3 bg-error-bg border-t border-error-border/50">
-          <AlertTriangle :size="14" class="text-error shrink-0 mt-0.5" />
-          <p class="text-caption text-error leading-relaxed"><span class="font-bold">سبب التقييد: </span>{{ row.restrictReason }}</p>
         </div>
       </template>
     </DataTable>
@@ -148,63 +113,43 @@
     <BaseModal v-model="editModalOpen" :title="editKind === 'student' ? 'تعديل بيانات الطالب' : 'تعديل بيانات المشرف'">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <template v-if="editKind === 'student'">
-          <BaseInput v-model="editForm.grp" label="رقم المجموعة" />
-          <BaseSelect v-model="editForm.spec" label="التخصص" :options="specializationOptions" />
-          <BaseInput v-model="editForm.name" label="اسم العضو" class="sm:col-span-2" />
+          <BaseInput v-model="editForm.name" label="اسم الطالب" class="sm:col-span-2" />
           <BaseInput v-model="editForm.uid" label="الرقم الجامعي" />
           <BaseInput v-model="editForm.whats" label="رقم الواتس" />
-          <BaseInput v-model="editForm.mail" type="email" label="البريد الإلكتروني" class="sm:col-span-2" />
-          <BaseSelect v-model="editForm.sup" label="اسم المشرف" :options="supervisorOptions" class="sm:col-span-2" />
         </template>
         <template v-else>
           <BaseInput v-model="editForm.name" label="اسم الموظف" class="sm:col-span-2" />
           <BaseInput v-model="editForm.empId" label="الرقم الوظيفي" />
           <BaseInput v-model="editForm.whats" label="رقم الواتس" />
-          <BaseInput v-model="editForm.mail" type="email" label="البريد الإلكتروني" class="sm:col-span-2" />
         </template>
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="editModalOpen = false">إلغاء</BaseButton>
-        <BaseButton :icon="Check" @click="saveEdit">حفظ التعديلات</BaseButton>
+        <BaseButton :icon="Check" :loading="submitting" @click="saveEdit">حفظ التعديلات</BaseButton>
       </template>
     </BaseModal>
 
-    <BaseModal v-model="restrictModal" title="سبب التقييد" :description="restrictTarget ? `سبب تقييد ‏${restrictTarget.name}` : ''" size="sm">
-      <div class="flex flex-col gap-2">
-        <label class="text-label font-semibold text-text-600">السبب</label>
-        <textarea v-model.trim="restrictReason" rows="4" placeholder="اكتبي سبب التقييد..." class="w-full rounded-sm border border-border bg-bg text-body text-text-900 px-3 py-2.5 focus:border-primary-600 transition-colors duration-fast resize-y" />
-      </div>
+    <BaseModal v-model="restrictModal" title="إيقاف دخول العضو" :description="restrictTarget ? `سيتعذّر على ‏${restrictTarget.name} تسجيل الدخول حتى تُلغى الإيقاف` : ''" size="sm">
+      <p class="text-body-sm text-text-600">هل تريدين المتابعة؟</p>
       <template #footer>
         <BaseButton variant="ghost" @click="restrictModal = false">إلغاء</BaseButton>
-        <BaseButton variant="danger" :icon="Lock" @click="confirmRestrict">تأكيد التقييد</BaseButton>
-      </template>
-    </BaseModal>
-
-    <BaseModal v-model="deleteModal" title="سبب الحذف" :description="deleteTarget ? `حذف ‏${deleteTarget.name}` : ''" size="sm">
-      <div class="flex flex-col gap-2">
-        <label class="text-label font-semibold text-text-600">السبب</label>
-        <textarea v-model.trim="deleteReason" rows="4" placeholder="اكتبي سبب الحذف..." class="w-full rounded-sm border border-border bg-bg text-body text-text-900 px-3 py-2.5 focus:border-primary-600 transition-colors duration-fast resize-y" />
-      </div>
-      <template #footer>
-        <BaseButton variant="ghost" @click="deleteModal = false">إلغاء</BaseButton>
-        <BaseButton variant="danger" :icon="Trash2" @click="confirmDelete">تأكيد الحذف</BaseButton>
+        <BaseButton variant="danger" :icon="Lock" :loading="submitting" @click="confirmRestrict">تأكيد الإيقاف</BaseButton>
       </template>
     </BaseModal>
   </div>
 </template>
 
 <script>
-import { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Eye, Pencil, Lock, RefreshCw, Check, Trash2, AlertTriangle } from 'lucide-vue-next'
-import { mapActions } from 'pinia'
-import { genPass } from '@/utils/password'
-import { useDeletedMembersStore } from '@/stores/deletedMembers.store'
+import { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Check } from 'lucide-vue-next'
+import { mapState, mapActions } from 'pinia'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import DataTable from '@/components/ui/DataTable.vue'
 import Pagination from '@/components/ui/Pagination.vue'
-import { SPECIALIZATIONS } from '@/utils/specializations'
+import { useTeamsStore } from '@/stores/teams.store'
+import { useUsersStore } from '@/stores/users.store'
 
 function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
@@ -214,37 +159,33 @@ const PAGE_SIZE = 4
 export default {
   name: 'CommitteeMembersPage',
 
-  components: { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Eye, Pencil, Lock, RefreshCw, Check, Trash2, AlertTriangle, BaseInput, BaseSelect, BaseButton, BaseModal, DataTable, Pagination },
+  components: { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, BaseInput, BaseSelect, BaseButton, BaseModal, DataTable, Pagination },
 
   data() {
     return {
-      Check, Lock, Trash2,
+      Check, Lock,
       studentSearch: '',
       specFilter: '',
       studentSupFilter: '',
       supervisorSearch: '',
-      visiblePw: [],
       studentPage: 1,
       supervisorPage: 1,
+      submitting: false,
+
       editModalOpen: false,
       editKind: 'student',
       editTargetId: null,
       editForm: {},
+
       restrictModal: false,
       restrictTarget: null,
-      restrictReason: '',
-      deleteModal: false,
-      deleteKind: 'student',
-      deleteTarget: null,
-      deleteReason: '',
 
       studentColumns: [
-        { key: 'grp', label: 'رقم المجموعة' },
+        { key: 'grp', label: 'الفريق' },
         { key: 'name', label: 'اسم العضو' },
         { key: 'uid', label: 'الرقم الجامعي' },
         { key: 'whats', label: 'رقم الواتس' },
         { key: 'mail', label: 'البريد الإلكتروني' },
-        { key: 'pw', label: 'كلمة السر' },
         { key: 'actions', label: 'إجراءات' }
       ],
       supervisorColumns: [
@@ -252,43 +193,62 @@ export default {
         { key: 'empId', label: 'الرقم الوظيفي' },
         { key: 'mail', label: 'البريد الإلكتروني' },
         { key: 'whats', label: 'رقم الواتس' },
-        { key: 'pw', label: 'كلمة السر' },
         { key: 'actions', label: 'إجراءات' }
-      ],
-
-      /* بيانات ثابتة — بانتظار GET /committee/students و GET /committee/supervisors */
-      students: [
-        { id: 1, grp: '31', spec: SPECIALIZATIONS[0], name: 'يوسف الدوسري', uid: '3175000', whats: '0551110001', mail: 'student1@academy.edu.sa', pw: '', sup: 'د. أحمد الشريف', restricted: false },
-        { id: 2, grp: '31', spec: SPECIALIZATIONS[0], name: 'علي الحربي', uid: '3175001', whats: '0551110002', mail: 'student2@academy.edu.sa', pw: '', sup: 'د. أحمد الشريف', restricted: false },
-        { id: 3, grp: '31', spec: SPECIALIZATIONS[0], name: 'سلطان الدوسري', uid: '3175006', whats: '0551110003', mail: 'student3@academy.edu.sa', pw: '', sup: 'د. أحمد الشريف', restricted: true },
-        { id: 4, grp: '52', spec: SPECIALIZATIONS[1], name: 'فيصل الحربي', uid: '3175018', whats: '0551110004', mail: 'student4@academy.edu.sa', pw: '', sup: 'د. سلمى نصار', restricted: false },
-        { id: 5, grp: '52', spec: SPECIALIZATIONS[1], name: 'إبراهيم الدوسري', uid: '3175019', whats: '0551110005', mail: 'student5@academy.edu.sa', pw: '', sup: 'د. سلمى نصار', restricted: false },
-        { id: 6, grp: '52', spec: SPECIALIZATIONS[1], name: 'سعد الحربي', uid: '3175020', whats: '0551110006', mail: 'student6@academy.edu.sa', pw: '', sup: 'د. سلمى نصار', restricted: false },
-        { id: 7, grp: '54', spec: SPECIALIZATIONS[2], name: 'حسين الحربي', uid: '3175022', whats: '0551110007', mail: 'student7@academy.edu.sa', pw: '', sup: 'د. أحمد النبريص', restricted: false },
-        { id: 8, grp: '54', spec: SPECIALIZATIONS[2], name: 'ماجد الحربي', uid: '3175023', whats: '0551110008', mail: 'student8@academy.edu.sa', pw: '', sup: 'د. أحمد النبريص', restricted: false },
-        { id: 9, grp: '54', spec: SPECIALIZATIONS[2], name: 'سارة الحربي', uid: '3175024', whats: '0551110009', mail: 'student9@academy.edu.sa', pw: '', sup: 'د. أحمد النبريص', restricted: false },
-        { id: 10, grp: '54', spec: SPECIALIZATIONS[2], name: 'رانا الحربي', uid: '3175025', whats: '0551110010', mail: 'student10@academy.edu.sa', pw: '', sup: 'د. أحمد النبريص', restricted: false }
-      ],
-      supervisors: [
-        { id: 101, name: 'د. أحمد الشريف', empId: 'EMP1001', mail: 'a.alsharif@academy.edu.sa', whats: '966501110011', pw: '', restricted: false },
-        { id: 102, name: 'د. سلمى نصار', empId: 'EMP1002', mail: 's.nassar@academy.edu.sa', whats: '966501110012', pw: '', restricted: false },
-        { id: 103, name: 'د. أحمد النبريص', empId: 'EMP1003', mail: 'a.alnabris@academy.edu.sa', whats: '966501110013', pw: '', restricted: false },
-        { id: 104, name: 'د. سلطان الدوسري', empId: 'EMP1004', mail: 's.aldosari@academy.edu.sa', whats: '966501110014', pw: '', restricted: false },
-        { id: 105, name: 'د. نورة القحطاني', empId: 'EMP1005', mail: 'n.alqahtani@academy.edu.sa', whats: '966501110015', pw: '', restricted: false },
-        { id: 106, name: 'د. ماجد الحربي', empId: 'EMP1006', mail: 'm.alharbi@academy.edu.sa', whats: '966501110016', pw: '', restricted: false },
-        { id: 107, name: 'د. هند الجهني', empId: 'EMP1007', mail: 'h.aljohani@academy.edu.sa', whats: '966501110017', pw: '', restricted: false },
-        { id: 108, name: 'د. عمر الدوسري', empId: 'EMP1008', mail: 'o.aldosari@academy.edu.sa', whats: '966501110018', pw: '', restricted: false },
-        { id: 109, name: 'د. ريم الحربي', empId: 'EMP1009', mail: 'r.alharbi@academy.edu.sa', whats: '966501110019', pw: '', restricted: false }
       ]
     }
   },
 
   computed: {
+    ...mapState(useTeamsStore, ['teams', 'teamsLoading']),
+
+    students() {
+      const seen = new Set()
+      const rows = []
+      this.teams.forEach((team) => {
+        (team.members || []).forEach((m) => {
+          if (!m.student || seen.has(m.student.id)) return
+          seen.add(m.student.id)
+          rows.push({
+            id: m.student.id,
+            grp: team.name,
+            spec: team.specialization_id,
+            sup: team.supervisor?.name || 'غير محدد',
+            name: m.student.name,
+            uid: m.student.university_number,
+            whats: m.student.whatsapp,
+            mail: m.student.email,
+            isLeader: !!m.is_leader,
+            restricted: m.student.status === 'restricted'
+          })
+        })
+      })
+      return rows
+    },
+
+    supervisors() {
+      const seen = new Set()
+      const rows = []
+      this.teams.forEach((team) => {
+        const sup = team.supervisor
+        if (!sup || seen.has(sup.id)) return
+        seen.add(sup.id)
+        rows.push({
+          id: sup.id,
+          name: sup.name,
+          empId: sup.employee_number,
+          mail: sup.email,
+          whats: sup.whatsapp,
+          restricted: sup.status === 'restricted'
+        })
+      })
+      return rows
+    },
+
     specializationOptions() {
-      return SPECIALIZATIONS.map((s) => ({ value: s, label: s }))
+      return [...new Set(this.teams.map((t) => this.specializationName(t.specialization_id)))].map((s) => ({ value: s, label: s }))
     },
     supervisorOptions() {
-      return this.supervisors.map((s) => ({ value: s.name, label: s.name }))
+      return [...new Set(this.supervisors.map((s) => s.name))].map((name) => ({ value: name, label: name }))
     },
     studentEmails() {
       return this.students.map((s) => s.mail)
@@ -300,8 +260,9 @@ export default {
     filteredStudents() {
       const q = this.studentSearch.trim()
       return this.students.filter((s) => {
+        const specName = this.specializationName(s.spec)
         const matchQ = !q || `${s.name}${s.uid}${s.sup}`.includes(q)
-        const matchSpec = !this.specFilter || s.spec === this.specFilter
+        const matchSpec = !this.specFilter || specName === this.specFilter
         const matchSup = !this.studentSupFilter || s.sup === this.studentSupFilter
         return matchQ && matchSpec && matchSup
       })
@@ -336,80 +297,76 @@ export default {
     }
   },
 
+  async created() {
+    await this.fetchTeams()
+  },
+
   methods: {
-    ...mapActions(useDeletedMembersStore, ['deleteStudent', 'deleteSupervisor']),
-
-    maskPw(pw) {
-      return '•'.repeat(pw.length)
-    },
-    togglePw(id) {
-      this.visiblePw = this.visiblePw.includes(id) ? this.visiblePw.filter((x) => x !== id) : [...this.visiblePw, id]
-    },
-    generatePw(row) {
-      row.pw = genPass()
-      if (!this.visiblePw.includes(row.id)) this.visiblePw.push(row.id)
-    },
-
-    toggleRestrict(row) {
-      if (row.restricted) {
-        row.restricted = false
-        row.restrictReason = ''
-        return
-      }
-      this.restrictTarget = row
-      this.restrictReason = ''
-      this.restrictModal = true
-    },
-    confirmRestrict() {
-      if (!this.restrictReason) {
-        this.$toast?.error('يرجى كتابة سبب التقييد')
-        return
-      }
-      this.restrictTarget.restricted = true
-      this.restrictTarget.restrictReason = this.restrictReason
-      this.restrictModal = false
-      this.$toast?.success('تم تقييد دخول العضو')
-    },
+    ...mapActions(useTeamsStore, ['fetchTeams', 'specializationName']),
+    ...mapActions(useUsersStore, ['updateUser', 'updateUserStatus']),
 
     openEdit(row, kind) {
       this.editKind = kind
       this.editTargetId = row.id
-      this.editForm = kind === 'student'
-        ? { grp: row.grp, spec: row.spec, name: row.name, uid: row.uid, whats: row.whats, mail: row.mail, sup: row.sup }
-        : { name: row.name, empId: row.empId, whats: row.whats, mail: row.mail }
+      this.editForm = this.editKind === 'student'
+        ? { name: row.name, uid: row.uid || '', whats: row.whats || '' }
+        : { name: row.name, empId: row.empId || '', whats: row.whats || '' }
       this.editModalOpen = true
     },
-    saveEdit() {
-      const arr = this.editKind === 'student' ? this.students : this.supervisors
-      const target = arr.find((m) => m.id === this.editTargetId)
-      if (target) Object.assign(target, this.editForm)
-      this.editModalOpen = false
-      this.$toast?.success('تم حفظ التعديلات')
-    },
-
-    openDelete(row, kind) {
-      this.deleteKind = kind
-      this.deleteTarget = row
-      this.deleteReason = ''
-      this.deleteModal = true
-    },
-    confirmDelete() {
-      if (!this.deleteReason) {
-        this.$toast?.error('يرجى كتابة سبب الحذف')
+    async saveEdit() {
+      if (!this.editForm.name) {
+        this.$toast?.error('يرجى إدخال الاسم')
         return
       }
-      if (this.deleteKind === 'student') {
-        this.deleteStudent(this.deleteTarget, this.deleteReason)
-        this.students = this.students.filter((s) => s.id !== this.deleteTarget.id)
-      } else {
-        this.deleteSupervisor(this.deleteTarget, this.deleteReason)
-        this.supervisors = this.supervisors.filter((s) => s.id !== this.deleteTarget.id)
+      this.submitting = true
+      try {
+        const payload = this.editKind === 'student'
+          ? { name: this.editForm.name, university_number: this.editForm.uid, whatsapp: this.editForm.whats }
+          : { name: this.editForm.name, employee_number: this.editForm.empId, whatsapp: this.editForm.whats }
+        await this.updateUser(this.editTargetId, payload)
+        this.editModalOpen = false
+        this.$toast?.success('تم حفظ التعديلات')
+        await this.fetchTeams()
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر حفظ التعديلات')
+      } finally {
+        this.submitting = false
       }
-      this.deleteModal = false
-      this.$toast?.success('تم حذف العضو')
+    },
+
+    toggleRestrict(row) {
+      if (row.restricted) {
+        this.reactivate(row)
+        return
+      }
+      this.restrictTarget = row
+      this.restrictModal = true
+    },
+    async reactivate(row) {
+      try {
+        await this.updateUserStatus(row.id, 'active')
+        this.$toast?.success('تم إلغاء الإيقاف')
+        await this.fetchTeams()
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إلغاء الإيقاف')
+      }
+    },
+    async confirmRestrict() {
+      this.submitting = true
+      try {
+        await this.updateUserStatus(this.restrictTarget.id, 'restricted')
+        this.restrictModal = false
+        this.$toast?.success('تم إيقاف دخول العضو')
+        await this.fetchTeams()
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إيقاف العضو')
+      } finally {
+        this.submitting = false
+      }
     },
 
     sendWhats(whats) {
+      if (!whats) return
       const num = digitsOnly(whats)
       const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
       window.open(`https://wa.me/${full}`, '_blank')
@@ -419,8 +376,10 @@ export default {
     },
 
     sendWhatsAll(list) {
-      if (!window.confirm(`سيتم فتح ${list.length} محادثة واتساب في تبويبات منفصلة. متابعة؟`)) return
-      list.forEach((r, i) => setTimeout(() => this.sendWhats(r.whats), i * 300))
+      const contacts = list.filter((c) => c.whats)
+      if (!contacts.length) return
+      if (!window.confirm(`سيتم فتح ${contacts.length} محادثة واتساب في تبويبات منفصلة. متابعة؟`)) return
+      contacts.forEach((c, i) => setTimeout(() => this.sendWhats(c.whats), i * 300))
     },
     sendMailAll(emails) {
       const url = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${encodeURIComponent(emails.join(','))}&su=${encodeURIComponent('تعميم من لجنة الإشراف')}`

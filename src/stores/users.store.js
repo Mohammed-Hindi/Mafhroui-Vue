@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import api from '@/services/api'
 
-/** إدارة حسابات المشرفين ولجنة الإشراف — خاص بدور super_admin */
+/** إدارة الحسابات — سوبر أدمن (مشرفين/لجنة) ولجنة الإشراف (طلاب/قادة فرق/مشرفين) */
 export const useUsersStore = defineStore('users', () => {
   const users = ref([])
   const usersLoading = ref(false)
