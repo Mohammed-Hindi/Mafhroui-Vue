@@ -10,9 +10,9 @@
         العودة إلى الرئيسية
       </router-link>
 
-      <h1 class="font-cairo font-extrabold text-sec-title-sm sm:text-sec-title text-text-900">المشاريع المميزة</h1>
+      <h1 class="font-cairo font-extrabold text-sec-title-sm sm:text-sec-title text-text-900">أرشيف المشاريع المكتملة</h1>
       <p class="mt-2 text-[13.5px] text-text-600">
-        جميع المشاريع المميزة  في المنصة
+        جميع مشاريع التخرج المكتملة في المنصة
         <span v-if="projectsMeta?.total">— {{ formatNumber(projectsMeta.total) }} مشروع</span>
       </p>
     </div>
@@ -27,7 +27,7 @@
           v-model.trim="filters.search"
           type="search"
           maxlength="80"
-          placeholder="اسم المشروع أو المشرف"
+          placeholder="اسم المشروع"
           class="w-full h-icon-btn ps-10 pe-3 rounded-sm border border-border bg-surface text-body text-text-900 focus:border-primary-600 transition-colors duration-fast"
           @input="onFilterChange"
         >
@@ -123,14 +123,9 @@
   </div>
 </template>
 
-تمام، فهمت — خلينا نبعد عن التفاصيل الدقيقة هلق ونركز فقط على نخلي الصفحة تعرض المشاريع الحقيقية أول شي. الفلترة (لو
-الباك اند بيدعمها أو لأ) منقدر نتأكد منها لاحقاً.
-
-بما إنه عندنا الشكل الحقيقي، هاد الكود النهائي لـ ProjectsArchivePage.vue
-vue
 <script>
 import { mapState, mapActions } from 'pinia'
-import { useLandingStore } from '@/stores/landing.store'
+import { useLandingStore, DEGREE_OPTIONS } from '@/stores/landing.store'
 import { formatNumber } from '@/utils/formatters'
 import ProjectCard from '@/components/landing/ProjectCard.vue'
 import Pagination from '@/components/ui/Pagination.vue'
@@ -149,81 +144,53 @@ export default {
         department_id: '',
         degree: ''
       },
-      page: 1
+      degreeOptions: DEGREE_OPTIONS,
+      searchDebounce: null
     }
   },
 
   computed: {
-    ...mapState(useLandingStore, ['featured', 'featuredTotal', 'featuredLoading', 'featuredError']),
+    ...mapState(useLandingStore, ['projects', 'projectsMeta', 'projectsLoading', 'projectsError', 'departments']),
 
     hasActiveFilters() {
       return Boolean(this.filters.search || this.filters.department_id || this.filters.degree)
     },
 
     departmentOptions() {
-      const seen = new Map()
-      this.featured.forEach((p) => {
-        if (p.department) seen.set(p.department.id, p.department.name)
-      })
-      return [...seen.entries()].map(([id, name]) => ({ value: id, label: name }))
-    },
-
-    /** فلترة محلية مؤقتة إلى حين تأكيد دعم الباك إند لها عبر query params */
-    filteredProjects() {
-      let list = this.featured
-      if (this.filters.search) {
-        const q = this.filters.search.toLowerCase()
-        list = list.filter((p) => (p.name || '').toLowerCase().includes(q))
-      }
-      if (this.filters.department_id) {
-        list = list.filter((p) => p.department_id === this.filters.department_id)
-      }
-      return list
-    },
-
-    projects() {
-      return this.filteredProjects
-    },
-
-    projectsMeta() {
-      return { total: this.filteredProjects.length, current_page: 1, last_page: 1 }
-    },
-
-    projectsLoading() {
-      return this.featuredLoading
-    },
-
-    projectsError() {
-      return this.featuredError
+      return this.departments.map((d) => ({ value: d.id, label: d.name }))
     }
   },
 
   created() {
+    this.fetchDepartments()
     this.loadProjects()
   },
 
   methods: {
-    ...mapActions(useLandingStore, ['fetchFeaturedProjects']),
+    ...mapActions(useLandingStore, ['fetchArchive', 'fetchDepartments']),
     formatNumber,
 
-    async loadProjects() {
+    async loadProjects(page = 1) {
       try {
-        await this.fetchFeaturedProjects()
+        await this.fetchArchive({ ...this.filters, page })
       } catch (_) {
-        // الخطأ يُعرض بالواجهة عبر featuredError
+        // الخطأ يُعرض بالواجهة عبر projectsError
       }
     },
 
     onFilterChange() {
-      // مؤقتًا: فلترة محلية فقط، بدون إعادة نداء للسيرفر
+      clearTimeout(this.searchDebounce)
+      this.searchDebounce = setTimeout(() => this.loadProjects(1), 350)
     },
 
-    changePage() {
-      // لا يوجد صفحات متعددة بعد ضمن هذا الربط المبدئي
+    changePage(page) {
+      this.loadProjects(page)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     },
 
     resetFilters() {
       this.filters = { search: '', department_id: '', degree: '' }
+      this.loadProjects(1)
     }
   }
 }
