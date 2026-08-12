@@ -37,7 +37,6 @@ export default {
 
   created() {
     if (!this.semesters.length) {
-      // TODO API — GET /semesters | response: [{ id, name, is_active }]
       this.fetchSemesters().catch(() => {})
     }
   },
@@ -46,10 +45,11 @@ export default {
     ...mapActions(useUiStore, ['fetchSemesters', 'setActiveSemester']),
 
     onChange(value) {
+      if (value === this.activeSemesterId) return
       this.setActiveSemester(value)
       this.$emit('change', value)
-      // تغيير الفصل يعيد تحميل بيانات الصفحة الحالية
-      this.$router.replace({ query: { ...this.$route.query, _s: value } })
+      // كل بيانات الصفحات مرتبطة بـ term_id عبر الباك إند — إعادة تحميل كاملة أبسط وأضمن طريقة لتحديثها كلها دفعة وحدة
+      window.location.reload()
     }
   }
 }

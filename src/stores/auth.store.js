@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import api from '@/services/api'
+import { STORAGE_KEYS } from '@/utils/constants'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
@@ -119,6 +120,7 @@ export const useAuthStore = defineStore('auth', () => {
       error.value = ''
       localStorage.removeItem('user')
       localStorage.removeItem('token')
+      localStorage.removeItem(STORAGE_KEYS.SEMESTER)
       window.location.href = '/login'
     }
   }

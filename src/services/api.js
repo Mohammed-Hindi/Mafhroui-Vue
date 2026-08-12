@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { STORAGE_KEYS } from '@/utils/constants'
 
 const api = axios.create({
   baseURL: 'http://127.0.0.1:8000/api',
@@ -13,6 +14,12 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+
+  const termId = localStorage.getItem(STORAGE_KEYS.SEMESTER)
+  if (termId) {
+    config.params = { ...config.params, term_id: termId }
+  }
+
   return config
 })
 
@@ -41,6 +48,7 @@ api.interceptors.response.use(
       ) {
         localStorage.removeItem('token')
         localStorage.removeItem('user')
+        localStorage.removeItem(STORAGE_KEYS.SEMESTER)
         if (!error.config?.url?.includes('/logout')) {
           window.location.href = '/login'
         }
