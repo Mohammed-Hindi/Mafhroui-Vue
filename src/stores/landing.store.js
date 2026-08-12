@@ -30,8 +30,6 @@ function mapProject(p) {
   }
 }
 
-const ARCHIVE_PAGE_SIZE = 9
-
 export const useLandingStore = defineStore('landing', () => {
   /* إحصائيات المنصة — GET /stats، حقيقي */
   const stats = ref(null)
