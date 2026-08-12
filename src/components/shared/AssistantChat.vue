@@ -54,7 +54,7 @@
       <button
         type="submit"
         class="grid place-items-center w-11 h-11 rounded-md bg-gradient-to-bl from-primary-600 to-primary-700 text-white shrink-0 disabled:opacity-50"
-        :disabled="!draft"
+        :disabled="!draft || typing"
         aria-label="إرسال"
       >
         <Send :size="17" />
@@ -65,6 +65,7 @@
 
 <script>
 import { Bot, Sparkles, Send } from 'lucide-vue-next'
+import api from '@/services/api'
 
 let uid = 0
 
@@ -77,8 +78,7 @@ export default {
     title: { type: String, default: 'المساعد الآلي' },
     emptyHint: { type: String, default: 'اكتب سؤالك وسيساعدك المساعد الآلي فورًا.' },
     placeholder: { type: String, default: 'اكتب رسالتك أو سؤالك...' },
-    suggestions: { type: Array, default: () => [] },
-    replies: { type: Array, default: () => [] }
+    suggestions: { type: Array, default: () => [] }
   },
 
   data() {
@@ -95,19 +95,28 @@ export default {
       this.send()
     },
 
-    send() {
+    async send() {
       const text = this.draft.trim()
-      if (!text) return
+      if (!text || this.typing) return
+
+      const history = this.messages.slice(-20).map((m) => ({
+        role: m.who === 'user' ? 'user' : 'assistant',
+        content: m.text
+      }))
+
       this.pushMessage(text, 'user')
       this.draft = ''
       this.typing = true
       this.scrollToBottom()
 
-      setTimeout(() => {
+      try {
+        const { data } = await api.post('/assistant/chat', { message: text, history })
+        this.pushMessage(data.reply, 'ai')
+      } catch (err) {
+        this.pushMessage(err.normalized?.message || 'تعذّر الوصول إلى المساعد الآلي حالياً، حاول مرة أخرى.', 'ai')
+      } finally {
         this.typing = false
-        const reply = this.replies[Math.floor(Math.random() * this.replies.length)] || '...'
-        this.pushMessage(reply, 'ai')
-      }, 900 + Math.random() * 500)
+      }
     },
 
     pushMessage(text, who) {
