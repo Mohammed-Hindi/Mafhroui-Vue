@@ -27,38 +27,38 @@
     </div>
 
     <div class="mb-12">
-    <DataTable :columns="studentColumns" :rows="studentPageRows" row-key="id" :primary-keys="['grp', 'name']" :loading="teamsLoading" empty-title="لا توجد نتائج مطابقة">
-      <template #cell-grp="{ row }">
-        <router-link :to="{ name: 'committee-teams' }" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-border-soft text-text-600 text-caption font-semibold hover:bg-primary-100 hover:text-primary-700 transition-colors duration-fast">
-          {{ row.grp }} <ExternalLink :size="11" class="opacity-65" />
-        </router-link>
-      </template>
-      <template #cell-name="{ row }">
-        <span class="font-bold text-text-900">{{ row.name }}</span>
-        <span v-if="row.isLeader" class="ms-1.5 text-label font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-pill">قائد</span>
-        <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">موقوف</span>
-      </template>
-      <template #cell-uid="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-      <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-      <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value }}</span></template>
-      <template #cell-actions="{ row }">
-        <div class="flex gap-1.5">
-          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
-          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
-          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, 'student')"><Pencil :size="14" /></button>
-          <button
-            type="button"
-            class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast"
-            :class="row.restricted ? 'bg-error text-white border-error hover:brightness-95' : 'border-border text-text-600 hover:bg-error-bg hover:text-error'"
-            :title="row.restricted ? 'إلغاء الإيقاف' : 'إيقاف دخول الطالب'"
-            @click="toggleRestrict(row)"
-          >
-            <Lock :size="14" />
-          </button>
-        </div>
-      </template>
-    </DataTable>
-    <Pagination class="mt-4" :current-page="studentPage" :last-page="studentTotalPages" :total="filteredStudents.length" @change="studentPage = $event" />
+      <DataTable :columns="studentColumns" :rows="studentPageRows" row-key="id" :primary-keys="['grp', 'name']" :loading="teamsLoading" empty-title="لا توجد نتائج مطابقة">
+        <template #cell-grp="{ row }">
+          <router-link :to="{ name: 'committee-teams' }" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-border-soft text-text-600 text-caption font-semibold hover:bg-primary-100 hover:text-primary-700 transition-colors duration-fast">
+            {{ row.grp }} <ExternalLink :size="11" class="opacity-65" />
+          </router-link>
+        </template>
+        <template #cell-name="{ row }">
+          <span class="font-bold text-text-900">{{ row.name }}</span>
+          <span v-if="row.isLeader" class="ms-1.5 text-label font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-pill">قائد</span>
+          <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">موقوف</span>
+        </template>
+        <template #cell-uid="{ value }"><span class="mono">{{ value || '—' }}</span></template>
+        <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
+        <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value }}</span></template>
+        <template #cell-actions="{ row }">
+          <div class="flex gap-1.5">
+            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
+            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
+            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, 'student')"><Pencil :size="14" /></button>
+            <button
+              type="button"
+              class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast"
+              :class="row.restricted ? 'bg-error text-white border-error hover:brightness-95' : 'border-border text-text-600 hover:bg-error-bg hover:text-error'"
+              :title="row.restricted ? 'إلغاء الإيقاف' : 'إيقاف دخول الطالب'"
+              @click="toggleRestrict(row)"
+            >
+              <Lock :size="14" />
+            </button>
+          </div>
+        </template>
+      </DataTable>
+      <Pagination class="mt-4" :current-page="studentPage" :last-page="studentTotalPages" :total="filteredStudents.length" @change="studentPage = $event" />
     </div>
 
     <!-- ===================== المشرفون ===================== -->
