@@ -1,49 +1,36 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import api from '@/services/api'
-import { PROJECT_ARCHIVE } from '@/data/projectArchive'
-import { DEPARTMENTS } from '@/utils/specializations'
 
-/** أرشيف المشاريع (الفلترة/الترقيم) لسا محلي — لا يوجد API عام لتصفحه بالكامل */
+export const DEGREE_LABELS = { diploma: 'دبلوم', bachelor: 'بكالوريوس' }
 
-const SUP_BY_TEAM = {
-  'فريق نوفا': 'د. أحمد الشريف',
-  'فريق كوانتم': 'د. سلمى نصار',
-  'فريق الابتكار': 'د. أحمد النبريص'
-}
+export const DEGREE_OPTIONS = [
+  { value: 'diploma', label: DEGREE_LABELS.diploma },
+  { value: 'bachelor', label: DEGREE_LABELS.bachelor }
+]
 
-function splitSpec(spec) {
-  const match = spec.match(/^(.*)\s"(.+)"$/)
-  return match ? { program: match[1], degree: match[2] } : { program: spec, degree: '' }
-}
+function mapProject(p) {
+  const degree = DEGREE_LABELS[p.specialization?.degree] || ''
+  const program = p.specialization?.name || ''
 
-function semesterOf(dateStr) {
-  const year = Number(dateStr.slice(0, 4))
-  return `${year - 1}/${year}-1`
-}
-
-const PROJECTS = PROJECT_ARCHIVE.map((p) => {
-  const { program, degree } = splitSpec(p.spec)
   return {
     id: p.id,
-    title: p.proj,
-    description: p.desc,
-    dept_name: p.dept,
+    title: p.name,
+    description: p.description,
+    dept_name: p.department?.name || '',
+    department_id: p.department?.id ?? null,
     program_name: program,
     degree,
-    spec: p.spec,
-    team_name: p.team,
-    grp: p.grp,
-    members: p.members,
-    supervisor_name: SUP_BY_TEAM[p.team] || 'غير محدد',
-    date: p.date,
-    semester: semesterOf(p.date)
+    spec: degree ? `${program} "${degree}"` : program,
+    team_name: p.team_name || '',
+    members: Array.isArray(p.members) ? p.members.join('، ') : '',
+    supervisor_name: p.supervisor_name || 'غير محدد',
+    date: p.completed_at || '',
+    semester: p.term || ''
   }
-})
+}
 
-const DEPARTMENT_LIST = DEPARTMENTS.map((name, index) => ({ id: index + 1, name }))
-
-const ARCHIVE_PAGE_SIZE = 6
+const ARCHIVE_PAGE_SIZE = 9
 
 export const useLandingStore = defineStore('landing', () => {
   /* إحصائيات المنصة — GET /stats، حقيقي */
@@ -57,13 +44,19 @@ export const useLandingStore = defineStore('landing', () => {
   const featuredLoading = ref(false)
   const featuredError = ref(null)
 
-  /* أرشيف المشاريع (صفحة مستقلة، فلاتر + ترقيم صفحات محليًا) — لا يوجد API عام */
-  const projects = ref(PROJECTS.slice(0, ARCHIVE_PAGE_SIZE))
-  const projectsMeta = ref({ current_page: 1, last_page: Math.max(1, Math.ceil(PROJECTS.length / ARCHIVE_PAGE_SIZE)), total: PROJECTS.length })
+  /* أرشيف المشاريع المكتملة (صفحة مستقلة، فلاتر + ترقيم صفحات حقيقيين) — GET /projects/public-archive */
+  const projects = ref([])
+  const projectsMeta = ref({ current_page: 1, last_page: 1, total: 0 })
   const projectsLoading = ref(false)
   const projectsError = ref(null)
 
-  const departments = ref(DEPARTMENT_LIST)
+  /* تفاصيل مشروع واحد من الأرشيف العام — GET /projects/public-archive/{id} */
+  const currentProject = ref(null)
+  const currentProjectLoading = ref(false)
+  const currentProjectError = ref(null)
+
+  /* الأقسام — GET /departments/public، حقيقي */
+  const departments = ref([])
   const departmentsLoading = ref(false)
   const departmentsError = ref(null)
 
@@ -105,22 +98,14 @@ export const useLandingStore = defineStore('landing', () => {
     }
   }
 
-  // GET /projects/featured → { data: [Project], total, ... }
-  // شكل Project الفعلي: { id, name, description, department, specialization } — بدون بيانات مشرف/فريق (Need-to-Know حتى بمسار عام)
+  // GET /projects/featured
   const fetchFeaturedProjects = async () => {
     featuredLoading.value = true
     featuredError.value = null
     try {
       const { data } = await api.get('/projects/featured')
       const rows = data.data || data
-      featured.value = rows.map((p) => ({
-        id: p.id,
-        title: p.name,
-        description: p.description,
-        program_name: p.specialization?.name || '',
-        degree: '',
-        dept_name: p.department?.name || ''
-      }))
+      featured.value = rows.map(mapProject)
       featuredTotal.value = data.total ?? featured.value.length
       return featured.value
     } catch (err) {
@@ -131,30 +116,66 @@ export const useLandingStore = defineStore('landing', () => {
     }
   }
 
-  /** فلترة وترقيم صفحات محليًا على البيانات الثابتة — لا يوجد API عام للأرشيف الكامل */
-  const fetchProjects = async (params = {}) => {
-    let list = PROJECTS
-
-    if (params.search) {
-      const q = String(params.search).toLowerCase()
-      list = list.filter((p) => p.title.toLowerCase().includes(q) || p.supervisor_name.toLowerCase().includes(q))
+  // GET /projects/public-archive?search=&department_id=&degree=&page=
+  const fetchArchive = async (params = {}) => {
+    projectsLoading.value = true
+    projectsError.value = null
+    try {
+      const { data } = await api.get('/projects/public-archive', {
+        params: {
+          search: params.search || undefined,
+          department_id: params.department_id || undefined,
+          degree: params.degree || undefined,
+          page: params.page || 1
+        }
+      })
+      projects.value = (data.data || []).map(mapProject)
+      projectsMeta.value = {
+        current_page: data.current_page ?? 1,
+        last_page: data.last_page ?? 1,
+        total: data.total ?? projects.value.length
+      }
+      return projects.value
+    } catch (err) {
+      projectsError.value = err.normalized?.message || 'تعذّر تحميل أرشيف المشاريع'
+      throw err
+    } finally {
+      projectsLoading.value = false
     }
-    if (params.department_id) {
-      const dept = DEPARTMENT_LIST.find((d) => String(d.id) === String(params.department_id))
-      if (dept) list = list.filter((p) => p.dept_name === dept.name)
-    }
-    if (params.degree) {
-      list = list.filter((p) => p.degree === params.degree)
-    }
-
-    const page = Math.max(1, Number(params.page) || 1)
-    const start = (page - 1) * ARCHIVE_PAGE_SIZE
-    projects.value = list.slice(start, start + ARCHIVE_PAGE_SIZE)
-    projectsMeta.value = { current_page: page, last_page: Math.max(1, Math.ceil(list.length / ARCHIVE_PAGE_SIZE)), total: list.length }
-    return projects.value
   }
 
-  const fetchDepartments = async () => departments.value
+  // GET /projects/public-archive/{id}
+  const fetchProjectById = async (id) => {
+    currentProjectLoading.value = true
+    currentProjectError.value = null
+    currentProject.value = null
+    try {
+      const { data } = await api.get(`/projects/public-archive/${id}`)
+      currentProject.value = mapProject(data)
+      return currentProject.value
+    } catch (err) {
+      currentProjectError.value = err.normalized?.message || 'تعذّر تحميل بيانات المشروع'
+      throw err
+    } finally {
+      currentProjectLoading.value = false
+    }
+  }
+
+  // GET /departments/public
+  const fetchDepartments = async () => {
+    departmentsLoading.value = true
+    departmentsError.value = null
+    try {
+      const { data } = await api.get('/departments/public')
+      departments.value = data
+      return departments.value
+    } catch (err) {
+      departmentsError.value = err.normalized?.message || 'تعذّر تحميل الأقسام'
+      throw err
+    } finally {
+      departmentsLoading.value = false
+    }
+  }
 
   return {
     stats,
@@ -168,6 +189,9 @@ export const useLandingStore = defineStore('landing', () => {
     projectsMeta,
     projectsLoading,
     projectsError,
+    currentProject,
+    currentProjectLoading,
+    currentProjectError,
     departments,
     departmentsLoading,
     departmentsError,
@@ -177,7 +201,8 @@ export const useLandingStore = defineStore('landing', () => {
     authBrandStats,
     fetchStats,
     fetchFeaturedProjects,
-    fetchProjects,
+    fetchArchive,
+    fetchProjectById,
     fetchDepartments
   }
 })

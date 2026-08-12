@@ -8,7 +8,11 @@
       رجوع
     </router-link>
 
-    <EmptyState v-if="!project" title="لم يتم العثور على المشروع" description="ربما تم حذف هذا المشروع أو الرابط غير صحيح." />
+    <div v-if="loading" class="grid sm:grid-cols-2 gap-4">
+      <div v-for="n in 6" :key="n" class="h-16 rounded-lg bg-border-soft animate-pulse" />
+    </div>
+
+    <EmptyState v-else-if="!project" title="لم يتم العثور على المشروع" description="ربما تم حذف هذا المشروع أو الرابط غير صحيح." />
 
     <template v-else>
       <span class="reveal inline-block px-4 py-1.5 rounded-pill bg-warning-bg text-warning-text text-label font-bold mb-4">
@@ -72,7 +76,7 @@
 </template>
 
 <script>
-import { mapState } from 'pinia'
+import { mapState, mapActions } from 'pinia'
 import { useLandingStore } from '@/stores/landing.store'
 import AppIcon from '@/components/icons/AppIcon.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
@@ -88,10 +92,14 @@ export default {
   },
 
   computed: {
-    ...mapState(useLandingStore, ['featured']),
+    ...mapState(useLandingStore, ['currentProject', 'currentProjectLoading']),
 
     project() {
-      return this.featured.find((p) => String(p.id) === String(this.id)) || null
+      return this.currentProject
+    },
+
+    loading() {
+      return this.currentProjectLoading
     },
 
     infoRows() {
@@ -108,7 +116,14 @@ export default {
     }
   },
 
+  created() {
+    this.fetchProjectById(this.id).catch(() => {
+      // الخطأ يُعرض بالواجهة عبر EmptyState لما project يبقى null
+    })
+  },
+
   methods: {
+    ...mapActions(useLandingStore, ['fetchProjectById']),
     openPlaceholderVideo
   }
 }
