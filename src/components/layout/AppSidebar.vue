@@ -237,7 +237,6 @@ export default {
       }
     },
 
-    // TODO API — POST /auth/logout | response: 204
     async handleLogout() {
       await this.logout()
       this.$router.push({ name: 'login' })

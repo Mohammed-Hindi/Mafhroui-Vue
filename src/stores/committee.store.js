@@ -2,12 +2,8 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import api from '@/services/api'
 
-/**
- * إحصائيات لوحة تحكم اللجنة.
- * بعض الحقول (المشاريع المكتملة، توزيع الحالات، متوسط الإنجاز) لا يوجد
- * لها API بعد — بانتظار endpoint من الباك إند (راجعي CommitteeDashboardController).
- */
-const NO_DASHBOARD_STATS_API = 'إحصائيات لوحة اللجنة التفصيلية غير متوفرة بالباك إند الحالي بعد'
+/** إحصائيات لوحة تحكم اللجنة — GET /committee/dashboard-stats، حقيقي (CommitteeDashboardController) */
+const DASHBOARD_STATS_ERROR = 'تعذّر تحميل إحصائيات لوحة اللجنة'
 
 export const useCommitteeStore = defineStore('committee', () => {
   const dashboardStats = ref(null)
@@ -47,7 +43,6 @@ export const useCommitteeStore = defineStore('committee', () => {
     ]
   })
 
-  // GET /committee/dashboard-stats — بانتظار الباك إند (راجعي NO_DASHBOARD_STATS_API)
   const fetchDashboardStats = async () => {
     dashboardLoading.value = true
     dashboardError.value = null
@@ -56,7 +51,7 @@ export const useCommitteeStore = defineStore('committee', () => {
       dashboardStats.value = data
       return data
     } catch (err) {
-      dashboardError.value = err.normalized?.message || NO_DASHBOARD_STATS_API
+      dashboardError.value = err.normalized?.message || DASHBOARD_STATS_ERROR
       throw err
     } finally {
       dashboardLoading.value = false

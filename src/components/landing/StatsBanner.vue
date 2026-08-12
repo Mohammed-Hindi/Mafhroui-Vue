@@ -39,7 +39,6 @@ const { bannerStats, statsLoading, statsError } = storeToRefs(landingStore)
 
 const withPlus = (n) => `+${formatNumber(n)}`
 
-// فجوة باك إند: لا يوجد GET /stats عام — fetchStats تضبط statsError فورًا (راجعي API_REFERENCE.md)
 const loadStats = async () => {
   try {
     await landingStore.fetchStats()
