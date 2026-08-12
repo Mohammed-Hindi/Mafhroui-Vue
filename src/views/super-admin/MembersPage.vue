@@ -78,7 +78,7 @@
     <!-- رابط الدعوة بعد الإنشاء -->
     <BaseModal v-model="inviteModalOpen" title="تم إنشاء الحساب" description="لا تُرسل المنصة كلمات مرور صريحة — شارك رابط الدعوة التالي مع العضو ليعيّن كلمة مروره بنفسه (صالح 3 أيام)." size="sm">
       <div class="flex items-center gap-2">
-        <input :value="inviteLink" readonly class="flex-1 min-w-0 h-icon-btn px-3 rounded-sm border border-border bg-bg text-body-sm mono" />
+        <input :value="inviteLink" readonly class="flex-1 min-w-0 h-icon-btn px-3 rounded-sm border border-border bg-bg text-body-sm mono">
         <BaseButton :icon="Copy" variant="outline" @click="copyInviteLink">نسخ</BaseButton>
       </div>
       <template #footer>

@@ -18,6 +18,12 @@ export default {
     return { display: '0', started: false, visible: false }
   },
 
+  computed: {
+    reducedMotion() {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    }
+  },
+
   watch: {
     // القيمة ممكن توصل بعد أول رسم للمكوّن (بيانات API غير متزامنة) — نعيد الرسم للقيمة الجديدة بدل التجمّد على القيمة الأولى (غالبًا 0)
     value() {
@@ -27,12 +33,6 @@ export default {
         return
       }
       this.animate()
-    }
-  },
-
-  computed: {
-    reducedMotion() {
-      return window.matchMedia('(prefers-reduced-motion: reduce)').matches
     }
   },
 

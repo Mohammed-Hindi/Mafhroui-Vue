@@ -134,7 +134,9 @@
                       :class="member.leader ? 'bg-warning-bg text-warning-text' : 'border border-border text-text-400'"
                       title="تعيين قائدًا"
                       @click="requestLeaderChange(group, member)"
-                    ><Crown :size="14" :fill="member.leader ? 'currentColor' : 'none'" /></button>
+                    >
+                      <Crown :size="14" :fill="member.leader ? 'currentColor' : 'none'" />
+                    </button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-error-bg text-error hover:brightness-95 disabled:opacity-40" :disabled="member.leader" title="إزالة من الفريق" @click="requestRemoveMember(group, member)"><Trash2 :size="14" /></button>
                   </div>
                 </div>
@@ -164,7 +166,7 @@
         <div v-if="!unassignedStudents.length" class="text-body-sm text-text-400 py-3">لا يوجد طلاب متاحون — استوردي طلابًا من Excel أولاً.</div>
         <div v-else class="max-h-60 overflow-y-auto border border-border rounded-sm divide-y divide-border-soft">
           <label v-for="s in unassignedStudents" :key="s.id" class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-border-soft">
-            <input type="checkbox" :value="s.id" v-model="createForm.member_ids" :disabled="!createForm.member_ids.includes(s.id) && createForm.member_ids.length >= 4">
+            <input v-model="createForm.member_ids" type="checkbox" :value="s.id" :disabled="!createForm.member_ids.includes(s.id) && createForm.member_ids.length >= 4">
             <span class="text-body-sm text-text-900">{{ s.name }}</span>
             <span class="text-label text-text-400 mono">{{ s.university_number || s.email }}</span>
           </label>
