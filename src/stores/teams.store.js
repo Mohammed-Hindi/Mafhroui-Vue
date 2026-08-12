@@ -28,6 +28,7 @@ export const useTeamsStore = defineStore('teams', () => {
       projectName: team.project?.name || '',
       projectStatus: team.project?.status || '',
       members: (team.members || []).map((m) => ({
+        id: m.student?.id ?? null,
         name: m.student?.name || '',
         uid: m.student?.university_number || '—',
         whats: m.student?.whatsapp || '',
