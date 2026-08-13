@@ -8,16 +8,27 @@ function applyTransform(el) {
 }
 
 function onMove(el, event) {
-  const rect = el.getBoundingClientRect()
-  const relX = event.clientX - (rect.left + rect.width / 2)
-  const relY = event.clientY - (rect.top + rect.height / 2)
-  el._magnetic.x = Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, relX * 0.35))
-  el._magnetic.y = Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, relY * 0.35))
-  el.style.transition = 'transform 80ms linear'
-  applyTransform(el)
+  if (el._magnetic.raf) return
+  el._magnetic.raf = requestAnimationFrame(() => {
+    el._magnetic.raf = null
+    const rect = el.getBoundingClientRect()
+    const relX = event.clientX - (rect.left + rect.width / 2)
+    const relY = event.clientY - (rect.top + rect.height / 2)
+    el._magnetic.x = Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, relX * 0.35))
+    el._magnetic.y = Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, relY * 0.35))
+    el.style.transition = 'transform 80ms linear'
+    applyTransform(el)
+  })
+}
+
+function cancelPendingMove(el) {
+  if (!el._magnetic.raf) return
+  cancelAnimationFrame(el._magnetic.raf)
+  el._magnetic.raf = null
 }
 
 function onLeave(el) {
+  cancelPendingMove(el)
   el._magnetic.x = 0
   el._magnetic.y = 0
   el._magnetic.pressed = false
@@ -57,6 +68,7 @@ export default {
 
   unmounted(el) {
     if (!el._magneticHandlers) return
+    cancelPendingMove(el)
     el.removeEventListener('mousemove', el._magneticHandlers.move)
     el.removeEventListener('mouseleave', el._magneticHandlers.leave)
     el.removeEventListener('mousedown', el._magneticHandlers.down)
