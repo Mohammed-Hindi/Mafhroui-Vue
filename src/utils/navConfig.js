@@ -10,14 +10,16 @@ import {
   CalendarClock,
   FileCheck,
   TrendingUp,
-  Bot
+  Bot,
+  Send
 } from 'lucide-vue-next'
 import { ROLES } from '@/utils/constants'
 
 /** عناصر القائمة الجانبية لكل دور — مصدر واحد يستهلكه DashboardLayout */
 export const NAV_ITEMS_BY_ROLE = {
   [ROLES.SUPER_ADMIN]: [
-    { label: 'إدارة الأعضاء', to: '/super-admin', icon: UserPlus, exact: true }
+    { label: 'إدارة الأعضاء', to: '/super-admin', icon: UserPlus, exact: true },
+    { label: 'إرسال بيانات الدخول', to: '/super-admin/notify', icon: Send }
   ],
 
   [ROLES.COMMITTEE]: [
