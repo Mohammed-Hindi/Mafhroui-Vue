@@ -1,108 +1,72 @@
-# مسار — منصة إدارة مشاريع التخرج (الواجهة الأمامية)
+# Mashroui — Frontend
 
-منصة عربية RTL كاملة لإدارة مشاريع التخرج، بأربع لوحات تحكم منفصلة (لجنة الإشراف، المشرف، قائد الفريق، الطالب) بالإضافة لصفحة عامة تسويقية وتسجيل دخول موحّد.
+Frontend for a graduation-project management platform — teams, proposals, tasks, meetings, discussions, and the review workflow between students, supervisors, and the committee. Five role-based dashboards plus a public marketing/archive site.
 
-**زيرو باك إند حقيقي** — كل بيانات المشروع بأكمله (فرق، مقترحات، مهام، اجتماعات، مواعيد مناقشات، أرشيف مشاريع، إحصائيات) بيانات ثابتة (placeholder) داخل `src/data/` و`data()` الخاصة بكل صفحة/store. لا يوجد أي endpoint فعلي يُستدعى في أي مكان بالتطبيق.
+Vue 3, Vite, Pinia, Tailwind CSS. Talks to the [Mashroui](https://github.com/iMumd/Mashroui) Laravel API — no mock data, no offline mode.
 
-## التقنيات
+## Stack
 
-| التقنية | الدور |
-|---|---|
-| Vue 3 (**Options API** بكل `views`/`components`؛ `<script setup>` فقط بمكوّنات UI صغيرة قائمة على تأثيرات بصرية بحتة) | إطار الواجهة |
-| Vite 5 | أداة البناء وخادم التطوير |
-| Vue Router 4 | التوجيه + حراسة الأدوار (كل مسارات لوحات التحكم مُستوردة مباشرة — لا `lazy import` — لتنقّل فوري بلا تأخير تحميل) |
-| Pinia (composition-style stores) | إدارة الحالة، تُستهلك بالمكوّنات عبر `mapState` / `mapActions` |
-| Tailwind CSS 3 | التنسيق، مربوط بمتغيرات `design-tokens.css` (يدعم الوضع الداكن عبر `[data-theme="dark"]`) |
-| lucide-vue-next | الأيقونات (لوحات التحكم) |
-| jsPDF + html2canvas | توليد ملفات PDF رسمية حقيقية (مقترحات، تقارير، تصدير تقارير الفرق/المواعيد) — تحميل كسول (dynamic import) |
-| ExcelJS | تصدير ملفات Excel احترافية (دمج خلايا، تنسيق، تجميد رأس الجدول) — تحميل كسول |
-| Axios | نسخة مركزية (`services/api.js`) — تُستخدم فقط بمخطط `auth.store.js`، غير مستهلَكة فعليًا بباقي المشروع |
+- Vue 3 (Options API in all views/components; `<script setup>` only in small presentational components)
+- Vite 5
+- Vue Router 4, static route imports (no lazy loading)
+- Pinia, composition-style stores, consumed via `mapState`/`mapActions`
+- Tailwind CSS 3, tokens in `src/styles/design-tokens.css`, dark mode via `[data-theme="dark"]`
+- Axios (`src/services/api.js`)
+- jsPDF + html2canvas — PDF export (proposals, reports)
+- ExcelJS — Excel import/export (team bulk-create, report tables)
 
-## التشغيل
+## Setup
 
 ```bash
 npm install
-npm run dev               # http://localhost:5173
-npm run build              # نسخة الإنتاج في dist/
-npm run preview            # معاينة نسخة الإنتاج
-npm run lint                # فحص وإصلاح الكود
+cp .env.example .env
+npm run dev              # http://localhost:5173
 ```
 
-## تسجيل الدخول (حسابات تجريبية ثابتة)
+Requires the [backend](https://github.com/iMumd/Mashroui) running locally at `http://127.0.0.1:8000` (the API base URL is hardcoded in `src/services/api.js`). Log in with any account seeded by the backend — see its README for the default super admin, or `TestUsersSeeder`/`FeaturedProjectSeeder` for one account per role.
 
-كل الحسابات تستخدم نفس البريد `admin@mashroui.local`، وكلمة المرور تحدد الدور:
+```bash
+npm run build             # production build in dist/
+npm run preview           # preview the production build
+npm run lint               # eslint --fix
+```
 
-| كلمة المرور | الدور | الاسم المعروض |
-|---|---|---|
-| `Password123$` | لجنة الإشراف (committee) | لجنة الإشراف |
-| `anas1` | المشرف (supervisor) | د. محمد العتيبي |
-| `anas2` | قائد الفريق (team_leader) | admin anas |
-| `anas3` | الطالب (student) | يوسف الدوسري |
+## Roles
 
-## قواعد المشروع الملزِمة
+Five roles, matching the backend's `RoleEnum`: `super_admin`, `committee`, `supervisor`, `team_leader`, `student`. The active user's role is read from `auth.store.js` and drives which dashboard layout, sidebar nav (`utils/navConfig.js`), and routes (`router/routes/`) are active.
 
-1. **Options API فقط** بكل `views`/`components` الرئيسية — الترتيب الثابت: `name → components → props → emits → data → computed → watch → created → mounted → beforeUnmount → methods`. الاستثناء: مكوّنات حركة/تأثيرات بصرية صغيرة (`WaterBackground.vue`, `CursorSpotlight.vue` جزئيًا، أقسام `landing/*`) قد تستخدم `<script setup>`.
-2. **Pinia عبر الـ helpers فقط** — `mapState` / `mapActions` بالمكوّنات، وتعريف الـ stores نفسها بأسلوب composition (`defineStore('x', () => {...})`).
-3. **صفر باك إند حقيقي** — أي بيانات جديدة تُضاف كبيانات ثابتة (in-memory أو `src/data/*.js`)، لا نداءات API جديدة.
-4. **صفر قيم مكتوبة يدويًا للألوان** — كل لون/ظل/زاوية عبر كلاس Tailwind مرتبط بمتغير في `design-tokens.css`، متوفّر بالوضعين الفاتح والداكن.
-5. **RTL و Responsive** على كل نقاط الكسر، في كل صفحة بلا استثناء — كل جدول له نسخة بطاقات للموبايل.
-6. **تنظيف الـ listeners** — أي listener يُضاف في `mounted()` يُزال في `beforeUnmount()`.
-7. **تنقّل فوري بلوحات التحكم** — مسارات `router/routes/{committee,supervisor,team-leader,student}.routes.js` مستوردة مباشرة (static import)، ليس `() => import(...)`.
+| Role | Dashboard |
+|---|---|
+| Super admin (`/super-admin`) | Supervisor/committee accounts, bulk credential notifications |
+| Committee (`/committee`) | Teams, members, proposals, discussion schedule, project archive, progress |
+| Supervisor (`/supervisor`) | Own teams, proposal/final-report review, tasks, meetings, discussion schedule, project archive, progress |
+| Team leader (`/team-leader`) | Own team's proposal/final-report, tasks, meetings |
+| Student (`/student`) | Same as team leader, read-only on submission unless they're the leader |
 
-## بنية المجلدات
+## How the project is organized
 
 ```
 src/
-├── components/
-│   ├── layout/     AppSidebar · AppTopbar (تخدم كل الأدوار عبر props)
-│   ├── ui/         مكوّنات أساس (Base*, DataTable, Modal, Pagination, CountUp, ScrollProgressBar…)
-│   ├── shared/     مكوّنات أعمال مشتركة (TaskBoard, MeetingCard, AssistantChat, SemesterSelect, WaterBackground, CursorSpotlight…)
-│   ├── auth/       مكوّنات نماذج تسجيل الدخول
-│   ├── landing/    أقسام الصفحة التسويقية (Hero, FeaturedProjects, RolesSection…)
-│   ├── committee/  مكوّنات خاصة بلوحة لجنة الإشراف
-│   └── icons/      AppIcon (غلاف أيقونات موحّد للصفحة العامة)
-├── layouts/        DashboardLayout (موحّد لكل الأدوار الأربعة) · AuthLayout · LandingLayout
-├── views/          auth/ · landing/ · committee/ · supervisor/ · team-leader/ · student/ + صفحات جذر (403/404)
-├── stores/         auth · landing · committee · supervisor · deletedMembers · notifications · ui
-├── data/           projectArchive.js — أرشيف المشاريع المشترك بين أكثر من صفحة
-├── router/         index.js · guards.js · routes/{auth,landing,committee,supervisor,team-leader,student}.routes.js
-├── utils/          constants · navConfig · formatters · validators · password · specializations · exportReport · filePreview
-├── composables/    useClickOutside
-├── directives/     reveal (ظهور عند التمرير) · parallax (حركة خفيفة مع التمرير) · magnetic (أزرار تتبع الفأرة) · tilt (إمالة 3D للبطاقات)
-└── styles/         design-tokens.css · main.css
+├── components/    ui/ (Base*, DataTable, Modal…) · layout/ · shared/ · auth/ · landing/ · committee/ · icons/
+├── layouts/       DashboardLayout (all four authenticated roles) · AuthLayout · LandingLayout
+├── views/         auth/ · landing/ · committee/ · supervisor/ · team-leader/ · student/ · super-admin/
+├── stores/        auth · users · teams · discussions · progress · notifications · notify · committee · landing · ui
+├── router/        index.js · guards.js · routes/{auth,landing,committee,supervisor,team-leader,student,super-admin}.routes.js
+├── services/      api.js — central Axios instance, attaches auth token and active term_id to every request
+├── utils/         constants · navConfig · formatters · validators · password · exportReport · filePreview
+├── composables/   useClickOutside
+├── directives/    reveal · parallax · magnetic · tilt
+└── styles/        design-tokens.css · main.css
 ```
 
-## الشريط الجانبي والـ Layout الموحّد
+An **academic term** scopes most data (teams, proposals, discussions) on the backend; the frontend tracks the active term in `ui.store.js` and sends it as `term_id` on every request. Switching terms in the navbar reloads the app so every page re-fetches under the new term.
 
-`DashboardLayout.vue` قالب واحد يخدم الأدوار الأربعة (لجنة الإشراف، المشرف، قائد الفريق، الطالب) — يقرأ دور المستخدم من `auth.store` ويشتق `navItems`/`roleLabel` من `utils/navConfig.js`. يحتوي أيضًا خلفية متحركة (فقاعات ماء + كتل ضبابية عائمة) خلف كل المحتوى.
+## Notes for contributors
 
-`AppSidebar.vue`:
-- **≥ 1024px:** ثابت بالتخطيط، بلا Drawer ولا Overlay.
-- **< 1024px:** Drawer منزلق **من اليمين** (RTL) فوق المحتوى، مع Overlay داكن.
-- **أربع طرق للإغلاق:** الضغط على الـ Overlay · زر ✕ داخل الشريط · زر ☰ في الـ Topbar (Toggle) · مفتاح Escape.
-- **إغلاق تلقائي** عند تغيّر المسار، ومنع تمرير الصفحة خلفه وهو مفتوح.
-
-## الوضع الداكن
-
-مُفعَّل بكل الصفحات (اللاندنج بيج + لوحات التحكم الأربعة) عبر زر شمس/قمر بالـ Topbar/Navbar. يُدار بـ `ui.store.js` (`toggleTheme`) عبر `data-theme` على `<html>`، محفوظ بـ `localStorage`.
-
-## الحركة/الأنيميشن
-
-- **خلفية متحركة:** فقاعات ماء (canvas، `WaterBackground.vue`) + كتل ضبابية عائمة (`animate-blob`) — بكل صفحات اللاندنج ولوحات التحكم.
-- **ظهور عند التمرير:** أي عنصر بكلاس `.reveal` يظهر تلقائيًا عبر `IntersectionObserver` (`directives/reveal.js`).
-- **أزرار مغناطيسية:** `v-magnetic` — تتبع الفأرة بحركة صغيرة، مطبّقة على `BaseButton` وأزرار اللاندنج الرئيسية.
-- **إمالة 3D:** `v-tilt` — على بطاقات المشاريع بالصفحة العامة.
-- **عداد تصاعدي:** `CountUp.vue` — على كل الأرقام الإحصائية بلوحات التحكم واللاندنج.
-- **مؤشر تمرير:** `ScrollProgressBar.vue` — شريط رفيع أعلى الصفحة.
-- **إضاءة تتبع الفأرة:** `CursorSpotlight.vue` — سطح المكتب فقط.
-- كل الحركات تحترم `prefers-reduced-motion` وتُعطَّل تلقائيًا على أجهزة اللمس عند الحاجة.
-
-## صفحات كل لوحة تحكم
-
-| الدور | الصفحات |
-|---|---|
-| لجنة الإشراف (`/committee/*`) | لوحة المعلومات، الفرق، الأعضاء (+ محذوفون)، المقترحات، مواعيد المناقشات، أرشيف المشاريع (+ تفاصيل مشروع)، نسبة التقدّم، إضافة لجنة، المساعد الآلي |
-| المشرف (`/supervisor/*`) | الملف الشخصي (رئيسية)، الفرق، المقترح/التقرير النهائي، المهام (Kanban)، الاجتماعات، مواعيد المناقشات، أرشيف المشاريع (+ تفاصيل)، نسبة التقدّم، المساعد الآلي |
-| قائد الفريق (`/team-leader/*`) | الملف الشخصي (رئيسية)، المقترح/التقرير النهائي (تسليم فعلي)، المهام، الاجتماعات، المساعد الآلي |
-| الطالب (`/student/*`) | نفس صفحات قائد الفريق، بفورم مقفل/معتم عند عدم كونه قائد الفريق |
-| عامة (بلا مصادقة) | الرئيسية، أرشيف المشاريع العام (فلاتر + سلايدر)، عرض مشروع مفرد، تسجيل الدخول |
+- Options API only in `views`/`components`, fixed order: `name → components → props → emits → data → computed → watch → created → mounted → beforeUnmount → methods`. Exception: small visual-effect components (`WaterBackground.vue`, `CursorSpotlight.vue`, `landing/*` sections) may use `<script setup>`.
+- Pinia stores are defined composition-style (`defineStore('x', () => {...})`) but consumed in components only through `mapState`/`mapActions`.
+- No hardcoded colors — every color/shadow/radius goes through a Tailwind class bound to a `design-tokens.css` variable, with a value for both light and dark mode.
+- RTL and responsive on every page, no exceptions — every table needs a mobile card view.
+- Any listener added in `mounted()` is removed in `beforeUnmount()`.
+- Dashboard routes (`router/routes/{committee,supervisor,team-leader,student,super-admin}.routes.js`) are statically imported, not lazy (`() => import(...)`), for instant navigation.
+- Commits are in English even though planning docs and conversations around this project are in Arabic.
