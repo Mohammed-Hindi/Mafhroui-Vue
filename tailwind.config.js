@@ -131,6 +131,7 @@ export default {
         drawer: 'var(--z-drawer)',
         'modal-overlay': 'var(--z-modal-overlay)',
         modal: 'var(--z-modal)',
+        popover: 'var(--z-popover)',
         toast: 'var(--z-toast)'
       },
       transitionDuration: {
