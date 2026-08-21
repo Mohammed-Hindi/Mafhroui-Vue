@@ -1,7 +1,6 @@
 <template>
   <component
     :is="tag"
-    v-magnetic
     :type="tag === 'button' ? type : undefined"
     :to="to || undefined"
     :href="href || undefined"

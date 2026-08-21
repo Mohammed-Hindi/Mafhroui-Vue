@@ -13,7 +13,6 @@
         </div>
 
         <router-link
-          v-magnetic
           :to="{ name: 'projects-archive' }"
           class="reveal reveal-delay-1 inline-flex items-center gap-2 h-[38px] px-[18px] rounded-pill border border-border bg-surface shadow-card text-[12.5px] font-bold text-text-700 hover:text-primary-700 hover:border-primary-200 transition-colors duration-fast"
         >
@@ -46,7 +45,6 @@
 
         <div v-if="slides.length > 1" class="flex items-center justify-center gap-5 mt-9">
           <button
-            v-magnetic
             type="button"
             class="grid place-items-center shrink-0 w-11 h-11 rounded-pill bg-surface border border-border shadow-dropdown text-text-700 hover:text-primary-700 hover:border-primary-200 disabled:opacity-30 disabled:pointer-events-none transition-colors duration-fast"
             :disabled="activeSlide === 0"
@@ -73,7 +71,6 @@
           </div>
 
           <button
-            v-magnetic
             type="button"
             class="grid place-items-center shrink-0 w-11 h-11 rounded-pill bg-surface border border-border shadow-dropdown text-text-700 hover:text-primary-700 hover:border-primary-200 disabled:opacity-30 disabled:pointer-events-none transition-colors duration-fast"
             :disabled="activeSlide === slides.length - 1"
