@@ -134,6 +134,7 @@ import { useUiStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { SIDEBAR_BREAKPOINT, APP_NAME, APP_DESCRIPTION } from '@/utils/constants'
 import { initials } from '@/utils/formatters'
+import { lockScroll, unlockScroll } from '@/utils/scrollLock'
 
 export default {
   name: 'AppSidebar',
@@ -199,7 +200,8 @@ export default {
     // منع تمرير الصفحة خلف الـ Drawer وهو مفتوح
     sidebarOpen(isOpen) {
       if (this.isDesktop) return
-      document.body.style.overflow = isOpen ? 'hidden' : ''
+      if (isOpen) lockScroll()
+      else unlockScroll()
     }
   },
 
@@ -207,12 +209,13 @@ export default {
     window.addEventListener('resize', this.handleResize)
     document.addEventListener('keydown', this.handleEscape)
     this.handleResize()
+    if (this.sidebarOpen && !this.isDesktop) lockScroll()
   },
 
   beforeUnmount() {
     window.removeEventListener('resize', this.handleResize)
     document.removeEventListener('keydown', this.handleEscape)
-    document.body.style.overflow = ''
+    if (this.sidebarOpen && !this.isDesktop) unlockScroll()
     clearTimeout(this.resizeTimer)
   },
 
@@ -226,7 +229,7 @@ export default {
         const isDesktop = window.innerWidth >= SIDEBAR_BREAKPOINT
         if (isDesktop !== this.isDesktop) {
           this.setIsDesktop(isDesktop)
-          if (isDesktop) document.body.style.overflow = ''
+          if (isDesktop && this.sidebarOpen) unlockScroll()
         }
       }, 120)
     },

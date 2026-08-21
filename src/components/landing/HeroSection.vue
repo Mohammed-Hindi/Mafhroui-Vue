@@ -24,7 +24,6 @@
 
         <div class="flex flex-wrap gap-3.5 mb-9">
           <router-link
-            v-magnetic
             :to="{ name: 'login' }"
             class="flex items-center gap-2.5 h-[52px] px-6 rounded-md bg-gradient-to-bl from-primary-600 to-primary-700 text-white font-cairo font-extrabold text-[14.5px] shadow-[0_12px_26px_-10px_rgba(37,99,235,.55)] transition-shadow duration-fast"
           >
@@ -33,7 +32,6 @@
           </router-link>
 
           <a
-            v-magnetic
             href="#projects"
             class="flex items-center gap-2.5 h-[52px] px-6 rounded-md bg-surface border border-border text-text-900 font-cairo font-bold text-[14.5px] hover:border-primary-200 hover:text-primary-700 transition-colors duration-fast"
           >

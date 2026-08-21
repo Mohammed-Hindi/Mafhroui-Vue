@@ -40,7 +40,7 @@
         </template>
         <template #cell-uid="{ value }"><span class="mono">{{ value || '—' }}</span></template>
         <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-        <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value }}</span></template>
+        <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value || '—' }}</span></template>
         <template #cell-actions="{ row }">
           <div class="flex gap-1.5">
             <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
@@ -89,7 +89,7 @@
         <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">موقوف</span>
       </template>
       <template #cell-empId="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-      <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value }}</span></template>
+      <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value || '—' }}</span></template>
       <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
       <template #cell-actions="{ row }">
         <div class="flex gap-1.5">

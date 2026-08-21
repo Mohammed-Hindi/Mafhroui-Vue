@@ -56,6 +56,7 @@
 
 <script>
 import { X } from 'lucide-vue-next'
+import { lockScroll, unlockScroll } from '@/utils/scrollLock'
 
 export default {
   name: 'BaseModal',
@@ -80,17 +81,19 @@ export default {
 
   watch: {
     modelValue(open) {
-      document.body.style.overflow = open ? 'hidden' : ''
+      if (open) lockScroll()
+      else unlockScroll()
     }
   },
 
   mounted() {
     document.addEventListener('keydown', this.handleEscape)
+    if (this.modelValue) lockScroll()
   },
 
   beforeUnmount() {
     document.removeEventListener('keydown', this.handleEscape)
-    document.body.style.overflow = ''
+    if (this.modelValue) unlockScroll()
   },
 
   methods: {
