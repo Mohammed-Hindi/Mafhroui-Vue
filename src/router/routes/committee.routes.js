@@ -26,7 +26,7 @@ export default [
   {
     path: '/committee',
     component: DashboardLayout,
-    meta: { requiresAuth: true, roles: [ROLES.COMMITTEE] },
+    meta: { requiresAuth: true, roles: [ROLES.COMMITTEE, ROLES.SUPER_ADMIN] },
     children: [
       {
         path: '',
