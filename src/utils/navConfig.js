@@ -19,7 +19,15 @@ import { ROLES } from '@/utils/constants'
 export const NAV_ITEMS_BY_ROLE = {
   [ROLES.SUPER_ADMIN]: [
     { label: 'إدارة الأعضاء', to: '/super-admin', icon: UserPlus, exact: true },
-    { label: 'إرسال بيانات الدخول', to: '/super-admin/notify', icon: Send }
+    { label: 'إرسال بيانات الدخول', to: '/super-admin/notify', icon: Send },
+    { label: 'لوحة لجنة الإشراف', to: '/committee', icon: LayoutDashboard, exact: true },
+    { label: 'الفرق', to: '/committee/teams', icon: Users },
+    { label: 'أعضاء الطلاب والمشرفين', to: '/committee/members', icon: User },
+    { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList },
+    { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock },
+    { label: 'أرشيف المشاريع', to: '/committee/project-archive', icon: FileCheck },
+    { label: 'نسبة تقدّم المشاريع', to: '/committee/progress', icon: TrendingUp },
+    { label: 'المساعد الآلي', to: '/committee/assistant', icon: Bot }
   ],
 
   [ROLES.COMMITTEE]: [
