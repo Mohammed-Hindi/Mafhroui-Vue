@@ -17,26 +17,33 @@ export const useTeamsStore = defineStore('teams', () => {
     return spec?.name || 'غير محدد'
   }
 
-  /** الفرق بشكل جاهز للعرض بالصفحة (تسطيح البيانات المتداخلة) */
-  const teamsForDisplay = computed(() =>
-    teams.value.map((team) => ({
-      id: team.id,
-      name: team.name,
-      spec: specializationName(team.specialization_id),
-      sup: team.supervisor?.name || 'غير محدد',
-      supId: team.supervisor?.id ?? null,
-      projectName: team.project?.name || '',
-      projectStatus: team.project?.status || '',
-      members: (team.members || []).map((m) => ({
-        id: m.student?.id ?? null,
-        name: m.student?.name || '',
-        uid: m.student?.university_number || '—',
-        whats: m.student?.whatsapp || '',
-        mail: m.student?.email || '',
-        leader: !!m.is_leader
-      }))
+  /** تسطيح فريق واحد بشكل جاهز للعرض — مشتركة بين الفرق النشطة والمحذوفة */
+  const mapTeamForDisplay = (team) => ({
+    id: team.id,
+    name: team.name,
+    spec: specializationName(team.specialization_id),
+    sup: team.supervisor?.name || 'غير محدد',
+    supId: team.supervisor?.id ?? null,
+    projectName: team.project?.name || '',
+    projectStatus: team.project?.status || '',
+    members: (team.members || []).map((m) => ({
+      id: m.student?.id ?? null,
+      name: m.student?.name || '',
+      uid: m.student?.university_number || '—',
+      whats: m.student?.whatsapp || '',
+      mail: m.student?.email || '',
+      leader: !!m.is_leader
     }))
-  )
+  })
+
+  /** الفرق بشكل جاهز للعرض بالصفحة (تسطيح البيانات المتداخلة) */
+  const teamsForDisplay = computed(() => teams.value.map(mapTeamForDisplay))
+
+  const trashedTeams = ref([])
+  const trashedTeamsLoading = ref(false)
+
+  /** الفرق المحذوفة (soft-deleted) بشكل جاهز للعرض */
+  const trashedTeamsForDisplay = computed(() => trashedTeams.value.map(mapTeamForDisplay))
 
   // GET /teams
   const fetchTeams = async () => {
@@ -89,6 +96,27 @@ export const useTeamsStore = defineStore('teams', () => {
   const deleteTeam = async (id) => {
     await api.delete(`/teams/${id}`)
     teams.value = teams.value.filter((t) => t.id !== id)
+  }
+
+  // GET /teams/trashed
+  const fetchTrashedTeams = async () => {
+    trashedTeamsLoading.value = true
+    try {
+      const { data } = await api.get('/teams/trashed')
+      trashedTeams.value = data.data || data
+      return trashedTeams.value
+    } finally {
+      trashedTeamsLoading.value = false
+    }
+  }
+
+  // POST /teams/{id}/restore
+  const restoreTeam = async (id) => {
+    const { data } = await api.post(`/teams/${id}/restore`)
+    const restored = data.data || data
+    trashedTeams.value = trashedTeams.value.filter((t) => t.id !== id)
+    teams.value.unshift(restored)
+    return restored
   }
 
   // POST /teams — { name, supervisor_id, specialization_id, member_ids, leader_id }
@@ -307,6 +335,11 @@ export const useTeamsStore = defineStore('teams', () => {
     specializationsLoading,
     specializationsError,
     teamsForDisplay,
+    trashedTeams,
+    trashedTeamsLoading,
+    trashedTeamsForDisplay,
+    fetchTrashedTeams,
+    restoreTeam,
     fetchTeams,
     fetchSpecializations,
     fetchTeamProgress,

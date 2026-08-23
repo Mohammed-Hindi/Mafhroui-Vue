@@ -1,5 +1,9 @@
 <template>
   <div>
+    <div class="flex flex-wrap items-center justify-end gap-3 mb-3">
+      <BaseButton variant="outline" size="sm" :icon="Archive" @click="openTrashed">الفرق المحذوفة</BaseButton>
+    </div>
+
     <div class="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-lg bg-surface border border-border shadow-card">
       <div class="relative flex-1 min-w-[220px]">
         <Search :size="16" class="pointer-events-none absolute top-1/2 -translate-y-1/2 start-3 text-text-400" />
@@ -144,18 +148,37 @@
         <BaseButton block @click="restrictModalOpen = false">تم</BaseButton>
       </template>
     </BaseModal>
+
+    <!-- الفرق المحذوفة -->
+    <BaseModal v-model="trashedModal" title="الفرق المحذوفة" description="استرجعي أي فريق حُذف بالخطأ" size="lg">
+      <SkeletonLoader v-if="trashedTeamsLoading" :rows="3" height="60px" />
+      <EmptyState v-else-if="!trashedGroups.length" title="لا يوجد فرق محذوفة" description="كل الفرق المحذوفة ستظهر هنا وبإمكانك استرجاعها." />
+      <div v-else class="flex flex-col gap-2 max-h-96 overflow-y-auto scrollbar-thin">
+        <div v-for="group in trashedGroups" :key="group.id" class="flex items-center justify-between gap-3 p-3 rounded-sm border border-border bg-bg">
+          <div class="min-w-0">
+            <div class="font-bold text-text-900 truncate">{{ group.name }}</div>
+            <div class="text-caption text-text-400">{{ group.members.length }} {{ group.members.length === 1 ? 'طالب' : 'طلاب' }}</div>
+          </div>
+          <BaseButton variant="outline" size="sm" :icon="RotateCcw" :loading="restoringId === group.id" @click="confirmRestore(group)">استرجاع</BaseButton>
+        </div>
+      </div>
+      <template #footer>
+        <BaseButton variant="ghost" @click="trashedModal = false">إغلاق</BaseButton>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Crown, Lock } from 'lucide-vue-next'
+import { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Crown, Lock, Archive, RotateCcw } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
+import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
@@ -176,11 +199,11 @@ function digitsOnly(value) {
 export default {
   name: 'SupervisorTeamsPage',
 
-  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, Lock, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, Pagination },
+  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, Lock, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination },
 
   data() {
     return {
-      Check, Trash2,
+      Check, Trash2, Archive, RotateCcw,
       search: '',
       openGroupIds: [],
       openMemberKeys: [],
@@ -203,13 +226,20 @@ export default {
       restrictionId: null,
       restrictSaving: false,
 
+      trashedModal: false,
+      restoringId: null,
+
       page: 1
     }
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['teamsForDisplay', 'specializations']),
+    ...mapState(useTeamsStore, ['teamsForDisplay', 'specializations', 'trashedTeamsForDisplay', 'trashedTeamsLoading']),
     ...mapState(useAuthStore, ['user']),
+
+    trashedGroups() {
+      return this.trashedTeamsForDisplay.filter((g) => g.supId === this.user?.id)
+    },
 
     specializationOptions() {
       return this.specializations.map((s) => ({ value: s.id, label: s.name }))
@@ -252,7 +282,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'updateTeam', 'deleteTeam']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'updateTeam', 'deleteTeam', 'fetchTrashedTeams', 'restoreTeam']),
     ...mapActions(useUsersStore, ['fetchRestrictions', 'setRestriction', 'removeRestriction']),
 
     isGroupOpen(id) {
@@ -319,6 +349,26 @@ export default {
         this.$toast?.error(err.normalized?.message || 'تعذّر الحذف')
       } finally {
         this.deleting = false
+      }
+    },
+
+    async openTrashed() {
+      this.trashedModal = true
+      try {
+        await this.fetchTrashedTeams()
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحميل الفرق المحذوفة')
+      }
+    },
+    async confirmRestore(group) {
+      this.restoringId = group.id
+      try {
+        await this.restoreTeam(group.id)
+        this.$toast?.success(`تم استرجاع فريق ${group.name}`)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر استرجاع الفريق')
+      } finally {
+        this.restoringId = null
       }
     },
 
