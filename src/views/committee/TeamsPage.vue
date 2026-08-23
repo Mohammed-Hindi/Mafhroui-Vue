@@ -6,6 +6,7 @@
         <BaseButton variant="outline" :icon="Upload" @click="openImport">استيراد من Excel</BaseButton>
       </div>
       <div class="flex flex-wrap gap-2">
+        <BaseButton variant="outline" :icon="Archive" @click="openTrashed">الفرق المحذوفة</BaseButton>
         <BaseButton variant="outline" :icon="Download" :loading="exportingExcel" @click="exportExcel">تصدير Excel</BaseButton>
         <BaseButton variant="outline" :icon="FileDown" :loading="exportingPdf" @click="exportPdf">تصدير PDF</BaseButton>
       </div>
@@ -240,10 +241,28 @@
 
     <!-- تأكيد حذف فريق -->
     <BaseModal v-model="deleteModal" title="حذف الفريق" :description="deleteTarget ? `حذف فريق ‏${deleteTarget.name} بالكامل` : ''" size="sm">
-      <p class="text-body-sm text-text-600">سيُحذف الفريق وكل بيانات مشروعه المرتبطة. لا يمكن التراجع عن هذا الإجراء.</p>
+      <p class="text-body-sm text-text-600">سيُحذف الفريق ويمكن استرجاعه لاحقًا من "الفرق المحذوفة".</p>
       <template #footer>
         <BaseButton variant="ghost" @click="deleteModal = false">إلغاء</BaseButton>
         <BaseButton variant="danger" :icon="Trash2" :loading="submitting" @click="confirmDelete">تأكيد الحذف</BaseButton>
+      </template>
+    </BaseModal>
+
+    <!-- الفرق المحذوفة -->
+    <BaseModal v-model="trashedModal" title="الفرق المحذوفة" description="استرجعي أي فريق حُذف بالخطأ" size="lg">
+      <SkeletonLoader v-if="trashedTeamsLoading" :rows="3" height="60px" />
+      <EmptyState v-else-if="!trashedTeamsForDisplay.length" title="لا يوجد فرق محذوفة" description="كل الفرق المحذوفة ستظهر هنا وبإمكانك استرجاعها." />
+      <div v-else class="flex flex-col gap-2 max-h-96 overflow-y-auto scrollbar-thin">
+        <div v-for="group in trashedTeamsForDisplay" :key="group.id" class="flex items-center justify-between gap-3 p-3 rounded-sm border border-border bg-bg">
+          <div class="min-w-0">
+            <div class="font-bold text-text-900 truncate">{{ group.name }}</div>
+            <div class="text-caption text-text-400">المشرف {{ group.sup }} · {{ group.members.length }} {{ group.members.length === 1 ? 'طالب' : 'طلاب' }}</div>
+          </div>
+          <BaseButton variant="outline" size="sm" :icon="RotateCcw" :loading="restoringId === group.id" @click="confirmRestore(group)">استرجاع</BaseButton>
+        </div>
+      </div>
+      <template #footer>
+        <BaseButton variant="ghost" @click="trashedModal = false">إغلاق</BaseButton>
       </template>
     </BaseModal>
   </div>
@@ -251,7 +270,7 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Plus, Upload, Download, FileDown, Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Crown } from 'lucide-vue-next'
+import { Plus, Upload, Download, FileDown, Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Crown, Archive, RotateCcw } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -279,7 +298,7 @@ export default {
 
   data() {
     return {
-      Plus, Upload, Download, FileDown, Check, Trash2, Crown,
+      Plus, Upload, Download, FileDown, Check, Trash2, Crown, Archive, RotateCcw,
       exportingExcel: false,
       exportingPdf: false,
       submitting: false,
@@ -316,12 +335,15 @@ export default {
       deleteModal: false,
       deleteTarget: null,
 
+      trashedModal: false,
+      restoringId: null,
+
       page: 1
     }
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['teams', 'teamsLoading', 'specializations']),
+    ...mapState(useTeamsStore, ['teams', 'teamsLoading', 'specializations', 'trashedTeamsForDisplay', 'trashedTeamsLoading']),
 
     memberGridCols() {
       return { gridTemplateColumns: '22% 16% 16% 22% 12% 12%' }
@@ -408,7 +430,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'specializationName', 'createTeam', 'updateTeam', 'deleteTeam', 'addTeamMember', 'removeTeamMember', 'updateTeamLeader', 'previewTeamImport', 'confirmTeamImport']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'specializationName', 'createTeam', 'updateTeam', 'deleteTeam', 'addTeamMember', 'removeTeamMember', 'updateTeamLeader', 'previewTeamImport', 'confirmTeamImport', 'fetchTrashedTeams', 'restoreTeam']),
     ...mapActions(useUsersStore, ['fetchUsers']),
 
     isGroupOpen(id) {
@@ -580,6 +602,26 @@ export default {
         this.$toast?.error(err.normalized?.message || 'تعذّر حذف الفريق')
       } finally {
         this.submitting = false
+      }
+    },
+
+    async openTrashed() {
+      this.trashedModal = true
+      try {
+        await this.fetchTrashedTeams()
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحميل الفرق المحذوفة')
+      }
+    },
+    async confirmRestore(group) {
+      this.restoringId = group.id
+      try {
+        await this.restoreTeam(group.id)
+        this.$toast?.success(`تم استرجاع فريق ${group.name}`)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر استرجاع الفريق')
+      } finally {
+        this.restoringId = null
       }
     },
 
