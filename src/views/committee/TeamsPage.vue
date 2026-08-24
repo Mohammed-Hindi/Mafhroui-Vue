@@ -2,7 +2,8 @@
   <div>
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex flex-wrap gap-3">
-        <BaseButton :icon="Plus" @click="openCreateTeam">إنشاء فريق جديد</BaseButton>
+        <BaseButton :icon="UserPlus" @click="openAddStudent">إضافة طالب</BaseButton>
+        <BaseButton variant="secondary" :icon="UserPlus" @click="openAddSupervisor">إضافة مشرف</BaseButton>
         <BaseButton variant="outline" :icon="Upload" @click="openImport">استيراد من Excel</BaseButton>
       </div>
       <div class="flex flex-wrap gap-2">
@@ -93,6 +94,7 @@
                     </button>
                   </span>
                   <span class="flex items-center justify-center gap-2">
+                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(group, member)"><Pencil :size="14" /></button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95 disabled:opacity-40 disabled:pointer-events-none" :disabled="!member.whats" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-error-bg text-error hover:brightness-95 disabled:opacity-40 disabled:pointer-events-none" :disabled="member.leader" :title="member.leader ? 'لا يمكن حذف القائد' : 'إزالة من الفريق'" @click="requestRemoveMember(group, member)"><Trash2 :size="14" /></button>
@@ -123,6 +125,7 @@
                 <div class="flex items-start justify-between gap-3">
                   <span class="text-label font-semibold text-text-400 shrink-0">إجراءات</span>
                   <div class="flex gap-1.5">
+                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(group, member)"><Pencil :size="14" /></button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95 disabled:opacity-40" :disabled="!member.whats" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
                     <button
@@ -151,30 +154,42 @@
     </div>
     <Pagination class="mt-6" :current-page="page" :last-page="totalPages" :total="filteredGroups.length" @change="page = $event" />
 
-    <!-- إنشاء فريق جديد -->
-    <BaseModal v-model="createModal" title="إنشاء فريق جديد" description="اختاري حتى 4 طلاب غير منضمّين لأي فريق هذا الفصل" size="lg">
+    <!-- إضافة طالب -->
+    <BaseModal v-model="addStudentModal" title="إضافة طالب" description="إنشاء حساب طالب جديد مباشرة">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <BaseInput v-model="createForm.name" label="اسم الفريق" placeholder="مثال: فريق الابتكار" class="sm:col-span-2" />
-        <BaseSelect v-model="createForm.supervisor_id" label="المشرف" placeholder="اختاري المشرف" :options="supervisorOptions" />
-        <BaseSelect v-model="createForm.specialization_id" label="التخصص" placeholder="اختاري التخصص" :options="specializationSelectOptions" />
-      </div>
-      <div class="mt-4">
-        <label class="block mb-2 text-label font-semibold text-text-700">الأعضاء (حتى 4)</label>
-        <div v-if="!unassignedStudents.length" class="text-body-sm text-text-400 py-3">لا يوجد طلاب متاحون — استوردي طلابًا من Excel أولاً.</div>
-        <div v-else class="max-h-60 overflow-y-auto border border-border rounded-sm divide-y divide-border-soft">
-          <label v-for="s in unassignedStudents" :key="s.id" class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-border-soft">
-            <input v-model="createForm.member_ids" type="checkbox" :value="s.id" :disabled="!createForm.member_ids.includes(s.id) && createForm.member_ids.length >= 4">
-            <span class="text-body-sm text-text-900">{{ s.name }}</span>
-            <span class="text-label text-text-400 mono">{{ s.university_number || s.email }}</span>
-          </label>
-        </div>
-      </div>
-      <div v-if="createForm.member_ids.length" class="mt-4">
-        <BaseSelect v-model="createForm.leader_id" label="قائد الفريق" placeholder="اختاري القائد" :options="leaderPickOptions" />
+        <BaseInput v-model="addStudentForm.name" label="اسم الطالب" placeholder="مثال: سيف قطناني" class="sm:col-span-2" />
+        <BaseInput v-model="addStudentForm.university_number" label="الرقم الجامعي" placeholder="اختياري" />
+        <BaseInput v-model="addStudentForm.email" type="email" label="البريد الإلكتروني" placeholder="name@mashroui.local" class="sm:col-span-2" />
+        <BaseInput v-model="addStudentForm.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" class="sm:col-span-2" />
       </div>
       <template #footer>
-        <BaseButton variant="ghost" @click="createModal = false">إلغاء</BaseButton>
-        <BaseButton :icon="Check" :loading="submitting" @click="submitCreateTeam">إنشاء الفريق</BaseButton>
+        <BaseButton variant="ghost" @click="addStudentModal = false">إلغاء</BaseButton>
+        <BaseButton :icon="Send" :loading="submitting" @click="submitAddStudent">إضافة الطالب</BaseButton>
+      </template>
+    </BaseModal>
+
+    <!-- إضافة مشرف -->
+    <BaseModal v-model="addSupervisorModal" title="إضافة مشرف" description="إنشاء حساب مشرف جديد مباشرة">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <BaseInput v-model="addSupervisorForm.name" label="اسم المشرف" placeholder="مثال: د. نورة العتيبي" class="sm:col-span-2" />
+        <BaseInput v-model="addSupervisorForm.employee_number" label="الرقم الوظيفي" placeholder="اختياري" />
+        <BaseInput v-model="addSupervisorForm.email" type="email" label="البريد الإلكتروني" placeholder="name@mashroui.local" class="sm:col-span-2" />
+        <BaseInput v-model="addSupervisorForm.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" class="sm:col-span-2" />
+      </div>
+      <template #footer>
+        <BaseButton variant="ghost" @click="addSupervisorModal = false">إلغاء</BaseButton>
+        <BaseButton :icon="Send" :loading="submitting" @click="submitAddSupervisor">إضافة المشرف</BaseButton>
+      </template>
+    </BaseModal>
+
+    <!-- رابط الدعوة بعد إنشاء حساب -->
+    <BaseModal v-model="inviteModal" title="تم إنشاء الحساب" description="لا تُرسل المنصة كلمات مرور صريحة — شارك رابط الدعوة التالي مع العضو ليعيّن كلمة مروره بنفسه (صالح 3 أيام)." size="sm">
+      <div class="flex items-center gap-2">
+        <input :value="inviteLink" readonly class="flex-1 min-w-0 h-icon-btn px-3 rounded-sm border border-border bg-bg text-body-sm mono">
+        <BaseButton :icon="Copy" variant="outline" @click="copyInviteLink">نسخ</BaseButton>
+      </div>
+      <template #footer>
+        <BaseButton block @click="inviteModal = false">تم</BaseButton>
       </template>
     </BaseModal>
 
@@ -218,6 +233,19 @@
       <template #footer>
         <BaseButton variant="ghost" @click="editGroupModal = false">إلغاء</BaseButton>
         <BaseButton :icon="Check" :loading="submitting" @click="saveEditGroup">حفظ التعديلات</BaseButton>
+      </template>
+    </BaseModal>
+
+    <!-- تعديل بيانات عضو -->
+    <BaseModal v-model="editMemberModal" title="تعديل بيانات العضو">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <BaseInput v-model="editMemberForm.name" label="اسم الطالب" class="sm:col-span-2" />
+        <BaseInput v-model="editMemberForm.university_number" label="الرقم الجامعي" />
+        <BaseInput v-model="editMemberForm.whatsapp" label="رقم الواتس" />
+      </div>
+      <template #footer>
+        <BaseButton variant="ghost" @click="editMemberModal = false">إلغاء</BaseButton>
+        <BaseButton :icon="Check" :loading="submitting" @click="saveEditMember">حفظ التعديلات</BaseButton>
       </template>
     </BaseModal>
 
@@ -270,7 +298,7 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Plus, Upload, Download, FileDown, Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Crown, Archive, RotateCcw } from 'lucide-vue-next'
+import { Plus, Upload, Download, FileDown, Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Crown, Archive, RotateCcw, UserPlus, Send, Copy } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -289,16 +317,17 @@ function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
 }
 
-const emptyCreateForm = () => ({ name: '', supervisor_id: '', specialization_id: '', member_ids: [], leader_id: '' })
+const emptyStudentForm = () => ({ name: '', university_number: '', email: '', whatsapp: '' })
+const emptySupervisorForm = () => ({ name: '', employee_number: '', email: '', whatsapp: '' })
 
 export default {
   name: 'CommitteeTeamsPage',
 
-  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination },
+  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, UserPlus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination },
 
   data() {
     return {
-      Plus, Upload, Download, FileDown, Check, Trash2, Crown, Archive, RotateCcw,
+      Plus, Upload, Download, FileDown, Check, Trash2, Crown, Archive, RotateCcw, Send, Copy,
       exportingExcel: false,
       exportingPdf: false,
       submitting: false,
@@ -308,9 +337,14 @@ export default {
       openGroupIds: [],
       openMemberKeys: [],
 
-      createModal: false,
-      createForm: emptyCreateForm(),
-      unassignedStudents: [],
+      addStudentModal: false,
+      addStudentForm: emptyStudentForm(),
+
+      addSupervisorModal: false,
+      addSupervisorForm: emptySupervisorForm(),
+
+      inviteModal: false,
+      inviteLink: '',
 
       importModal: false,
       importPreview: null,
@@ -325,6 +359,10 @@ export default {
       editGroupModal: false,
       editGroupTargetId: null,
       editGroupForm: {},
+
+      editMemberModal: false,
+      editMemberTargetId: null,
+      editMemberForm: {},
 
       leaderModal: false,
       leaderTarget: null,
@@ -389,11 +427,6 @@ export default {
     specializationSelectOptions() {
       return this.specializations.map((s) => ({ value: s.id, label: s.name }))
     },
-    leaderPickOptions() {
-      return this.unassignedStudents
-        .filter((s) => this.createForm.member_ids.includes(s.id))
-        .map((s) => ({ value: s.id, label: s.name }))
-    },
 
     totalMembers() {
       return this.groups.reduce((sum, g) => sum + g.members.length, 0)
@@ -430,8 +463,8 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'specializationName', 'createTeam', 'updateTeam', 'deleteTeam', 'addTeamMember', 'removeTeamMember', 'updateTeamLeader', 'previewTeamImport', 'confirmTeamImport', 'fetchTrashedTeams', 'restoreTeam']),
-    ...mapActions(useUsersStore, ['fetchUsers']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'specializationName', 'updateTeam', 'deleteTeam', 'addTeamMember', 'removeTeamMember', 'updateTeamLeader', 'previewTeamImport', 'confirmTeamImport', 'fetchTrashedTeams', 'restoreTeam']),
+    ...mapActions(useUsersStore, ['fetchUsers', 'createUser', 'updateUser']),
 
     isGroupOpen(id) {
       return this.openGroupIds.includes(id)
@@ -448,30 +481,57 @@ export default {
       this.openMemberKeys = this.isMemberOpen(groupId, memberId) ? this.openMemberKeys.filter((k) => k !== key) : [...this.openMemberKeys, key]
     },
 
-    async openCreateTeam() {
-      this.createForm = emptyCreateForm()
-      this.createModal = true
-      try {
-        this.unassignedStudents = await this.fetchUsers('student', { unassigned: 1 })
-      } catch {
-        this.$toast?.error('تعذّر تحميل الطلاب المتاحين')
-      }
+    openAddStudent() {
+      this.addStudentForm = emptyStudentForm()
+      this.addStudentModal = true
     },
-    async submitCreateTeam() {
-      const f = this.createForm
-      if (!f.name || !f.supervisor_id || !f.specialization_id || !f.member_ids.length || !f.leader_id) {
-        this.$toast?.error('يرجى تعبئة جميع الحقول واختيار عضو واحد على الأقل وقائد الفريق')
+    async submitAddStudent() {
+      if (!this.addStudentForm.name || !this.addStudentForm.email) {
+        this.$toast?.error('يرجى تعبئة الاسم والبريد الإلكتروني على الأقل')
         return
       }
       this.submitting = true
       try {
-        await this.createTeam(f)
-        this.createModal = false
-        this.$toast?.success('تم إنشاء الفريق')
+        const result = await this.createUser({ ...this.addStudentForm, role: 'student' })
+        this.addStudentModal = false
+        this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
+        this.inviteModal = true
+        this.$toast?.success('تم إنشاء حساب الطالب')
       } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء الفريق')
+        this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء حساب الطالب')
       } finally {
         this.submitting = false
+      }
+    },
+
+    openAddSupervisor() {
+      this.addSupervisorForm = emptySupervisorForm()
+      this.addSupervisorModal = true
+    },
+    async submitAddSupervisor() {
+      if (!this.addSupervisorForm.name || !this.addSupervisorForm.email) {
+        this.$toast?.error('يرجى تعبئة الاسم والبريد الإلكتروني على الأقل')
+        return
+      }
+      this.submitting = true
+      try {
+        const result = await this.createUser({ ...this.addSupervisorForm, role: 'supervisor' })
+        this.addSupervisorModal = false
+        this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
+        this.inviteModal = true
+        this.$toast?.success('تم إنشاء حساب المشرف')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء حساب المشرف')
+      } finally {
+        this.submitting = false
+      }
+    },
+    async copyInviteLink() {
+      try {
+        await navigator.clipboard.writeText(this.inviteLink)
+        this.$toast?.success('تم نسخ الرابط')
+      } catch {
+        this.$toast?.error('تعذّر نسخ الرابط')
       }
     },
 
@@ -529,6 +589,29 @@ export default {
         this.$toast?.success('تم إضافة الطالب للفريق')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إضافة الطالب')
+      } finally {
+        this.submitting = false
+      }
+    },
+
+    openEditMember(group, member) {
+      this.editMemberTargetId = member.studentId
+      this.editMemberForm = { name: member.name, university_number: member.uid || '', whatsapp: member.whats || '' }
+      this.editMemberModal = true
+    },
+    async saveEditMember() {
+      if (!this.editMemberForm.name) {
+        this.$toast?.error('يرجى إدخال الاسم')
+        return
+      }
+      this.submitting = true
+      try {
+        await this.updateUser(this.editMemberTargetId, this.editMemberForm)
+        this.editMemberModal = false
+        this.$toast?.success('تم حفظ التعديلات')
+        await this.fetchTeams()
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر حفظ التعديلات')
       } finally {
         this.submitting = false
       }

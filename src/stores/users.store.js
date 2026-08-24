@@ -39,13 +39,48 @@ export const useUsersStore = defineStore('users', () => {
     return updated
   }
 
-  // PATCH /users/{id}/status
-  const updateUserStatus = async (id, status) => {
-    const { data } = await api.patch(`/users/${id}/status`, { status })
+  // PATCH /users/{id}/status — reason إلزامي عند status=restricted
+  const updateUserStatus = async (id, status, reason = null) => {
+    const { data } = await api.patch(`/users/${id}/status`, { status, reason })
     const updated = data.data || data
     const index = users.value.findIndex((u) => u.id === id)
     if (index !== -1) users.value[index] = updated
     return updated
+  }
+
+  // DELETE /users/{id} — سوفت ديليت مع سبب إلزامي
+  const deleteUser = async (id, reason) => {
+    await api.delete(`/users/${id}`, { data: { reason } })
+    users.value = users.value.filter((u) => u.id !== id)
+  }
+
+  const trashedUsers = ref([])
+  const trashedUsersLoading = ref(false)
+
+  // GET /users/trashed?role=
+  const fetchTrashedUsers = async (role) => {
+    trashedUsersLoading.value = true
+    try {
+      const { data } = await api.get('/users/trashed', { params: { role } })
+      trashedUsers.value = data.data || data
+      return trashedUsers.value
+    } finally {
+      trashedUsersLoading.value = false
+    }
+  }
+
+  // POST /users/{id}/restore
+  const restoreUser = async (id) => {
+    const { data } = await api.post(`/users/${id}/restore`)
+    const restored = data.data || data
+    trashedUsers.value = trashedUsers.value.filter((u) => u.id !== id)
+    return restored
+  }
+
+  // POST /users/{id}/set-password -> { password }
+  const setUserPassword = async (id) => {
+    const { data } = await api.post(`/users/${id}/set-password`)
+    return data.password
   }
 
   // POST /users/{id}/invite -> رابط دعوة جديد (بعد انتهاء صلاحية القديم مثلاً)
@@ -60,9 +95,9 @@ export const useUsersStore = defineStore('users', () => {
     return data.data || data
   }
 
-  // POST /users/{id}/restrictions
-  const setRestriction = async (id, module, level) => {
-    const { data } = await api.post(`/users/${id}/restrictions`, { module, level })
+  // POST /users/{id}/restrictions — reason إلزامي
+  const setRestriction = async (id, module, level, reason) => {
+    const { data } = await api.post(`/users/${id}/restrictions`, { module, level, reason })
     return data
   }
 
@@ -79,6 +114,12 @@ export const useUsersStore = defineStore('users', () => {
     createUser,
     updateUser,
     updateUserStatus,
+    deleteUser,
+    trashedUsers,
+    trashedUsersLoading,
+    fetchTrashedUsers,
+    restoreUser,
+    setUserPassword,
     reinviteUser,
     fetchRestrictions,
     setRestriction,

@@ -4,6 +4,7 @@ import {
   Users,
   User,
   UserPlus,
+  ShieldCheck,
   ClipboardList,
   ListTodo,
   CalendarDays,
@@ -19,8 +20,9 @@ import { ROLES } from '@/utils/constants'
 export const NAV_ITEMS_BY_ROLE = {
   [ROLES.SUPER_ADMIN]: [
     { label: 'إدارة الأعضاء', to: '/super-admin', icon: UserPlus, exact: true },
+    { label: 'إضافة لجنة الإشراف', to: '/super-admin/committee', icon: ShieldCheck },
     { label: 'إرسال بيانات الدخول', to: '/super-admin/notify', icon: Send },
-    { label: 'لوحة لجنة الإشراف', to: '/committee', icon: LayoutDashboard, exact: true },
+    { label: 'لوحة التحكم', to: '/committee', icon: LayoutDashboard, exact: true },
     { label: 'الفرق', to: '/committee/teams', icon: Users },
     { label: 'أعضاء الطلاب والمشرفين', to: '/committee/members', icon: User },
     { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList },
