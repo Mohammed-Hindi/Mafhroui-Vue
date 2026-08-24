@@ -18,7 +18,7 @@
     <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden">
       <div class="flex flex-wrap items-center justify-between gap-4 p-5 pb-4">
         <div>
-          <h3 class="font-cairo font-bold text-h4 text-text-900">المشاريع المؤرشفة</h3>
+          <h3 class="font-cairo font-bold text-h4 text-text-900">المشاريع المؤرشفة مؤخرًا</h3>
           <p class="text-caption text-text-600 mt-0.5">سجلّ المشاريع المكتملة عبر جميع الفصول الدراسية</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
@@ -30,84 +30,68 @@
         </div>
       </div>
 
-      <div class="p-5">
-        <SkeletonLoader v-if="projectArchiveLoading" :rows="3" height="90px" />
-        <EmptyState v-else-if="!filteredArchive.length" title="لا توجد مشاريع مطابقة" />
-
-        <div v-else class="flex items-stretch gap-2">
-          <button
-            type="button" class="hidden sm:grid place-items-center w-9 h-9 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700 disabled:opacity-30 disabled:pointer-events-none shrink-0 self-center"
-            :disabled="page <= 1" aria-label="الشريحة السابقة" @click="page -= 1"
-          >
-            <ChevronRightIcon :size="18" />
+      <DataTable
+        :columns="columns" :rows="pageRows" row-key="id" :primary-keys="['proj', 'files']"
+        :loading="projectArchiveLoading"
+        :meta="{ current_page: page, last_page: totalPages, total: filteredArchive.length }"
+        empty-title="لا توجد مشاريع مطابقة"
+        @page-change="page = $event"
+      >
+        <template #cell-dept="{ value }"><span class="chip gray inline-block px-2.5 py-1 rounded-pill bg-border-soft text-text-600 text-caption font-semibold">{{ value }}</span></template>
+        <template #cell-spec="{ value }"><span class="text-body-sm text-text-700">{{ value }}</span></template>
+        <template #cell-team="{ row }">
+          <router-link :to="{ name: 'committee-teams' }" class="inline-flex items-center gap-1.5 text-body-sm text-primary-700 font-semibold hover:text-primary-800 hover:underline transition-colors duration-fast">
+            {{ row.team }} <ExternalLink :size="11" class="opacity-65" />
+          </router-link>
+        </template>
+        <template #cell-proj="{ value }"><span class="font-bold text-text-900">{{ value }}</span></template>
+        <template #cell-date="{ value }"><span class="mono text-caption text-text-600 font-semibold">{{ value }}</span></template>
+        <template #cell-files="{ row }">
+          <router-link :to="{ name: 'committee-project-detail', params: { id: row.id } }" class="inline-flex items-center gap-2 h-9 px-4 rounded-pill bg-primary-50 text-primary-700 text-caption font-bold hover:bg-primary-100 transition-colors duration-fast">
+            <FileText :size="14" /> عرض الملفات
+          </router-link>
+        </template>
+        <template #cell-featured="{ row }">
+          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast" :class="row.featured ? 'bg-warning-bg border-warning text-warning' : 'border-border text-text-400 hover:text-warning-text hover:bg-warning-bg'" :title="row.featured ? 'إلغاء التمييز' : 'تمييز المشروع'" @click="toggleFeatured(row)">
+            <Star :size="15" :fill="row.featured ? 'currentColor' : 'none'" />
           </button>
-
-          <div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div v-for="row in pageRows" :key="row.id" class="border border-border rounded-lg p-4 flex flex-col gap-3 hover:border-primary-200 transition-colors duration-fast">
-              <div class="flex items-start justify-between gap-2">
-                <span class="font-bold text-text-900">{{ row.proj }}</span>
-                <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border shrink-0 transition-colors duration-fast" :class="row.featured ? 'bg-warning-bg border-warning text-warning' : 'border-border text-text-400 hover:text-warning-text hover:bg-warning-bg'" :title="row.featured ? 'إلغاء التمييز' : 'تمييز المشروع'" @click="toggleFeatured(row)">
-                  <Star :size="15" :fill="row.featured ? 'currentColor' : 'none'" />
-                </button>
-              </div>
-              <router-link :to="{ name: 'committee-teams' }" class="inline-flex items-center gap-1.5 text-caption text-primary-700 font-semibold hover:text-primary-800 hover:underline transition-colors duration-fast w-fit">
-                {{ row.team }} <ExternalLink :size="11" class="opacity-65" />
-              </router-link>
-              <div class="flex flex-wrap items-center gap-1.5">
-                <span class="inline-block px-2.5 py-1 rounded-pill bg-border-soft text-text-600 text-caption font-semibold">{{ row.dept }}</span>
-                <span class="text-caption text-text-700">{{ row.spec }}</span>
-              </div>
-              <div class="mono text-caption text-text-600 font-semibold">{{ row.date }}</div>
-              <router-link :to="{ name: 'committee-project-detail', params: { id: row.id } }" class="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-pill bg-primary-50 text-primary-700 text-caption font-bold hover:bg-primary-100 transition-colors duration-fast w-fit">
-                <FileText :size="14" /> عرض الملفات
-              </router-link>
-            </div>
-          </div>
-
-          <button
-            type="button" class="hidden sm:grid place-items-center w-9 h-9 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700 disabled:opacity-30 disabled:pointer-events-none shrink-0 self-center"
-            :disabled="page >= totalPages" aria-label="الشريحة التالية" @click="page += 1"
-          >
-            <ChevronLeftIcon :size="18" />
-          </button>
-        </div>
-
-        <div v-if="totalPages > 1" class="flex items-center justify-center gap-2 mt-5">
-          <button
-            v-for="p in totalPages" :key="p" type="button"
-            class="rounded-pill transition-all duration-fast"
-            :class="p === page ? 'w-6 h-2 bg-primary-600' : 'w-2 h-2 bg-border hover:bg-primary-200'"
-            :aria-label="`الشريحة ${p}`"
-            @click="page = p"
-          />
-        </div>
-      </div>
+        </template>
+      </DataTable>
     </div>
   </div>
 </template>
 
 <script>
-import { CheckCircle2, Star, Search, FileText, FileCheck, ExternalLink, ChevronRight as ChevronRightIcon, ChevronLeft as ChevronLeftIcon } from 'lucide-vue-next'
+import { CheckCircle2, Star, Search, FileText, FileCheck, ExternalLink } from 'lucide-vue-next'
 import { mapState, mapActions } from 'pinia'
 import { useTeamsStore } from '@/stores/teams.store'
 import { formatDate } from '@/utils/formatters'
+import DataTable from '@/components/ui/DataTable.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import CountUp from '@/components/ui/CountUp.vue'
-import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
-import EmptyState from '@/components/ui/EmptyState.vue'
 
 const PAGE_SIZE = 5
 
 export default {
   name: 'CommitteeProjectArchivePage',
 
-  components: { CheckCircle2, Star, Search, FileText, FileCheck, ExternalLink, ChevronRightIcon, ChevronLeftIcon, BaseSelect, CountUp, SkeletonLoader, EmptyState },
+  components: { CheckCircle2, Star, Search, FileText, FileCheck, ExternalLink, DataTable, BaseSelect, CountUp },
 
   data() {
     return {
       search: '',
       specFilter: '',
-      page: 1
+      page: 1,
+
+      columns: [
+        { key: 'dept', label: 'القسم' },
+        { key: 'spec', label: 'التخصص' },
+        { key: 'team', label: 'الفريق' },
+        { key: 'proj', label: 'المشروع' },
+        { key: 'date', label: 'تاريخ الإنجاز' },
+        { key: 'files', label: 'الملفات' },
+        { key: 'featured', label: 'مميّز' }
+      ]
     }
   },
 

@@ -11,7 +11,7 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-2 mb-6">
-      <BaseButton variant="outline" :icon="Archive" @click="openTrashed">أعضاء لجنة الإشراف المحذوفون</BaseButton>
+      <BaseButton variant="outline" :icon="Archive" @click="openTrashed">المشرفون المحذوفون</BaseButton>
       <BaseButton :icon="UserPlus" @click="openForm">إضافة عضو جديد</BaseButton>
     </div>
 
@@ -38,7 +38,7 @@
             <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row)"><Pencil :size="14" /></button>
             <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
             <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete(row)"><Trash2 :size="14" /></button>
+            <button v-if="row.mail !== userEmail" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete(row)"><Trash2 :size="14" /></button>
           </div>
         </template>
         <template #cell-empId="{ value }"><span class="mono">{{ value || '—' }}</span></template>
@@ -108,7 +108,7 @@
     </BaseModal>
 
     <!-- حذف مع سبب -->
-    <BaseModal v-model="deleteModalOpen" title="حذف الحساب" :description="deleteTarget ? `سيُحذف حساب ${deleteTarget.name} ويمكن استرجاعه لاحقًا من 'أعضاء لجنة الإشراف المحذوفون'.` : ''" size="sm">
+    <BaseModal v-model="deleteModalOpen" title="حذف الحساب" :description="deleteTarget ? `سيُحذف حساب ${deleteTarget.name} ويمكن استرجاعه لاحقًا من 'المشرفون المحذوفون'.` : ''" size="sm">
       <BaseInput v-model="deleteReason" label="سبب الحذف" placeholder="اكتبي سبب حذف هذا الحساب" required />
       <template #footer>
         <BaseButton variant="ghost" @click="deleteModalOpen = false">إلغاء</BaseButton>
@@ -117,7 +117,7 @@
     </BaseModal>
 
     <!-- المحذوفون -->
-    <BaseModal v-model="trashedModalOpen" title="أعضاء لجنة الإشراف المحذوفون" description="استرجعي أي حساب حُذف بالخطأ" size="lg">
+    <BaseModal v-model="trashedModalOpen" title="المشرفون المحذوفون" description="استرجعي أي حساب حُذف بالخطأ" size="lg">
       <SkeletonLoader v-if="trashedUsersLoading" :rows="3" height="60px" />
       <EmptyState v-else-if="!trashedUsers.length" title="لا يوجد أعضاء محذوفون" description="كل الحسابات المحذوفة ستظهر هنا وبإمكانك استرجاعها." />
       <div v-else class="flex flex-col gap-2 max-h-96 overflow-y-auto scrollbar-thin">
@@ -164,6 +164,7 @@ import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { mapState, mapActions } from 'pinia'
 import { useUsersStore } from '@/stores/users.store'
+import { useAuthStore } from '@/stores/auth.store'
 
 const emptyForm = () => ({ name: '', role: 'committee', employee_number: '', email: '', whatsapp: '' })
 const PAGE_SIZE = 5
@@ -227,6 +228,7 @@ export default {
 
   computed: {
     ...mapState(useUsersStore, ['usersLoading', 'trashedUsers', 'trashedUsersLoading']),
+    ...mapState(useAuthStore, ['userEmail']),
 
     filteredUsers() {
       const store = useUsersStore()

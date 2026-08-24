@@ -48,12 +48,22 @@
         <template #cell-uid="{ value }"><span class="mono">{{ value || '—' }}</span></template>
         <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
         <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value || '—' }}</span></template>
+        <template #cell-pw="{ row }">
+          <div class="flex items-center gap-2">
+            <button type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="توليد كلمة سر" :disabled="generatingPwFor === row.id" @click="generatePw(row)">
+              <RefreshCw :size="13" />
+            </button>
+            <span class="mono text-caption tracking-wider min-w-[70px] inline-block">{{ passwords[row.id] ? (visiblePw.includes(row.id) ? passwords[row.id] : maskPw(passwords[row.id])) : '—' }}</span>
+            <button v-if="passwords[row.id]" type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="إظهار/إخفاء كلمة السر" @click="togglePw(row.id)">
+              <Eye :size="13" />
+            </button>
+          </div>
+        </template>
         <template #cell-actions="{ row }">
           <div class="flex gap-1.5">
             <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
             <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
             <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, 'student')"><Pencil :size="14" /></button>
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعيين كلمة السر" @click="openSetPassword(row)"><KeyRound :size="14" /></button>
             <button
               type="button"
               class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast"
@@ -103,12 +113,22 @@
       <template #cell-empId="{ value }"><span class="mono">{{ value || '—' }}</span></template>
       <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value || '—' }}</span></template>
       <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
+      <template #cell-pw="{ row }">
+        <div class="flex items-center gap-2">
+          <button type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="توليد كلمة سر" :disabled="generatingPwFor === row.id" @click="generatePw(row)">
+            <RefreshCw :size="13" />
+          </button>
+          <span class="mono text-caption tracking-wider min-w-[70px] inline-block">{{ passwords[row.id] ? (visiblePw.includes(row.id) ? passwords[row.id] : maskPw(passwords[row.id])) : '—' }}</span>
+          <button v-if="passwords[row.id]" type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="إظهار/إخفاء كلمة السر" @click="togglePw(row.id)">
+            <Eye :size="13" />
+          </button>
+        </div>
+      </template>
       <template #cell-actions="{ row }">
         <div class="flex gap-1.5">
           <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
           <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
           <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, 'supervisor')"><Pencil :size="14" /></button>
-          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعيين كلمة السر" @click="openSetPassword(row)"><KeyRound :size="14" /></button>
           <button
             type="button"
             class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast"
@@ -187,26 +207,11 @@
         <BaseButton variant="ghost" @click="trashedModal = false">إغلاق</BaseButton>
       </template>
     </BaseModal>
-
-    <!-- تعيين كلمة السر -->
-    <BaseModal v-model="passwordModal" title="تعيين كلمة سر جديدة" :description="passwordTarget ? `سيتم إنشاء كلمة سر جديدة لحساب ${passwordTarget.name} وسيُطلب منه/ها تغييرها عند أول تسجيل دخول.` : ''" size="sm">
-      <template v-if="!generatedPassword">
-        <p class="text-body-sm text-text-600">هل تريدين المتابعة؟</p>
-      </template>
-      <div v-else class="flex items-center gap-2">
-        <input :value="generatedPassword" readonly class="flex-1 min-w-0 h-icon-btn px-3 rounded-sm border border-border bg-bg text-body-sm mono">
-        <BaseButton :icon="Copy" variant="outline" @click="copyPassword">نسخ</BaseButton>
-      </div>
-      <template #footer>
-        <BaseButton v-if="!generatedPassword" block :icon="KeyRound" :loading="submitting" @click="confirmSetPassword">إنشاء كلمة السر</BaseButton>
-        <BaseButton v-else block @click="passwordModal = false">تم</BaseButton>
-      </template>
-    </BaseModal>
   </div>
 </template>
 
 <script>
-import { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Check, Trash2, Archive, RotateCcw, KeyRound, Copy } from 'lucide-vue-next'
+import { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Check, Trash2, Archive, RotateCcw, RefreshCw, Eye } from 'lucide-vue-next'
 import { mapState, mapActions } from 'pinia'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -227,11 +232,14 @@ const PAGE_SIZE = 4
 export default {
   name: 'CommitteeMembersPage',
 
-  components: { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, KeyRound, Trash2, BaseInput, BaseSelect, BaseButton, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState },
+  components: { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, BaseInput, BaseSelect, BaseButton, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState },
 
   data() {
     return {
-      Check, Lock, Trash2, RotateCcw, KeyRound, Copy, Archive,
+      Check, Lock, Trash2, RotateCcw, Archive,
+      passwords: {},
+      visiblePw: [],
+      generatingPwFor: null,
       studentSearch: '',
       specFilter: '',
       studentSupFilter: '',
@@ -262,16 +270,13 @@ export default {
       ],
       restoringId: null,
 
-      passwordModal: false,
-      passwordTarget: null,
-      generatedPassword: '',
-
       studentColumns: [
-        { key: 'grp', label: 'الفريق' },
+        { key: 'grp', label: 'رقم المجموعة' },
         { key: 'name', label: 'اسم العضو' },
         { key: 'uid', label: 'الرقم الجامعي' },
         { key: 'whats', label: 'رقم الواتس' },
         { key: 'mail', label: 'البريد الإلكتروني' },
+        { key: 'pw', label: 'كلمة السر' },
         { key: 'actions', label: 'إجراءات' }
       ],
       supervisorColumns: [
@@ -279,6 +284,7 @@ export default {
         { key: 'empId', label: 'الرقم الوظيفي' },
         { key: 'mail', label: 'البريد الإلكتروني' },
         { key: 'whats', label: 'رقم الواتس' },
+        { key: 'pw', label: 'كلمة السر' },
         { key: 'actions', label: 'إجراءات' }
       ]
     }
@@ -297,7 +303,7 @@ export default {
           seen.add(m.student.id)
           rows.push({
             id: m.student.id,
-            grp: team.name,
+            grp: team.id,
             spec: team.specialization_id,
             sup: team.supervisor?.name || 'غير محدد',
             name: m.student.name,
@@ -511,28 +517,23 @@ export default {
       }
     },
 
-    openSetPassword(row) {
-      this.passwordTarget = row
-      this.generatedPassword = ''
-      this.passwordModal = true
+    maskPw(pw) {
+      return '•'.repeat(pw.length)
     },
-    async confirmSetPassword() {
-      this.submitting = true
+    togglePw(id) {
+      this.visiblePw = this.visiblePw.includes(id) ? this.visiblePw.filter((x) => x !== id) : [...this.visiblePw, id]
+    },
+    async generatePw(row) {
+      this.generatingPwFor = row.id
       try {
-        this.generatedPassword = await this.setUserPassword(this.passwordTarget.id)
+        const password = await this.setUserPassword(row.id)
+        this.passwords = { ...this.passwords, [row.id]: password }
+        if (!this.visiblePw.includes(row.id)) this.visiblePw.push(row.id)
         this.$toast?.success('تم إنشاء كلمة سر جديدة')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر تعيين كلمة السر')
       } finally {
-        this.submitting = false
-      }
-    },
-    async copyPassword() {
-      try {
-        await navigator.clipboard.writeText(this.generatedPassword)
-        this.$toast?.success('تم نسخ كلمة السر')
-      } catch {
-        this.$toast?.error('تعذّر نسخ كلمة السر')
+        this.generatingPwFor = null
       }
     },
 
