@@ -54,7 +54,7 @@
       </div>
 
       <DataTable
-        :columns="columns" :rows="pageRows" row-key="id" :primary-keys="['spec', 'team']"
+        :columns="columns" :rows="pageRows" row-key="id"
         :meta="{ current_page: page, last_page: totalPages, total: filteredProposals.length }"
         empty-title="لا توجد مقترحات مطابقة"
         @page-change="page = $event"
@@ -75,6 +75,10 @@
             <button type="button" class="grid place-items-center w-9 h-9 rounded-pill bg-error-bg text-error hover:brightness-95 transition-all duration-fast disabled:opacity-40" :disabled="row.status !== 'قيد المراجعة'" title="رفض" @click="openReject(row)"><X :size="15" /></button>
             <button type="button" class="grid place-items-center w-9 h-9 rounded-pill bg-success-bg text-success hover:brightness-95 transition-all duration-fast disabled:opacity-40" :disabled="row.status !== 'قيد المراجعة'" title="موافقة" @click="approve(row)"><Check :size="15" /></button>
           </div>
+        </template>
+        <template #cell-rejectReason="{ row }">
+          <span v-if="row.status === 'مرفوض' && row.rejectReason" class="text-caption text-error">{{ row.rejectReason }}</span>
+          <span v-else class="text-text-400">—</span>
         </template>
         <template #row-extra="{ row }">
           <div v-if="row.status === 'مرفوض' && row.rejectReason" class="flex items-start gap-2 px-5 py-3 bg-error-bg border-t border-error-border/50">
@@ -132,7 +136,8 @@ export default {
         { key: 'team', label: 'الفريق' },
         { key: 'file', label: 'المرفقات' },
         { key: 'status', label: 'الحالة' },
-        { key: 'actions', label: 'الإجراءات' }
+        { key: 'actions', label: 'الإجراءات' },
+        { key: 'rejectReason', label: 'سبب الرفض' }
       ],
 
       rejectModal: false,
@@ -229,7 +234,7 @@ export default {
         await this.rejectProposal(this.rejectTarget.id, this.rejectReason)
         await this.fetchTeams()
         this.rejectModal = false
-        this.$toast?.success(`تم رفض مقترح ${this.rejectTarget.team}`)
+        this.$toast?.success(`تم رفض مقترح ${this.rejectTarget.team} — السبب: ${this.rejectReason}`)
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر الرفض')
       } finally {

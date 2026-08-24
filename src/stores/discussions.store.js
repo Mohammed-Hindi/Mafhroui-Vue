@@ -44,6 +44,20 @@ export const useDiscussionsStore = defineStore('discussions', () => {
     discussions.value = discussions.value.filter((d) => d.id !== id)
   }
 
+  // POST /discussions/import/preview (multipart)
+  const previewDiscussionImport = async (file) => {
+    const form = new FormData()
+    form.append('file', file)
+    const { data } = await api.post('/discussions/import/preview', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+    return data
+  }
+
+  // POST /discussions/import/confirm
+  const confirmDiscussionImport = async (rows) => {
+    const { data } = await api.post('/discussions/import/confirm', { rows })
+    return data
+  }
+
   // GET /discussions/export (xlsx)
   const exportDiscussionsExcel = async () => {
     const response = await api.get('/discussions/export', { responseType: 'blob' })
@@ -63,6 +77,8 @@ export const useDiscussionsStore = defineStore('discussions', () => {
     createDiscussion,
     updateDiscussion,
     deleteDiscussion,
+    previewDiscussionImport,
+    confirmDiscussionImport,
     exportDiscussionsExcel
   }
 })

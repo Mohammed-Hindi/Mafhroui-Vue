@@ -4,59 +4,61 @@
       <div class="flex items-center gap-3">
         <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><ShieldCheck :size="18" /></span>
         <div>
-          <h3 class="text-h3 font-bold text-text-900">إدارة حسابات المشرفين</h3>
-          <p class="text-caption text-text-600">إضافة حسابات جديدة، تعديل بياناتها، وتقييد صلاحياتها</p>
+          <h3 class="text-h3 font-bold text-text-900">إضافة وإدارة لجنة الإشراف</h3>
+          <p class="text-caption text-text-600">إنشاء حسابات أعضاء لجنة الإشراف والتحكم في صلاحياتها</p>
         </div>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <BaseButton variant="outline" :icon="Archive" @click="openTrashed">المشرفون المحذوفون</BaseButton>
-        <BaseButton :icon="UserPlus" @click="openForm">إضافة مشرف جديد</BaseButton>
-      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2 mb-6">
+      <BaseButton variant="outline" :icon="Archive" @click="openTrashed">أعضاء لجنة الإشراف المحذوفون</BaseButton>
+      <BaseButton :icon="UserPlus" @click="openForm">إضافة عضو جديد</BaseButton>
     </div>
 
     <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden">
       <div class="flex items-center justify-between gap-3 p-5 pb-4">
-        <h4 class="text-h4 font-bold text-text-900">المشرفون</h4>
-        <BaseBadge>{{ users.length }} {{ users.length === 1 ? 'عضو' : 'أعضاء' }}</BaseBadge>
+        <h4 class="text-h4 font-bold text-text-900">أعضاء لجنة الإشراف</h4>
+        <BaseBadge>{{ filteredUsers.length }} {{ filteredUsers.length === 1 ? 'عضو' : 'أعضاء' }}</BaseBadge>
       </div>
 
       <DataTable
-        :columns="columns" :rows="users" row-key="id" :primary-keys="['name', 'actions']"
-        :loading="usersLoading" empty-title="لا يوجد مشرفون بعد"
+        :columns="columns" :rows="pageRows" row-key="id" :primary-keys="['name', 'actions']"
+        :loading="usersLoading" empty-title="لا يوجد أعضاء لجنة إشراف بعد"
         @retry="load"
       >
         <template #cell-name="{ row }">
           <span class="font-bold text-text-900">{{ row.name }}</span>
         </template>
-        <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value || '—' }}</span></template>
-        <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-        <template #cell-empId="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-        <template #cell-status="{ row }">
-          <BaseBadge :variant="row.status === 'active' ? 'success' : 'error'" dot>{{ row.status === 'active' ? 'نشط' : 'موقوف' }}</BaseBadge>
-        </template>
         <template #cell-actions="{ row }">
           <div class="flex gap-1.5">
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="القيود" @click="openRestrict(row)"><Lock :size="14" /></button>
             <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row)"><Pencil :size="14" /></button>
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="رابط دعوة جديد" @click="reinvite(row)"><RefreshCw :size="14" /></button>
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعيين كلمة السر" @click="openSetPassword(row)"><KeyRound :size="14" /></button>
-            <button
-              type="button"
-              class="grid place-items-center w-8 h-8 rounded-sm border"
-              :class="row.status === 'active' ? 'border-error-bg text-error hover:bg-error-bg' : 'border-success-bg text-success hover:bg-success-bg'"
-              :title="row.status === 'active' ? 'إيقاف الحساب' : 'تفعيل الحساب'"
-              @click="toggleStatus(row)"
-            >
-              <component :is="row.status === 'active' ? Ban : Check" :size="14" />
-            </button>
+            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
+            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
             <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete(row)"><Trash2 :size="14" /></button>
           </div>
         </template>
+        <template #cell-empId="{ value }"><span class="mono">{{ value || '—' }}</span></template>
+        <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value || '—' }}</span></template>
+        <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
+        <template #cell-password="{ row }">
+          <div class="flex items-center gap-2">
+            <span class="mono">{{ row.password || '—' }}</span>
+            <button type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعيين/تجديد كلمة السر" @click="openSetPassword(row)"><RefreshCw :size="13" /></button>
+          </div>
+        </template>
+        <template #cell-createdAt="{ value }"><span class="mono">{{ value ? value.slice(0, 10) : '—' }}</span></template>
+        <template #cell-restrict="{ row }">
+          <BaseSelect class="min-w-[150px]" :model-value="row.status" :options="statusOptions" @update:model-value="onRestrictChange(row, $event)" />
+        </template>
       </DataTable>
+
+      <div v-if="totalPages > 1" class="px-4 sm:px-6 py-3 border-t border-border-soft">
+        <Pagination :current-page="page" :last-page="totalPages" :total="filteredUsers.length" @change="page = $event" />
+      </div>
     </div>
 
     <!-- إضافة عضو -->
-    <BaseModal v-model="formOpen" title="إضافة مشرف جديد">
+    <BaseModal v-model="formOpen" title="إضافة عضو لجنة إشراف">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <BaseInput v-model="form.name" label="الاسم" placeholder="مثال: د. نورة العتيبي" class="sm:col-span-2" />
         <BaseInput v-model="form.employee_number" label="الرقم الوظيفي" placeholder="اختياري" />
@@ -64,7 +66,7 @@
         <BaseInput v-model="form.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" class="sm:col-span-2" />
       </div>
       <template #footer>
-        <BaseButton block :icon="Send" :loading="submitting" @click="submit">إضافة المشرف</BaseButton>
+        <BaseButton block :icon="Send" :loading="submitting" @click="submit">إضافة العضو</BaseButton>
       </template>
     </BaseModal>
 
@@ -92,27 +94,17 @@
       </template>
     </BaseModal>
 
-    <!-- القيود -->
-    <BaseModal v-model="restrictModalOpen" title="قيود الصلاحيات" :description="restrictTarget ? `صلاحيات ${restrictTarget.name} على وحدات النظام` : ''">
-      <div class="flex flex-col gap-4">
-        <div v-for="mod in modules" :key="mod.value" class="flex items-center justify-between gap-4">
-          <span class="text-body-sm font-bold text-text-900">{{ mod.label }}</span>
-          <BaseSelect
-            class="min-w-[170px]"
-            :model-value="restrictLevels[mod.value]"
-            :options="levelOptions"
-            @update:model-value="setLevel(mod.value, $event)"
-          />
-        </div>
-        <BaseInput v-model="restrictReason" label="سبب التقييد" placeholder="سبب تقييد هذا المشرف — مطلوب عند اختيار مستوى غير 'كامل'" />
-      </div>
+    <!-- سبب التقييد -->
+    <BaseModal v-model="restrictReasonModalOpen" title="سبب التقييد" size="sm">
+      <BaseInput v-model="restrictReason" label="سبب التقييد" placeholder="اكتبي سبب تقييد هذا العضو" required />
       <template #footer>
-        <BaseButton block @click="restrictModalOpen = false">تم</BaseButton>
+        <BaseButton variant="ghost" @click="cancelRestrict">إلغاء</BaseButton>
+        <BaseButton variant="danger" :loading="submitting" @click="confirmRestrictChange">تأكيد</BaseButton>
       </template>
     </BaseModal>
 
     <!-- حذف مع سبب -->
-    <BaseModal v-model="deleteModalOpen" title="حذف الحساب" :description="deleteTarget ? `سيُحذف حساب ${deleteTarget.name} ويمكن استرجاعه لاحقًا من 'المشرفون المحذوفون'.` : ''" size="sm">
+    <BaseModal v-model="deleteModalOpen" title="حذف الحساب" :description="deleteTarget ? `سيُحذف حساب ${deleteTarget.name} ويمكن استرجاعه لاحقًا من 'أعضاء لجنة الإشراف المحذوفون'.` : ''" size="sm">
       <BaseInput v-model="deleteReason" label="سبب الحذف" placeholder="اكتبي سبب حذف هذا الحساب" required />
       <template #footer>
         <BaseButton variant="ghost" @click="deleteModalOpen = false">إلغاء</BaseButton>
@@ -121,9 +113,9 @@
     </BaseModal>
 
     <!-- المحذوفون -->
-    <BaseModal v-model="trashedModalOpen" title="المشرفون المحذوفون" description="استرجعي أي حساب حُذف بالخطأ" size="lg">
+    <BaseModal v-model="trashedModalOpen" title="أعضاء لجنة الإشراف المحذوفون" description="استرجعي أي حساب حُذف بالخطأ" size="lg">
       <SkeletonLoader v-if="trashedUsersLoading" :rows="3" height="60px" />
-      <EmptyState v-else-if="!trashedUsers.length" title="لا يوجد مشرفون محذوفون" description="كل الحسابات المحذوفة ستظهر هنا وبإمكانك استرجاعها." />
+      <EmptyState v-else-if="!trashedUsers.length" title="لا يوجد أعضاء محذوفون" description="كل الحسابات المحذوفة ستظهر هنا وبإمكانك استرجاعها." />
       <div v-else class="flex flex-col gap-2 max-h-96 overflow-y-auto scrollbar-thin">
         <div v-for="u in trashedUsers" :key="u.id" class="flex items-center justify-between gap-3 p-3 rounded-sm border border-border bg-bg">
           <div class="min-w-0">
@@ -156,50 +148,48 @@
 </template>
 
 <script>
-import { ShieldCheck, UserPlus, RefreshCw, Pencil, Send, Check, Lock, Copy, Ban, Trash2, Archive, RotateCcw, KeyRound } from 'lucide-vue-next'
+import { ShieldCheck, UserPlus, RefreshCw, Pencil, Send, Check, Copy, Trash2, Archive, RotateCcw, KeyRound, Mail, MessageCircle } from 'lucide-vue-next'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import DataTable from '@/components/ui/DataTable.vue'
+import Pagination from '@/components/ui/Pagination.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { mapState, mapActions } from 'pinia'
 import { useUsersStore } from '@/stores/users.store'
 
-const emptyForm = () => ({ name: '', role: 'supervisor', employee_number: '', email: '', whatsapp: '' })
+const emptyForm = () => ({ name: '', role: 'committee', employee_number: '', email: '', whatsapp: '' })
+const PAGE_SIZE = 5
 
-const MODULES = [
-  { value: 'projects', label: 'المشاريع' },
-  { value: 'proposals', label: 'المقترحات' },
-  { value: 'tasks', label: 'المهام' },
-  { value: 'meetings', label: 'الاجتماعات' }
-]
-
-const LEVEL_OPTIONS = [
-  { value: 'full', label: 'كامل' },
-  { value: 'view_only', label: 'عرض فقط' },
-  { value: 'blocked', label: 'محظور' }
-]
+function digitsOnly(value) {
+  return String(value || '').replace(/\D/g, '').replace(/^0/, '')
+}
 
 export default {
-  name: 'SuperAdminMembersPage',
+  name: 'SuperAdminCommitteeMembersPage',
 
-  components: { ShieldCheck, UserPlus, RefreshCw, Pencil, Lock, Copy, Trash2, Archive, RotateCcw, KeyRound, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, SkeletonLoader, EmptyState },
+  components: { ShieldCheck, UserPlus, Pencil, Copy, Trash2, Archive, RotateCcw, KeyRound, Mail, MessageCircle, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState },
 
   data() {
     return {
-      Send, Check, Ban,
-      modules: MODULES,
-      levelOptions: LEVEL_OPTIONS,
+      RefreshCw, Send, Check,
+      page: 1,
+      statusOptions: [
+        { value: 'active', label: 'بدون تقييد' },
+        { value: 'restricted', label: 'مقيّد' }
+      ],
       columns: [
         { key: 'name', label: 'الاسم' },
+        { key: 'actions', label: 'إجراءات' },
         { key: 'empId', label: 'الرقم الوظيفي' },
         { key: 'mail', label: 'البريد' },
         { key: 'whats', label: 'واتساب' },
-        { key: 'status', label: 'الحالة' },
-        { key: 'actions', label: 'إجراءات' }
+        { key: 'password', label: 'كلمة السر' },
+        { key: 'createdAt', label: 'تاريخ الإضافة' },
+        { key: 'restrict', label: 'التقييد' }
       ],
 
       formOpen: false,
@@ -213,10 +203,9 @@ export default {
       editTargetId: null,
       editForm: { name: '', employee_number: '', whatsapp: '' },
 
-      restrictModalOpen: false,
-      restrictTarget: null,
-      restrictLevels: {},
+      restrictReasonModalOpen: false,
       restrictReason: '',
+      restrictPendingRow: null,
 
       deleteModalOpen: false,
       deleteTarget: null,
@@ -227,14 +216,15 @@ export default {
 
       passwordModalOpen: false,
       passwordTarget: null,
-      generatedPassword: ''
+      generatedPassword: '',
+      lastPasswords: {}
     }
   },
 
   computed: {
     ...mapState(useUsersStore, ['usersLoading', 'trashedUsers', 'trashedUsersLoading']),
 
-    users() {
+    filteredUsers() {
       const store = useUsersStore()
       return store.users.map((u) => ({
         id: u.id,
@@ -242,8 +232,18 @@ export default {
         empId: u.employee_number,
         mail: u.email,
         whats: u.whatsapp,
-        status: u.status
+        status: u.status,
+        createdAt: u.created_at,
+        password: this.lastPasswords[u.id] || ''
       }))
+    },
+
+    totalPages() {
+      return Math.max(1, Math.ceil(this.filteredUsers.length / PAGE_SIZE))
+    },
+    pageRows() {
+      const start = (this.page - 1) * PAGE_SIZE
+      return this.filteredUsers.slice(start, start + PAGE_SIZE)
     }
   },
 
@@ -253,13 +253,12 @@ export default {
 
   methods: {
     ...mapActions(useUsersStore, [
-      'fetchUsers', 'createUser', 'updateUser', 'updateUserStatus', 'reinviteUser',
-      'fetchRestrictions', 'setRestriction', 'removeRestriction',
+      'fetchUsers', 'createUser', 'updateUser', 'updateUserStatus',
       'deleteUser', 'fetchTrashedUsers', 'restoreUser', 'setUserPassword'
     ]),
 
     async load() {
-      await this.fetchUsers('supervisor')
+      await this.fetchUsers('committee')
     },
 
     openForm() {
@@ -319,70 +318,50 @@ export default {
       }
     },
 
-    async reinvite(row) {
-      try {
-        const result = await this.reinviteUser(row.id)
-        this.inviteLink = `${window.location.origin}/reset-password?token=${result.token}`
-        this.inviteModalOpen = true
-        this.$toast?.success('تم إنشاء رابط دعوة جديد')
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء رابط الدعوة')
-      }
+    sendMail(mail) {
+      if (!mail) return
+      window.location.href = `mailto:${mail}`
+    },
+    sendWhats(whats) {
+      if (!whats) return
+      const num = digitsOnly(whats)
+      const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
+      window.open(`https://wa.me/${full}`, '_blank')
     },
 
-    async toggleStatus(row) {
-      if (row.status === 'active') {
-        const reason = window.prompt('سبب إيقاف هذا الحساب؟')
-        if (!reason) return
-        try {
-          await this.updateUserStatus(row.id, 'restricted', reason)
-          this.$toast?.success(`تم إيقاف الحساب — السبب: ${reason}`)
-          await this.load()
-        } catch (err) {
-          this.$toast?.error(err.normalized?.message || 'تعذّر تحديث حالة الحساب')
-        }
+    onRestrictChange(row, status) {
+      if (status === row.status) return
+      if (status === 'active') {
+        this.applyRestrictChange(row, 'active', null)
         return
       }
+      this.restrictPendingRow = row
+      this.restrictReason = ''
+      this.restrictReasonModalOpen = true
+    },
+    cancelRestrict() {
+      this.restrictReasonModalOpen = false
+      this.restrictPendingRow = null
+    },
+    async confirmRestrictChange() {
+      if (!this.restrictReason.trim()) {
+        this.$toast?.error('يرجى إدخال سبب التقييد')
+        return
+      }
+      await this.applyRestrictChange(this.restrictPendingRow, 'restricted', this.restrictReason.trim())
+      this.restrictReasonModalOpen = false
+      this.restrictPendingRow = null
+    },
+    async applyRestrictChange(row, status, reason) {
+      this.submitting = true
       try {
-        await this.updateUserStatus(row.id, 'active')
-        this.$toast?.success('تم تفعيل الحساب')
+        await this.updateUserStatus(row.id, status, reason)
+        this.$toast?.success(status === 'restricted' ? `تم تقييد العضو — السبب: ${reason}` : 'تم إلغاء التقييد')
         await this.load()
       } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث حالة الحساب')
-      }
-    },
-
-    async openRestrict(row) {
-      this.restrictTarget = row
-      this.restrictReason = ''
-      this.restrictLevels = Object.fromEntries(MODULES.map((m) => [m.value, 'full']))
-      this.restrictModalOpen = true
-      try {
-        const restrictions = await this.fetchRestrictions(row.id)
-        restrictions.forEach((r) => { this.restrictLevels[r.module] = r.level })
-        this.restrictionIds = Object.fromEntries(restrictions.map((r) => [r.module, r.id]))
-        this.restrictReason = restrictions[0]?.reason || ''
-      } catch {
-        this.$toast?.error('تعذّر تحميل القيود الحالية')
-      }
-    },
-
-    async setLevel(module, level) {
-      if (level !== 'full' && !this.restrictReason.trim()) {
-        this.$toast?.error('يرجى إدخال سبب التقييد أولًا')
-        return
-      }
-      this.restrictLevels[module] = level
-      try {
-        if (level === 'full') {
-          const id = this.restrictionIds?.[module]
-          if (id) await this.removeRestriction(id)
-        } else {
-          await this.setRestriction(this.restrictTarget.id, module, level, this.restrictReason.trim())
-        }
-        this.$toast?.success(level === 'full' ? 'تم إلغاء القيد' : `تم تحديث القيد — السبب: ${this.restrictReason.trim()}`)
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث القيد')
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث التقييد')
+      } finally {
+        this.submitting = false
       }
     },
 
@@ -412,7 +391,7 @@ export default {
     async openTrashed() {
       this.trashedModalOpen = true
       try {
-        await this.fetchTrashedUsers('supervisor')
+        await this.fetchTrashedUsers('committee')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر تحميل الحسابات المحذوفة')
       }
@@ -438,7 +417,9 @@ export default {
     async confirmSetPassword() {
       this.submitting = true
       try {
-        this.generatedPassword = await this.setUserPassword(this.passwordTarget.id)
+        const password = await this.setUserPassword(this.passwordTarget.id)
+        this.generatedPassword = password
+        this.lastPasswords = { ...this.lastPasswords, [this.passwordTarget.id]: password }
         this.$toast?.success('تم إنشاء كلمة سر جديدة')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر تعيين كلمة السر')

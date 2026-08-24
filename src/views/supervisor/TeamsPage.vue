@@ -70,6 +70,7 @@
                     <span v-else class="text-text-400">—</span>
                   </span>
                   <span class="flex items-center justify-center gap-2">
+                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(member)"><Pencil :size="14" /></button>
                     <button v-if="member.whats" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
                     <button v-if="member.mail" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
                     <button v-if="member.leader" type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تقييد على المهام" @click="openRestrict(member)"><Lock :size="14" /></button>
@@ -103,6 +104,7 @@
                 <div class="flex items-start justify-between gap-3">
                   <span class="text-label font-semibold text-text-400 shrink-0">تواصل</span>
                   <div class="flex gap-1.5">
+                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(member)"><Pencil :size="14" /></button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
                     <button v-if="member.leader" type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تقييد على المهام" @click="openRestrict(member)"><Lock :size="14" /></button>
@@ -138,14 +140,30 @@
 
     <!-- تقييد قائد الفريق على وحدة المهام -->
     <BaseModal v-model="restrictModalOpen" title="تقييد الوصول للمهام" :description="restrictTarget ? `صلاحية ${restrictTarget.name} على وحدة المهام` : ''" size="sm">
-      <BaseSelect
-        :model-value="restrictLevel"
-        :options="levelOptions"
-        :disabled="restrictSaving"
-        @update:model-value="setRestrictLevel"
-      />
+      <div class="flex flex-col gap-4">
+        <BaseSelect
+          :model-value="restrictLevel"
+          :options="levelOptions"
+          :disabled="restrictSaving"
+          @update:model-value="setRestrictLevel"
+        />
+        <BaseInput v-model="restrictReason" label="سبب التقييد" placeholder="مطلوب عند اختيار مستوى غير 'كامل'" />
+      </div>
       <template #footer>
         <BaseButton block @click="restrictModalOpen = false">تم</BaseButton>
+      </template>
+    </BaseModal>
+
+    <!-- تعديل بيانات عضو -->
+    <BaseModal v-model="editMemberModal" title="تعديل بيانات العضو">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <BaseInput v-model="editMemberForm.name" label="اسم الطالب" class="sm:col-span-2" />
+        <BaseInput v-model="editMemberForm.university_number" label="الرقم الجامعي" />
+        <BaseInput v-model="editMemberForm.whatsapp" label="رقم الواتس" />
+      </div>
+      <template #footer>
+        <BaseButton variant="ghost" @click="editMemberModal = false">إلغاء</BaseButton>
+        <BaseButton :icon="Check" :loading="submitting" @click="saveEditMember">حفظ التعديلات</BaseButton>
       </template>
     </BaseModal>
 
@@ -223,11 +241,17 @@ export default {
       restrictModalOpen: false,
       restrictTarget: null,
       restrictLevel: 'full',
+      restrictReason: '',
       restrictionId: null,
       restrictSaving: false,
 
       trashedModal: false,
       restoringId: null,
+
+      editMemberModal: false,
+      editMemberTargetId: null,
+      editMemberForm: {},
+      submitting: false,
 
       page: 1
     }
@@ -283,7 +307,7 @@ export default {
 
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'updateTeam', 'deleteTeam', 'fetchTrashedTeams', 'restoreTeam']),
-    ...mapActions(useUsersStore, ['fetchRestrictions', 'setRestriction', 'removeRestriction']),
+    ...mapActions(useUsersStore, ['fetchRestrictions', 'setRestriction', 'removeRestriction', 'updateUser']),
 
     isGroupOpen(id) {
       return this.openGroupIds.includes(id)
@@ -375,6 +399,7 @@ export default {
     async openRestrict(member) {
       this.restrictTarget = member
       this.restrictLevel = 'full'
+      this.restrictReason = ''
       this.restrictionId = null
       this.restrictModalOpen = true
       try {
@@ -383,6 +408,7 @@ export default {
         if (current) {
           this.restrictLevel = current.level
           this.restrictionId = current.id
+          this.restrictReason = current.reason || ''
         }
       } catch {
         this.$toast?.error('تعذّر تحميل حالة التقييد')
@@ -390,6 +416,10 @@ export default {
     },
 
     async setRestrictLevel(level) {
+      if (level !== 'full' && !this.restrictReason.trim()) {
+        this.$toast?.error('يرجى إدخال سبب التقييد أولًا')
+        return
+      }
       this.restrictLevel = level
       this.restrictSaving = true
       try {
@@ -397,14 +427,37 @@ export default {
           if (this.restrictionId) await this.removeRestriction(this.restrictionId)
           this.restrictionId = null
         } else {
-          const restriction = await this.setRestriction(this.restrictTarget.id, 'tasks', level)
+          const restriction = await this.setRestriction(this.restrictTarget.id, 'tasks', level, this.restrictReason.trim())
           this.restrictionId = restriction.id
         }
-        this.$toast?.success('تم تحديث القيد')
+        this.$toast?.success(level === 'full' ? 'تم إلغاء القيد' : `تم تحديث القيد — السبب: ${this.restrictReason.trim()}`)
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر تحديث القيد')
       } finally {
         this.restrictSaving = false
+      }
+    },
+
+    openEditMember(member) {
+      this.editMemberTargetId = member.id
+      this.editMemberForm = { name: member.name, university_number: member.uid || '', whatsapp: member.whats || '' }
+      this.editMemberModal = true
+    },
+    async saveEditMember() {
+      if (!this.editMemberForm.name) {
+        this.$toast?.error('يرجى إدخال الاسم')
+        return
+      }
+      this.submitting = true
+      try {
+        await this.updateUser(this.editMemberTargetId, this.editMemberForm)
+        this.editMemberModal = false
+        this.$toast?.success('تم حفظ التعديلات')
+        await this.fetchTeams()
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر حفظ التعديلات')
+      } finally {
+        this.submitting = false
       }
     },
 

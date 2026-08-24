@@ -1,6 +1,7 @@
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { ROLES } from '@/utils/constants'
 import MembersPage from '@/views/super-admin/MembersPage.vue'
+import CommitteeMembersPage from '@/views/super-admin/CommitteeMembersPage.vue'
 import BulkNotifyPage from '@/views/super-admin/BulkNotifyPage.vue'
 
 /** مسارات لوحة الإدارة العامة (Super Admin) — إنشاء وإدارة حسابات المشرفين ولجنة الإشراف */
@@ -15,6 +16,12 @@ export default [
         name: 'super-admin-members',
         component: MembersPage,
         meta: { title: 'إدارة الأعضاء' }
+      },
+      {
+        path: 'committee',
+        name: 'super-admin-committee',
+        component: CommitteeMembersPage,
+        meta: { title: 'إضافة لجنة الإشراف' }
       },
       {
         path: 'notify',
