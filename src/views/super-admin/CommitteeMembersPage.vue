@@ -27,7 +27,11 @@
         @retry="load"
       >
         <template #cell-name="{ row }">
-          <span class="font-bold text-text-900">{{ row.name }}</span>
+          <div>
+            <span class="font-bold text-text-900">{{ row.name }}</span>
+            <span v-if="row.status === 'restricted'" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">مقيّد</span>
+          </div>
+          <div v-if="row.status === 'restricted' && row.restrictedReason" class="text-label text-error mt-0.5">السبب: {{ row.restrictedReason }}</div>
         </template>
         <template #cell-actions="{ row }">
           <div class="flex gap-1.5">
@@ -171,11 +175,11 @@ function digitsOnly(value) {
 export default {
   name: 'SuperAdminCommitteeMembersPage',
 
-  components: { ShieldCheck, UserPlus, Pencil, Copy, Trash2, Archive, RotateCcw, KeyRound, Mail, MessageCircle, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState },
+  components: { ShieldCheck, UserPlus, Pencil, Copy, Trash2, Archive, RotateCcw, KeyRound, Mail, MessageCircle, RefreshCw, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState },
 
   data() {
     return {
-      RefreshCw, Send, Check,
+      RefreshCw, Send, Check, Archive, Copy, KeyRound, RotateCcw, Trash2, UserPlus,
       page: 1,
       statusOptions: [
         { value: 'active', label: 'بدون تقييد' },
@@ -233,6 +237,7 @@ export default {
         mail: u.email,
         whats: u.whatsapp,
         status: u.status,
+        restrictedReason: u.restricted_reason,
         createdAt: u.created_at,
         password: this.lastPasswords[u.id] || ''
       }))

@@ -38,9 +38,12 @@
           </router-link>
         </template>
         <template #cell-name="{ row }">
-          <span class="font-bold text-text-900">{{ row.name }}</span>
-          <span v-if="row.isLeader" class="ms-1.5 text-label font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-pill">قائد</span>
-          <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">موقوف</span>
+          <div>
+            <span class="font-bold text-text-900">{{ row.name }}</span>
+            <span v-if="row.isLeader" class="ms-1.5 text-label font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-pill">قائد</span>
+            <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">موقوف</span>
+          </div>
+          <div v-if="row.restricted && row.restrictedReason" class="text-label text-error mt-0.5">السبب: {{ row.restrictedReason }}</div>
         </template>
         <template #cell-uid="{ value }"><span class="mono">{{ value || '—' }}</span></template>
         <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
@@ -91,8 +94,11 @@
 
     <DataTable :columns="supervisorColumns" :rows="supervisorPageRows" row-key="id" :primary-keys="['name', 'actions']" :loading="teamsLoading" empty-title="لا توجد نتائج مطابقة">
       <template #cell-name="{ row }">
-        <span class="font-bold text-text-900">{{ row.name }}</span>
-        <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">موقوف</span>
+        <div>
+          <span class="font-bold text-text-900">{{ row.name }}</span>
+          <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">موقوف</span>
+        </div>
+        <div v-if="row.restricted && row.restrictedReason" class="text-label text-error mt-0.5">السبب: {{ row.restrictedReason }}</div>
       </template>
       <template #cell-empId="{ value }"><span class="mono">{{ value || '—' }}</span></template>
       <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value || '—' }}</span></template>
@@ -221,11 +227,11 @@ const PAGE_SIZE = 4
 export default {
   name: 'CommitteeMembersPage',
 
-  components: { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, BaseInput, BaseSelect, BaseButton, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState },
+  components: { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, KeyRound, Trash2, BaseInput, BaseSelect, BaseButton, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState },
 
   data() {
     return {
-      Check, Lock, Trash2, RotateCcw, KeyRound, Copy,
+      Check, Lock, Trash2, RotateCcw, KeyRound, Copy, Archive,
       studentSearch: '',
       specFilter: '',
       studentSupFilter: '',
@@ -299,7 +305,8 @@ export default {
             whats: m.student.whatsapp,
             mail: m.student.email,
             isLeader: !!m.is_leader,
-            restricted: m.student.status === 'restricted'
+            restricted: m.student.status === 'restricted',
+            restrictedReason: m.student.restricted_reason
           })
         })
       })
@@ -319,7 +326,8 @@ export default {
           empId: sup.employee_number,
           mail: sup.email,
           whats: sup.whatsapp,
-          restricted: sup.status === 'restricted'
+          restricted: sup.status === 'restricted',
+          restrictedReason: sup.restricted_reason
         })
       })
       return rows

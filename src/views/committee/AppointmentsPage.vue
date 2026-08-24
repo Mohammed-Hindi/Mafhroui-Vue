@@ -201,7 +201,7 @@ const emptyForm = () => ({ project_id: '', place: '', date: '', time: '', commit
 export default {
   name: 'CommitteeAppointmentsPage',
 
-  components: { Search, MessageCircle, Mail, Pencil, Trash2, MapPin, Users, CalendarClock, ChevronDown, ChevronRightIcon, ChevronLeftIcon, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader },
+  components: { Search, MessageCircle, Mail, Pencil, Trash2, MapPin, Users, CalendarClock, ChevronDown, ChevronRightIcon, ChevronLeftIcon, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader },
 
   data() {
     return {

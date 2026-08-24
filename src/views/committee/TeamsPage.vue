@@ -323,11 +323,11 @@ const emptySupervisorForm = () => ({ name: '', employee_number: '', email: '', w
 export default {
   name: 'CommitteeTeamsPage',
 
-  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, UserPlus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination },
+  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, UserPlus, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination },
 
   data() {
     return {
-      Plus, Upload, Download, FileDown, Check, Trash2, Crown, Archive, RotateCcw, Send, Copy,
+      Plus, Upload, Download, FileDown, Check, Trash2, Crown, Archive, RotateCcw, Send, Copy, UserPlus,
       exportingExcel: false,
       exportingPdf: false,
       submitting: false,
