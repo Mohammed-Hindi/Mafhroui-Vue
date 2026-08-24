@@ -33,6 +33,7 @@
         <template #cell-empId="{ value }"><span class="mono">{{ value || '—' }}</span></template>
         <template #cell-status="{ row }">
           <BaseBadge :variant="row.status === 'active' ? 'success' : 'error'" dot>{{ row.status === 'active' ? 'نشط' : 'موقوف' }}</BaseBadge>
+          <div v-if="row.status !== 'active' && row.restrictedReason" class="text-label text-error mt-1">السبب: {{ row.restrictedReason }}</div>
         </template>
         <template #cell-actions="{ row }">
           <div class="flex gap-1.5">
@@ -190,7 +191,7 @@ export default {
 
   data() {
     return {
-      Send, Check, Ban,
+      Send, Check, Ban, Archive, Copy, KeyRound, RotateCcw, Trash2, UserPlus,
       modules: MODULES,
       levelOptions: LEVEL_OPTIONS,
       columns: [
@@ -242,7 +243,8 @@ export default {
         empId: u.employee_number,
         mail: u.email,
         whats: u.whatsapp,
-        status: u.status
+        status: u.status,
+        restrictedReason: u.restricted_reason
       }))
     }
   },
