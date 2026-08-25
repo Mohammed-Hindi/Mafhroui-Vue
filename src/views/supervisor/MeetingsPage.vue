@@ -61,6 +61,7 @@
     <BaseModal v-model="modalOpen" title="اجتماع جديد" description="سيتم إشعار الفريق المعني">
       <div class="flex flex-col gap-4">
         <BaseInput v-model="form.title" label="اسم الاجتماع" placeholder="مثال: مراجعة الفصل الثاني من التقرير" required />
+        <BaseInput v-model="form.num" label="رقم المجموعة" placeholder="مثال: 31" />
         <div class="grid grid-cols-2 gap-4">
           <BaseInput v-model="form.date" type="date" label="التاريخ" required />
           <BaseInput v-model="form.time" type="time" label="الوقت" required />
@@ -184,7 +185,7 @@ export default {
     },
 
     emptyForm() {
-      return { title: '', date: '', time: '', link: '', notes: '' }
+      return { title: '', num: '', date: '', time: '', link: '', notes: '' }
     },
 
     openCreate() {

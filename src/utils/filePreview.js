@@ -1,34 +1,6 @@
 /** رابط فيديو عام (Creative Commons) يُستخدم كمعاينة تجريبية بانتظار الفيديوهات الفعلية */
 const SAMPLE_VIDEO_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
 
-/** يبني Blob لملف PDF صالح بأقل حجم ممكن من مجموعة أسطر نصية — بديلjs مؤقت لملفات حقيقية من الباك إند */
-function buildPlaceholderPdfBlob(lines) {
-  const clean = lines.filter(Boolean).map((line) => String(line).replace(/[()\\]/g, ' '))
-  const height = Math.max(300, 80 + clean.length * 24)
-
-  const stream = clean.map((line, i) => `BT /F1 ${i === 0 ? 14 : 10} Tf 40 ${height - 70 - i * 22} Td (${line}) Tj ET`).join('\n')
-
-  const pdf = `%PDF-1.4
-1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
-2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1/MediaBox[0 0 420 ${height}]>>endobj
-3 0 obj<</Type/Page/Parent 2 0 R/Resources<</Font<</F1<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>>>>>/Contents 4 0 R>>endobj
-4 0 obj<</Length ${stream.length}>>stream
-${stream}
-endstream endobj
-trailer<</Root 1 0 R/Size 5>>
-%%EOF`
-
-  return new Blob([pdf], { type: 'application/pdf' })
-}
-
-/** يبني PDF ويفتحه بتبويب جديد مباشرة */
-export function openPlaceholderPdf(fileName, heading = '') {
-  const blob = buildPlaceholderPdfBlob([heading, fileName, 'Placeholder document -- no real file attached yet'])
-  const url = URL.createObjectURL(blob)
-  window.open(url, '_blank')
-  setTimeout(() => URL.revokeObjectURL(url), 60000)
-}
-
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 }
@@ -110,4 +82,11 @@ export async function generateOfficialPdf(title, subtitle, fields) {
 /** يفتح معاينة فيديو تجريبية بتبويب جديد */
 export function openPlaceholderVideo() {
   window.open(SAMPLE_VIDEO_URL, '_blank')
+}
+
+/** توليد PDF رسمي بهوية مسار وفتحه مباشرة بتبويب جديد — نفس generateOfficialPdf لكن بخطوة واحدة لأماكن العرض السريع */
+export async function openOfficialPdf(title, subtitle, fields) {
+  const url = await generateOfficialPdf(title, subtitle, fields)
+  window.open(url, '_blank')
+  return url
 }

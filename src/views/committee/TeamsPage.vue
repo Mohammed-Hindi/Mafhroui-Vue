@@ -196,7 +196,7 @@
     <!-- استيراد من Excel -->
     <BaseModal v-model="importModal" title="استيراد طلاب من Excel" description="الأعمدة المطلوبة بالترتيب: الاسم، البريد، الرقم الجامعي، الواتساب" size="lg">
       <div v-if="!importPreview">
-        <input ref="fileInput" type="file" accept=".xlsx" class="block w-full text-body-sm text-text-700 file:me-3 file:h-icon-btn file:px-4 file:rounded-sm file:border-0 file:bg-primary-50 file:text-primary-700 file:font-bold" @change="onFileSelected">
+        <FileDropzone label="ملف الطلاب" accept=".xlsx" hint="Excel (.xlsx) — الأعمدة بالترتيب: الاسم، البريد، الرقم الجامعي، الواتساب" @change="onFileSelected" />
       </div>
       <div v-else class="flex flex-col gap-4">
         <BaseSelect v-model="importSpecId" label="التخصص لكل الطلاب المستوردين" placeholder="اختاري التخصص" :options="specializationSelectOptions" />
@@ -310,6 +310,7 @@ import Pagination from '@/components/ui/Pagination.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useUsersStore } from '@/stores/users.store'
 import { exportStyledExcel, exportGroupsPdf } from '@/utils/exportReport'
+import FileDropzone from '@/components/shared/FileDropzone.vue'
 
 const GROUPS_PAGE_SIZE = 5
 
@@ -323,7 +324,7 @@ const emptySupervisorForm = () => ({ name: '', employee_number: '', email: '', w
 export default {
   name: 'CommitteeTeamsPage',
 
-  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, UserPlus, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination },
+  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, UserPlus, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, FileDropzone },
 
   data() {
     return {
@@ -541,8 +542,7 @@ export default {
       this.importRows = []
       this.importModal = true
     },
-    async onFileSelected(event) {
-      const file = event.target.files?.[0]
+    async onFileSelected(file) {
       if (!file) return
       this.submitting = true
       try {
