@@ -70,15 +70,25 @@
         <BaseInput v-model="form.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" class="sm:col-span-2" />
       </div>
       <template #footer>
-        <BaseButton block :icon="Send" :loading="submitting" @click="submit">إضافة العضو</BaseButton>
+        <BaseButton block :icon="Send" :loading="submitting" @click="submit">إضافة وإرسال البيانات (واتس + بريد)</BaseButton>
       </template>
     </BaseModal>
 
-    <!-- رابط الدعوة بعد الإنشاء -->
-    <BaseModal v-model="inviteModalOpen" title="تم إنشاء الحساب" description="لا تُرسل المنصة كلمات مرور صريحة — شارك رابط الدعوة التالي مع العضو ليعيّن كلمة مروره بنفسه (صالح 3 أيام)." size="sm">
+    <!-- بيانات الحساب بعد الإنشاء -->
+    <BaseModal v-model="inviteModalOpen" title="تم إنشاء الحساب" description="تم توليد كلمة سر مؤقتة وفتح واتساب/البريد لإرسالها للعضو تلقائيًا." size="sm">
+      <label class="block mb-1.5 text-label font-semibold text-text-700">كلمة السر المؤقتة</label>
+      <div class="flex items-center gap-2 mb-3">
+        <input :value="inviteTarget?.password" readonly class="flex-1 min-w-0 h-icon-btn px-3 rounded-sm border border-border bg-bg text-body-sm mono">
+        <BaseButton :icon="Copy" variant="outline" @click="copyInvitePassword">نسخ</BaseButton>
+      </div>
+      <label class="block mb-1.5 text-label font-semibold text-text-700">رابط الدعوة (بديل)</label>
       <div class="flex items-center gap-2">
         <input :value="inviteLink" readonly class="flex-1 min-w-0 h-icon-btn px-3 rounded-sm border border-border bg-bg text-body-sm mono">
         <BaseButton :icon="Copy" variant="outline" @click="copyInviteLink">نسخ</BaseButton>
+      </div>
+      <div class="flex items-center gap-2 mt-3">
+        <BaseButton :icon="MessageCircle" variant="outline" class="flex-1" :disabled="!inviteTarget?.whats" @click="sendInviteWhats">إعادة الإرسال عبر واتساب</BaseButton>
+        <BaseButton :icon="Mail" variant="outline" class="flex-1" :disabled="!inviteTarget?.mail" @click="sendInviteMail">إعادة الإرسال عبر البريد</BaseButton>
       </div>
       <template #footer>
         <BaseButton block @click="inviteModalOpen = false">تم</BaseButton>
@@ -165,6 +175,7 @@ import EmptyState from '@/components/ui/EmptyState.vue'
 import { mapState, mapActions } from 'pinia'
 import { useUsersStore } from '@/stores/users.store'
 import { useAuthStore } from '@/stores/auth.store'
+import { APP_NAME } from '@/utils/constants'
 
 const emptyForm = () => ({ name: '', role: 'committee', employee_number: '', email: '', whatsapp: '' })
 const PAGE_SIZE = 5
@@ -203,6 +214,7 @@ export default {
 
       inviteModalOpen: false,
       inviteLink: '',
+      inviteTarget: null,
 
       editModalOpen: false,
       editTargetId: null,
@@ -281,16 +293,43 @@ export default {
       this.submitting = true
       try {
         const result = await this.createUser(this.form)
+        const password = await this.setUserPassword(result.user.id)
         this.formOpen = false
         this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
+        this.inviteTarget = { name: this.form.name, mail: this.form.email, whats: this.form.whatsapp, password }
         this.inviteModalOpen = true
-        this.$toast?.success('تم إنشاء الحساب')
+        this.sendInviteWhats()
+        this.sendInviteMail()
+        this.$toast?.success('تم إنشاء الحساب وإرسال بياناته')
         await this.load()
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء الحساب')
       } finally {
         this.submitting = false
       }
+    },
+
+    inviteMessage() {
+      return `مرحبًا ${this.inviteTarget?.name || ''}،\nتم إنشاء حسابك على منصة ${APP_NAME}.\nالبريد الإلكتروني: ${this.inviteTarget?.mail || ''}\nكلمة المرور: ${this.inviteTarget?.password || ''}\nرابط الدخول: ${window.location.origin}/login`
+    },
+    async copyInvitePassword() {
+      try {
+        await navigator.clipboard.writeText(this.inviteTarget?.password || '')
+        this.$toast?.success('تم نسخ كلمة السر')
+      } catch {
+        this.$toast?.error('تعذّر نسخ كلمة السر')
+      }
+    },
+    sendInviteWhats() {
+      if (!this.inviteTarget?.whats) return
+      const num = digitsOnly(this.inviteTarget.whats)
+      const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
+      window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.inviteMessage())}`, '_blank')
+    },
+    sendInviteMail() {
+      if (!this.inviteTarget?.mail) return
+      const subject = encodeURIComponent(`تم إنشاء حسابك على منصة ${APP_NAME}`)
+      window.location.href = `mailto:${this.inviteTarget.mail}?subject=${subject}&body=${encodeURIComponent(this.inviteMessage())}`
     },
 
     async copyInviteLink() {
