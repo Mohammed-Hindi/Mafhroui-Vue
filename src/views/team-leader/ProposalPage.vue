@@ -12,23 +12,25 @@
           تم رفض المقترح: {{ proposal.rejection_reason }}. عدّلي البيانات وأعيدي الإرسال.
         </div>
 
-        <template v-for="(field, i) in fieldsMeta" :key="field.key">
-          <BaseInput v-if="i < visibleFieldsCount && field.type === 'input'" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" />
-          <ClauseTextarea v-else-if="i < visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
-        </template>
-
-        <button
-          type="button"
-          class="flex items-center justify-center gap-1.5 h-10 rounded-sm border border-border bg-bg text-primary-700 text-body-sm font-bold hover:bg-primary-50 transition-colors duration-fast"
-          @click="showMoreFields = !showMoreFields"
-        >
-          {{ showMoreFields ? 'عرض أقل' : 'عرض المزيد' }}
-          <ChevronDown :size="14" :class="['transition-transform duration-fast', showMoreFields && 'rotate-180']" />
-        </button>
-
-        <template v-if="showMoreFields">
+        <template v-if="proposalMode === 'form'">
           <template v-for="(field, i) in fieldsMeta" :key="field.key">
-            <ClauseTextarea v-if="i >= visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
+            <BaseInput v-if="i < visibleFieldsCount && field.type === 'input'" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" />
+            <ClauseTextarea v-else-if="i < visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
+          </template>
+
+          <button
+            type="button"
+            class="flex items-center justify-center gap-1.5 h-10 rounded-sm border border-border bg-bg text-primary-700 text-body-sm font-bold hover:bg-primary-50 transition-colors duration-fast"
+            @click="showMoreFields = !showMoreFields"
+          >
+            {{ showMoreFields ? 'عرض أقل' : 'عرض المزيد' }}
+            <ChevronDown :size="14" :class="['transition-transform duration-fast', showMoreFields && 'rotate-180']" />
+          </button>
+
+          <template v-if="showMoreFields">
+            <template v-for="(field, i) in fieldsMeta" :key="field.key">
+              <ClauseTextarea v-if="i >= visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
+            </template>
           </template>
         </template>
 
@@ -98,9 +100,9 @@ import { useAuthStore } from '@/stores/auth.store'
 const PROPOSAL_FIELDS = [
   { key: 'name', hint: 'اسم المشروع', type: 'input', placeholder: 'اسم مشروع التخرج' },
   { key: 'desc', hint: 'وصف المشروع', type: 'textarea', rows: 3, placeholder: 'وصف مختصر عن فكرة المشروع...' },
-  { key: 'challenges', hint: 'التحديات', type: 'textarea', rows: 3, placeholder: 'التحديات التي يحلّها المشروع' },
   { key: 'solutions', hint: 'الحلول', type: 'textarea', rows: 3, placeholder: 'الحلول المقترحة' },
   { key: 'features', hint: 'الميزات', type: 'textarea', rows: 3, placeholder: 'أبرز ميزات المشروع' },
+  { key: 'challenges', hint: 'التحديات', type: 'textarea', rows: 3, placeholder: 'التحديات التي يحلّها المشروع' },
   { key: 'addedValue', hint: 'القيمة المضافة', type: 'textarea', rows: 3, placeholder: 'القيمة المضافة للمستخدم' }
 ]
 
@@ -171,6 +173,16 @@ export default {
     ...mapActions(useTeamsStore, ['fetchTeams', 'submitProposal', 'updateProposal', 'submitFinalReport', 'openProtectedFile']),
 
     async submitProposal() {
+      if (this.proposalMode === 'file') {
+        if (!this.proposalFile) {
+          this.$toast?.error('يرجى رفع ملف المقترح قبل الإرسال')
+          return
+        }
+        this.proposalSubmitted = true
+        this.$toast?.success('تم إرسال المقترح بنجاح، بانتظار اعتماد المشرف')
+        return
+      }
+
       if (!this.proposalForm.name.trim() || !this.proposalForm.desc.trim()) {
         this.$toast?.error('يرجى تعبئة اسم المشروع ووصفه على الأقل')
         return

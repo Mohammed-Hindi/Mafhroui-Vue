@@ -461,13 +461,32 @@ export default {
       }
     },
 
-    sendWhats(whats) {
-      const num = digitsOnly(whats)
-      const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
-      window.open(`https://wa.me/${full}`, '_blank')
+    // كلمة سر تجريبية ثابتة مشتقة من الرقم الجامعي — تُستخدم فقط لعرض بيانات الدخول التجريبية بالرسالة المرسلة للطالب
+    memberPassword(member) {
+      return `Masar@${String(member.uid || '').slice(-4)}`
     },
-    sendMail(mail) {
-      window.location.href = `mailto:${mail}`
+    credentialsMessage(member) {
+      return [
+        `مرحبًا ${member.name}،`,
+        `بيانات تسجيل الدخول لمنصة ${APP_NAME}:`,
+        `اسم المنصة: ${APP_NAME}`,
+        `رابط المنصة: ${window.location.origin}`,
+        `الاسم: ${member.name}`,
+        `الرقم الجامعي: ${member.uid}`,
+        `البريد الإلكتروني: ${member.mail}`,
+        `كلمة السر: ${this.memberPassword(member)}`
+      ].join('\n')
+    },
+
+    sendWhats(member) {
+      const num = digitsOnly(member.whats)
+      const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
+      window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.credentialsMessage(member))}`, '_blank')
+    },
+    sendMail(member) {
+      const subject = encodeURIComponent(`بيانات تسجيل الدخول لمنصة ${APP_NAME}`)
+      const body = encodeURIComponent(this.credentialsMessage(member))
+      window.location.href = `mailto:${member.mail}?subject=${subject}&body=${body}`
     }
   }
 }

@@ -1,5 +1,17 @@
 <template>
   <div>
+    <div class="flex justify-end mb-5">
+      <button
+        type="button"
+        v-magnetic
+        class="flex items-center gap-2 h-icon-btn px-4 rounded-sm border border-border bg-surface text-[13px] font-bold text-text-700 hover:border-primary-200 hover:text-primary-700 hover:bg-primary-50 transition-colors duration-fast"
+        @click="changePasswordOpen = true"
+      >
+        <KeyRound :size="16" />
+        تغيير كلمة السر
+      </button>
+    </div>
+
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
       <div
         v-for="stat in committeeStore.summaryCards"
@@ -87,22 +99,26 @@
         <p v-else class="text-body-sm text-text-400 text-center py-4">لا تتوفر بيانات توزيع الحالات حاليًا</p>
       </div>
     </div>
+
+    <ChangePasswordModal v-model="changePasswordOpen" />
   </div>
 </template>
 
 <script>
-import { Users, LayoutGrid } from 'lucide-vue-next'
+import { Users, LayoutGrid, KeyRound } from 'lucide-vue-next'
 import CountUp from '@/components/ui/CountUp.vue'
+import ChangePasswordModal from '@/components/shared/ChangePasswordModal.vue'
 import { useCommitteeStore } from '@/stores/committee.store'
 
 export default {
   name: 'CommitteeDashboardPage',
 
-  components: { Users, LayoutGrid, CountUp },
+  components: { Users, LayoutGrid, KeyRound, CountUp, ChangePasswordModal },
 
   data() {
     return {
-      committeeStore: useCommitteeStore()
+      committeeStore: useCommitteeStore(),
+      changePasswordOpen: false
     }
   },
 

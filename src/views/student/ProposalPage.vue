@@ -98,7 +98,6 @@ export default {
   async created() {
     await this.fetchTeams()
   },
-
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams', 'openProtectedFile'])
   }
