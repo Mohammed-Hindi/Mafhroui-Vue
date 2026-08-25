@@ -164,7 +164,7 @@
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="addStudentModal = false">إلغاء</BaseButton>
-        <BaseButton :icon="Send" :loading="submitting" @click="submitAddStudent">إضافة الطالب</BaseButton>
+        <BaseButton :icon="Send" :loading="submitting" @click="submitAddStudent">إضافة وإرسال البيانات (واتس + بريد)</BaseButton>
       </template>
     </BaseModal>
 
@@ -178,15 +178,25 @@
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="addSupervisorModal = false">إلغاء</BaseButton>
-        <BaseButton :icon="Send" :loading="submitting" @click="submitAddSupervisor">إضافة المشرف</BaseButton>
+        <BaseButton :icon="Send" :loading="submitting" @click="submitAddSupervisor">إضافة وإرسال البيانات (واتس + بريد)</BaseButton>
       </template>
     </BaseModal>
 
-    <!-- رابط الدعوة بعد إنشاء حساب -->
-    <BaseModal v-model="inviteModal" title="تم إنشاء الحساب" description="لا تُرسل المنصة كلمات مرور صريحة — شارك رابط الدعوة التالي مع العضو ليعيّن كلمة مروره بنفسه (صالح 3 أيام)." size="sm">
+    <!-- بيانات الحساب بعد الإنشاء -->
+    <BaseModal v-model="inviteModal" title="تم إنشاء الحساب" description="تم توليد كلمة سر مؤقتة وفتح واتساب/البريد لإرسالها للعضو تلقائيًا." size="sm">
+      <label class="block mb-1.5 text-label font-semibold text-text-700">كلمة السر المؤقتة</label>
+      <div class="flex items-center gap-2 mb-3">
+        <input :value="inviteTarget?.password" readonly class="flex-1 min-w-0 h-icon-btn px-3 rounded-sm border border-border bg-bg text-body-sm mono">
+        <BaseButton :icon="Copy" variant="outline" @click="copyInvitePassword">نسخ</BaseButton>
+      </div>
+      <label class="block mb-1.5 text-label font-semibold text-text-700">رابط الدعوة (بديل)</label>
       <div class="flex items-center gap-2">
         <input :value="inviteLink" readonly class="flex-1 min-w-0 h-icon-btn px-3 rounded-sm border border-border bg-bg text-body-sm mono">
         <BaseButton :icon="Copy" variant="outline" @click="copyInviteLink">نسخ</BaseButton>
+      </div>
+      <div class="flex items-center gap-2 mt-3">
+        <BaseButton :icon="MessageCircle" variant="outline" class="flex-1" :disabled="!inviteTarget?.whats" @click="sendInviteWhats">إعادة الإرسال عبر واتساب</BaseButton>
+        <BaseButton :icon="Mail" variant="outline" class="flex-1" :disabled="!inviteTarget?.mail" @click="sendInviteMail">إعادة الإرسال عبر البريد</BaseButton>
       </div>
       <template #footer>
         <BaseButton block @click="inviteModal = false">تم</BaseButton>
@@ -310,6 +320,7 @@ import Pagination from '@/components/ui/Pagination.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useUsersStore } from '@/stores/users.store'
 import { exportStyledExcel, exportGroupsPdf } from '@/utils/exportReport'
+import { APP_NAME } from '@/utils/constants'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
 
 const GROUPS_PAGE_SIZE = 5
@@ -346,6 +357,7 @@ export default {
 
       inviteModal: false,
       inviteLink: '',
+      inviteTarget: null,
 
       importModal: false,
       importPreview: null,
@@ -465,7 +477,7 @@ export default {
 
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'specializationName', 'updateTeam', 'deleteTeam', 'addTeamMember', 'removeTeamMember', 'updateTeamLeader', 'previewTeamImport', 'confirmTeamImport', 'fetchTrashedTeams', 'restoreTeam']),
-    ...mapActions(useUsersStore, ['fetchUsers', 'createUser', 'updateUser']),
+    ...mapActions(useUsersStore, ['fetchUsers', 'createUser', 'updateUser', 'setUserPassword']),
 
     isGroupOpen(id) {
       return this.openGroupIds.includes(id)
@@ -494,10 +506,14 @@ export default {
       this.submitting = true
       try {
         const result = await this.createUser({ ...this.addStudentForm, role: 'student' })
+        const password = await this.setUserPassword(result.user.id)
         this.addStudentModal = false
         this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
+        this.inviteTarget = { name: this.addStudentForm.name, mail: this.addStudentForm.email, whats: this.addStudentForm.whatsapp, password }
         this.inviteModal = true
-        this.$toast?.success('تم إنشاء حساب الطالب')
+        this.sendInviteWhats()
+        this.sendInviteMail()
+        this.$toast?.success('تم إنشاء حساب الطالب وإرسال بياناته')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء حساب الطالب')
       } finally {
@@ -517,14 +533,41 @@ export default {
       this.submitting = true
       try {
         const result = await this.createUser({ ...this.addSupervisorForm, role: 'supervisor' })
+        const password = await this.setUserPassword(result.user.id)
         this.addSupervisorModal = false
         this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
+        this.inviteTarget = { name: this.addSupervisorForm.name, mail: this.addSupervisorForm.email, whats: this.addSupervisorForm.whatsapp, password }
         this.inviteModal = true
-        this.$toast?.success('تم إنشاء حساب المشرف')
+        this.sendInviteWhats()
+        this.sendInviteMail()
+        this.$toast?.success('تم إنشاء حساب المشرف وإرسال بياناته')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء حساب المشرف')
       } finally {
         this.submitting = false
+      }
+    },
+
+    inviteMessage() {
+      return `مرحبًا ${this.inviteTarget?.name || ''}،\nتم إنشاء حسابك على منصة ${APP_NAME}.\nالبريد الإلكتروني: ${this.inviteTarget?.mail || ''}\nكلمة المرور: ${this.inviteTarget?.password || ''}\nرابط الدخول: ${window.location.origin}/login`
+    },
+    sendInviteWhats() {
+      if (!this.inviteTarget?.whats) return
+      const num = digitsOnly(this.inviteTarget.whats)
+      const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
+      window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.inviteMessage())}`, '_blank')
+    },
+    sendInviteMail() {
+      if (!this.inviteTarget?.mail) return
+      const subject = encodeURIComponent(`تم إنشاء حسابك على منصة ${APP_NAME}`)
+      window.location.href = `mailto:${this.inviteTarget.mail}?subject=${subject}&body=${encodeURIComponent(this.inviteMessage())}`
+    },
+    async copyInvitePassword() {
+      try {
+        await navigator.clipboard.writeText(this.inviteTarget?.password || '')
+        this.$toast?.success('تم نسخ كلمة السر')
+      } catch {
+        this.$toast?.error('تعذّر نسخ كلمة السر')
       }
     },
     async copyInviteLink() {
