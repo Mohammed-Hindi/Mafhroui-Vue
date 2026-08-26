@@ -76,10 +76,6 @@
             <button type="button" class="grid place-items-center w-9 h-9 rounded-pill bg-success-bg text-success hover:brightness-95 transition-all duration-fast disabled:opacity-40" :disabled="row.status !== 'قيد المراجعة'" title="موافقة" @click="approve(row)"><Check :size="15" /></button>
           </div>
         </template>
-        <template #cell-rejectReason="{ row }">
-          <span v-if="row.status === 'مرفوض' && row.rejectReason" class="text-caption text-error">{{ row.rejectReason }}</span>
-          <span v-else class="text-text-400">—</span>
-        </template>
         <template #row-extra="{ row }">
           <div v-if="row.status === 'مرفوض' && row.rejectReason" class="flex items-start gap-2 px-5 py-3 bg-error-bg border-t border-error-border/50">
             <XCircle :size="14" class="text-error shrink-0 mt-0.5" />
@@ -136,8 +132,7 @@ export default {
         { key: 'team', label: 'الفريق' },
         { key: 'file', label: 'المرفقات' },
         { key: 'status', label: 'الحالة' },
-        { key: 'actions', label: 'الإجراءات' },
-        { key: 'rejectReason', label: 'سبب الرفض' }
+        { key: 'actions', label: 'الإجراءات' }
       ],
 
       rejectModal: false,
