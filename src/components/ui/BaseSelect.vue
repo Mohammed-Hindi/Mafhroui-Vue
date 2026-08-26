@@ -27,6 +27,7 @@
     <p v-if="error" class="mt-1.5 text-label text-error">{{ error }}</p>
 
     <teleport to="body">
+      <div v-if="isOpen" class="fixed inset-0 z-popover bg-text-900/20" aria-hidden="true" @click="closeDropdown" />
       <transition
         enter-active-class="transition duration-fast ease-standard"
         enter-from-class="opacity-0 -translate-y-1 scale-[0.98]"
