@@ -181,13 +181,19 @@
     <!-- تسجيل / تعديل موعد مناقشة -->
     <BaseModal v-model="apptModal" :title="isEditing ? 'تعديل موعد المناقشة' : 'تسجيل موعد مناقشة جديد'" description="سيصل إشعار داخل المنصة لقائد الفريق والمشرف فور الحفظ" size="lg">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <BaseSelect v-if="!isEditing" v-model="apptForm.project_id" label="المشروع" placeholder="اختر مشروعًا قيد التنفيذ" :options="projectOptions" class="sm:col-span-2" />
+        <template v-if="!isEditing">
+          <BaseSelect v-model="modalDeptId" label="القسم" placeholder="اختاري القسم" :options="modalDeptOptions" @update:model-value="modalSpecId = ''; apptForm.project_id = ''" />
+          <BaseSelect v-model="modalSpecId" label="التخصص" placeholder="اختاري التخصص" :options="modalSpecOptions" @update:model-value="apptForm.project_id = ''" />
+          <BaseSelect v-model="apptForm.project_id" label="المشروع" placeholder="اختر مشروعًا قيد التنفيذ" :options="projectOptions" class="sm:col-span-2" />
+        </template>
+        <template v-else>
+          <BaseInput :model-value="selectedProjectInfo?.deptName ?? ''" label="القسم" readonly />
+          <BaseInput :model-value="selectedProjectInfo?.specName ?? ''" label="التخصص" readonly />
+        </template>
 
         <BaseInput :model-value="selectedProjectInfo?.teamId ?? ''" label="رقم المجموعة" readonly />
         <BaseInput :model-value="selectedProjectInfo?.teamName ?? ''" label="اسم الفريق" readonly />
         <BaseInput :model-value="selectedProjectInfo?.supervisorName ?? ''" label="المشرف" readonly />
-        <BaseInput :model-value="selectedProjectInfo?.deptName ?? ''" label="القسم" readonly />
-        <BaseInput :model-value="selectedProjectInfo?.specName ?? ''" label="التخصص" readonly />
 
         <BaseInput v-model="apptForm.place" label="مكان المناقشة" placeholder="مثال: قاعة المناقشات 1" />
         <BaseInput v-model="apptForm.date" type="date" label="تاريخ المناقشة" />
@@ -300,6 +306,8 @@ export default {
       isEditing: false,
       editTargetId: null,
       apptForm: emptyForm(),
+      modalDeptId: '',
+      modalSpecId: '',
 
       deleteModal: false,
       deleteTarget: null,
@@ -310,7 +318,7 @@ export default {
 
   computed: {
     ...mapState(useDiscussionsStore, ['discussions', 'discussionsLoading']),
-    ...mapState(useTeamsStore, ['teams', 'teamsForDisplay']),
+    ...mapState(useTeamsStore, ['teams', 'teamsForDisplay', 'departments', 'specializations']),
 
     rows() {
       return this.discussions.map((d) => ({
@@ -345,12 +353,23 @@ export default {
       return this.discussionMembers.map((m) => m.mail).filter(Boolean)
     },
 
-    /** المشاريع قيد التنفيذ التي ما إلها موعد مناقشة مسجّل بعد */
+    /** المشاريع قيد التنفيذ التي ما إلها موعد مناقشة مسجّل بعد، مفلترة حسب القسم/التخصص المختارين بالنافذة */
     projectOptions() {
       const taken = new Set(this.discussions.map((d) => d.project_id))
       return this.teams
         .filter((t) => t.project?.status === 'in_progress' && !taken.has(t.project.id))
+        .filter((t) => !this.modalDeptId || t.project?.department_id === this.modalDeptId)
+        .filter((t) => !this.modalSpecId || t.project?.specialization_id === this.modalSpecId)
         .map((t) => ({ value: t.project.id, label: `${t.project.name} — ${t.name}` }))
+    },
+
+    modalDeptOptions() {
+      return this.departments.map((d) => ({ value: d.id, label: d.name }))
+    },
+    modalSpecOptions() {
+      return this.specializations
+        .filter((s) => !this.modalDeptId || s.department_id === this.modalDeptId)
+        .map((s) => ({ value: s.id, label: s.name }))
     },
 
     /** بيانات الفريق/المشرف/القسم/التخصص للمشروع المختار — تُعرض كمعلومات ثابتة داخل نافذة الموعد */
@@ -407,13 +426,13 @@ export default {
   },
 
   async created() {
-    await Promise.all([this.fetchDiscussions(), this.fetchTeams()])
+    await Promise.all([this.fetchDiscussions(), this.fetchTeams(), this.fetchDepartments(), this.fetchSpecializations()])
   },
 
   methods: {
     formatDate,
     ...mapActions(useDiscussionsStore, ['fetchDiscussions', 'createDiscussion', 'updateDiscussion', 'deleteDiscussion', 'previewDiscussionImport', 'confirmDiscussionImport']),
-    ...mapActions(useTeamsStore, ['fetchTeams', 'addTeamMember', 'removeTeamMember']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchDepartments', 'fetchSpecializations', 'addTeamMember', 'removeTeamMember']),
     ...mapActions(useUsersStore, ['fetchUsers', 'updateUser']),
 
     isDiscussionOpen(id) {
@@ -513,6 +532,8 @@ export default {
       this.isEditing = false
       this.editTargetId = null
       this.apptForm = emptyForm()
+      this.modalDeptId = ''
+      this.modalSpecId = ''
       this.apptModal = true
     },
     openEdit(row) {
