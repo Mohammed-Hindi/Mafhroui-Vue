@@ -69,10 +69,15 @@
                   <span class="mono truncate">{{ member.whats || '—' }}</span>
                   <span class="mono truncate" :title="member.mail">{{ member.mail || '—' }}</span>
                   <span class="text-center">
-                    <span v-if="member.leader" class="inline-grid place-items-center w-8 h-8 rounded-pill bg-warning-bg text-warning-text" title="قائد الفريق">
-                      <Crown :size="14" fill="currentColor" />
-                    </span>
-                    <span v-else class="text-text-400">—</span>
+                    <button
+                      type="button"
+                      class="grid place-items-center w-8 h-8 rounded-pill transition-colors duration-fast"
+                      :class="member.leader ? 'bg-warning-bg text-warning-text' : 'border border-border text-text-400 hover:bg-warning-bg hover:text-warning-text'"
+                      :title="member.leader ? 'قائد الفريق الحالي' : 'تعيين قائدًا للفريق'"
+                      @click="requestLeaderChange(group, member)"
+                    >
+                      <Crown :size="14" :fill="member.leader ? 'currentColor' : 'none'" />
+                    </button>
                   </span>
                   <span class="flex items-center justify-center gap-2">
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(member)"><Pencil :size="14" /></button>
@@ -112,6 +117,15 @@
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(member)"><Pencil :size="14" /></button>
                     <button v-if="member.whats" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member)"><MessageCircle :size="14" /></button>
                     <button v-if="member.mail" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member)"><Mail :size="14" /></button>
+                    <button
+                      type="button"
+                      class="grid place-items-center w-8 h-8 rounded-pill transition-colors duration-fast"
+                      :class="member.leader ? 'bg-warning-bg text-warning-text' : 'border border-border text-text-400'"
+                      :title="member.leader ? 'قائد الفريق الحالي' : 'تعيين قائدًا للفريق'"
+                      @click="requestLeaderChange(group, member)"
+                    >
+                      <Crown :size="14" :fill="member.leader ? 'currentColor' : 'none'" />
+                    </button>
                     <button v-if="member.leader" type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تقييد على المهام" @click="openRestrict(member)"><Lock :size="14" /></button>
                   </div>
                 </div>
@@ -156,6 +170,15 @@
       </div>
       <template #footer>
         <BaseButton block @click="restrictModalOpen = false">تم</BaseButton>
+      </template>
+    </BaseModal>
+
+    <!-- تعيين قائد الفريق -->
+    <BaseModal v-model="leaderModal" title="تعيين قائد الفريق" :description="leaderTarget ? `سيصبح ‏${leaderTarget.member.name} قائدًا لـ${leaderTarget.group.name}` : ''" size="sm">
+      <p class="text-body-sm text-text-600">سيفقد القائد الحالي صلاحية القيادة. هل تريدين المتابعة؟</p>
+      <template #footer>
+        <BaseButton variant="ghost" @click="leaderModal = false">إلغاء</BaseButton>
+        <BaseButton :icon="Crown" :loading="submittingLeader" @click="confirmLeaderChange">تأكيد</BaseButton>
       </template>
     </BaseModal>
 
@@ -255,6 +278,10 @@ export default {
       trashedModal: false,
       restoringId: null,
 
+      leaderModal: false,
+      leaderTarget: null,
+      submittingLeader: false,
+
       editMemberModal: false,
       editMemberTargetId: null,
       editMemberForm: {},
@@ -317,7 +344,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'updateTeam', 'deleteTeam', 'fetchTrashedTeams', 'restoreTeam']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'updateTeam', 'deleteTeam', 'fetchTrashedTeams', 'restoreTeam', 'updateTeamLeader']),
     ...mapActions(useUsersStore, ['fetchRestrictions', 'setRestriction', 'removeRestriction', 'updateUser', 'setUserPassword']),
 
     isGroupOpen(id) {
@@ -404,6 +431,25 @@ export default {
         this.$toast?.error(err.normalized?.message || 'تعذّر استرجاع الفريق')
       } finally {
         this.restoringId = null
+      }
+    },
+
+    requestLeaderChange(group, member) {
+      if (member.leader) return
+      this.leaderTarget = { group, member }
+      this.leaderModal = true
+    },
+    async confirmLeaderChange() {
+      this.submittingLeader = true
+      try {
+        await this.updateTeamLeader(this.leaderTarget.group.id, this.leaderTarget.member.id)
+        this.leaderModal = false
+        this.$toast?.success('تم تعيين قائد الفريق')
+        await this.fetchTeams()
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تعيين القائد')
+      } finally {
+        this.submittingLeader = false
       }
     },
 
