@@ -53,7 +53,10 @@
           </div>
 
           <div class="flex-1 min-w-0 flex items-center gap-3 sm:gap-6 flex-wrap">
-            <div class="text-body-sm font-extrabold text-text-900">{{ group.name }}</div>
+            <div>
+              <div class="text-body-sm font-extrabold text-text-900">{{ group.name }}</div>
+              <div class="text-label text-text-400">رقم المجموعة {{ group.id }}<template v-if="group.section"> — {{ group.section }}</template></div>
+            </div>
             <div class="text-caption"><span class="text-text-400">المشرف </span><span class="font-bold text-text-900">{{ group.sup }}</span></div>
             <BaseBadge variant="info">{{ group.spec }}</BaseBadge>
             <BaseBadge>{{ group.members.length }} {{ group.members.length === 1 ? 'طالب' : 'طلاب' }}</BaseBadge>
@@ -237,6 +240,7 @@
     <BaseModal v-model="editGroupModal" title="تعديل بيانات الفريق">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <BaseInput v-model="editGroupForm.name" label="اسم الفريق" class="sm:col-span-2" />
+        <BaseInput v-model="editGroupForm.section" label="الشعبة" placeholder="مثال: شعبة 1" />
         <BaseSelect v-model="editGroupForm.supervisor_id" label="المشرف" :options="supervisorOptions" />
         <BaseSelect v-model="editGroupForm.specialization_id" label="التخصص" :options="specializationSelectOptions" />
       </div>
@@ -404,6 +408,7 @@ export default {
       return this.teams.map((team) => ({
         id: team.id,
         name: team.name,
+        section: team.section || '',
         spec: this.specializationName(team.specialization_id),
         specId: team.specialization_id,
         sup: team.supervisor?.name || 'غير محدد',
@@ -698,7 +703,7 @@ export default {
 
     openEditGroup(group) {
       this.editGroupTargetId = group.id
-      this.editGroupForm = { name: group.name, supervisor_id: group.supId, specialization_id: group.specId }
+      this.editGroupForm = { name: group.name, section: group.section, supervisor_id: group.supId, specialization_id: group.specId }
       this.editGroupModal = true
     },
     async saveEditGroup() {
@@ -776,13 +781,14 @@ export default {
       this.exportingExcel = true
       try {
         const rowGroups = this.groups.map((g) => g.members.map((m) => ({
-          num: g.id, spec: g.spec, name: m.name, uid: m.uid || '', sup: g.sup, whats: m.whats || '', mail: m.mail
+          num: g.id, section: g.section || '', spec: g.spec, name: m.name, uid: m.uid || '', sup: g.sup, whats: m.whats || '', mail: m.mail
         })))
         await exportStyledExcel({
           fileName: 'فرق-مشاريع-التخرج.xlsx',
           sheetTitle: 'الفرق',
           columns: [
-            { key: 'num', label: 'رقم الفريق', width: 12 },
+            { key: 'num', label: 'رقم المجموعة', width: 14 },
+            { key: 'section', label: 'الشعبة', width: 12 },
             { key: 'spec', label: 'التخصص', width: 18 },
             { key: 'name', label: 'اسم العضو', width: 22 },
             { key: 'uid', label: 'الرقم الجامعي', width: 16 },
@@ -791,7 +797,7 @@ export default {
             { key: 'mail', label: 'البريد', width: 28 }
           ],
           rowGroups,
-          mergeKeys: ['num', 'sup', 'spec']
+          mergeKeys: ['num', 'section', 'sup', 'spec']
         })
       } finally {
         this.exportingExcel = false
@@ -808,6 +814,8 @@ export default {
           sections: this.groups.map((g) => ({
             heading: `${g.name}`,
             meta: [
+              { label: 'رقم المجموعة', value: String(g.id) },
+              { label: 'الشعبة', value: g.section || '—' },
               { label: 'التخصص', value: g.spec },
               { label: 'المشرف', value: g.sup },
               { label: 'عدد الأعضاء', value: String(g.members.length) }
