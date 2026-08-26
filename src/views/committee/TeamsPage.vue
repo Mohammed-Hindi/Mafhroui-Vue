@@ -320,6 +320,8 @@
         <BaseButton variant="ghost" @click="trashedModal = false">إغلاق</BaseButton>
       </template>
     </BaseModal>
+
+    <EmailComposeModal v-model="emailComposeOpen" :to="emailComposeTarget" />
   </div>
 </template>
 
@@ -340,6 +342,7 @@ import { exportStyledExcel, exportGroupsPdf } from '@/utils/exportReport'
 import { APP_NAME } from '@/utils/constants'
 import { sendEmail } from '@/services/api'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
+import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
 
 const GROUPS_PAGE_SIZE = 5
 
@@ -353,7 +356,7 @@ const emptySupervisorForm = () => ({ name: '', employee_number: '', email: '', w
 export default {
   name: 'CommitteeTeamsPage',
 
-  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, UserPlus, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, FileDropzone },
+  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, UserPlus, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, FileDropzone, EmailComposeModal },
 
   data() {
     return {
@@ -365,6 +368,8 @@ export default {
       supFilter: '',
       specFilter: '',
       openGroupIds: [],
+      emailComposeOpen: false,
+      emailComposeTarget: '',
       openMemberKeys: [],
 
       addStudentModal: false,
@@ -799,7 +804,9 @@ export default {
       window.open(`https://wa.me/${full}`, '_blank')
     },
     sendMail(mail) {
-      window.location.href = `mailto:${mail}`
+      if (!mail) return
+      this.emailComposeTarget = mail
+      this.emailComposeOpen = true
     },
     sendWhatsAll() {
       const contacts = this.groups.flatMap((g) => g.members).filter((m) => m.whats)
