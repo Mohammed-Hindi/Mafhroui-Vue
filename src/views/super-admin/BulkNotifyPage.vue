@@ -30,15 +30,21 @@
       <div v-if="usersLoading" class="py-8 text-center text-body-sm text-text-400">جارٍ التحميل...</div>
       <EmptyState v-else-if="!users.length" title="لا يوجد أعضاء" description="لا يوجد أعضاء بهذا الدور حاليًا." />
       <EmptyState v-else-if="!filteredUsers.length" title="لا نتائج" description="لا يوجد عضو مطابق للبحث." />
-      <div v-else class="border border-border rounded-sm divide-y divide-border-soft max-h-72 overflow-y-auto">
-        <label v-for="u in filteredUsers" :key="u.id" class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-border-soft">
+      <template v-else>
+        <label class="flex items-center gap-3 px-3 py-2 mb-1.5 cursor-pointer text-caption font-bold text-text-700">
+          <input type="checkbox" :checked="allFilteredSelected" @change="toggleSelectAll">
+          تحديد الكل ({{ filteredUsers.length }})
+        </label>
+        <div class="border border-border rounded-sm divide-y divide-border-soft max-h-72 overflow-y-auto">
+          <label v-for="u in filteredUsers" :key="u.id" class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-border-soft">
           <input v-model="selectedIds" type="checkbox" :value="u.id" @change="previewResult = null">
           <span class="flex-1 min-w-0">
             <span class="text-body-sm font-bold text-text-900">{{ u.name }}</span>
             <span class="text-caption text-text-400 ms-2">{{ channel === 'email' ? (u.email || 'بلا بريد') : (u.whatsapp || 'بلا واتساب') }}</span>
           </span>
-        </label>
-      </div>
+          </label>
+        </div>
+      </template>
 
       <!-- نتيجة المعاينة -->
       <div v-if="previewResult" class="mt-5 p-4 rounded-md bg-bg border border-border-soft">
@@ -83,7 +89,8 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <BaseSelect v-model="addForm.role" label="الدور" :options="roleOptions" class="sm:col-span-2" />
         <BaseInput v-model="addForm.name" label="الاسم" placeholder="مثال: د. نورة العتيبي" class="sm:col-span-2" />
-        <BaseInput v-model="addForm.employee_number" label="الرقم الوظيفي" placeholder="اختياري" />
+        <BaseInput v-if="addForm.role === 'student'" v-model="addForm.university_number" label="الرقم الجامعي" placeholder="اختياري" />
+        <BaseInput v-else v-model="addForm.employee_number" label="الرقم الوظيفي" placeholder="اختياري" />
         <BaseInput v-model="addForm.email" type="email" label="البريد الإلكتروني" placeholder="name@mashroui.local" class="sm:col-span-2" />
         <BaseInput v-model="addForm.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" class="sm:col-span-2" />
       </div>
@@ -139,7 +146,7 @@ function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
 }
 
-const emptyAddForm = () => ({ role: 'supervisor', name: '', employee_number: '', email: '', whatsapp: '' })
+const emptyAddForm = () => ({ role: 'supervisor', name: '', employee_number: '', university_number: '', email: '', whatsapp: '' })
 
 export default {
   name: 'SuperAdminBulkNotifyPage',
@@ -169,7 +176,8 @@ export default {
       /** الأدوار اللي super_admin يقدر ينشئ حسابات جديدة إلها مباشرة */
       roleOptions: [
         { value: 'supervisor', label: 'المشرفون' },
-        { value: 'committee', label: 'لجنة الإشراف' }
+        { value: 'committee', label: 'لجنة الإشراف' },
+        { value: 'student', label: 'الطلاب' }
       ],
       /** الأدوار اللي ممكن نرسلها بيانات دخول جماعيًا — تشمل الطلاب أيضًا */
       notifyRoleOptions: [
@@ -223,6 +231,10 @@ export default {
         const matchSpec = !this.specFilter || u.specialization_id === this.specFilter
         return matchQ && matchSpec
       })
+    },
+
+    allFilteredSelected() {
+      return this.filteredUsers.length > 0 && this.filteredUsers.every((u) => this.selectedIds.includes(u.id))
     }
   },
 
@@ -254,6 +266,14 @@ export default {
       } catch (_) {
         // الخطأ متاح عبر deliveriesError عند الحاجة
       }
+    },
+
+    toggleSelectAll() {
+      const filteredIds = this.filteredUsers.map((u) => u.id)
+      this.selectedIds = this.allFilteredSelected
+        ? this.selectedIds.filter((id) => !filteredIds.includes(id))
+        : [...new Set([...this.selectedIds, ...filteredIds])]
+      this.previewResult = null
     },
 
     async preview() {
