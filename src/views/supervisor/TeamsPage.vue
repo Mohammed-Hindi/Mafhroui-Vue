@@ -1,9 +1,16 @@
 <template>
   <div>
-    <div class="flex flex-wrap items-center justify-end gap-3 mb-3">
-      <BaseButton variant="outline" size="sm" :icon="MessageCircle" :loading="sendingWhatsAll" @click="sendWhatsAll">إرسال واتساب للجميع</BaseButton>
-      <BaseButton variant="outline" size="sm" :icon="Mail" :loading="sendingMailAll" @click="sendMailAll">إرسال بريد للجميع</BaseButton>
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
       <BaseButton variant="outline" size="sm" :icon="Archive" @click="openTrashed">الفرق المحذوفة</BaseButton>
+
+      <div class="flex flex-wrap gap-3">
+        <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-success-bg text-success text-caption font-bold hover:brightness-95 transition-all duration-fast disabled:opacity-40 disabled:pointer-events-none" :disabled="sendingWhatsAll || !allMembers.some((m) => m.whats)" @click="sendWhatsAll">
+          <MessageCircle :size="15" /> واتساب للجميع ({{ allMembers.filter((m) => m.whats).length }})
+        </button>
+        <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-primary-50 text-primary-700 text-caption font-bold hover:bg-primary-100 transition-colors duration-fast disabled:opacity-40 disabled:pointer-events-none" :disabled="sendingMailAll || !allMembers.some((m) => m.mail)" @click="sendMailAll">
+          <Mail :size="15" /> بريد للجميع (Gmail)
+        </button>
+      </div>
     </div>
 
     <div class="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-lg bg-surface border border-border shadow-card">
