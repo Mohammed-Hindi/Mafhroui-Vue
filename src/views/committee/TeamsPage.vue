@@ -158,12 +158,24 @@
     <Pagination class="mt-6" :current-page="page" :last-page="totalPages" :total="filteredGroups.length" @change="page = $event" />
 
     <!-- إضافة طالب -->
-    <BaseModal v-model="addStudentModal" title="إضافة طالب" description="إنشاء حساب طالب جديد مباشرة">
+    <BaseModal v-model="addStudentModal" title="إضافة طالب" description="إنشاء حساب الطالب، وإنشاء فريقه الجديد بقائد الفريق الأول (اختياري)" size="lg">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <BaseInput v-model="addStudentForm.name" label="اسم الطالب" placeholder="مثال: سيف قطناني" class="sm:col-span-2" />
         <BaseInput v-model="addStudentForm.university_number" label="الرقم الجامعي" placeholder="اختياري" />
-        <BaseInput v-model="addStudentForm.email" type="email" label="البريد الإلكتروني" placeholder="name@mashroui.local" class="sm:col-span-2" />
+        <BaseInput v-model="addStudentForm.email" type="email" label="البريد الإلكتروني" placeholder="name@mashroui.local" />
         <BaseInput v-model="addStudentForm.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" class="sm:col-span-2" />
+
+        <div class="sm:col-span-2 pt-2 mt-1 border-t border-dashed border-border">
+          <label class="flex items-center gap-2 text-body-sm font-bold text-text-900 cursor-pointer">
+            <input v-model="addStudentForm.createTeam" type="checkbox">
+            إنشاء فريق جديد لهذا الطالب (كقائد الفريق)
+          </label>
+        </div>
+        <template v-if="addStudentForm.createTeam">
+          <BaseInput v-model="addStudentForm.team_name" label="اسم الفريق" placeholder="مثال: فريق نوفا" class="sm:col-span-2" />
+          <BaseSelect v-model="addStudentForm.specialization_id" label="التخصص" placeholder="اختاري التخصص" :options="specializationSelectOptions" />
+          <BaseSelect v-model="addStudentForm.supervisor_id" label="المشرف" placeholder="اختاري المشرف" :options="supervisorOptions" />
+        </template>
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="addStudentModal = false">إلغاء</BaseButton>
@@ -333,7 +345,7 @@ function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
 }
 
-const emptyStudentForm = () => ({ name: '', university_number: '', email: '', whatsapp: '' })
+const emptyStudentForm = () => ({ name: '', university_number: '', email: '', whatsapp: '', createTeam: false, team_name: '', specialization_id: '', supervisor_id: '' })
 const emptySupervisorForm = () => ({ name: '', employee_number: '', email: '', whatsapp: '' })
 
 export default {
@@ -481,7 +493,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'specializationName', 'updateTeam', 'deleteTeam', 'addTeamMember', 'removeTeamMember', 'updateTeamLeader', 'previewTeamImport', 'confirmTeamImport', 'fetchTrashedTeams', 'restoreTeam']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'specializationName', 'createTeam', 'updateTeam', 'deleteTeam', 'addTeamMember', 'removeTeamMember', 'updateTeamLeader', 'previewTeamImport', 'confirmTeamImport', 'fetchTrashedTeams', 'restoreTeam']),
     ...mapActions(useUsersStore, ['fetchUsers', 'createUser', 'updateUser', 'setUserPassword']),
 
     isGroupOpen(id) {
@@ -504,17 +516,31 @@ export default {
       this.addStudentModal = true
     },
     async submitAddStudent() {
-      if (!this.addStudentForm.name || !this.addStudentForm.email) {
+      const f = this.addStudentForm
+      if (!f.name || !f.email) {
         this.$toast?.error('يرجى تعبئة الاسم والبريد الإلكتروني على الأقل')
+        return
+      }
+      if (f.createTeam && (!f.team_name || !f.specialization_id || !f.supervisor_id)) {
+        this.$toast?.error('يرجى تعبئة اسم الفريق والتخصص والمشرف لإنشاء الفريق')
         return
       }
       this.submitting = true
       try {
-        const result = await this.createUser({ ...this.addStudentForm, role: 'student' })
+        const result = await this.createUser({
+          name: f.name, email: f.email, whatsapp: f.whatsapp, university_number: f.university_number,
+          role: 'student', specialization_id: f.createTeam ? f.specialization_id : null
+        })
         const password = await this.setUserPassword(result.user.id)
+        if (f.createTeam) {
+          await this.createTeam({
+            name: f.team_name, supervisor_id: f.supervisor_id, specialization_id: f.specialization_id,
+            member_ids: [result.user.id], leader_id: result.user.id
+          })
+        }
         this.addStudentModal = false
         this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
-        this.inviteTarget = { name: this.addStudentForm.name, mail: this.addStudentForm.email, whats: this.addStudentForm.whatsapp, password }
+        this.inviteTarget = { name: f.name, mail: f.email, whats: f.whatsapp, password }
         this.inviteModal = true
         this.sendInviteWhats()
         this.sendInviteMail()
