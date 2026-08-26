@@ -87,10 +87,9 @@
                 </slot>
               </span>
             </div>
+            <slot name="row-extra" :row="row" :index="index" />
           </div>
         </template>
-
-        <slot name="row-extra" :row="row" :index="index" />
       </div>
     </div>
 
