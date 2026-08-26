@@ -176,6 +176,7 @@ import { mapState, mapActions } from 'pinia'
 import { useUsersStore } from '@/stores/users.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { APP_NAME } from '@/utils/constants'
+import { sendEmail } from '@/services/api'
 
 const emptyForm = () => ({ name: '', role: 'committee', employee_number: '', email: '', whatsapp: '' })
 const PAGE_SIZE = 5
@@ -326,10 +327,18 @@ export default {
       const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
       window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.inviteMessage())}`, '_blank')
     },
-    sendInviteMail() {
+    async sendInviteMail() {
       if (!this.inviteTarget?.mail) return
-      const subject = encodeURIComponent(`تم إنشاء حسابك على منصة ${APP_NAME}`)
-      window.location.href = `mailto:${this.inviteTarget.mail}?subject=${subject}&body=${encodeURIComponent(this.inviteMessage())}`
+      try {
+        await sendEmail({
+          to: this.inviteTarget.mail,
+          subject: `تم إنشاء حسابك على منصة ${APP_NAME}`,
+          message: this.inviteMessage()
+        })
+        this.$toast?.success('تم إرسال البريد')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال البريد')
+      }
     },
 
     async copyInviteLink() {

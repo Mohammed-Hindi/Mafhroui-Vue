@@ -236,6 +236,7 @@ import Pagination from '@/components/ui/Pagination.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUsersStore } from '@/stores/users.store'
+import { sendEmail } from '@/services/api'
 
 const GROUPS_PAGE_SIZE = 5
 
@@ -553,11 +554,14 @@ export default {
       if (!member.mail || !member.id) return
       try {
         const password = await this.setUserPassword(member.id)
-        const subject = encodeURIComponent(`بيانات تسجيل الدخول لمنصة ${APP_NAME}`)
-        const body = encodeURIComponent(this.credentialsMessage(member, password))
-        window.location.href = `mailto:${member.mail}?subject=${subject}&body=${body}`
+        await sendEmail({
+          to: member.mail,
+          subject: `بيانات تسجيل الدخول لمنصة ${APP_NAME}`,
+          message: this.credentialsMessage(member, password)
+        })
+        this.$toast?.success('تم إرسال البريد')
       } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر توليد كلمة سر جديدة')
+        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال البريد')
       }
     },
 
@@ -584,15 +588,18 @@ export default {
     async sendMailAll() {
       const targets = this.allMembers.filter((m) => m.mail && m.id)
       if (!targets.length) return
-      if (!window.confirm(`سيتم توليد كلمة سر جديدة لكل عضو وفتح ${targets.length} رسالة بريد. متابعة؟`)) return
+      if (!window.confirm(`سيتم توليد كلمة سر جديدة لكل عضو وإرسال ${targets.length} رسالة بريد عبر ${APP_NAME}. متابعة؟`)) return
       this.sendingMailAll = true
       try {
-        for (const [i, member] of targets.entries()) {
+        for (const member of targets) {
           const password = await this.setUserPassword(member.id)
-          const subject = encodeURIComponent(`بيانات تسجيل الدخول لمنصة ${APP_NAME}`)
-          const body = encodeURIComponent(this.credentialsMessage(member, password))
-          setTimeout(() => window.open(`mailto:${member.mail}?subject=${subject}&body=${body}`, '_blank'), i * 300)
+          await sendEmail({
+            to: member.mail,
+            subject: `بيانات تسجيل الدخول لمنصة ${APP_NAME}`,
+            message: this.credentialsMessage(member, password)
+          })
         }
+        this.$toast?.success('تم إرسال البريد للجميع')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إرسال البيانات للجميع')
       } finally {
