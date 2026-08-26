@@ -182,6 +182,15 @@
     <BaseModal v-model="apptModal" :title="isEditing ? 'تعديل موعد المناقشة' : 'تسجيل موعد مناقشة جديد'" description="سيصل إشعار داخل المنصة لقائد الفريق والمشرف فور الحفظ" size="lg">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <BaseSelect v-if="!isEditing" v-model="apptForm.project_id" label="المشروع" placeholder="اختر مشروعًا قيد التنفيذ" :options="projectOptions" class="sm:col-span-2" />
+
+        <div v-if="selectedProjectInfo" class="sm:col-span-2 flex flex-wrap gap-x-6 gap-y-2 p-3 rounded-sm bg-bg border border-border-soft text-caption">
+          <div><span class="text-text-400">رقم المجموعة: </span><span class="font-bold text-text-900">{{ selectedProjectInfo.teamId }}</span></div>
+          <div><span class="text-text-400">اسم الفريق: </span><span class="font-bold text-text-900">{{ selectedProjectInfo.teamName }}</span></div>
+          <div><span class="text-text-400">المشرف: </span><span class="font-bold text-text-900">{{ selectedProjectInfo.supervisorName }}</span></div>
+          <div><span class="text-text-400">القسم: </span><span class="font-bold text-text-900">{{ selectedProjectInfo.deptName }}</span></div>
+          <div><span class="text-text-400">التخصص: </span><span class="font-bold text-text-900">{{ selectedProjectInfo.specName }}</span></div>
+        </div>
+
         <BaseInput v-model="apptForm.place" label="مكان المناقشة" placeholder="مثال: قاعة المناقشات 1" />
         <BaseInput v-model="apptForm.date" type="date" label="تاريخ المناقشة" />
         <BaseInput v-model="apptForm.time" type="time" label="موعد المناقشة" />
@@ -344,6 +353,20 @@ export default {
       return this.teams
         .filter((t) => t.project?.status === 'in_progress' && !taken.has(t.project.id))
         .map((t) => ({ value: t.project.id, label: `${t.project.name} — ${t.name}` }))
+    },
+
+    /** بيانات الفريق/المشرف/القسم/التخصص للمشروع المختار — تُعرض كمعلومات ثابتة داخل نافذة الموعد */
+    selectedProjectInfo() {
+      if (!this.apptForm.project_id) return null
+      const team = this.teams.find((t) => t.project?.id === this.apptForm.project_id)
+      if (!team) return null
+      return {
+        teamId: team.id,
+        teamName: team.name,
+        supervisorName: team.supervisor?.name || '—',
+        deptName: team.project?.department?.name || 'غير محدد',
+        specName: team.project?.specialization?.name || 'غير محدد'
+      }
     },
 
     deptOptions() {
