@@ -119,6 +119,8 @@
       <BaseSelect v-model="pageDropdown" class="min-w-[160px]" :options="pageOptions" />
       <Pagination :current-page="page" :last-page="totalPages" :total="filteredDiscussions.length" @change="page = $event" />
     </div>
+
+    <EmailComposeModal v-model="emailComposeOpen" :to="emailComposeTarget" />
   </div>
 </template>
 
@@ -134,6 +136,7 @@ import Pagination from '@/components/ui/Pagination.vue'
 import { formatDate } from '@/utils/formatters'
 import { useDiscussionsStore } from '@/stores/discussions.store'
 import { useTeamsStore } from '@/stores/teams.store'
+import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
 
 const APPTS_PAGE_SIZE = 5
 
@@ -144,14 +147,16 @@ function digitsOnly(value) {
 export default {
   name: 'SupervisorAppointmentsPage',
 
-  components: { Search, MessageCircle, Mail, MapPin, Users, ChevronDown, CalendarClock, BaseSelect, BaseBadge, EmptyState, SkeletonLoader, Pagination },
+  components: { Search, MessageCircle, Mail, MapPin, Users, ChevronDown, CalendarClock, BaseSelect, BaseBadge, EmptyState, SkeletonLoader, Pagination, EmailComposeModal },
 
   data() {
     return {
       search: '',
       openDiscussionIds: [],
       openStudentKeys: [],
-      page: 1
+      page: 1,
+      emailComposeOpen: false,
+      emailComposeTarget: ''
     }
   },
 
@@ -257,7 +262,8 @@ export default {
     },
     sendMail(mail) {
       if (!mail) return
-      window.location.href = `mailto:${mail}`
+      this.emailComposeTarget = mail
+      this.emailComposeOpen = true
     },
     sendWhatsAll() {
       if (!this.allMembersWhats.length) return

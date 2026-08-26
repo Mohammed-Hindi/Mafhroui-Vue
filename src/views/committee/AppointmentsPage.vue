@@ -236,6 +236,8 @@
         <BaseButton variant="danger" :icon="Trash2" :loading="submitting" @click="confirmDelete">تأكيد الحذف</BaseButton>
       </template>
     </BaseModal>
+
+    <EmailComposeModal v-model="emailComposeOpen" :to="emailComposeTarget" />
   </div>
 </template>
 
@@ -255,6 +257,7 @@ import { exportStyledExcel, exportGroupsPdf } from '@/utils/exportReport'
 import { useDiscussionsStore } from '@/stores/discussions.store'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useUsersStore } from '@/stores/users.store'
+import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
 
 const APPTS_PAGE_SIZE = 5
 
@@ -267,7 +270,7 @@ const emptyForm = () => ({ project_id: '', place: '', date: '', time: '', commit
 export default {
   name: 'CommitteeAppointmentsPage',
 
-  components: { Search, MessageCircle, Mail, Pencil, Trash2, MapPin, Users, ChevronDown, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination },
+  components: { Search, MessageCircle, Mail, Pencil, Trash2, MapPin, Users, ChevronDown, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, EmailComposeModal },
 
   data() {
     return {
@@ -296,6 +299,9 @@ export default {
 
       removeStudentModal: false,
       removeStudentTarget: null,
+
+      emailComposeOpen: false,
+      emailComposeTarget: '',
 
       statusOptions: [
         { value: 'pending', label: 'قيد الانتظار' },
@@ -625,7 +631,8 @@ export default {
     },
     sendMail(mail) {
       if (!mail) return
-      window.location.href = `mailto:${mail}`
+      this.emailComposeTarget = mail
+      this.emailComposeOpen = true
     },
     sendWhatsAll() {
       if (!this.allMembersWhats.length) return

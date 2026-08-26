@@ -207,6 +207,8 @@
         <BaseButton variant="ghost" @click="trashedModal = false">إغلاق</BaseButton>
       </template>
     </BaseModal>
+
+    <EmailComposeModal v-model="emailComposeOpen" :to="emailComposeTarget" />
   </div>
 </template>
 
@@ -223,6 +225,7 @@ import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useUsersStore } from '@/stores/users.store'
+import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
 
 function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
@@ -232,11 +235,13 @@ const PAGE_SIZE = 4
 export default {
   name: 'CommitteeMembersPage',
 
-  components: { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, BaseInput, BaseSelect, BaseButton, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState },
+  components: { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, BaseInput, BaseSelect, BaseButton, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState, EmailComposeModal },
 
   data() {
     return {
       Check, Lock, Trash2, RotateCcw, Archive,
+      emailComposeOpen: false,
+      emailComposeTarget: '',
       passwords: {},
       visiblePw: [],
       generatingPwFor: null,
@@ -544,7 +549,9 @@ export default {
       window.open(`https://wa.me/${full}`, '_blank')
     },
     sendMail(mail) {
-      window.location.href = `mailto:${mail}`
+      if (!mail) return
+      this.emailComposeTarget = mail
+      this.emailComposeOpen = true
     },
 
     sendWhatsAll(list) {

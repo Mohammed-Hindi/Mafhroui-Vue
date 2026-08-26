@@ -158,6 +158,8 @@
         <BaseButton v-else block @click="passwordModalOpen = false">تم</BaseButton>
       </template>
     </BaseModal>
+
+    <EmailComposeModal v-model="emailComposeOpen" :to="emailComposeTarget" />
   </div>
 </template>
 
@@ -177,6 +179,7 @@ import { useUsersStore } from '@/stores/users.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { APP_NAME } from '@/utils/constants'
 import { sendEmail } from '@/services/api'
+import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
 
 const emptyForm = () => ({ name: '', role: 'committee', employee_number: '', email: '', whatsapp: '' })
 const PAGE_SIZE = 5
@@ -188,12 +191,14 @@ function digitsOnly(value) {
 export default {
   name: 'SuperAdminCommitteeMembersPage',
 
-  components: { ShieldCheck, UserPlus, Pencil, Copy, Trash2, Archive, RotateCcw, KeyRound, Mail, MessageCircle, RefreshCw, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState },
+  components: { ShieldCheck, UserPlus, Pencil, Copy, Trash2, Archive, RotateCcw, KeyRound, Mail, MessageCircle, RefreshCw, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState, EmailComposeModal },
 
   data() {
     return {
       RefreshCw, Send, Check, Archive, Copy, KeyRound, RotateCcw, Trash2, UserPlus,
       page: 1,
+      emailComposeOpen: false,
+      emailComposeTarget: '',
       statusOptions: [
         { value: 'active', label: 'بدون تقييد' },
         { value: 'restricted', label: 'مقيّد' }
@@ -375,7 +380,8 @@ export default {
 
     sendMail(mail) {
       if (!mail) return
-      window.location.href = `mailto:${mail}`
+      this.emailComposeTarget = mail
+      this.emailComposeOpen = true
     },
     sendWhats(whats) {
       if (!whats) return
