@@ -29,7 +29,7 @@
 
     <div class="flex items-center justify-between gap-4 mb-4">
       <h3 class="font-cairo font-bold text-h4 text-text-900">مواعيد المناقشات المسجلة</h3>
-      <span class="text-caption text-text-600">{{ filteredDiscussions.length }} موعد</span>
+      <span class="text-caption text-text-600">{{ filteredDiscussions.length }} مجموعة — {{ filteredStudentsCount }} طالبًا</span>
     </div>
 
     <SkeletonLoader v-if="discussionsLoading" :rows="4" height="80px" />
@@ -57,6 +57,7 @@
             </div>
             <div class="text-caption"><span class="text-text-400">المشرف </span><span class="font-bold text-text-900">{{ d.sup }}</span></div>
             <BaseBadge variant="info">{{ formatDate(d.date) }} — {{ d.time }}</BaseBadge>
+            <BaseBadge>{{ membersFor(d.teamId).length }} {{ membersFor(d.teamId).length === 1 ? 'طالب' : 'طلاب' }}</BaseBadge>
             <BaseBadge :variant="d.status === 'confirmed' ? 'success' : 'warning'" dot>{{ d.status === 'confirmed' ? 'مؤكَّد' : 'قيد الانتظار' }}</BaseBadge>
           </div>
 
@@ -326,6 +327,9 @@ export default {
     discussionMembers() {
       const teamIds = new Set(this.filteredDiscussions.map((d) => d.teamId))
       return this.teamsForDisplay.filter((t) => teamIds.has(t.id)).flatMap((t) => t.members)
+    },
+    filteredStudentsCount() {
+      return this.filteredDiscussions.reduce((sum, d) => sum + this.membersFor(d.teamId).length, 0)
     },
     allMembersWhats() {
       return this.discussionMembers.filter((m) => m.whats)
