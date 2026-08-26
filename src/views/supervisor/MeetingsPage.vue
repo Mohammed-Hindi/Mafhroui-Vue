@@ -119,6 +119,7 @@ export default {
       return this.meetings.map((m) => ({
         id: m.id,
         title: m.title,
+        num: this.selectedTeamId,
         date: this.formatDate(m.scheduled_at),
         time: this.formatTime(m.scheduled_at),
         link: m.google_meet_link || '',
