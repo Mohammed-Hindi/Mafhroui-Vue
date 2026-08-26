@@ -17,6 +17,9 @@
         <div class="min-w-[160px]">
           <BaseSelect v-model="channel" label="طريقة الإرسال" :options="channelOptions" />
         </div>
+        <div class="min-w-[170px]">
+          <BaseSelect v-model="specFilter" label="التخصص" placeholder="جميع التخصصات" include-placeholder-option :options="specializationOptions" />
+        </div>
         <div class="min-w-[200px]">
           <BaseInput v-model="search" label="بحث بالاسم" placeholder="اكتبي اسم العضو..." :icon="Search" />
         </div>
@@ -118,6 +121,7 @@ import { mapState, mapActions } from 'pinia'
 import { Send, UserPlus, Search, Copy, MessageCircle, Mail } from 'lucide-vue-next'
 import { useUsersStore } from '@/stores/users.store'
 import { useNotifyStore } from '@/stores/notify.store'
+import { useTeamsStore } from '@/stores/teams.store'
 import { formatDateTime } from '@/utils/formatters'
 import { APP_NAME } from '@/utils/constants'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -147,6 +151,7 @@ export default {
       Send, UserPlus, Search, Copy, MessageCircle, Mail,
       roleFilter: 'supervisor',
       channel: 'email',
+      specFilter: '',
       search: '',
       selectedIds: [],
       previewResult: null,
@@ -188,6 +193,11 @@ export default {
   computed: {
     ...mapState(useUsersStore, ['users', 'usersLoading']),
     ...mapState(useNotifyStore, ['deliveries', 'deliveriesLoading']),
+    ...mapState(useTeamsStore, ['specializations']),
+
+    specializationOptions() {
+      return this.specializations.map((s) => ({ value: s.id, label: s.name }))
+    },
 
     deliveryRows() {
       return this.deliveries.map((d) => ({
@@ -201,23 +211,29 @@ export default {
 
     filteredUsers() {
       const q = this.search.trim()
-      if (!q) return this.users
-      return this.users.filter((u) => u.name.includes(q))
+      return this.users.filter((u) => {
+        const matchQ = !q || u.name.includes(q)
+        const matchSpec = !this.specFilter || u.specialization_id === this.specFilter
+        return matchQ && matchSpec
+      })
     }
   },
 
   created() {
     this.loadUsers()
     this.loadDeliveries()
+    this.fetchSpecializations()
   },
 
   methods: {
     ...mapActions(useUsersStore, ['fetchUsers', 'createUser', 'setUserPassword']),
     ...mapActions(useNotifyStore, ['previewBulkNotify', 'sendBulkNotify', 'fetchDeliveries', 'retryDelivery']),
+    ...mapActions(useTeamsStore, ['fetchSpecializations']),
 
     async loadUsers() {
       this.selectedIds = []
       this.previewResult = null
+      this.specFilter = ''
       try {
         await this.fetchUsers(this.roleFilter)
       } catch (_) {
