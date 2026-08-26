@@ -90,6 +90,7 @@ import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import DataTable from '@/components/ui/DataTable.vue'
 import { useProgressStore } from '@/stores/progress.store'
+import { exportStyledExcel } from '@/utils/exportReport'
 
 const STATUS_LABELS = {
   completed: { label: 'مكتمل', variant: 'success' },
@@ -136,7 +137,9 @@ export default {
           sup: team.supervisor?.name || 'غير محدد',
           members: (team.members || []).map((m) => m.student?.name).filter(Boolean),
           status: team.project?.status || 'proposed',
-          pct: entry.progress.percentage
+          pct: entry.progress.percentage,
+          done: entry.progress.done,
+          total: entry.progress.total
         }
       })
     },
@@ -211,12 +214,30 @@ export default {
   },
 
   methods: {
-    ...mapActions(useProgressStore, ['fetchProgress', 'exportProgressExcel']),
+    ...mapActions(useProgressStore, ['fetchProgress']),
 
     async exportExcel() {
       this.exporting = true
       try {
-        await this.exportProgressExcel()
+        const rowGroups = this.filteredRows.map((r) => [{
+          team: r.team, sup: r.sup, spec: r.spec,
+          status: STATUS_LABELS[r.status]?.label || r.status,
+          done: r.done, total: r.total, pct: `${r.pct}%`
+        }])
+        await exportStyledExcel({
+          fileName: 'نسبة-تقدم-المشاريع.xlsx',
+          sheetTitle: 'نسبة تقدّم المشاريع',
+          columns: [
+            { key: 'team', label: 'الفريق', width: 24 },
+            { key: 'sup', label: 'المشرف', width: 20 },
+            { key: 'spec', label: 'التخصص', width: 18 },
+            { key: 'status', label: 'حالة المشروع', width: 16 },
+            { key: 'done', label: 'المهام المنجزة', width: 14 },
+            { key: 'total', label: 'إجمالي المهام', width: 14 },
+            { key: 'pct', label: 'نسبة الإنجاز', width: 14 }
+          ],
+          rowGroups
+        })
       } catch {
         this.$toast?.error('تعذّر تصدير الملف')
       } finally {

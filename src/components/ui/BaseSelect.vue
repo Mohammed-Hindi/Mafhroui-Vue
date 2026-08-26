@@ -60,8 +60,9 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onBeforeUnmount } from 'vue'
+import { ref, computed, nextTick, onBeforeUnmount, watch } from 'vue'
 import { ChevronDown, Check } from 'lucide-vue-next'
+import { useUiStore } from '@/stores/ui.store'
 
 let uid = 0
 
@@ -159,4 +160,13 @@ const select = (value) => {
 }
 
 onBeforeUnmount(closeDropdown)
+
+/** القائمة المنسدلة (fixed على body) بتتراكب بصريًا فوق الـ drawer الجانبي عالموبايل إذا ضلّت مفتوحة — سكّريها فور ما الـ drawer يفتح */
+const uiStore = useUiStore()
+watch(
+  () => uiStore.sidebarOpen,
+  (open) => {
+    if (open && isOpen.value) closeDropdown()
+  }
+)
 </script>
