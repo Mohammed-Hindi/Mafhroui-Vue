@@ -31,9 +31,10 @@
       </section>
     </template>
 
-    <BaseModal v-model="modalOpen" title="اجتماع جديد" description="سيتم إشعار الفريق المعني">
+    <BaseModal v-model="modalOpen" title="اجتماع جديد" description="سيتم إنشاؤه على Google Meet وإشعار الفريق المعني">
       <div class="flex flex-col gap-4">
         <BaseInput v-model="form.title" label="اسم الاجتماع" placeholder="مثال: مراجعة الفصل الثاني من التقرير" required />
+        <BaseInput :model-value="myTeam?.id" label="رقم المجموعة" readonly />
         <div class="grid grid-cols-2 gap-4">
           <BaseInput v-model="form.date" type="date" label="التاريخ" required />
           <BaseInput v-model="form.time" type="time" label="الوقت" required />
