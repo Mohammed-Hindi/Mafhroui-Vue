@@ -1,8 +1,6 @@
 <template>
   <div>
     <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
-      <BaseButton variant="outline" size="sm" :icon="Archive" @click="openTrashed">الفرق المحذوفة</BaseButton>
-
       <div class="flex flex-wrap gap-3">
         <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-success-bg text-success text-caption font-bold hover:brightness-95 transition-all duration-fast disabled:opacity-40 disabled:pointer-events-none" :disabled="sendingWhatsAll || !allMembers.some((m) => m.whats)" @click="sendWhatsAll">
           <MessageCircle :size="15" /> واتساب للجميع ({{ allMembers.filter((m) => m.whats).length }})
@@ -11,6 +9,8 @@
           <Mail :size="15" /> بريد للجميع (Gmail)
         </button>
       </div>
+
+      <BaseButton variant="outline" size="sm" :icon="Archive" @click="openTrashed">الفرق المحذوفة</BaseButton>
     </div>
 
     <div class="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-lg bg-surface border border-border shadow-card">
