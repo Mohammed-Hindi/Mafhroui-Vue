@@ -89,6 +89,8 @@
             </div>
           </div>
         </template>
+
+        <slot name="row-extra" :row="row" :index="index" />
       </div>
     </div>
 
