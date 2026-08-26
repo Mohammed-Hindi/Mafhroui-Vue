@@ -36,9 +36,9 @@
       <div class="reveal reveal-delay-1 bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col transition-all duration-base hover:shadow-card-hover">
         <div class="flex items-center justify-between mb-5">
           <h3 class="text-h3 font-bold text-text-900">فريقي</h3>
+          <router-link v-if="myTeams.length" :to="{ name: 'supervisor-teams' }" class="text-caption font-bold text-primary-600 hover:underline shrink-0">عرض المزيد</router-link>
         </div>
 
-        <!-- سكرول داخلي بسيط بدل "عرض المزيد" اللي كان يكبّر الصفحة كاملة -->
         <div class="flex flex-col gap-3 max-h-[380px] overflow-y-auto pe-1 scrollbar-thin">
           <div
             v-for="team in myTeams" :key="team.id"
