@@ -11,6 +11,10 @@ export const useTeamsStore = defineStore('teams', () => {
   const specializationsLoading = ref(false)
   const specializationsError = ref(null)
 
+  const departments = ref([])
+  const departmentsLoading = ref(false)
+  const departmentsError = ref(null)
+
   /** اسم التخصص من الـ id — بديل لعرض الرقم مباشرة */
   const specializationName = (id) => {
     const spec = specializations.value.find((s) => s.id === id)
@@ -58,6 +62,22 @@ export const useTeamsStore = defineStore('teams', () => {
       throw err
     } finally {
       teamsLoading.value = false
+    }
+  }
+
+  // GET /departments
+  const fetchDepartments = async () => {
+    departmentsLoading.value = true
+    departmentsError.value = null
+    try {
+      const { data } = await api.get('/departments')
+      departments.value = data.data || data
+      return departments.value
+    } catch (err) {
+      departmentsError.value = err.normalized?.message || 'تعذّر تحميل الأقسام'
+      throw err
+    } finally {
+      departmentsLoading.value = false
     }
   }
 
@@ -334,6 +354,9 @@ export const useTeamsStore = defineStore('teams', () => {
     specializations,
     specializationsLoading,
     specializationsError,
+    departments,
+    departmentsLoading,
+    departmentsError,
     teamsForDisplay,
     trashedTeams,
     trashedTeamsLoading,
@@ -342,6 +365,7 @@ export const useTeamsStore = defineStore('teams', () => {
     restoreTeam,
     fetchTeams,
     fetchSpecializations,
+    fetchDepartments,
     fetchTeamProgress,
     updateTeam,
     deleteTeam,

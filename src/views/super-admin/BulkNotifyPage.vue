@@ -12,7 +12,7 @@
 
       <div class="flex flex-wrap items-end gap-3 mb-4">
         <div class="min-w-[180px]">
-          <BaseSelect v-model="roleFilter" label="الدور" :options="roleOptions" @update:model-value="loadUsers" />
+          <BaseSelect v-model="roleFilter" label="الدور" :options="notifyRoleOptions" @update:model-value="loadUsers" />
         </div>
         <div class="min-w-[160px]">
           <BaseSelect v-model="channel" label="طريقة الإرسال" :options="channelOptions" />
@@ -166,9 +166,16 @@ export default {
       inviteLink: '',
       inviteTarget: null,
 
+      /** الأدوار اللي super_admin يقدر ينشئ حسابات جديدة إلها مباشرة */
       roleOptions: [
         { value: 'supervisor', label: 'المشرفون' },
         { value: 'committee', label: 'لجنة الإشراف' }
+      ],
+      /** الأدوار اللي ممكن نرسلها بيانات دخول جماعيًا — تشمل الطلاب أيضًا */
+      notifyRoleOptions: [
+        { value: 'supervisor', label: 'المشرفون' },
+        { value: 'committee', label: 'لجنة الإشراف' },
+        { value: 'student', label: 'الطلاب' }
       ],
       channelOptions: [
         { value: 'email', label: 'البريد الإلكتروني' },
@@ -292,7 +299,8 @@ export default {
     },
 
     openAddModal() {
-      this.addForm = { ...emptyAddForm(), role: this.roleFilter }
+      const role = this.roleOptions.some((o) => o.value === this.roleFilter) ? this.roleFilter : 'supervisor'
+      this.addForm = { ...emptyAddForm(), role }
       this.addModalOpen = true
     },
     async submitAdd() {
