@@ -162,6 +162,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <BaseInput v-model="addStudentForm.name" label="اسم الطالب" placeholder="مثال: سيف قطناني" class="sm:col-span-2" />
         <BaseInput v-model="addStudentForm.university_number" label="الرقم الجامعي" placeholder="اختياري" />
+        <BaseSelect v-model="addStudentForm.specialization_id" label="التخصص" placeholder="اختاري التخصص" :options="specializationSelectOptions" />
         <BaseInput v-model="addStudentForm.email" type="email" label="البريد الإلكتروني" placeholder="name@mashroui.local" />
         <BaseInput v-model="addStudentForm.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" class="sm:col-span-2" />
 
@@ -172,9 +173,9 @@
           </label>
         </div>
         <template v-if="addStudentForm.createTeam">
-          <BaseInput v-model="addStudentForm.team_name" label="اسم الفريق" placeholder="مثال: فريق نوفا" class="sm:col-span-2" />
-          <BaseSelect v-model="addStudentForm.specialization_id" label="التخصص" placeholder="اختاري التخصص" :options="specializationSelectOptions" />
-          <BaseSelect v-model="addStudentForm.supervisor_id" label="المشرف" placeholder="اختاري المشرف" :options="supervisorOptions" />
+          <BaseInput v-model="addStudentForm.team_name" label="اسم الفريق" placeholder="مثال: فريق نوفا" />
+          <BaseInput v-model="addStudentForm.section" label="الشعبة" placeholder="مثال: شعبة 1" />
+          <BaseSelect v-model="addStudentForm.supervisor_id" label="المشرف" placeholder="اختاري المشرف" :options="supervisorOptions" class="sm:col-span-2" />
         </template>
       </div>
       <template #footer>
@@ -345,7 +346,7 @@ function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
 }
 
-const emptyStudentForm = () => ({ name: '', university_number: '', email: '', whatsapp: '', createTeam: false, team_name: '', specialization_id: '', supervisor_id: '' })
+const emptyStudentForm = () => ({ name: '', university_number: '', email: '', whatsapp: '', createTeam: false, team_name: '', section: '', specialization_id: '', supervisor_id: '' })
 const emptySupervisorForm = () => ({ name: '', employee_number: '', email: '', whatsapp: '' })
 
 export default {
@@ -529,12 +530,12 @@ export default {
       try {
         const result = await this.createUser({
           name: f.name, email: f.email, whatsapp: f.whatsapp, university_number: f.university_number,
-          role: 'student', specialization_id: f.createTeam ? f.specialization_id : null
+          role: 'student', specialization_id: f.specialization_id || null
         })
         const password = await this.setUserPassword(result.user.id)
         if (f.createTeam) {
           await this.createTeam({
-            name: f.team_name, supervisor_id: f.supervisor_id, specialization_id: f.specialization_id,
+            name: f.team_name, section: f.section || null, supervisor_id: f.supervisor_id, specialization_id: f.specialization_id,
             member_ids: [result.user.id], leader_id: result.user.id
           })
         }
