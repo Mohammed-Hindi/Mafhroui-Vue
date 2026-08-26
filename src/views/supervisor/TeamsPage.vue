@@ -1,6 +1,8 @@
 <template>
   <div>
     <div class="flex flex-wrap items-center justify-end gap-3 mb-3">
+      <BaseButton variant="outline" size="sm" :icon="MessageCircle" :loading="sendingWhatsAll" @click="sendWhatsAll">إرسال واتساب للجميع</BaseButton>
+      <BaseButton variant="outline" size="sm" :icon="Mail" :loading="sendingMailAll" @click="sendMailAll">إرسال بريد للجميع</BaseButton>
       <BaseButton variant="outline" size="sm" :icon="Archive" @click="openTrashed">الفرق المحذوفة</BaseButton>
     </div>
 
@@ -74,8 +76,8 @@
                   </span>
                   <span class="flex items-center justify-center gap-2">
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(member)"><Pencil :size="14" /></button>
-                    <button v-if="member.whats" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
-                    <button v-if="member.mail" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
+                    <button v-if="member.whats" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member)"><MessageCircle :size="14" /></button>
+                    <button v-if="member.mail" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member)"><Mail :size="14" /></button>
                     <button v-if="member.leader" type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تقييد على المهام" @click="openRestrict(member)"><Lock :size="14" /></button>
                   </span>
                 </div>
@@ -108,8 +110,8 @@
                   <span class="text-label font-semibold text-text-400 shrink-0">تواصل</span>
                   <div class="flex gap-1.5">
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(member)"><Pencil :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
+                    <button v-if="member.whats" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member)"><MessageCircle :size="14" /></button>
+                    <button v-if="member.mail" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member)"><Mail :size="14" /></button>
                     <button v-if="member.leader" type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تقييد على المهام" @click="openRestrict(member)"><Lock :size="14" /></button>
                   </div>
                 </div>
@@ -229,6 +231,8 @@ export default {
       openGroupIds: [],
       openMemberKeys: [],
       highlightId: null,
+      sendingWhatsAll: false,
+      sendingMailAll: false,
 
       editGroupModal: false,
       editGroupTargetId: null,
@@ -280,6 +284,10 @@ export default {
       return this.teamsForDisplay.filter((g) => g.supId === this.user?.id)
     },
 
+    allMembers() {
+      return this.groups.flatMap((g) => g.members)
+    },
+
     filteredGroups() {
       const q = this.search.trim()
       return this.groups.filter((g) => {
@@ -310,7 +318,7 @@ export default {
 
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'updateTeam', 'deleteTeam', 'fetchTrashedTeams', 'restoreTeam']),
-    ...mapActions(useUsersStore, ['fetchRestrictions', 'setRestriction', 'removeRestriction', 'updateUser']),
+    ...mapActions(useUsersStore, ['fetchRestrictions', 'setRestriction', 'removeRestriction', 'updateUser', 'setUserPassword']),
 
     isGroupOpen(id) {
       return this.openGroupIds.includes(id)
@@ -464,11 +472,7 @@ export default {
       }
     },
 
-    // كلمة سر تجريبية ثابتة مشتقة من الرقم الجامعي — تُستخدم فقط لعرض بيانات الدخول التجريبية بالرسالة المرسلة للطالب
-    memberPassword(member) {
-      return `Masar@${String(member.uid || '').slice(-4)}`
-    },
-    credentialsMessage(member) {
+    credentialsMessage(member, password) {
       return [
         `مرحبًا ${member.name}،`,
         `بيانات تسجيل الدخول لمنصة ${APP_NAME}:`,
@@ -477,19 +481,70 @@ export default {
         `الاسم: ${member.name}`,
         `الرقم الجامعي: ${member.uid}`,
         `البريد الإلكتروني: ${member.mail}`,
-        `كلمة السر: ${this.memberPassword(member)}`
+        `كلمة السر: ${password}`
       ].join('\n')
     },
 
-    sendWhats(member) {
-      const num = digitsOnly(member.whats)
-      const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
-      window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.credentialsMessage(member))}`, '_blank')
+    async sendWhats(member) {
+      if (!member.whats || !member.id) return
+      try {
+        const password = await this.setUserPassword(member.id)
+        const num = digitsOnly(member.whats)
+        const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
+        window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.credentialsMessage(member, password))}`, '_blank')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر توليد كلمة سر جديدة')
+      }
     },
-    sendMail(member) {
-      const subject = encodeURIComponent(`بيانات تسجيل الدخول لمنصة ${APP_NAME}`)
-      const body = encodeURIComponent(this.credentialsMessage(member))
-      window.location.href = `mailto:${member.mail}?subject=${subject}&body=${body}`
+    async sendMail(member) {
+      if (!member.mail || !member.id) return
+      try {
+        const password = await this.setUserPassword(member.id)
+        const subject = encodeURIComponent(`بيانات تسجيل الدخول لمنصة ${APP_NAME}`)
+        const body = encodeURIComponent(this.credentialsMessage(member, password))
+        window.location.href = `mailto:${member.mail}?subject=${subject}&body=${body}`
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر توليد كلمة سر جديدة')
+      }
+    },
+
+    async sendWhatsAll() {
+      const targets = this.allMembers.filter((m) => m.whats && m.id)
+      if (!targets.length) return
+      if (!window.confirm(`سيتم توليد كلمة سر جديدة لكل عضو وفتح ${targets.length} محادثة واتساب. متابعة؟`)) return
+      this.sendingWhatsAll = true
+      try {
+        for (const [i, member] of targets.entries()) {
+          const password = await this.setUserPassword(member.id)
+          setTimeout(() => {
+            const num = digitsOnly(member.whats)
+            const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
+            window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.credentialsMessage(member, password))}`, '_blank')
+          }, i * 300)
+        }
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال البيانات للجميع')
+      } finally {
+        this.sendingWhatsAll = false
+      }
+    },
+    async sendMailAll() {
+      const targets = this.allMembers.filter((m) => m.mail && m.id)
+      if (!targets.length) return
+      if (!window.confirm(`سيتم توليد كلمة سر جديدة لكل عضو وفتح ${targets.length} رسالة بريد. متابعة؟`)) return
+      this.sendingMailAll = true
+      try {
+        for (const [i, member] of targets.entries()) {
+          const password = await this.setUserPassword(member.id)
+          const subject = encodeURIComponent(`بيانات تسجيل الدخول لمنصة ${APP_NAME}`)
+          const body = encodeURIComponent(this.credentialsMessage(member, password))
+          setTimeout(() => window.open(`mailto:${member.mail}?subject=${subject}&body=${body}`, '_blank'), i * 300)
+        }
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال البيانات للجميع')
+      } finally {
+        this.sendingMailAll = false
+      }
     }
   }
 }
