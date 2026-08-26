@@ -2,12 +2,12 @@
   <div>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
       <div class="reveal group bg-surface rounded-lg border border-border shadow-card p-5 flex items-center gap-4 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200 active:scale-[0.98]">
-        <span class="grid place-items-center w-11 h-11 rounded-md bg-success-bg text-success shrink-0"><CheckCircle2 :size="20" /></span>
-        <div><div class="font-cairo font-extrabold text-h1 text-text-900 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="archive.length" /></div><div class="text-body-sm font-bold text-text-600 mt-0.5">مشاريع مكتملة</div></div>
+        <span class="grid place-items-center w-11 h-11 rounded-md bg-primary-50 text-primary-600 shrink-0"><FileCheck :size="20" /></span>
+        <div><div class="font-cairo font-extrabold text-h1 text-text-900 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="archive.length" /></div><div class="text-body-sm font-bold text-text-600 mt-0.5">إجمالي المشاريع</div></div>
       </div>
       <div class="reveal group bg-surface rounded-lg border border-border shadow-card p-5 flex items-center gap-4 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200 active:scale-[0.98]">
-        <span class="grid place-items-center w-11 h-11 rounded-md bg-warning-bg text-warning-text shrink-0"><Star :size="20" /></span>
-        <div><div class="font-cairo font-extrabold text-h1 text-text-900 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="featuredCount" /></div><div class="text-body-sm font-bold text-text-600 mt-0.5">مشاريع مميزة</div></div>
+        <span class="grid place-items-center w-11 h-11 rounded-md bg-success-bg text-success shrink-0"><CheckCircle2 :size="20" /></span>
+        <div><div class="font-cairo font-extrabold text-h1 text-text-900 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="archive.length" /></div><div class="text-body-sm font-bold text-text-600 mt-0.5">مشاريع مكتملة</div></div>
       </div>
     </div>
 
@@ -53,7 +53,7 @@
 </template>
 
 <script>
-import { CheckCircle2, Star, Search, FileText, ExternalLink } from 'lucide-vue-next'
+import { CheckCircle2, Search, FileText, FileCheck, ExternalLink } from 'lucide-vue-next'
 import { mapState, mapActions } from 'pinia'
 import { useTeamsStore } from '@/stores/teams.store'
 import { formatDate } from '@/utils/formatters'
@@ -66,7 +66,7 @@ const PAGE_SIZE = 5
 export default {
   name: 'SupervisorProjectArchivePage',
 
-  components: { CheckCircle2, Star, Search, FileText, ExternalLink, DataTable, BaseSelect, CountUp },
+  components: { CheckCircle2, Search, FileText, FileCheck, ExternalLink, DataTable, BaseSelect, CountUp },
 
   data() {
     return {
@@ -95,13 +95,8 @@ export default {
         spec: p.specialization?.name || 'غير محدد',
         team: p.team?.name || '—',
         proj: p.name,
-        date: formatDate(p.completed_at || p.updated_at),
-        featured: !!p.is_featured
+        date: formatDate(p.completed_at || p.updated_at)
       }))
-    },
-
-    featuredCount() {
-      return this.archive.filter((a) => a.featured).length
     },
 
     specOptions() {

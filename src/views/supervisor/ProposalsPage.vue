@@ -71,7 +71,7 @@
         </template>
         <template #cell-status="{ row }"><BaseBadge :variant="statusVariant(row.status)" dot>{{ row.status }}</BaseBadge></template>
         <template #row-extra="{ row }">
-          <div v-if="row.status === 'مرفوض' && row.rejectReason" class="flex items-start gap-2 px-5 py-3 bg-error-bg border-t border-error-border/50">
+          <div v-if="row.status === 'مرفوض' && row.rejectReason" class="flex items-start gap-2 p-3 rounded-sm bg-error-bg md:rounded-none md:px-5 md:py-3 md:border-t md:border-error-border/50">
             <XCircle :size="14" class="text-error shrink-0 mt-0.5" />
             <p class="text-caption text-error leading-relaxed"><span class="font-bold">ملاحظات الرفض: </span>{{ row.rejectReason }}</p>
           </div>

@@ -5,13 +5,18 @@
       <BaseButton size="sm" :icon="Plus" @click="openCreate()">مهمة جديدة</BaseButton>
     </div>
 
+    <div class="sm:hidden mb-4">
+      <BaseSelect v-model="mobileStatus" label="عرض قائمة" :options="columnOptions" />
+    </div>
+
     <!-- خلفية شبكية هادئة خلف الأعمدة، بلمسة "لوحة عمل" -->
     <div class="relative rounded-xl p-4 sm:p-5 board-grid-bg">
       <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 relative">
         <div
           v-for="column in columns"
           :key="column.id"
-          class="bg-surface/90 backdrop-blur-sm rounded-xl border border-border-soft shadow-card flex flex-col min-h-[440px] overflow-hidden"
+          class="bg-surface/90 backdrop-blur-sm rounded-xl border border-border-soft shadow-card flex-col min-h-[440px] overflow-hidden sm:flex"
+          :class="mobileStatus === column.id ? 'flex' : 'hidden'"
           @dragover.prevent
           @drop="onDrop(column.id)"
         >
@@ -85,6 +90,7 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseTextarea from '@/components/ui/BaseTextarea.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 
 const COLUMNS = [
   { id: 'pending', label: 'قيد الانتظار', dot: 'bg-text-400', headBg: '', accentBorder: 'border-s-border' },
@@ -96,7 +102,7 @@ const COLUMNS = [
 export default {
   name: 'TaskBoard',
 
-  components: { Trash2, BaseButton, BaseModal, BaseInput, BaseTextarea },
+  components: { Trash2, BaseButton, BaseModal, BaseInput, BaseTextarea, BaseSelect },
 
   props: {
     tasks: { type: Array, default: () => [] },
@@ -111,10 +117,17 @@ export default {
     return {
       Plus,
       columns: COLUMNS,
+      mobileStatus: COLUMNS[0].id,
       modalOpen: false,
       draggingId: null,
       dragOverColumn: null,
       form: { title: '', description: '' }
+    }
+  },
+
+  computed: {
+    columnOptions() {
+      return this.columns.map((c) => ({ value: c.id, label: c.label }))
     }
   },
 
