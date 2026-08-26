@@ -14,12 +14,12 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
       <div
-        v-for="stat in committeeStore.summaryCards"
+        v-for="(stat, index) in committeeStore.summaryCards"
         :key="stat.label"
         class="reveal group bg-surface rounded-lg border border-border shadow-card p-6 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200 active:scale-[0.98]"
       >
-        <span class="grid place-items-center w-11 h-11 rounded-md mb-4 bg-primary-50 text-primary-600">
-          <Users :size="20" />
+        <span class="grid place-items-center w-11 h-11 rounded-md mb-4" :class="[statTheme[index]?.bg, statTheme[index]?.color]">
+          <component :is="statTheme[index]?.icon" :size="20" />
         </span>
         <div class="text-body-sm text-text-600 font-medium">{{ stat.label }}</div>
         <div
@@ -105,20 +105,28 @@
 </template>
 
 <script>
-import { Users, LayoutGrid, KeyRound } from 'lucide-vue-next'
+import { Users, GraduationCap, UserCog, LayoutGrid, KeyRound } from 'lucide-vue-next'
 import CountUp from '@/components/ui/CountUp.vue'
 import ChangePasswordModal from '@/components/shared/ChangePasswordModal.vue'
 import { useCommitteeStore } from '@/stores/committee.store'
 
+/** ترتيب البطاقات ثابت من committeeStore.summaryCards: المشاريع المكتملة، عدد الشعب، إجمالي الطلاب */
+const STAT_THEME = [
+  { icon: Users, bg: 'bg-primary-50', color: 'text-primary-600' },
+  { icon: GraduationCap, bg: 'bg-secondary-50', color: 'text-secondary-600' },
+  { icon: UserCog, bg: 'bg-accent-50', color: 'text-accent-600' }
+]
+
 export default {
   name: 'CommitteeDashboardPage',
 
-  components: { Users, LayoutGrid, KeyRound, CountUp, ChangePasswordModal },
+  components: { Users, GraduationCap, UserCog, LayoutGrid, KeyRound, CountUp, ChangePasswordModal },
 
   data() {
     return {
       committeeStore: useCommitteeStore(),
-      changePasswordOpen: false
+      changePasswordOpen: false,
+      statTheme: STAT_THEME
     }
   },
 

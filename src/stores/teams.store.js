@@ -25,6 +25,7 @@ export const useTeamsStore = defineStore('teams', () => {
   const mapTeamForDisplay = (team) => ({
     id: team.id,
     name: team.name,
+    section: team.section || '',
     spec: specializationName(team.specialization_id),
     sup: team.supervisor?.name || 'غير محدد',
     supId: team.supervisor?.id ?? null,

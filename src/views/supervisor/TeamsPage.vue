@@ -33,7 +33,10 @@
           </div>
 
           <div class="flex-1 min-w-0 flex items-center gap-3 sm:gap-6 flex-wrap">
-            <div class="text-body-sm font-extrabold text-text-900">{{ group.name }}</div>
+            <div>
+              <div class="text-body-sm font-extrabold text-text-900">{{ group.name }}</div>
+              <div class="text-label text-text-400">رقم المجموعة {{ group.id }}<template v-if="group.section"> — {{ group.section }}</template></div>
+            </div>
             <BaseBadge variant="info">{{ group.spec }}</BaseBadge>
             <BaseBadge>{{ group.members.length }} {{ group.members.length === 1 ? 'طالب' : 'طلاب' }}</BaseBadge>
             <BaseBadge v-if="group.projectName" variant="info">{{ group.projectName }}</BaseBadge>
