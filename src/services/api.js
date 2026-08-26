@@ -59,4 +59,6 @@ api.interceptors.response.use(
   },
 )
 
+export const sendEmail = ({ to, subject, message }) => api.post('/email/send', { to, subject, message })
+
 export default api
