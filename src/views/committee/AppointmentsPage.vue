@@ -247,7 +247,7 @@ import EmptyState from '@/components/ui/EmptyState.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { formatDate } from '@/utils/formatters'
-import { exportGroupsPdf } from '@/utils/exportReport'
+import { exportStyledExcel, exportGroupsPdf } from '@/utils/exportReport'
 import { useDiscussionsStore } from '@/stores/discussions.store'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useUsersStore } from '@/stores/users.store'
@@ -414,7 +414,7 @@ export default {
 
   methods: {
     formatDate,
-    ...mapActions(useDiscussionsStore, ['fetchDiscussions', 'createDiscussion', 'updateDiscussion', 'deleteDiscussion', 'previewDiscussionImport', 'confirmDiscussionImport', 'exportDiscussionsExcel']),
+    ...mapActions(useDiscussionsStore, ['fetchDiscussions', 'createDiscussion', 'updateDiscussion', 'deleteDiscussion', 'previewDiscussionImport', 'confirmDiscussionImport']),
     ...mapActions(useTeamsStore, ['fetchTeams', 'addTeamMember', 'removeTeamMember']),
     ...mapActions(useUsersStore, ['fetchUsers', 'updateUser']),
 
@@ -622,7 +622,35 @@ export default {
     async exportExcel() {
       this.exportingExcel = true
       try {
-        await this.exportDiscussionsExcel()
+        const rowGroups = this.filteredDiscussions.map((d) => {
+          const members = this.membersFor(d.teamId)
+          const rows = members.length ? members : [{ name: '', whats: '', mail: '' }]
+          return rows.map((m) => ({
+            grp: d.teamId ?? '—', proj: d.proj, sup: d.sup, dept: d.dept, spec: d.spec,
+            place: d.place, date: formatDate(d.date), time: d.time, committee: d.committee,
+            name: m.name, whats: m.whats || '', mail: m.mail || ''
+          }))
+        })
+        await exportStyledExcel({
+          fileName: 'مواعيد-المناقشات.xlsx',
+          sheetTitle: 'مواعيد المناقشات',
+          columns: [
+            { key: 'grp', label: 'رقم المجموعة', width: 14 },
+            { key: 'proj', label: 'اسم المشروع', width: 30 },
+            { key: 'sup', label: 'المشرف', width: 20 },
+            { key: 'dept', label: 'القسم', width: 16 },
+            { key: 'spec', label: 'التخصص', width: 16 },
+            { key: 'place', label: 'المكان', width: 18 },
+            { key: 'date', label: 'التاريخ', width: 14 },
+            { key: 'time', label: 'الوقت', width: 12 },
+            { key: 'committee', label: 'لجنة المناقشة', width: 32 },
+            { key: 'name', label: 'اسم الطالب', width: 22 },
+            { key: 'whats', label: 'الواتس', width: 16 },
+            { key: 'mail', label: 'البريد', width: 28 }
+          ],
+          rowGroups,
+          mergeKeys: ['grp', 'proj', 'sup', 'dept', 'spec', 'place', 'date', 'time', 'committee']
+        })
       } catch {
         this.$toast?.error('تعذّر تصدير الملف')
       } finally {
