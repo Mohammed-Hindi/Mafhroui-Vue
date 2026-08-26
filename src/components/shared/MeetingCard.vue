@@ -2,14 +2,25 @@
   <div class="h-full bg-surface rounded-lg border border-border shadow-card p-4 flex flex-col gap-2.5">
     <div class="flex items-start justify-between gap-2">
       <h4 class="font-cairo font-bold text-body-sm text-text-900">{{ meeting.title }}</h4>
-      <span
-        :class="[
-          'shrink-0 text-label font-bold px-2.5 py-1 rounded-pill',
-          done ? 'bg-success-bg text-success' : 'bg-info-bg text-info'
-        ]"
-      >
-        {{ done ? 'منتهي' : 'قادم' }}
-      </span>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <span
+          :class="[
+            'text-label font-bold px-2.5 py-1 rounded-pill',
+            done ? 'bg-success-bg text-success' : 'bg-info-bg text-info'
+          ]"
+        >
+          {{ done ? 'منتهي' : 'قادم' }}
+        </span>
+        <button
+          v-if="deletable"
+          type="button"
+          class="grid place-items-center w-6 h-6 rounded-sm text-text-400 hover:bg-error-bg hover:text-error transition-colors duration-fast"
+          title="إلغاء الاجتماع"
+          @click="$emit('delete', meeting)"
+        >
+          <Trash2 :size="13" />
+        </button>
+      </div>
     </div>
 
     <div v-if="meeting.num" class="flex items-center justify-end gap-1.5 text-label font-bold text-primary-700 bg-primary-50 px-3 py-1.5 rounded-sm">
@@ -55,19 +66,20 @@
 </template>
 
 <script>
-import { Users, CalendarDays, Clock, FileText, Video, MessageCircle } from 'lucide-vue-next'
+import { Users, CalendarDays, Clock, FileText, Video, MessageCircle, Trash2 } from 'lucide-vue-next'
 
 export default {
   name: 'MeetingCard',
 
-  components: { Users, CalendarDays, Clock, FileText, Video, MessageCircle },
+  components: { Users, CalendarDays, Clock, FileText, Video, MessageCircle, Trash2 },
 
   props: {
     meeting: { type: Object, required: true },
     done: { type: Boolean, default: false },
-    remindNumber: { type: String, default: '' }
+    remindNumber: { type: String, default: '' },
+    deletable: { type: Boolean, default: false }
   },
 
-  emits: ['remind']
+  emits: ['remind', 'delete']
 }
 </script>
