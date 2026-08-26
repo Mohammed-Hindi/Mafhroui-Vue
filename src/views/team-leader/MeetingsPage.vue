@@ -5,60 +5,35 @@
     </div>
 
     <EmptyState v-if="!myTeam" title="لسا ما إلك فريق" />
-    <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-      <div class="bg-surface rounded-lg border border-border shadow-card p-6">
-        <MeetingCalendar :meetings="meetings" :selected-id="selectedMeeting?.id" @select-day="onSelectDay" />
-      </div>
-
-      <div class="bg-surface rounded-lg border border-border shadow-card p-6 min-h-[360px] flex flex-col">
-        <template v-if="dayMeetings.length">
-          <div v-for="meeting in dayMeetings" :key="meeting.id" class="flex-1 flex flex-col" :class="{ 'mb-6 pb-6 border-b border-border-soft': dayMeetings.length > 1 }">
-            <div class="flex items-center justify-between gap-2 mb-3">
-              <h4 class="font-cairo font-bold text-h4 text-text-900">{{ meeting.title }}</h4>
-              <div class="flex items-center gap-2 shrink-0">
-                <span :class="['text-label font-bold px-2.5 py-1 rounded-pill', isPast(meeting) ? 'bg-success-bg text-success' : 'bg-info-bg text-info']">
-                  {{ isPast(meeting) ? 'منتهي' : 'قادم' }}
-                </span>
-                <button type="button" class="grid place-items-center w-7 h-7 rounded-sm text-text-400 hover:bg-error-bg hover:text-error transition-colors duration-fast" title="إلغاء الاجتماع" @click="confirmCancel(meeting)">
-                  <Trash2 :size="14" />
-                </button>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5 text-caption text-text-600 mb-1.5">
-              <CalendarDays :size="13" class="text-text-400 shrink-0" />
-              {{ formatDate(meeting.scheduled_at) }}
-            </div>
-            <div class="flex items-center gap-1.5 text-caption text-text-600 mb-1.5">
-              <Clock :size="13" class="text-text-400 shrink-0" />
-              {{ formatTime(meeting.scheduled_at) }}
-            </div>
-            <p v-if="meeting.notes" class="flex items-start gap-1.5 text-caption text-text-600 mt-2">
-              <FileText :size="13" class="text-text-400 shrink-0 mt-0.5" />
-              {{ meeting.notes }}
-            </p>
-
-            <div v-if="meeting.google_meet_link || remindNumber" class="flex items-center gap-2 mt-4 pt-4 border-t border-border-soft">
-              <a v-if="meeting.google_meet_link" :href="meeting.google_meet_link" target="_blank" rel="noopener" class="flex-1 inline-flex items-center justify-center gap-2 h-10 rounded-sm border border-primary-100 bg-primary-50 text-primary-700 text-body-sm font-bold hover:bg-primary-100 transition-colors duration-fast">
-                <Video :size="15" /> دخول
-              </a>
-              <button v-if="remindNumber" type="button" class="inline-flex items-center justify-center gap-2 h-10 px-3 rounded-sm border border-secondary-100 bg-secondary-50 text-secondary-700 text-body-sm font-bold hover:bg-secondary-100 transition-colors duration-fast shrink-0" @click="sendReminder(meeting)">
-                <MessageCircle :size="15" /> تذكير واتساب
-              </button>
-            </div>
-          </div>
-        </template>
-        <div v-else class="flex-1 flex flex-col items-center justify-center text-center gap-2">
-          <span class="grid place-items-center w-12 h-12 rounded-pill bg-bg border border-border text-text-400"><CalendarDays :size="20" /></span>
-          <p class="text-body-sm font-bold text-text-900">اختاري يوم فيه اجتماع</p>
-          <p class="text-caption text-text-600">الأيام المعلّمة بالأحمر فيها اجتماعات</p>
+    <template v-else>
+      <section class="mb-10">
+        <h3 class="font-cairo font-bold text-h4 text-text-900 mb-4 flex items-center gap-2.5">
+          الاجتماعات القادمة
+          <span class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600"><Clock :size="16" /></span>
+        </h3>
+        <EmptyState v-if="!upcoming.length" title="لا توجد اجتماعات قادمة حاليًا" />
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <MeetingCard v-for="meeting in upcomingPage" :key="meeting.id" :meeting="meeting" deletable :remind-number="remindNumber" @remind="sendReminder" @delete="confirmCancel" />
         </div>
-      </div>
-    </div>
+        <Pagination v-if="upcoming.length" class="mt-4" :current-page="upcomingPage_" :last-page="upcomingLastPage" :total="upcoming.length" @change="upcomingPage_ = $event" />
+      </section>
+
+      <section>
+        <h3 class="font-cairo font-bold text-h4 text-text-900 mb-4 flex items-center gap-2.5">
+          الاجتماعات المنتهية
+          <span class="grid place-items-center w-8 h-8 rounded-pill bg-success-bg text-success"><CheckCircle2 :size="16" /></span>
+        </h3>
+        <EmptyState v-if="!completed.length" title="لا توجد اجتماعات منتهية بعد" />
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <MeetingCard v-for="meeting in completedPage" :key="meeting.id" :meeting="meeting" done @remind="sendReminder" />
+        </div>
+        <Pagination v-if="completed.length" class="mt-4" :current-page="completedPage_" :last-page="completedLastPage" :total="completed.length" @change="completedPage_ = $event" />
+      </section>
+    </template>
 
     <BaseModal v-model="modalOpen" title="اجتماع جديد" description="سيتم إشعار الفريق المعني">
       <div class="flex flex-col gap-4">
         <BaseInput v-model="form.title" label="اسم الاجتماع" placeholder="مثال: مراجعة الفصل الثاني من التقرير" required />
-        <BaseInput v-model="form.num" label="رقم المجموعة" placeholder="مثال: 31" />
         <div class="grid grid-cols-2 gap-4">
           <BaseInput v-model="form.date" type="date" label="التاريخ" required />
           <BaseInput v-model="form.time" type="time" label="الوقت" required />
@@ -83,30 +58,34 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Plus, Clock, CalendarDays, FileText, Video, MessageCircle, Trash2 } from 'lucide-vue-next'
+import { Plus, Clock, CheckCircle2, Trash2 } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseTextarea from '@/components/ui/BaseTextarea.vue'
+import Pagination from '@/components/ui/Pagination.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
-import MeetingCalendar from '@/components/shared/MeetingCalendar.vue'
+import MeetingCard from '@/components/shared/MeetingCard.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
+
+const PAGE_SIZE = 2
 
 export default {
   name: 'TeamLeaderMeetingsPage',
 
-  components: { BaseButton, BaseModal, BaseInput, BaseTextarea, EmptyState, MeetingCalendar, CalendarDays, Clock, FileText, Video, MessageCircle, Trash2 },
+  components: { BaseButton, BaseModal, BaseInput, BaseTextarea, Pagination, EmptyState, MeetingCard },
 
   data() {
     return {
-      Plus, Trash2,
+      Plus, Clock, CheckCircle2, Trash2,
       modalOpen: false,
       cancelModalOpen: false,
       cancelTarget: null,
       cancelling: false,
       submitting: false,
-      dayMeetings: [],
+      upcomingPage_: 1,
+      completedPage_: 1,
       form: this.emptyForm()
     }
   },
@@ -123,8 +102,36 @@ export default {
       return this.myTeam?.supervisor?.whatsapp || ''
     },
 
-    selectedMeeting() {
-      return this.dayMeetings[0] || null
+    mappedMeetings() {
+      return this.meetings.map((m) => ({
+        id: m.id,
+        title: m.title,
+        date: this.formatDate(m.scheduled_at),
+        time: this.formatTime(m.scheduled_at),
+        link: m.google_meet_link || '',
+        notes: m.notes || '',
+        raw: m
+      }))
+    },
+    upcoming() {
+      return this.mappedMeetings.filter((m) => !this.isPast(m.raw))
+    },
+    completed() {
+      return this.mappedMeetings.filter((m) => this.isPast(m.raw))
+    },
+    upcomingLastPage() {
+      return Math.max(1, Math.ceil(this.upcoming.length / PAGE_SIZE))
+    },
+    completedLastPage() {
+      return Math.max(1, Math.ceil(this.completed.length / PAGE_SIZE))
+    },
+    upcomingPage() {
+      const start = (this.upcomingPage_ - 1) * PAGE_SIZE
+      return this.upcoming.slice(start, start + PAGE_SIZE)
+    },
+    completedPage() {
+      const start = (this.completedPage_ - 1) * PAGE_SIZE
+      return this.completed.slice(start, start + PAGE_SIZE)
     },
 
     canSubmit() {
@@ -150,7 +157,6 @@ export default {
       this.cancelling = true
       try {
         await this.deleteMeeting(this.cancelTarget.id)
-        this.dayMeetings = this.dayMeetings.filter((m) => m.id !== this.cancelTarget.id)
         this.cancelModalOpen = false
         this.$toast?.success('تم إلغاء الاجتماع')
       } catch (err) {
@@ -158,10 +164,6 @@ export default {
       } finally {
         this.cancelling = false
       }
-    },
-
-    onSelectDay(dayMeetings) {
-      this.dayMeetings = dayMeetings
     },
 
     formatDate(scheduledAt) {
@@ -175,7 +177,7 @@ export default {
     },
 
     emptyForm() {
-      return { title: '', num: '', date: '', time: '', link: '', notes: '' }
+      return { title: '', date: '', time: '', link: '', notes: '' }
     },
 
     openCreate() {
@@ -205,9 +207,9 @@ export default {
     sendReminder(meeting) {
       const text = [
         `تذكير باجتماع: ${meeting.title}`,
-        `التاريخ: ${this.formatDate(meeting.scheduled_at)}`,
-        `الوقت: ${this.formatTime(meeting.scheduled_at)}`,
-        meeting.google_meet_link ? `الرابط: ${meeting.google_meet_link}` : null,
+        `التاريخ: ${meeting.date}`,
+        `الوقت: ${meeting.time}`,
+        meeting.link ? `الرابط: ${meeting.link}` : null,
         meeting.notes ? `الملاحظات: ${meeting.notes}` : null
       ].filter(Boolean).join('\n')
       window.open(`https://wa.me/${this.remindNumber}?text=${encodeURIComponent(text)}`, '_blank')
