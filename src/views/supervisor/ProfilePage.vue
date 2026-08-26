@@ -133,7 +133,6 @@ export default {
       return [
         { k: 'الرقم الوظيفي', v: this.user?.employee_number || '—' },
         { k: 'البريد الإلكتروني', v: this.user?.email || '—' },
-        { k: 'التخصص', v: this.user?.specialization?.name || '—' },
         { k: 'عدد الفرق المُشرَف عليها', v: `${this.myTeams.length} فرق` },
         { k: 'الفصل الدراسي', v: this.user?.academicTerm?.name || '—' }
       ]
