@@ -65,11 +65,17 @@
         </template>
         <template #cell-team="{ value }"><span class="font-bold text-text-900">{{ value }}</span></template>
         <template #cell-file="{ row }">
-          <button type="button" class="inline-flex items-center gap-2 text-caption font-semibold text-primary-700 bg-primary-50 px-3 py-1.5 rounded-sm hover:bg-primary-100 transition-colors duration-fast" @click="openProtectedFile(`/proposals/${row.id}/download`, `مقترح-${row.title}.pdf`)">
+          <button type="button" class="inline-flex items-center gap-2 text-caption font-semibold text-primary-700 bg-primary-50 px-3 py-1.5 rounded-sm hover:bg-primary-100 transition-colors duration-fast" @click="openProtectedFile(`/proposals/${row.id}/download`, `مقترح-${row.title}.${row.ext}`)">
             <FileText :size="14" /> عرض المقترح
           </button>
         </template>
         <template #cell-status="{ row }"><BaseBadge :variant="statusVariant(row.status)" dot>{{ row.status }}</BaseBadge></template>
+        <template #cell-actions="{ row }">
+          <div class="flex gap-2">
+            <button type="button" class="grid place-items-center w-9 h-9 rounded-pill bg-error-bg text-error hover:brightness-95 transition-all duration-fast disabled:opacity-40" :disabled="row.status !== 'قيد المراجعة'" title="رفض" @click="openReject(row)"><X :size="15" /></button>
+            <button type="button" class="grid place-items-center w-9 h-9 rounded-pill bg-success-bg text-success hover:brightness-95 transition-all duration-fast disabled:opacity-40" :disabled="row.status !== 'قيد المراجعة'" title="موافقة" @click="approve(row)"><Check :size="15" /></button>
+          </div>
+        </template>
         <template #row-extra="{ row }">
           <div v-if="row.status === 'مرفوض' && row.rejectReason" class="flex items-start gap-2 p-3 rounded-sm bg-error-bg md:rounded-none md:px-5 md:py-3 md:border-t md:border-error-border/50">
             <XCircle :size="14" class="text-error shrink-0 mt-0.5" />
@@ -78,13 +84,26 @@
         </template>
       </DataTable>
     </div>
+
+    <BaseModal v-model="rejectModal" title="سبب الرفض" :description="rejectTarget ? `سبب رفض مقترح ${rejectTarget.team}` : ''" size="sm">
+      <div class="flex flex-col gap-2">
+        <label class="text-label font-semibold text-text-600">سبب الرفض</label>
+        <textarea v-model.trim="rejectReason" rows="4" placeholder="اكتبي سبب الرفض ليتم إرساله للفريق..." class="w-full rounded-sm border border-border bg-bg text-body text-text-900 px-3 py-2.5 focus:border-primary-600 transition-colors duration-fast resize-y" />
+      </div>
+      <template #footer>
+        <BaseButton variant="ghost" @click="rejectModal = false">إلغاء</BaseButton>
+        <BaseButton variant="danger" :icon="X" :loading="rejecting" @click="confirmReject">تأكيد الرفض</BaseButton>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText } from 'lucide-vue-next'
+import { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, X, Check } from 'lucide-vue-next'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 import DataTable from '@/components/ui/DataTable.vue'
 import CountUp from '@/components/ui/CountUp.vue'
 import { useTeamsStore } from '@/stores/teams.store'
@@ -96,10 +115,11 @@ const STATUS_LABELS = { pending: 'قيد المراجعة', approved: 'معتم�
 export default {
   name: 'SupervisorProposalsPage',
 
-  components: { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, BaseBadge, DataTable, CountUp },
+  components: { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, X, Check, BaseBadge, BaseButton, BaseModal, DataTable, CountUp },
 
   data() {
     return {
+      X,
       search: '',
       activeTab: 'all',
       page: 1,
@@ -112,8 +132,14 @@ export default {
         { key: 'spec', label: 'تفاصيل المشروع والتخصص' },
         { key: 'team', label: 'الفريق' },
         { key: 'file', label: 'المرفقات' },
-        { key: 'status', label: 'الحالة' }
-      ]
+        { key: 'status', label: 'الحالة' },
+        { key: 'actions', label: 'الإجراءات' }
+      ],
+
+      rejectModal: false,
+      rejectTarget: null,
+      rejectReason: '',
+      rejecting: false
     }
   },
 
@@ -132,7 +158,8 @@ export default {
             sub: this.specializationName(t.specialization_id),
             team: t.name,
             status: STATUS_LABELS[p.status] || p.status,
-            rejectReason: p.rejection_reason
+            rejectReason: p.rejection_reason,
+            ext: p.pdf_path?.split('.').pop() || 'pdf'
           }
         })
     },
@@ -168,10 +195,44 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'openProtectedFile']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'approveProposal', 'rejectProposal', 'openProtectedFile']),
 
     statusVariant(status) {
       return { 'معتمد': 'success', 'مرفوض': 'error', 'قيد المراجعة': 'warning' }[status] || 'neutral'
+    },
+
+    async approve(row) {
+      try {
+        await this.approveProposal(row.id)
+        await this.fetchTeams()
+        this.$toast?.success(`تمت الموافقة على مقترح ${row.team}`)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّرت الموافقة')
+      }
+    },
+
+    openReject(row) {
+      this.rejectTarget = row
+      this.rejectReason = ''
+      this.rejectModal = true
+    },
+
+    async confirmReject() {
+      if (!this.rejectReason) {
+        this.$toast?.error('يرجى كتابة سبب الرفض')
+        return
+      }
+      this.rejecting = true
+      try {
+        await this.rejectProposal(this.rejectTarget.id, this.rejectReason)
+        await this.fetchTeams()
+        this.rejectModal = false
+        this.$toast?.success(`تم رفض مقترح ${this.rejectTarget.team} — السبب: ${this.rejectReason}`)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر الرفض')
+      } finally {
+        this.rejecting = false
+      }
     }
   }
 }

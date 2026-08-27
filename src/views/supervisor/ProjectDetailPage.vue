@@ -68,7 +68,7 @@
           class="flex items-center gap-3 bg-surface border border-border rounded-lg shadow-card p-4 text-start transition-all duration-fast"
           :class="project.proposal ? 'hover:-translate-y-0.5 hover:shadow-card-hover' : 'opacity-50 cursor-not-allowed'"
           :disabled="!project.proposal"
-          @click="project.proposal && openProtectedFile(`/proposals/${project.proposal.id}/download`, `مقترح-${project.name}.pdf`)"
+          @click="project.proposal && openProtectedFile(`/proposals/${project.proposal.id}/download`, `مقترح-${project.name}.${project.proposal.pdf_path?.split('.').pop() || 'pdf'}`)"
         >
           <span class="grid place-items-center w-11 h-11 rounded-md bg-primary-50 text-primary-600 shrink-0"><FileText :size="20" /></span>
           <span>

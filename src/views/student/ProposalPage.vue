@@ -82,7 +82,9 @@ export default {
 
     proposalItems() {
       if (!this.proposal) return []
-      return [{ icon: FileText, label: 'ملف المقترح', fileName: `مقترح-${this.proposal.name}.pdf`, onClick: () => this.openProtectedFile(`/proposals/${this.proposal.id}/download`, `مقترح-${this.proposal.name}.pdf`) }]
+      const ext = this.proposal.pdf_path?.split('.').pop() || 'pdf'
+      const fileName = `مقترح-${this.proposal.name}.${ext}`
+      return [{ icon: FileText, label: 'ملف المقترح', fileName, onClick: () => this.openProtectedFile(`/proposals/${this.proposal.id}/download`, fileName) }]
     },
 
     reportItems() {

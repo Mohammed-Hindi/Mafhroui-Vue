@@ -338,10 +338,11 @@ export const useTeamsStore = defineStore('teams', () => {
     return data
   }
 
-  // يفتح ملف PDF محمي بتوكن — window.open المباشر ما بيقدر يرفق Authorization header
+  // يفتح ملف محمي بتوكن — window.open المباشر ما بيقدر يرفق Authorization header
+  // response.data من axios بـ responseType:'blob' أصلاً Blob محمّل بنوع المحتوى الحقيقي من هيدر السيرفر — ما لازم نفرض نوع تاني عليه
   const openProtectedFile = async (url, fileName) => {
     const response = await api.get(url, { responseType: 'blob' })
-    const blobUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/octet-stream' }))
+    const blobUrl = URL.createObjectURL(response.data)
     const link = document.createElement('a')
     link.href = blobUrl
     link.target = '_blank'
