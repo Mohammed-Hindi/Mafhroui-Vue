@@ -65,7 +65,9 @@ export const useDiscussionsStore = defineStore('discussions', () => {
     const link = document.createElement('a')
     link.href = blobUrl
     link.download = 'مواعيد-المناقشات.xlsx'
+    document.body.appendChild(link)
     link.click()
+    document.body.removeChild(link)
     setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
   }
 

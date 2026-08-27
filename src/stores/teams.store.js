@@ -350,7 +350,11 @@ export const useTeamsStore = defineStore('teams', () => {
       link.target = '_blank'
       link.rel = 'noopener'
       if (fileName) link.download = fileName
+      // لازم الرابط ينضاف فعليًا للـDOM قبل click() — بعض المتصفحات (فايرفوكس/سفاري وحتى بعض نسخ كروم)
+      // بتتجاهل click() بصمت على عنصر <a> مش موجود بالصفحة، خصوصًا مع خاصية download
+      document.body.appendChild(link)
       link.click()
+      document.body.removeChild(link)
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
     } catch (err) {
       // بطلب من نوع blob، جسم الخطأ من السيرفر بيرجع Blob مش JSON جاهز — لازم نقرأه يدويًا لنطلع الرسالة الحقيقية

@@ -30,7 +30,9 @@ export const useProgressStore = defineStore('progress', () => {
     const link = document.createElement('a')
     link.href = blobUrl
     link.download = 'نسبة-تقدم-المشاريع.xlsx'
+    document.body.appendChild(link)
     link.click()
+    document.body.removeChild(link)
     setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
   }
 
