@@ -341,7 +341,7 @@ export const useTeamsStore = defineStore('teams', () => {
   // يفتح ملف PDF محمي بتوكن — window.open المباشر ما بيقدر يرفق Authorization header
   const openProtectedFile = async (url, fileName) => {
     const response = await api.get(url, { responseType: 'blob' })
-    const blobUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+    const blobUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/octet-stream' }))
     const link = document.createElement('a')
     link.href = blobUrl
     link.target = '_blank'
