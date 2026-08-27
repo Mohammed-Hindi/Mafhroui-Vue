@@ -11,8 +11,14 @@
       :can-create="true"
       :can-drag="false"
       :can-delete="true"
+      :trashed-tasks="trashedTasks"
+      :trashed-loading="trashedTasksLoading"
+      :restoring-id="restoringId"
       @create="onCreate"
-      @delete="onDelete"
+      @archive="onArchive"
+      @update="onUpdate"
+      @open-archive="onOpenArchive"
+      @restore="onRestore"
     />
   </div>
 </template>
@@ -32,12 +38,13 @@ export default {
 
   data() {
     return {
-      selectedTeamId: null
+      selectedTeamId: null,
+      restoringId: null
     }
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['teamsForDisplay', 'tasks']),
+    ...mapState(useTeamsStore, ['teamsForDisplay', 'tasks', 'trashedTasks', 'trashedTasksLoading']),
     ...mapState(useAuthStore, ['user']),
 
     myTeams() {
@@ -58,7 +65,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchTasks', 'createTask', 'deleteTask']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchTasks', 'createTask', 'deleteTask', 'updateTask', 'fetchTrashedTasks', 'restoreTask']),
 
     async loadTasks() {
       if (!this.selectedTeamId) return
@@ -78,12 +85,41 @@ export default {
       }
     },
 
-    async onDelete(id) {
+    async onArchive(id) {
       try {
         await this.deleteTask(id)
-        this.$toast?.success('تم حذف المهمة')
+        this.$toast?.success('تمت أرشفة المهمة')
       } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر حذف المهمة')
+        this.$toast?.error(err.normalized?.message || 'تعذّر أرشفة المهمة')
+      }
+    },
+
+    async onUpdate({ id, title, description }) {
+      try {
+        await this.updateTask(id, { title, description })
+        this.$toast?.success('تم حفظ التعديلات')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر حفظ التعديلات')
+      }
+    },
+
+    async onOpenArchive() {
+      try {
+        await this.fetchTrashedTasks(this.selectedTeamId)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحميل الأرشيف')
+      }
+    },
+
+    async onRestore(id) {
+      this.restoringId = id
+      try {
+        await this.restoreTask(id)
+        this.$toast?.success('تم استرجاع المهمة')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر استرجاع المهمة')
+      } finally {
+        this.restoringId = null
       }
     }
   }

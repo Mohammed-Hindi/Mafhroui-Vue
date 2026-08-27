@@ -168,15 +168,18 @@
     <BaseModal v-model="restrictModalOpen" title="تقييد الوصول للمهام" :description="restrictTarget ? `صلاحية ${restrictTarget.name} على وحدة المهام` : ''" size="sm">
       <div class="flex flex-col gap-4">
         <BaseSelect
-          :model-value="restrictLevel"
+          v-model="restrictLevel"
           :options="levelOptions"
           :disabled="restrictSaving"
-          @update:model-value="setRestrictLevel"
         />
-        <BaseInput v-model="restrictReason" label="سبب التقييد" placeholder="مطلوب عند اختيار مستوى غير 'كامل'" />
+        <BaseInput
+          v-model="restrictReason" label="سبب التقييد" placeholder="مطلوب عند اختيار مستوى غير 'كامل'"
+          :disabled="restrictLevel === 'full' || restrictSaving"
+        />
       </div>
       <template #footer>
-        <BaseButton block @click="restrictModalOpen = false">تم</BaseButton>
+        <BaseButton variant="ghost" :disabled="restrictSaving" @click="restrictModalOpen = false">إلغاء</BaseButton>
+        <BaseButton :icon="Check" :loading="restrictSaving" @click="saveRestrict">حفظ</BaseButton>
       </template>
     </BaseModal>
 
@@ -480,22 +483,22 @@ export default {
       }
     },
 
-    async setRestrictLevel(level) {
-      if (level !== 'full' && !this.restrictReason.trim()) {
-        this.$toast?.error('يرجى إدخال سبب التقييد أولًا')
+    async saveRestrict() {
+      if (this.restrictLevel !== 'full' && !this.restrictReason.trim()) {
+        this.$toast?.error('يرجى إدخال سبب التقييد')
         return
       }
-      this.restrictLevel = level
       this.restrictSaving = true
       try {
-        if (level === 'full') {
+        if (this.restrictLevel === 'full') {
           if (this.restrictionId) await this.removeRestriction(this.restrictionId)
           this.restrictionId = null
         } else {
-          const restriction = await this.setRestriction(this.restrictTarget.id, 'tasks', level, this.restrictReason.trim())
+          const restriction = await this.setRestriction(this.restrictTarget.id, 'tasks', this.restrictLevel, this.restrictReason.trim())
           this.restrictionId = restriction.id
         }
-        this.$toast?.success(level === 'full' ? 'تم إلغاء القيد' : `تم تحديث القيد — السبب: ${this.restrictReason.trim()}`)
+        this.$toast?.success(this.restrictLevel === 'full' ? 'تم إلغاء القيد' : `تم تحديث القيد — السبب: ${this.restrictReason.trim()}`)
+        this.restrictModalOpen = false
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر تحديث القيد')
       } finally {
