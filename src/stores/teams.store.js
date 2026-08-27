@@ -339,34 +339,18 @@ export const useTeamsStore = defineStore('teams', () => {
     return data
   }
 
-  // يفتح ملف محمي بتوكن بتبويب جديد — window.open المباشر ما بيقدر يرفق Authorization header
-  // بدل window.open(blob) بعد الـawait (بيتحجب من حاجب النوافذ المنبثقة بمتصفحات كتير)، بنستخدم نفس أسلوب رابط <a> المرفق
-  // فعليًا بالـDOM ومنضغطه — بس بدون خاصية download، فالمتصفح بيفتحه بتبويب بدل ما يفرض تحميله
+  // يفتح ملف محمي بتوكن بتبويب جديد — بدل ما نجيب الملف كـblob عبر JS ونفتحه (كان بيفشل بصمت
+  // بمتصفحات/إضافات كتير)، منجيب من الباك-إند رابط موقّع مؤقت (صالح ٥ دقايق) ومنخلي المتصفح
+  // يتنقّل له بشكل طبيعي زي أي رابط — بدون أي blob أو DOM tricks
   const openProtectedFile = async (url) => {
     try {
-      const response = await api.get(url, { responseType: 'blob' })
-      const blobUrl = URL.createObjectURL(response.data)
-      const link = document.createElement('a')
-      link.href = blobUrl
-      link.target = '_blank'
-      link.rel = 'noopener'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
-    } catch (err) {
-      // بطلب من نوع blob، جسم الخطأ من السيرفر بيرجع Blob مش JSON جاهز — لازم نقرأه يدويًا لنطلع الرسالة الحقيقية
-      let message = 'تعذّر فتح الملف'
-      if (err.response?.data instanceof Blob) {
-        try {
-          const parsed = JSON.parse(await err.response.data.text())
-          if (parsed?.message) message = parsed.message
-        } catch {
-          // تجاهل فشل التحليل، خلي الرسالة العامة
-        }
-      } else if (err.normalized?.message) {
-        message = err.normalized.message
+      const { data } = await api.get(`${url}-link`)
+      const win = window.open(data.url, '_blank')
+      if (!win) {
+        useUiStore().pushToast({ type: 'error', message: 'المتصفح منع فتح تبويب جديد — تحقّقي من إعدادات حاجب النوافذ المنبثقة (popup blocker) وحاولي مرة أخرى' })
       }
+    } catch (err) {
+      const message = err.normalized?.message || 'تعذّر فتح الملف'
       useUiStore().pushToast({ type: 'error', message })
       throw err
     }
