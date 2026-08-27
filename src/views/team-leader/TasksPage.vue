@@ -10,12 +10,16 @@
       :trashed-tasks="trashedTasks"
       :trashed-loading="trashedTasksLoading"
       :restoring-id="restoringId"
+      :notes-by-task="taskNotes"
+      :notes-loading-by-task="taskNotesLoading"
       @create="onCreate"
       @move="onMove"
       @archive="onArchive"
       @update="onUpdate"
       @open-archive="onOpenArchive"
       @restore="onRestore"
+      @load-notes="onLoadNotes"
+      @add-note="onAddNote"
     />
   </div>
 </template>
@@ -39,7 +43,7 @@ export default {
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['teams', 'tasks', 'trashedTasks', 'trashedTasksLoading']),
+    ...mapState(useTeamsStore, ['teams', 'tasks', 'trashedTasks', 'trashedTasksLoading', 'taskNotes', 'taskNotesLoading']),
     ...mapState(useAuthStore, ['user']),
 
     myTeam() {
@@ -53,7 +57,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchTasks', 'createTask', 'changeTaskStatus', 'deleteTask', 'updateTask', 'fetchTrashedTasks', 'restoreTask']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchTasks', 'createTask', 'changeTaskStatus', 'deleteTask', 'updateTask', 'fetchTrashedTasks', 'restoreTask', 'fetchTaskNotes', 'addTaskNote']),
 
     async loadTasks() {
       try {
@@ -115,6 +119,22 @@ export default {
         this.$toast?.error(err.normalized?.message || 'تعذّر استرجاع المهمة')
       } finally {
         this.restoringId = null
+      }
+    },
+
+    async onLoadNotes(id) {
+      try {
+        await this.fetchTaskNotes(id)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحميل الملاحظات')
+      }
+    },
+
+    async onAddNote({ id, note }) {
+      try {
+        await this.addTaskNote(id, note)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إضافة الملاحظة')
       }
     }
   }
