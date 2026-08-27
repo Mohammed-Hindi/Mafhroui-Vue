@@ -204,7 +204,7 @@ const COLUMNS = [
 export default {
   name: 'TaskBoard',
 
-  components: { BaseButton, BaseModal, BaseInput, BaseTextarea, BaseSelect, EmptyState, SkeletonLoader, MessageSquare, ChevronDown, Pencil },
+  components: { BaseButton, BaseModal, BaseInput, BaseTextarea, BaseSelect, EmptyState, SkeletonLoader, MessageSquare, ChevronDown, Pencil, ArchiveIcon },
 
   props: {
     tasks: { type: Array, default: () => [] },
