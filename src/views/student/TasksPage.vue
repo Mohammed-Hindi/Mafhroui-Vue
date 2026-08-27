@@ -4,9 +4,10 @@
     <TaskBoard
       v-else
       :tasks="tasks"
-      :can-create="false" :can-drag="false" :can-delete="false"
+      :can-create="false" :can-drag="true" :can-delete="false"
       :notes-by-task="taskNotes"
       :notes-loading-by-task="taskNotesLoading"
+      @move="onMove"
       @load-notes="onLoadNotes"
       @add-note="onAddNote"
     />
@@ -46,7 +47,15 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchTasks', 'fetchTaskNotes', 'addTaskNote']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchTasks', 'changeTaskStatus', 'fetchTaskNotes', 'addTaskNote']),
+
+    async onMove({ id, status }) {
+      try {
+        await this.changeTaskStatus(id, status)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث الحالة')
+      }
+    },
 
     async onLoadNotes(id) {
       try {
