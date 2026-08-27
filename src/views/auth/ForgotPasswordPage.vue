@@ -61,14 +61,6 @@
         لم تصلك الرسالة؟ تحققي من مجلد الرسائل غير المرغوب فيها، أو اطلبي إرسال الرابط مجددًا.
       </p>
 
-      <router-link
-        :to="{ name: 'reset-password', query: { token: 'demo' } }"
-        class="w-full h-[50px] rounded-sm bg-gradient-to-bl from-primary-600 to-primary-700 text-white font-cairo font-extrabold text-[14px] shadow-[0_10px_22px_-8px_rgba(37,99,235,.55)] hover:-translate-y-px transition-transform duration-fast flex items-center justify-center gap-2.5 mb-3"
-      >
-        فتح رابط إعادة تعيين كلمة المرور
-        <AppIcon name="chevronStart" :size="16" :stroke-width="2.4" />
-      </router-link>
-
       <button
         type="button"
         :disabled="isLoading"
@@ -90,11 +82,13 @@
 </template>
 
 <script>
+import { mapActions } from 'pinia'
 import { Mail } from 'lucide-vue-next'
 import { required, email as emailRule } from '@/utils/validators'
 import AuthTextField from '@/components/auth/AuthTextField.vue'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
+import { useAuthStore } from '@/stores/auth.store'
 
 export default {
   name: 'ForgotPasswordPage',
@@ -112,20 +106,25 @@ export default {
   },
 
   methods: {
+    ...mapActions(useAuthStore, ['forgotPassword']),
+
     validateEmail() {
       this.errors.email = required(this.form.email, 'البريد الإلكتروني') || emailRule(this.form.email)
       return !this.errors.email
     },
 
-    // فجوة باك إند: لا يوجد endpoint لإرسال رابط استعادة عبر البريد — محاكاة الإرسال ثم توجيه المستخدم لصفحة تعيين كلمة المرور
-    handleSubmit() {
+    async handleSubmit() {
       if (!this.validateEmail()) return
 
       this.isLoading = true
-      setTimeout(() => {
-        this.isLoading = false
+      try {
+        await this.forgotPassword(this.form.email)
         this.submitted = true
-      }, 900)
+      } catch (err) {
+        this.errors.email = err.normalized?.message || 'تعذّر إرسال الرابط، حاولي مرة أخرى.'
+      } finally {
+        this.isLoading = false
+      }
     }
   }
 }
