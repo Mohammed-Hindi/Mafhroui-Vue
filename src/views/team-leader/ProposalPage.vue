@@ -12,25 +12,47 @@
           تم رفض المقترح: {{ proposal.rejection_reason }}. عدّلي البيانات وأعيدي الإرسال.
         </div>
 
-        <template v-for="(field, i) in fieldsMeta" :key="field.key">
-          <BaseInput v-if="i < visibleFieldsCount && field.type === 'input'" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" />
-          <ClauseTextarea v-else-if="i < visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
-        </template>
+        <div class="inline-flex items-center gap-1 bg-bg border border-border rounded-md p-1 self-start">
+          <button
+            type="button" class="h-8 px-3.5 rounded-sm text-caption font-bold transition-colors duration-fast"
+            :class="proposalMode === 'form' ? 'bg-primary-600 text-white shadow-card' : 'text-text-600 hover:text-primary-700'"
+            @click="proposalMode = 'form'"
+          >
+            تعبئة نموذج
+          </button>
+          <button
+            type="button" class="h-8 px-3.5 rounded-sm text-caption font-bold transition-colors duration-fast"
+            :class="proposalMode === 'file' ? 'bg-primary-600 text-white shadow-card' : 'text-text-600 hover:text-primary-700'"
+            @click="proposalMode = 'file'"
+          >
+            رفع ملف
+          </button>
+        </div>
 
-        <button
-          type="button"
-          class="flex items-center justify-center gap-1.5 h-10 rounded-sm border border-border bg-bg text-primary-700 text-body-sm font-bold hover:bg-primary-50 transition-colors duration-fast"
-          @click="showMoreFields = !showMoreFields"
-        >
-          {{ showMoreFields ? 'عرض أقل' : 'عرض المزيد' }}
-          <ChevronDown :size="14" :class="['transition-transform duration-fast', showMoreFields && 'rotate-180']" />
-        </button>
+        <BaseInput v-model="proposalForm.name" label="اسم المشروع" placeholder="اسم مشروع التخرج" required />
 
-        <template v-if="showMoreFields">
+        <template v-if="proposalMode === 'form'">
           <template v-for="(field, i) in fieldsMeta" :key="field.key">
-            <ClauseTextarea v-if="i >= visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
+            <ClauseTextarea v-if="i < visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
+          </template>
+
+          <button
+            type="button"
+            class="flex items-center justify-center gap-1.5 h-10 rounded-sm border border-border bg-bg text-primary-700 text-body-sm font-bold hover:bg-primary-50 transition-colors duration-fast"
+            @click="showMoreFields = !showMoreFields"
+          >
+            {{ showMoreFields ? 'عرض أقل' : 'عرض المزيد' }}
+            <ChevronDown :size="14" :class="['transition-transform duration-fast', showMoreFields && 'rotate-180']" />
+          </button>
+
+          <template v-if="showMoreFields">
+            <template v-for="(field, i) in fieldsMeta" :key="field.key">
+              <ClauseTextarea v-if="i >= visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
+            </template>
           </template>
         </template>
+
+        <FileDropzone v-else ref="proposalFileDropzone" label="ملف المقترح" accept=".pdf,.doc,.docx,.ppt,.pptx" hint="PDF, Word أو PowerPoint — بحد أقصى 10 ميجابايت" @change="proposalFile = $event" />
 
         <BaseButton block :icon="Send" :loading="proposalGenerating" :disabled="proposalGenerating" class="mt-auto pt-2" @click="handleSubmitProposal">{{ proposal?.status === 'rejected' ? 'إعادة إرسال المقترح' : 'إرسال المقترح' }}</BaseButton>
       </div>
@@ -96,12 +118,11 @@ import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
 
 const PROPOSAL_FIELDS = [
-  { key: 'name', hint: 'اسم المشروع', type: 'input', placeholder: 'اسم مشروع التخرج' },
-  { key: 'desc', hint: 'وصف المشروع', type: 'textarea', rows: 3, placeholder: 'وصف مختصر عن فكرة المشروع...' },
-  { key: 'solutions', hint: 'الحلول', type: 'textarea', rows: 3, placeholder: 'الحلول المقترحة' },
-  { key: 'features', hint: 'الميزات', type: 'textarea', rows: 3, placeholder: 'أبرز ميزات المشروع' },
-  { key: 'challenges', hint: 'التحديات', type: 'textarea', rows: 3, placeholder: 'التحديات التي يحلّها المشروع' },
-  { key: 'addedValue', hint: 'القيمة المضافة', type: 'textarea', rows: 3, placeholder: 'القيمة المضافة للمستخدم' }
+  { key: 'desc', hint: 'وصف المشروع', rows: 3, placeholder: 'وصف مختصر عن فكرة المشروع...' },
+  { key: 'solutions', hint: 'الحلول', rows: 3, placeholder: 'الحلول المقترحة' },
+  { key: 'features', hint: 'الميزات', rows: 3, placeholder: 'أبرز ميزات المشروع' },
+  { key: 'challenges', hint: 'التحديات', rows: 3, placeholder: 'التحديات التي يحلّها المشروع' },
+  { key: 'addedValue', hint: 'القيمة المضافة', rows: 3, placeholder: 'القيمة المضافة للمستخدم' }
 ]
 
 export default {
@@ -113,9 +134,11 @@ export default {
     return {
       Send, Link2,
       fieldsMeta: PROPOSAL_FIELDS,
-      visibleFieldsCount: 2,
+      visibleFieldsCount: 1,
       showMoreFields: false,
       proposalGenerating: false,
+      proposalMode: 'form',
+      proposalFile: null,
       proposalForm: { name: '', desc: '', challenges: '', solutions: '', features: '', addedValue: '' },
 
       reportFile: null,
@@ -143,7 +166,9 @@ export default {
 
     proposalItems() {
       if (!this.proposal) return []
-      return [{ icon: FileText, label: 'ملف المقترح', fileName: `مقترح-${this.proposal.name}.pdf`, onClick: () => this.openProtectedFile(`/proposals/${this.proposal.id}/download`, `مقترح-${this.proposal.name}.pdf`) }]
+      const ext = this.proposal.pdf_path?.split('.').pop() || 'pdf'
+      const fileName = `مقترح-${this.proposal.name}.${ext}`
+      return [{ icon: FileText, label: 'ملف المقترح', fileName, onClick: () => this.openProtectedFile(`/proposals/${this.proposal.id}/download`, fileName) }]
     },
 
     reportItems() {
@@ -171,14 +196,37 @@ export default {
     ...mapActions(useTeamsStore, ['fetchTeams', 'submitProposal', 'updateProposal', 'submitFinalReport', 'openProtectedFile']),
 
     async handleSubmitProposal() {
-      if (!this.proposalForm.name.trim() || !this.proposalForm.desc.trim()) {
-        this.$toast?.error('يرجى تعبئة اسم المشروع ووصفه على الأقل')
+      if (!this.proposalForm.name.trim()) {
+        this.$toast?.error('يرجى تعبئة اسم المشروع')
         return
       }
       if (!this.myTeam?.project?.id) {
         this.$toast?.error('لسا ما إلك فريق/مشروع')
         return
       }
+
+      if (this.proposalMode === 'file') {
+        if (!this.proposalFile) {
+          this.$toast?.error('يرجى رفع ملف المقترح قبل الإرسال')
+          return
+        }
+        await this.sendProposal({
+          project_id: this.myTeam.project.id,
+          name: this.proposalForm.name,
+          description: '',
+          problems: '',
+          solutions: '',
+          features_value: '',
+          pdf: this.proposalFile
+        })
+        return
+      }
+
+      if (!this.proposalForm.desc.trim()) {
+        this.$toast?.error('يرجى تعبئة وصف المشروع على الأقل')
+        return
+      }
+
       this.proposalGenerating = true
       try {
         const pdfBlob = await generateOfficialPdf('مقترح مشروع التخرج', this.proposalForm.name,
@@ -189,7 +237,7 @@ export default {
           ? `${this.proposalForm.features}\n\nالقيمة المضافة: ${this.proposalForm.addedValue}`
           : this.proposalForm.features
 
-        const payload = {
+        await this.sendProposal({
           project_id: this.myTeam.project.id,
           name: this.proposalForm.name,
           description: this.proposalForm.desc,
@@ -197,8 +245,14 @@ export default {
           solutions: this.proposalForm.solutions,
           features_value: featuresValue,
           pdf: pdfFile
-        }
+        })
+      } finally {
+        this.proposalGenerating = false
+      }
+    },
 
+    async sendProposal(payload) {
+      try {
         if (this.proposal?.id) {
           await this.updateProposal(this.proposal.id, payload)
         } else {
@@ -208,8 +262,6 @@ export default {
         this.$toast?.success('تم إرسال المقترح بنجاح، بانتظار اعتماد المشرف')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إرسال المقترح')
-      } finally {
-        this.proposalGenerating = false
       }
     },
 
