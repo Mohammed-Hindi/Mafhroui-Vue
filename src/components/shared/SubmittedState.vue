@@ -17,7 +17,7 @@
         v-for="item in items" :key="item.label"
         type="button"
         class="flex items-center gap-3 bg-bg border border-border rounded-md px-4 py-3 hover:border-primary-200 hover:bg-primary-50 transition-colors duration-fast text-start"
-        @click="item.onClick"
+        @click="handleClick(item)"
       >
         <span class="grid place-items-center w-9 h-9 rounded-md bg-primary-50 text-primary-600 shrink-0">
           <component :is="item.icon" :size="16" />
@@ -46,6 +46,16 @@ export default {
     items: { type: Array, default: () => [] },
     rejected: { type: Boolean, default: false },
     rejectReason: { type: String, default: '' }
+  },
+
+  methods: {
+    async handleClick(item) {
+      try {
+        await item.onClick()
+      } catch {
+        // الرسالة انعرضت أصلاً كـ toast من مصدر الطلب — هون بس منمنع unhandled rejection
+      }
+    }
   }
 }
 </script>
