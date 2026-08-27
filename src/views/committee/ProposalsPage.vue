@@ -157,7 +157,8 @@ export default {
             sub: this.specializationName(t.specialization_id),
             team: t.name,
             status: STATUS_LABELS[p.status] || p.status,
-            rejectReason: p.rejection_reason
+            rejectReason: p.rejection_reason,
+            ext: p.pdf_path?.split('.').pop() || 'pdf'
           }
         })
     },
@@ -200,7 +201,7 @@ export default {
     },
 
     openFile(row) {
-      this.openProtectedFile(`/proposals/${row.id}/download`, `مقترح-${row.title}.pdf`)
+      this.openProtectedFile(`/proposals/${row.id}/download`, `مقترح-${row.title}.${row.ext}`)
     },
 
     async approve(row) {
