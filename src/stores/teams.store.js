@@ -266,6 +266,12 @@ export const useTeamsStore = defineStore('teams', () => {
     return restored
   }
 
+  // DELETE /tasks/{id}/force
+  const forceDeleteTask = async (taskId) => {
+    await api.delete(`/tasks/${taskId}/force`)
+    trashedTasks.value = trashedTasks.value.filter((t) => t.id !== taskId)
+  }
+
   const taskNotes = ref({})
   const taskNotesLoading = ref({})
 
@@ -409,6 +415,7 @@ export const useTeamsStore = defineStore('teams', () => {
     trashedTasksLoading,
     fetchTrashedTasks,
     restoreTask,
+    forceDeleteTask,
     taskNotes,
     taskNotesLoading,
     fetchTaskNotes,

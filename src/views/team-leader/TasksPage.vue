@@ -10,6 +10,7 @@
       :trashed-tasks="trashedTasks"
       :trashed-loading="trashedTasksLoading"
       :restoring-id="restoringId"
+      :force-deleting-id="forceDeletingId"
       :notes-by-task="taskNotes"
       :notes-loading-by-task="taskNotesLoading"
       @create="onCreate"
@@ -18,6 +19,7 @@
       @update="onUpdate"
       @open-archive="onOpenArchive"
       @restore="onRestore"
+      @force-delete="onForceDelete"
       @load-notes="onLoadNotes"
       @add-note="onAddNote"
     />
@@ -38,7 +40,8 @@ export default {
 
   data() {
     return {
-      restoringId: null
+      restoringId: null,
+      forceDeletingId: null
     }
   },
 
@@ -57,7 +60,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchTasks', 'createTask', 'changeTaskStatus', 'deleteTask', 'updateTask', 'fetchTrashedTasks', 'restoreTask', 'fetchTaskNotes', 'addTaskNote']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchTasks', 'createTask', 'changeTaskStatus', 'deleteTask', 'updateTask', 'fetchTrashedTasks', 'restoreTask', 'forceDeleteTask', 'fetchTaskNotes', 'addTaskNote']),
 
     async loadTasks() {
       try {
@@ -119,6 +122,18 @@ export default {
         this.$toast?.error(err.normalized?.message || 'تعذّر استرجاع المهمة')
       } finally {
         this.restoringId = null
+      }
+    },
+
+    async onForceDelete(id) {
+      this.forceDeletingId = id
+      try {
+        await this.forceDeleteTask(id)
+        this.$toast?.success('تم حذف المهمة نهائيًا')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر حذف المهمة')
+      } finally {
+        this.forceDeletingId = null
       }
     },
 
