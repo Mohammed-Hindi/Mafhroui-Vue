@@ -340,23 +340,21 @@ export const useTeamsStore = defineStore('teams', () => {
   }
 
   // يفتح ملف محمي بتوكن بتبويب جديد — window.open المباشر ما بيقدر يرفق Authorization header
-  // بدل التحميل الإجباري (كان بيفشل بصمت بمتصفحات كتير)، بنفتح الملف مباشرة بتبويب — المتصفح بيعاينه (PDF خصوصًا) من غير أي تعقيد
+  // بدل window.open(blob) بعد الـawait (بيتحجب من حاجب النوافذ المنبثقة بمتصفحات كتير)، بنستخدم نفس أسلوب رابط <a> المرفق
+  // فعليًا بالـDOM ومنضغطه — بس بدون خاصية download، فالمتصفح بيفتحه بتبويب بدل ما يفرض تحميله
   const openProtectedFile = async (url) => {
-    // لازم نفتح التبويب فورًا وبشكل متزامن (قبل أي await) وإلا حاجب النوافذ المنبثقة رح يمنعه
-    const newTab = window.open('', '_blank')
-    if (newTab) newTab.opener = null
-
     try {
       const response = await api.get(url, { responseType: 'blob' })
       const blobUrl = URL.createObjectURL(response.data)
-      if (newTab) {
-        newTab.location.href = blobUrl
-      } else {
-        window.open(blobUrl, '_blank')
-      }
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.target = '_blank'
+      link.rel = 'noopener'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
     } catch (err) {
-      if (newTab) newTab.close()
       // بطلب من نوع blob، جسم الخطأ من السيرفر بيرجع Blob مش JSON جاهز — لازم نقرأه يدويًا لنطلع الرسالة الحقيقية
       let message = 'تعذّر فتح الملف'
       if (err.response?.data instanceof Blob) {
