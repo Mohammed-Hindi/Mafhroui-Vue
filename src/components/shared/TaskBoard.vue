@@ -43,24 +43,36 @@
               v-for="task in tasksByColumn(column.id)"
               :key="task.id"
               :draggable="canDrag"
-              class="group bg-surface rounded-lg border border-border shadow-card p-3.5 border-s-[3px] transition-all duration-fast hover:shadow-card-hover hover:-translate-y-0.5 cursor-pointer"
+              class="bg-surface rounded-lg border border-border shadow-card p-3.5 border-s-[3px] transition-all duration-fast hover:shadow-card-hover hover:-translate-y-0.5 cursor-pointer"
               :class="[column.accentBorder, canDrag && 'cursor-grab active:cursor-grabbing']"
               @dragstart="onDragStart(task)"
               @dragend="dragOverColumn = null"
               @click="openDetail(task)"
             >
               <div class="flex items-start justify-between gap-2 mb-1.5">
-                <p class="text-body-sm font-bold text-text-900 leading-snug">{{ task.title }}</p>
-                <button
-                  v-if="canDelete"
-                  type="button"
-                  class="grid place-items-center w-6 h-6 rounded-sm text-text-400 opacity-0 group-hover:opacity-100 hover:bg-error-bg hover:text-error transition-all duration-fast shrink-0"
-                  aria-label="أرشفة المهمة"
-                  title="أرشفة المهمة"
-                  @click.stop="$emit('archive', task.id)"
-                >
-                  <ArchiveIcon :size="13" />
-                </button>
+                <p class="text-body-sm font-bold text-text-900 leading-snug flex-1">{{ task.title }}</p>
+                <div v-if="canEditTask || canDelete" class="flex items-center gap-1 shrink-0" @click.stop>
+                  <button
+                    v-if="canEditTask"
+                    type="button"
+                    class="grid place-items-center w-6 h-6 rounded-sm text-text-400 hover:bg-primary-50 hover:text-primary-700 transition-colors duration-fast"
+                    aria-label="تعديل المهمة"
+                    title="تعديل المهمة"
+                    @click="openDetail(task)"
+                  >
+                    <Pencil :size="13" />
+                  </button>
+                  <button
+                    v-if="canDelete"
+                    type="button"
+                    class="grid place-items-center w-6 h-6 rounded-sm text-text-400 hover:bg-error-bg hover:text-error transition-colors duration-fast"
+                    aria-label="أرشفة المهمة"
+                    title="أرشفة المهمة"
+                    @click="$emit('archive', task.id)"
+                  >
+                    <ArchiveIcon :size="13" />
+                  </button>
+                </div>
               </div>
 
               <p v-if="task.description" class="text-caption text-text-600 mb-1 leading-relaxed line-clamp-2">{{ task.description }}</p>
@@ -149,16 +161,19 @@
     </BaseModal>
 
     <!-- أرشيف المهام -->
-    <BaseModal v-model="archiveModalOpen" title="أرشيف المهام" description="استرجعي أي مهمة تمت أرشفتها بالخطأ" size="lg">
+    <BaseModal v-model="archiveModalOpen" title="أرشيف المهام" description="استرجعي أي مهمة تمت أرشفتها بالخطأ، أو احذفيها نهائيًا" size="lg">
       <SkeletonLoader v-if="trashedLoading" :rows="3" height="60px" />
-      <EmptyState v-else-if="!trashedTasks.length" title="لا توجد مهام مؤرشفة" description="كل مهمة يتم أرشفتها ستظهر هنا وبإمكانك استرجاعها." />
+      <EmptyState v-else-if="!trashedTasks.length" title="لا توجد مهام مؤرشفة" description="كل مهمة يتم أرشفتها ستظهر هنا وبإمكانك استرجاعها أو حذفها نهائيًا." />
       <div v-else class="flex flex-col gap-2 max-h-96 overflow-y-auto scrollbar-thin">
-        <div v-for="task in trashedTasks" :key="task.id" class="flex items-center justify-between gap-3 p-3 rounded-sm border border-border bg-bg">
-          <div class="min-w-0">
+        <div v-for="task in trashedTasks" :key="task.id" class="flex items-center justify-between gap-3 p-3 rounded-sm border border-border bg-bg flex-wrap">
+          <div class="min-w-0 flex-1">
             <div class="font-bold text-text-900 truncate">{{ task.title }}</div>
             <div v-if="task.description" class="text-caption text-text-400 truncate">{{ task.description }}</div>
           </div>
-          <BaseButton variant="outline" size="sm" :icon="RotateCcw" :loading="restoringId === task.id" @click="$emit('restore', task.id)">استرجاع</BaseButton>
+          <div class="flex items-center gap-2">
+            <BaseButton variant="outline" size="sm" :icon="RotateCcw" :loading="restoringId === task.id" @click="$emit('restore', task.id)">استرجاع</BaseButton>
+            <BaseButton variant="danger" size="sm" :icon="Trash2" :loading="forceDeletingId === task.id" @click="confirmForceDelete(task)">حذف نهائي</BaseButton>
+          </div>
         </div>
       </div>
       <template #footer>
@@ -169,7 +184,7 @@
 </template>
 
 <script>
-import { Plus, Archive as ArchiveIcon, Check, RotateCcw, MessageSquare, ChevronDown } from 'lucide-vue-next'
+import { Plus, Archive as ArchiveIcon, Check, RotateCcw, MessageSquare, ChevronDown, Pencil, Trash2 } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -189,7 +204,7 @@ const COLUMNS = [
 export default {
   name: 'TaskBoard',
 
-  components: { BaseButton, BaseModal, BaseInput, BaseTextarea, BaseSelect, EmptyState, SkeletonLoader, MessageSquare, ChevronDown },
+  components: { BaseButton, BaseModal, BaseInput, BaseTextarea, BaseSelect, EmptyState, SkeletonLoader, MessageSquare, ChevronDown, Pencil },
 
   props: {
     tasks: { type: Array, default: () => [] },
@@ -199,11 +214,12 @@ export default {
     trashedTasks: { type: Array, default: () => [] },
     trashedLoading: { type: Boolean, default: false },
     restoringId: { type: [Number, String], default: null },
+    forceDeletingId: { type: [Number, String], default: null },
     notesByTask: { type: Object, default: () => ({}) },
     notesLoadingByTask: { type: Object, default: () => ({}) }
   },
 
-  emits: ['create', 'move', 'archive', 'update', 'open-archive', 'restore', 'load-notes', 'add-note'],
+  emits: ['create', 'move', 'archive', 'update', 'open-archive', 'restore', 'force-delete', 'load-notes', 'add-note'],
 
   data() {
     return {
@@ -211,6 +227,8 @@ export default {
       ArchiveIcon,
       Check,
       RotateCcw,
+      Pencil,
+      Trash2,
       formatRelativeTime,
       columns: COLUMNS,
       mobileStatus: COLUMNS[0].id,
@@ -273,6 +291,11 @@ export default {
     openArchive() {
       this.archiveModalOpen = true
       this.$emit('open-archive')
+    },
+
+    confirmForceDelete(task) {
+      if (!window.confirm(`سيتم حذف مهمة "${task.title}" نهائيًا ولا يمكن التراجع عن هذا الإجراء. متابعة؟`)) return
+      this.$emit('force-delete', task.id)
     },
 
     onDragStart(task) {
