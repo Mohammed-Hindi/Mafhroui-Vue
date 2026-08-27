@@ -339,24 +339,24 @@ export const useTeamsStore = defineStore('teams', () => {
     return data
   }
 
-  // يفتح ملف محمي بتوكن — window.open المباشر ما بيقدر يرفق Authorization header
-  // response.data من axios بـ responseType:'blob' أصلاً Blob محمّل بنوع المحتوى الحقيقي من هيدر السيرفر — ما لازم نفرض نوع تاني عليه
-  const openProtectedFile = async (url, fileName) => {
+  // يفتح ملف محمي بتوكن بتبويب جديد — window.open المباشر ما بيقدر يرفق Authorization header
+  // بدل التحميل الإجباري (كان بيفشل بصمت بمتصفحات كتير)، بنفتح الملف مباشرة بتبويب — المتصفح بيعاينه (PDF خصوصًا) من غير أي تعقيد
+  const openProtectedFile = async (url) => {
+    // لازم نفتح التبويب فورًا وبشكل متزامن (قبل أي await) وإلا حاجب النوافذ المنبثقة رح يمنعه
+    const newTab = window.open('', '_blank')
+    if (newTab) newTab.opener = null
+
     try {
       const response = await api.get(url, { responseType: 'blob' })
       const blobUrl = URL.createObjectURL(response.data)
-      const link = document.createElement('a')
-      link.href = blobUrl
-      link.target = '_blank'
-      link.rel = 'noopener'
-      if (fileName) link.download = fileName
-      // لازم الرابط ينضاف فعليًا للـDOM قبل click() — بعض المتصفحات (فايرفوكس/سفاري وحتى بعض نسخ كروم)
-      // بتتجاهل click() بصمت على عنصر <a> مش موجود بالصفحة، خصوصًا مع خاصية download
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      if (newTab) {
+        newTab.location.href = blobUrl
+      } else {
+        window.open(blobUrl, '_blank')
+      }
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
     } catch (err) {
+      if (newTab) newTab.close()
       // بطلب من نوع blob، جسم الخطأ من السيرفر بيرجع Blob مش JSON جاهز — لازم نقرأه يدويًا لنطلع الرسالة الحقيقية
       let message = 'تعذّر فتح الملف'
       if (err.response?.data instanceof Blob) {
