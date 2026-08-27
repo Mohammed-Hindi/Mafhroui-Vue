@@ -94,6 +94,21 @@ export const useAuthStore = defineStore('auth', () => {
     }
 }
 
+  // POST /forgot-password | ما بيرجع أي معلومة عن وجود الحساب من عدمه (حماية)
+  const forgotPassword = async (email) => {
+    isLoading.value = true
+    error.value = ''
+    try {
+      const response = await api.post('/forgot-password', { email })
+      return response.data
+    } catch (err) {
+      error.value = err.normalized?.message || 'تعذّر إرسال رابط إعادة التعيين.'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // GET /me | Response: user object مباشرة (بدون تغليف data)
   const fetchCurrentUser = async () => {
     if (!token.value) return null
@@ -139,6 +154,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     acceptInvite,
     changePassword,
+    forgotPassword,
     fetchCurrentUser,
     hasRole,
   }
