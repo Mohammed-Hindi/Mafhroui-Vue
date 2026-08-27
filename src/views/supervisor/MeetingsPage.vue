@@ -37,7 +37,7 @@
     <BaseModal v-model="modalOpen" title="اجتماع جديد" description="سيتم إنشاؤه على Google Meet وإشعار الفريق المعني">
       <div class="flex flex-col gap-4">
         <BaseInput v-model="form.title" label="اسم الاجتماع" placeholder="مثال: مراجعة الفصل الثاني من التقرير" required />
-        <BaseInput :model-value="selectedTeamId" label="رقم المجموعة" readonly />
+        <BaseSelect v-model="form.teamId" label="المجموعة" :options="teamOptions" />
         <div class="grid grid-cols-2 gap-4">
           <BaseInput v-model="form.date" type="date" label="التاريخ" required />
           <BaseInput v-model="form.time" type="time" label="الوقت" required />
@@ -150,7 +150,7 @@ export default {
     },
 
     canSubmit() {
-      return this.form.title.trim() && this.form.date && this.form.time
+      return this.form.title.trim() && this.form.teamId && this.form.date && this.form.time
     }
   },
 
@@ -191,7 +191,7 @@ export default {
     },
 
     emptyForm() {
-      return { title: '', date: '', time: '', link: '', notes: '' }
+      return { title: '', teamId: this.selectedTeamId, date: '', time: '', link: '', notes: '' }
     },
 
     openCreate() {
@@ -203,7 +203,7 @@ export default {
       if (!this.canSubmit) return
       this.submitting = true
       try {
-        await this.createMeeting(this.selectedTeamId, {
+        await this.createMeeting(this.form.teamId, {
           title: this.form.title,
           scheduled_at: `${this.form.date} ${this.form.time}:00`,
           google_meet_link: this.form.link || null,
@@ -211,6 +211,10 @@ export default {
         })
         this.modalOpen = false
         this.$toast?.success('تم إنشاء الاجتماع بنجاح')
+        if (this.form.teamId !== this.selectedTeamId) {
+          this.selectedTeamId = this.form.teamId
+        }
+        await this.loadMeetings()
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء الاجتماع')
       } finally {
