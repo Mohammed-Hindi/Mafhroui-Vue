@@ -200,8 +200,12 @@ export default {
       return { 'معتمد': 'success', 'مرفوض': 'error', 'قيد المراجعة': 'warning' }[status] || 'neutral'
     },
 
-    openFile(row) {
-      this.openProtectedFile(`/proposals/${row.id}/download`, `مقترح-${row.title}.${row.ext}`)
+    async openFile(row) {
+      try {
+        await this.openProtectedFile(`/proposals/${row.id}/download`, `مقترح-${row.title}.${row.ext}`)
+      } catch {
+        // الرسالة انعرضت أصلاً كـ toast
+      }
     },
 
     async approve(row) {

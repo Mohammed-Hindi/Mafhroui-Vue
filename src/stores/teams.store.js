@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import api from '@/services/api'
+import { useUiStore } from '@/stores/ui.store'
 
 export const useTeamsStore = defineStore('teams', () => {
   const teams = ref([])
@@ -341,15 +342,32 @@ export const useTeamsStore = defineStore('teams', () => {
   // يفتح ملف محمي بتوكن — window.open المباشر ما بيقدر يرفق Authorization header
   // response.data من axios بـ responseType:'blob' أصلاً Blob محمّل بنوع المحتوى الحقيقي من هيدر السيرفر — ما لازم نفرض نوع تاني عليه
   const openProtectedFile = async (url, fileName) => {
-    const response = await api.get(url, { responseType: 'blob' })
-    const blobUrl = URL.createObjectURL(response.data)
-    const link = document.createElement('a')
-    link.href = blobUrl
-    link.target = '_blank'
-    link.rel = 'noopener'
-    if (fileName) link.download = fileName
-    link.click()
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
+    try {
+      const response = await api.get(url, { responseType: 'blob' })
+      const blobUrl = URL.createObjectURL(response.data)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.target = '_blank'
+      link.rel = 'noopener'
+      if (fileName) link.download = fileName
+      link.click()
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
+    } catch (err) {
+      // بطلب من نوع blob، جسم الخطأ من السيرفر بيرجع Blob مش JSON جاهز — لازم نقرأه يدويًا لنطلع الرسالة الحقيقية
+      let message = 'تعذّر فتح الملف'
+      if (err.response?.data instanceof Blob) {
+        try {
+          const parsed = JSON.parse(await err.response.data.text())
+          if (parsed?.message) message = parsed.message
+        } catch {
+          // تجاهل فشل التحليل، خلي الرسالة العامة
+        }
+      } else if (err.normalized?.message) {
+        message = err.normalized.message
+      }
+      useUiStore().pushToast({ type: 'error', message })
+      throw err
+    }
   }
 
   // POST /proposals/{id}/approve
