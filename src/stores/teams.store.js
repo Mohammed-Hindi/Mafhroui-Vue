@@ -227,10 +227,43 @@ export const useTeamsStore = defineStore('teams', () => {
     return updated
   }
 
-  // DELETE /tasks/{id}
+  // DELETE /tasks/{id} (أرشفة — soft delete)
   const deleteTask = async (taskId) => {
     await api.delete(`/tasks/${taskId}`)
     tasks.value = tasks.value.filter((t) => t.id !== taskId)
+  }
+
+  // PUT /tasks/{id}
+  const updateTask = async (taskId, payload) => {
+    const { data } = await api.put(`/tasks/${taskId}`, payload)
+    const updated = data.data || data
+    const index = tasks.value.findIndex((t) => t.id === taskId)
+    if (index !== -1) tasks.value[index] = updated
+    return updated
+  }
+
+  const trashedTasks = ref([])
+  const trashedTasksLoading = ref(false)
+
+  // GET /teams/{id}/tasks/trashed
+  const fetchTrashedTasks = async (teamId) => {
+    trashedTasksLoading.value = true
+    try {
+      const { data } = await api.get(`/teams/${teamId}/tasks/trashed`)
+      trashedTasks.value = data.data || data
+      return trashedTasks.value
+    } finally {
+      trashedTasksLoading.value = false
+    }
+  }
+
+  // POST /tasks/{id}/restore
+  const restoreTask = async (taskId) => {
+    const { data } = await api.post(`/tasks/${taskId}/restore`)
+    const restored = data.data || data
+    trashedTasks.value = trashedTasks.value.filter((t) => t.id !== taskId)
+    tasks.value.push(restored)
+    return restored
   }
 
   const meetings = ref([])
@@ -350,6 +383,11 @@ export const useTeamsStore = defineStore('teams', () => {
     createTask,
     changeTaskStatus,
     deleteTask,
+    updateTask,
+    trashedTasks,
+    trashedTasksLoading,
+    fetchTrashedTasks,
+    restoreTask,
     teamsLoading,
     teamsError,
     specializations,

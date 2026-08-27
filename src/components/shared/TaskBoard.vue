@@ -1,8 +1,11 @@
 <template>
   <div>
-    <div v-if="canCreate" class="flex items-center justify-between gap-4 mb-5">
+    <div v-if="canCreate" class="flex items-center justify-between gap-4 mb-5 flex-wrap">
       <p class="text-body-sm text-text-600">{{ canDrag ? 'اسحب البطاقات بين الأعمدة لتحديث الحالة' : 'قائد الفريق هو من يقدر يغيّر حالة المهمة' }}</p>
-      <BaseButton size="sm" :icon="Plus" @click="openCreate()">مهمة جديدة</BaseButton>
+      <div class="flex items-center gap-2">
+        <BaseButton v-if="canDelete" variant="outline" size="sm" :icon="ArchiveIcon" @click="openArchive">الأرشيف</BaseButton>
+        <BaseButton size="sm" :icon="Plus" @click="openCreate()">مهمة جديدة</BaseButton>
+      </div>
     </div>
 
     <div class="sm:hidden mb-4">
@@ -40,10 +43,11 @@
               v-for="task in tasksByColumn(column.id)"
               :key="task.id"
               :draggable="canDrag"
-              class="group bg-surface rounded-lg border border-border shadow-card p-3.5 border-s-[3px] transition-all duration-fast hover:shadow-card-hover hover:-translate-y-0.5"
+              class="group bg-surface rounded-lg border border-border shadow-card p-3.5 border-s-[3px] transition-all duration-fast hover:shadow-card-hover hover:-translate-y-0.5 cursor-pointer"
               :class="[column.accentBorder, canDrag && 'cursor-grab active:cursor-grabbing']"
               @dragstart="onDragStart(task)"
               @dragend="dragOverColumn = null"
+              @click="openDetail(task)"
             >
               <div class="flex items-start justify-between gap-2 mb-1.5">
                 <p class="text-body-sm font-bold text-text-900 leading-snug">{{ task.title }}</p>
@@ -51,14 +55,15 @@
                   v-if="canDelete"
                   type="button"
                   class="grid place-items-center w-6 h-6 rounded-sm text-text-400 opacity-0 group-hover:opacity-100 hover:bg-error-bg hover:text-error transition-all duration-fast shrink-0"
-                  aria-label="حذف المهمة"
-                  @click.stop="$emit('delete', task.id)"
+                  aria-label="أرشفة المهمة"
+                  title="أرشفة المهمة"
+                  @click.stop="$emit('archive', task.id)"
                 >
-                  <Trash2 :size="13" />
+                  <ArchiveIcon :size="13" />
                 </button>
               </div>
 
-              <p v-if="task.description" class="text-caption text-text-600 mb-1 leading-relaxed">{{ task.description }}</p>
+              <p v-if="task.description" class="text-caption text-text-600 mb-1 leading-relaxed line-clamp-2">{{ task.description }}</p>
               <p v-if="creatorName(task)" class="flex items-center gap-1.5 text-label text-text-400 mt-2.5 pt-2.5 border-t border-border-soft">
                 <span class="grid place-items-center w-4 h-4 rounded-pill bg-primary-50 text-primary-600 text-[9px] font-bold shrink-0">{{ creatorName(task).charAt(0) }}</span>
                 {{ creatorName(task) }}
@@ -81,16 +86,48 @@
         <BaseButton :disabled="!form.title.trim()" @click="saveTask">إضافة المهمة</BaseButton>
       </template>
     </BaseModal>
+
+    <!-- تفاصيل / تعديل المهمة -->
+    <BaseModal v-model="detailModalOpen" :title="canEditTask ? 'تعديل المهمة' : 'تفاصيل المهمة'" size="md">
+      <div class="flex flex-col gap-4">
+        <BaseInput v-model="detailForm.title" label="عنوان المهمة" :disabled="!canEditTask" required />
+        <BaseTextarea v-model="detailForm.description" label="الوصف" placeholder="لا يوجد وصف" :rows="4" :disabled="!canEditTask" />
+      </div>
+      <template #footer>
+        <BaseButton variant="ghost" @click="detailModalOpen = false">{{ canEditTask ? 'إلغاء' : 'إغلاق' }}</BaseButton>
+        <BaseButton v-if="canEditTask" :icon="Check" :disabled="!detailForm.title.trim()" @click="saveDetail">حفظ التعديلات</BaseButton>
+      </template>
+    </BaseModal>
+
+    <!-- أرشيف المهام -->
+    <BaseModal v-model="archiveModalOpen" title="أرشيف المهام" description="استرجعي أي مهمة تمت أرشفتها بالخطأ" size="lg">
+      <SkeletonLoader v-if="trashedLoading" :rows="3" height="60px" />
+      <EmptyState v-else-if="!trashedTasks.length" title="لا توجد مهام مؤرشفة" description="كل مهمة يتم أرشفتها ستظهر هنا وبإمكانك استرجاعها." />
+      <div v-else class="flex flex-col gap-2 max-h-96 overflow-y-auto scrollbar-thin">
+        <div v-for="task in trashedTasks" :key="task.id" class="flex items-center justify-between gap-3 p-3 rounded-sm border border-border bg-bg">
+          <div class="min-w-0">
+            <div class="font-bold text-text-900 truncate">{{ task.title }}</div>
+            <div v-if="task.description" class="text-caption text-text-400 truncate">{{ task.description }}</div>
+          </div>
+          <BaseButton variant="outline" size="sm" :icon="RotateCcw" :loading="restoringId === task.id" @click="$emit('restore', task.id)">استرجاع</BaseButton>
+        </div>
+      </div>
+      <template #footer>
+        <BaseButton variant="ghost" @click="archiveModalOpen = false">إغلاق</BaseButton>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
 <script>
-import { Plus, Trash2 } from 'lucide-vue-next'
+import { Plus, Archive as ArchiveIcon, Check, RotateCcw } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
+import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 
 const COLUMNS = [
   { id: 'pending', label: 'قيد الانتظار', dot: 'bg-text-400', headBg: '', accentBorder: 'border-s-border' },
@@ -102,32 +139,47 @@ const COLUMNS = [
 export default {
   name: 'TaskBoard',
 
-  components: { Trash2, BaseButton, BaseModal, BaseInput, BaseTextarea, BaseSelect },
+  components: { BaseButton, BaseModal, BaseInput, BaseTextarea, BaseSelect, EmptyState, SkeletonLoader },
 
   props: {
     tasks: { type: Array, default: () => [] },
     canCreate: { type: Boolean, default: false },
     canDrag: { type: Boolean, default: false },
-    canDelete: { type: Boolean, default: false }
+    canDelete: { type: Boolean, default: false },
+    trashedTasks: { type: Array, default: () => [] },
+    trashedLoading: { type: Boolean, default: false },
+    restoringId: { type: [Number, String], default: null }
   },
 
-  emits: ['create', 'move', 'delete'],
+  emits: ['create', 'move', 'archive', 'update', 'open-archive', 'restore'],
 
   data() {
     return {
       Plus,
+      ArchiveIcon,
+      Check,
+      RotateCcw,
       columns: COLUMNS,
       mobileStatus: COLUMNS[0].id,
       modalOpen: false,
       draggingId: null,
       dragOverColumn: null,
-      form: { title: '', description: '' }
+      form: { title: '', description: '' },
+
+      detailModalOpen: false,
+      detailForm: { id: null, title: '', description: '' },
+
+      archiveModalOpen: false
     }
   },
 
   computed: {
     columnOptions() {
       return this.columns.map((c) => ({ value: c.id, label: c.label }))
+    },
+    // التعديل مسموح فقط لمن يقدر ينشئ مهام (المشرف/قائد الفريق) — نفس صلاحية الباك-إند
+    canEditTask() {
+      return this.canCreate
     }
   },
 
@@ -149,6 +201,22 @@ export default {
       if (!this.form.title.trim()) return
       this.$emit('create', { title: this.form.title, description: this.form.description })
       this.modalOpen = false
+    },
+
+    openDetail(task) {
+      this.detailForm = { id: task.id, title: task.title, description: task.description || '' }
+      this.detailModalOpen = true
+    },
+
+    saveDetail() {
+      if (!this.detailForm.title.trim()) return
+      this.$emit('update', { id: this.detailForm.id, title: this.detailForm.title, description: this.detailForm.description })
+      this.detailModalOpen = false
+    },
+
+    openArchive() {
+      this.archiveModalOpen = true
+      this.$emit('open-archive')
     },
 
     onDragStart(task) {
