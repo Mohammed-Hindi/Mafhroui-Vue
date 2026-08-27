@@ -12,29 +12,27 @@
           تم رفض المقترح: {{ proposal.rejection_reason }}. عدّلي البيانات وأعيدي الإرسال.
         </div>
 
-        <template v-if="proposalMode === 'form'">
+        <template v-for="(field, i) in fieldsMeta" :key="field.key">
+          <BaseInput v-if="i < visibleFieldsCount && field.type === 'input'" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" />
+          <ClauseTextarea v-else-if="i < visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
+        </template>
+
+        <button
+          type="button"
+          class="flex items-center justify-center gap-1.5 h-10 rounded-sm border border-border bg-bg text-primary-700 text-body-sm font-bold hover:bg-primary-50 transition-colors duration-fast"
+          @click="showMoreFields = !showMoreFields"
+        >
+          {{ showMoreFields ? 'عرض أقل' : 'عرض المزيد' }}
+          <ChevronDown :size="14" :class="['transition-transform duration-fast', showMoreFields && 'rotate-180']" />
+        </button>
+
+        <template v-if="showMoreFields">
           <template v-for="(field, i) in fieldsMeta" :key="field.key">
-            <BaseInput v-if="i < visibleFieldsCount && field.type === 'input'" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" />
-            <ClauseTextarea v-else-if="i < visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
-          </template>
-
-          <button
-            type="button"
-            class="flex items-center justify-center gap-1.5 h-10 rounded-sm border border-border bg-bg text-primary-700 text-body-sm font-bold hover:bg-primary-50 transition-colors duration-fast"
-            @click="showMoreFields = !showMoreFields"
-          >
-            {{ showMoreFields ? 'عرض أقل' : 'عرض المزيد' }}
-            <ChevronDown :size="14" :class="['transition-transform duration-fast', showMoreFields && 'rotate-180']" />
-          </button>
-
-          <template v-if="showMoreFields">
-            <template v-for="(field, i) in fieldsMeta" :key="field.key">
-              <ClauseTextarea v-if="i >= visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
-            </template>
+            <ClauseTextarea v-if="i >= visibleFieldsCount" v-model="proposalForm[field.key]" :label="field.hint" :placeholder="field.placeholder" :rows="field.rows" />
           </template>
         </template>
 
-        <BaseButton block :icon="Send" :loading="proposalGenerating" :disabled="proposalGenerating" class="mt-auto pt-2" @click="submitProposal">{{ proposal?.status === 'rejected' ? 'إعادة إرسال المقترح' : 'إرسال المقترح' }}</BaseButton>
+        <BaseButton block :icon="Send" :loading="proposalGenerating" :disabled="proposalGenerating" class="mt-auto pt-2" @click="handleSubmitProposal">{{ proposal?.status === 'rejected' ? 'إعادة إرسال المقترح' : 'إرسال المقترح' }}</BaseButton>
       </div>
 
       <SubmittedState
@@ -172,17 +170,7 @@ export default {
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams', 'submitProposal', 'updateProposal', 'submitFinalReport', 'openProtectedFile']),
 
-    async submitProposal() {
-      if (this.proposalMode === 'file') {
-        if (!this.proposalFile) {
-          this.$toast?.error('يرجى رفع ملف المقترح قبل الإرسال')
-          return
-        }
-        this.proposalSubmitted = true
-        this.$toast?.success('تم إرسال المقترح بنجاح، بانتظار اعتماد المشرف')
-        return
-      }
-
+    async handleSubmitProposal() {
       if (!this.proposalForm.name.trim() || !this.proposalForm.desc.trim()) {
         this.$toast?.error('يرجى تعبئة اسم المشروع ووصفه على الأقل')
         return
