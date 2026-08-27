@@ -266,6 +266,27 @@ export const useTeamsStore = defineStore('teams', () => {
     return restored
   }
 
+  const taskNotes = ref({})
+  const taskNotesLoading = ref({})
+
+  // GET /tasks/{id}/notes
+  const fetchTaskNotes = async (taskId) => {
+    taskNotesLoading.value = { ...taskNotesLoading.value, [taskId]: true }
+    try {
+      const { data } = await api.get(`/tasks/${taskId}/notes`)
+      taskNotes.value = { ...taskNotes.value, [taskId]: data.data || data }
+      return taskNotes.value[taskId]
+    } finally {
+      taskNotesLoading.value = { ...taskNotesLoading.value, [taskId]: false }
+    }
+  }
+
+  // POST /tasks/{id}/notes
+  const addTaskNote = async (taskId, note) => {
+    await api.post(`/tasks/${taskId}/notes`, { note })
+    return fetchTaskNotes(taskId)
+  }
+
   const meetings = ref([])
   const meetingsLoading = ref(false)
 
@@ -388,6 +409,10 @@ export const useTeamsStore = defineStore('teams', () => {
     trashedTasksLoading,
     fetchTrashedTasks,
     restoreTask,
+    taskNotes,
+    taskNotesLoading,
+    fetchTaskNotes,
+    addTaskNote,
     teamsLoading,
     teamsError,
     specializations,

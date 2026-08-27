@@ -1,7 +1,15 @@
 <template>
   <div>
     <EmptyState v-if="!myTeam" title="لسا ما إلك فريق" description="لما ينسبك مشرف لفريق رح تقدر تشوف مهامه من هون." />
-    <TaskBoard v-else :tasks="tasks" :can-create="false" :can-drag="false" :can-delete="false" />
+    <TaskBoard
+      v-else
+      :tasks="tasks"
+      :can-create="false" :can-drag="false" :can-delete="false"
+      :notes-by-task="taskNotes"
+      :notes-loading-by-task="taskNotesLoading"
+      @load-notes="onLoadNotes"
+      @add-note="onAddNote"
+    />
   </div>
 </template>
 
@@ -18,7 +26,7 @@ export default {
   components: { TaskBoard, EmptyState },
 
   computed: {
-    ...mapState(useTeamsStore, ['teams', 'tasks']),
+    ...mapState(useTeamsStore, ['teams', 'tasks', 'taskNotes', 'taskNotesLoading']),
     ...mapState(useAuthStore, ['user']),
 
     myTeam() {
@@ -38,7 +46,23 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchTasks'])
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchTasks', 'fetchTaskNotes', 'addTaskNote']),
+
+    async onLoadNotes(id) {
+      try {
+        await this.fetchTaskNotes(id)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحميل الملاحظات')
+      }
+    },
+
+    async onAddNote({ id, note }) {
+      try {
+        await this.addTaskNote(id, note)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إضافة الملاحظة')
+      }
+    }
   }
 }
 </script>

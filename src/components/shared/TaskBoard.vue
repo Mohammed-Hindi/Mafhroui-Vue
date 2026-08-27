@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="canCreate" class="flex items-center justify-between gap-4 mb-5 flex-wrap">
-      <p class="text-body-sm text-text-600">{{ canDrag ? 'اسحب البطاقات بين الأعمدة لتحديث الحالة' : 'قائد الفريق هو من يقدر يغيّر حالة المهمة' }}</p>
+      <p class="text-body-sm text-text-600">{{ canDrag ? 'اسحبي البطاقات أو استخدمي القائمة على البطاقة لتحديث الحالة' : 'قائد الفريق هو من يقدر يغيّر حالة المهمة' }}</p>
       <div class="flex items-center gap-2">
         <BaseButton v-if="canDelete" variant="outline" size="sm" :icon="ArchiveIcon" @click="openArchive">الأرشيف</BaseButton>
         <BaseButton size="sm" :icon="Plus" @click="openCreate()">مهمة جديدة</BaseButton>
@@ -64,10 +64,59 @@
               </div>
 
               <p v-if="task.description" class="text-caption text-text-600 mb-1 leading-relaxed line-clamp-2">{{ task.description }}</p>
+
+              <div v-if="canDrag" class="mt-2" @click.stop>
+                <BaseSelect
+                  :model-value="task.status" :options="columnOptions"
+                  @update:model-value="(val) => $emit('move', { id: task.id, status: val })"
+                />
+              </div>
+
               <p v-if="creatorName(task)" class="flex items-center gap-1.5 text-label text-text-400 mt-2.5 pt-2.5 border-t border-border-soft">
                 <span class="grid place-items-center w-4 h-4 rounded-pill bg-primary-50 text-primary-600 text-[9px] font-bold shrink-0">{{ creatorName(task).charAt(0) }}</span>
                 {{ creatorName(task) }}
               </p>
+
+              <div class="mt-2.5 pt-2.5 border-t border-border-soft" @click.stop>
+                <button
+                  type="button"
+                  class="flex items-center gap-1.5 text-label font-semibold text-primary-600 hover:text-primary-700 transition-colors duration-fast"
+                  @click="toggleNotes(task)"
+                >
+                  <MessageSquare :size="12" />
+                  الملاحظات
+                  <span v-if="(notesByTask[task.id] || []).length" class="text-text-400 font-normal">({{ (notesByTask[task.id] || []).length }})</span>
+                  <ChevronDown :size="12" :class="['transition-transform duration-fast', isNotesOpen(task.id) && 'rotate-180']" />
+                </button>
+
+                <div v-if="isNotesOpen(task.id)" class="mt-2 flex flex-col gap-2">
+                  <SkeletonLoader v-if="notesLoadingByTask[task.id]" :rows="2" height="28px" />
+                  <template v-else>
+                    <p v-if="!(notesByTask[task.id] || []).length" class="text-label text-text-400 text-center py-1">لا توجد ملاحظات بعد</p>
+                    <div v-for="note in notesByTask[task.id]" :key="note.id" class="bg-bg rounded-sm p-2">
+                      <div class="flex items-center justify-between gap-2 mb-0.5">
+                        <span class="text-label font-bold text-text-700">{{ note.user?.name || '—' }}</span>
+                        <span class="text-label text-text-400 shrink-0">{{ formatRelativeTime(note.created_at) }}</span>
+                      </div>
+                      <p class="text-caption text-text-600 leading-relaxed">{{ note.note }}</p>
+                    </div>
+                  </template>
+                  <div class="flex items-center gap-1.5">
+                    <input
+                      v-model="noteDrafts[task.id]" type="text" placeholder="اكتب ملاحظة..."
+                      class="flex-1 h-8 px-2.5 rounded-sm border border-border bg-surface text-caption text-text-900 focus:border-primary-600 transition-colors duration-fast"
+                      @keydown.enter="submitNote(task.id)"
+                    >
+                    <button
+                      type="button"
+                      class="grid place-items-center h-8 px-2.5 rounded-sm bg-primary-600 text-white text-caption font-bold hover:bg-primary-700 transition-colors duration-fast shrink-0"
+                      @click="submitNote(task.id)"
+                    >
+                      إضافة
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <p v-if="!tasksByColumn(column.id).length" class="text-center text-label text-text-400 py-8">لا توجد مهام</p>
@@ -120,7 +169,7 @@
 </template>
 
 <script>
-import { Plus, Archive as ArchiveIcon, Check, RotateCcw } from 'lucide-vue-next'
+import { Plus, Archive as ArchiveIcon, Check, RotateCcw, MessageSquare, ChevronDown } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -128,6 +177,7 @@ import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
+import { formatRelativeTime } from '@/utils/formatters'
 
 const COLUMNS = [
   { id: 'pending', label: 'قيد الانتظار', dot: 'bg-text-400', headBg: '', accentBorder: 'border-s-border' },
@@ -139,7 +189,7 @@ const COLUMNS = [
 export default {
   name: 'TaskBoard',
 
-  components: { BaseButton, BaseModal, BaseInput, BaseTextarea, BaseSelect, EmptyState, SkeletonLoader },
+  components: { BaseButton, BaseModal, BaseInput, BaseTextarea, BaseSelect, EmptyState, SkeletonLoader, MessageSquare, ChevronDown },
 
   props: {
     tasks: { type: Array, default: () => [] },
@@ -148,10 +198,12 @@ export default {
     canDelete: { type: Boolean, default: false },
     trashedTasks: { type: Array, default: () => [] },
     trashedLoading: { type: Boolean, default: false },
-    restoringId: { type: [Number, String], default: null }
+    restoringId: { type: [Number, String], default: null },
+    notesByTask: { type: Object, default: () => ({}) },
+    notesLoadingByTask: { type: Object, default: () => ({}) }
   },
 
-  emits: ['create', 'move', 'archive', 'update', 'open-archive', 'restore'],
+  emits: ['create', 'move', 'archive', 'update', 'open-archive', 'restore', 'load-notes', 'add-note'],
 
   data() {
     return {
@@ -159,6 +211,7 @@ export default {
       ArchiveIcon,
       Check,
       RotateCcw,
+      formatRelativeTime,
       columns: COLUMNS,
       mobileStatus: COLUMNS[0].id,
       modalOpen: false,
@@ -169,7 +222,10 @@ export default {
       detailModalOpen: false,
       detailForm: { id: null, title: '', description: '' },
 
-      archiveModalOpen: false
+      archiveModalOpen: false,
+
+      openNotesIds: [],
+      noteDrafts: {}
     }
   },
 
@@ -229,6 +285,24 @@ export default {
       if (!this.canDrag || !this.draggingId) return
       this.$emit('move', { id: this.draggingId, status: columnId })
       this.draggingId = null
+    },
+
+    isNotesOpen(taskId) {
+      return this.openNotesIds.includes(taskId)
+    },
+    toggleNotes(task) {
+      if (this.isNotesOpen(task.id)) {
+        this.openNotesIds = this.openNotesIds.filter((id) => id !== task.id)
+        return
+      }
+      this.openNotesIds = [...this.openNotesIds, task.id]
+      this.$emit('load-notes', task.id)
+    },
+    submitNote(taskId) {
+      const note = (this.noteDrafts[taskId] || '').trim()
+      if (!note) return
+      this.$emit('add-note', { id: taskId, note })
+      this.noteDrafts = { ...this.noteDrafts, [taskId]: '' }
     }
   }
 }
