@@ -7,31 +7,34 @@ function applyTransform(el, rotateX, rotateY) {
   el.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(${LIFT}px) translateZ(0) scale(${scale})`
 }
 
+/** يبقي انتقال box-shadow الخاص بكلاس Tailwind (transition-shadow duration-base) شغالاً بدل ما يلغيه shorthand الـ transform هون */
+const SHADOW_TRANSITION = 'box-shadow 200ms cubic-bezier(0.4,0,0.2,1)'
+
 function onMove(el, event) {
   const rect = el.getBoundingClientRect()
   const px = (event.clientX - rect.left) / rect.width
   const py = (event.clientY - rect.top) / rect.height
   el._tilt.rotateY = (px - 0.5) * MAX_TILT * 2
   el._tilt.rotateX = (0.5 - py) * MAX_TILT * 2
-  el.style.transition = 'transform 90ms linear'
+  el.style.transition = `transform 90ms linear, ${SHADOW_TRANSITION}`
   applyTransform(el, el._tilt.rotateX, el._tilt.rotateY)
 }
 
 function onLeave(el) {
   el._tilt.pressed = false
-  el.style.transition = 'transform 450ms cubic-bezier(.22,.9,.32,1)'
+  el.style.transition = `transform 450ms cubic-bezier(.22,.9,.32,1), ${SHADOW_TRANSITION}`
   el.style.transform = 'perspective(900px) rotateX(0) rotateY(0) translateY(0) translateZ(0) scale(1)'
 }
 
 function onDown(el) {
   el._tilt.pressed = true
-  el.style.transition = 'transform 100ms cubic-bezier(.22,.9,.32,1)'
+  el.style.transition = `transform 100ms cubic-bezier(.22,.9,.32,1), ${SHADOW_TRANSITION}`
   applyTransform(el, el._tilt.rotateX, el._tilt.rotateY)
 }
 
 function onUp(el) {
   el._tilt.pressed = false
-  el.style.transition = 'transform 250ms cubic-bezier(.22,.9,.32,1)'
+  el.style.transition = `transform 250ms cubic-bezier(.22,.9,.32,1), ${SHADOW_TRANSITION}`
   applyTransform(el, el._tilt.rotateX, el._tilt.rotateY)
 }
 
