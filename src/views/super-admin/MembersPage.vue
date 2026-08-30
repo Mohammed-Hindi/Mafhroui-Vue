@@ -41,8 +41,7 @@
             <div class="flex gap-1.5">
               <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="القيود" @click="openRestrict(row)"><Lock :size="14" /></button>
               <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row)"><Pencil :size="14" /></button>
-              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="رابط دعوة جديد" @click="reinvite(row)"><RefreshCw :size="14" /></button>
-              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعيين كلمة السر" @click="openSetPassword(row)"><KeyRound :size="14" /></button>
+              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" :disabled="resettingId === row.id" title="إعادة تعيين بيانات الدخول (كلمة سر + رابط دعوة)" @click="resetAccess(row)"><KeyRound :size="14" /></button>
               <button
                 type="button"
                 class="grid place-items-center w-8 h-8 rounded-sm border"
@@ -260,26 +259,11 @@
         <BaseButton variant="ghost" @click="trashedModalOpen = false">إغلاق</BaseButton>
       </template>
     </BaseModal>
-
-    <!-- تعيين كلمة السر -->
-    <BaseModal v-model="passwordModalOpen" title="تعيين كلمة سر جديدة" :description="passwordTarget ? `سيتم إنشاء كلمة سر جديدة لحساب ${passwordTarget.name} وسيُطلب منه/ها تغييرها عند أول تسجيل دخول.` : ''" size="sm">
-      <template v-if="!generatedPassword">
-        <p class="text-body-sm text-text-600">هل تريدين المتابعة؟</p>
-      </template>
-      <div v-else class="flex items-center gap-2">
-        <input :value="generatedPassword" readonly class="flex-1 min-w-0 h-icon-btn px-3 rounded-sm border border-border bg-bg text-body-sm mono">
-        <BaseButton :icon="Copy" variant="outline" @click="copyPassword">نسخ</BaseButton>
-      </div>
-      <template #footer>
-        <BaseButton v-if="!generatedPassword" block :icon="KeyRound" :loading="submitting" @click="confirmSetPassword">إنشاء كلمة السر</BaseButton>
-        <BaseButton v-else block @click="passwordModalOpen = false">تم</BaseButton>
-      </template>
-    </BaseModal>
   </div>
 </template>
 
 <script>
-import { ShieldCheck, UserPlus, RefreshCw, Pencil, Send, Check, Lock, Copy, Ban, Trash2, Archive, RotateCcw, KeyRound, Mail, MessageCircle, Search } from 'lucide-vue-next'
+import { ShieldCheck, UserPlus, Pencil, Send, Check, Lock, Copy, Ban, Trash2, Archive, RotateCcw, KeyRound, Mail, MessageCircle, Search } from 'lucide-vue-next'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -322,11 +306,11 @@ const STATUS_VARIANTS = { pending: 'warning', sent: 'success', failed: 'error' }
 export default {
   name: 'SuperAdminMembersPage',
 
-  components: { ShieldCheck, UserPlus, RefreshCw, Pencil, Lock, Copy, Trash2, Archive, RotateCcw, KeyRound, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, SkeletonLoader, EmptyState },
+  components: { ShieldCheck, UserPlus, Pencil, Lock, Copy, Trash2, Archive, RotateCcw, KeyRound, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, SkeletonLoader, EmptyState },
 
   data() {
     return {
-      Send, Check, Ban, Archive, Copy, KeyRound, RotateCcw, Trash2, UserPlus, Mail, MessageCircle, Search,
+      Send, Check, Ban, Archive, Copy, RotateCcw, Trash2, UserPlus, Mail, MessageCircle, Search,
       modules: MODULES,
       levelOptions: LEVEL_OPTIONS,
       columns: [
@@ -369,9 +353,7 @@ export default {
       trashedModalOpen: false,
       restoringId: null,
 
-      passwordModalOpen: false,
-      passwordTarget: null,
-      generatedPassword: '',
+      resettingId: null,
 
       /** إرسال بيانات الدخول الجماعي */
       roleFilter: 'supervisor',
@@ -585,19 +567,23 @@ export default {
       }
     },
 
-    async reinvite(row) {
+    /** إعادة تعيين بيانات الدخول: كلمة سر جديدة + رابط دعوة جديد معًا، بنفس نافذة "بيانات الحساب" */
+    async resetAccess(row) {
+      this.resettingId = row.id
       try {
-        const result = await this.reinviteUser(row.id)
-        this.inviteLink = `${window.location.origin}/reset-password?token=${result.token}`
-        this.inviteTarget = { name: row.name, mail: row.mail, whats: row.whats }
+        const [inviteResult, password] = await Promise.all([this.reinviteUser(row.id), this.setUserPassword(row.id)])
+        this.inviteLink = `${window.location.origin}/reset-password?token=${inviteResult.token}`
+        this.inviteTarget = { name: row.name, mail: row.mail, whats: row.whats, password }
         this.inviteModalOpen = true
-        this.$toast?.success('تم إنشاء رابط دعوة جديد')
+        this.$toast?.success('تم إنشاء كلمة سر ورابط دعوة جديدين')
       } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء رابط الدعوة')
+        this.$toast?.error(err.normalized?.message || 'تعذّر إعادة تعيين بيانات الدخول')
+      } finally {
+        this.resettingId = null
       }
     },
 
-openStop(row) {
+    openStop(row) {
       this.stopTarget = row
       this.stopReason = ''
       this.stopModalOpen = true
@@ -709,31 +695,6 @@ openStop(row) {
         this.$toast?.error(err.normalized?.message || 'تعذّر استرجاع الحساب')
       } finally {
         this.restoringId = null
-      }
-    },
-
-    openSetPassword(row) {
-      this.passwordTarget = row
-      this.generatedPassword = ''
-      this.passwordModalOpen = true
-    },
-    async confirmSetPassword() {
-      this.submitting = true
-      try {
-        this.generatedPassword = await this.setUserPassword(this.passwordTarget.id)
-        this.$toast?.success('تم إنشاء كلمة سر جديدة')
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر تعيين كلمة السر')
-      } finally {
-        this.submitting = false
-      }
-    },
-    async copyPassword() {
-      try {
-        await navigator.clipboard.writeText(this.generatedPassword)
-        this.$toast?.success('تم نسخ كلمة السر')
-      } catch {
-        this.$toast?.error('تعذّر نسخ كلمة السر')
       }
     },
 
