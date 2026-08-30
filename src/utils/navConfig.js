@@ -19,17 +19,27 @@ import { ROLES } from '@/utils/constants'
 /** عناصر القائمة الجانبية لكل دور — مصدر واحد يستهلكه DashboardLayout */
 export const NAV_ITEMS_BY_ROLE = {
   [ROLES.SUPER_ADMIN]: [
-    { label: 'الأعضاء وبيانات الدخول', to: '/super-admin', icon: UserPlus, exact: true },
-    { label: 'إضافة لجنة الإشراف', to: '/super-admin/committee', icon: ShieldCheck },
-    { label: 'الأقسام والتخصصات والفصول', to: '/super-admin/structure', icon: Building2 },
-    { label: 'لوحة التحكم', to: '/committee', icon: LayoutDashboard, exact: true },
-    { label: 'الفرق', to: '/committee/teams', icon: Users },
-    { label: 'أعضاء الطلاب والمشرفين', to: '/committee/members', icon: User },
-    { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList },
-    { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock },
-    { label: 'أرشيف المشاريع', to: '/committee/project-archive', icon: FileCheck },
-    { label: 'نسبة تقدّم المشاريع', to: '/committee/progress', icon: TrendingUp },
-    { label: 'المساعد الآلي', to: '/committee/assistant', icon: Bot }
+    {
+      title: 'الإدارة العامة',
+      items: [
+        { label: 'الأعضاء وبيانات الدخول', to: '/super-admin', icon: UserPlus, exact: true },
+        { label: 'لجنة الإشراف', to: '/super-admin/committee', icon: ShieldCheck },
+        { label: 'الأقسام والفصول الدراسية', to: '/super-admin/structure', icon: Building2 }
+      ]
+    },
+    {
+      title: 'أدوات لجنة الإشراف',
+      items: [
+        { label: 'لوحة التحكم', to: '/committee', icon: LayoutDashboard, exact: true },
+        { label: 'الفرق', to: '/committee/teams', icon: Users },
+        { label: 'الطلاب والمشرفين', to: '/committee/members', icon: User },
+        { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList },
+        { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock },
+        { label: 'أرشيف المشاريع', to: '/committee/project-archive', icon: FileCheck },
+        { label: 'تقدّم المشاريع', to: '/committee/progress', icon: TrendingUp },
+        { label: 'المساعد الآلي', to: '/committee/assistant', icon: Bot }
+      ]
+    }
   ],
 
   [ROLES.COMMITTEE]: [
