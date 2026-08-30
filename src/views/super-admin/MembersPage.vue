@@ -23,9 +23,9 @@
         </div>
 
         <DataTable
-          :columns="columns" :rows="users" row-key="id" :primary-keys="['name', 'actions']"
-          :loading="supervisorsLoading" empty-title="لا يوجد مشرفون بعد"
-          @retry="load"
+          :columns="columns" :rows="pagedUsers" row-key="id" :primary-keys="['name', 'actions']"
+          :loading="supervisorsLoading" :meta="usersMeta" empty-title="لا يوجد مشرفون بعد"
+          @retry="load" @page-change="page = $event"
         >
           <template #cell-name="{ row }">
             <span class="font-bold text-text-900">{{ row.name }}</span>
@@ -302,6 +302,7 @@ const LEVEL_OPTIONS = [
 
 const STATUS_LABELS = { pending: 'قيد الإرسال', sent: 'تم الإرسال', failed: 'فشل' }
 const STATUS_VARIANTS = { pending: 'warning', sent: 'success', failed: 'error' }
+const SUPERVISORS_PAGE_SIZE = 4
 
 export default {
   name: 'SuperAdminMembersPage',
@@ -324,6 +325,7 @@ export default {
 
       supervisors: [],
       supervisorsLoading: false,
+      page: 1,
 
       formOpen: false,
       form: emptyForm(),
@@ -422,6 +424,17 @@ export default {
       }))
     },
 
+    usersTotalPages() {
+      return Math.max(1, Math.ceil(this.users.length / SUPERVISORS_PAGE_SIZE))
+    },
+    pagedUsers() {
+      const start = (this.page - 1) * SUPERVISORS_PAGE_SIZE
+      return this.users.slice(start, start + SUPERVISORS_PAGE_SIZE)
+    },
+    usersMeta() {
+      return { current_page: this.page, last_page: this.usersTotalPages, total: this.users.length }
+    },
+
     specializationOptions() {
       return this.specializations.map((s) => ({ value: s.id, label: s.name }))
     },
@@ -447,6 +460,12 @@ export default {
 
     allFilteredSelected() {
       return this.filteredUsers.length > 0 && this.filteredUsers.every((u) => this.selectedIds.includes(u.id))
+    }
+  },
+
+  watch: {
+    usersTotalPages(newVal) {
+      if (this.page > newVal) this.page = newVal
     }
   },
 
