@@ -14,19 +14,25 @@
       </div>
     </div>
 
-    <!-- ===================== الطلاب ===================== -->
+    <!-- ===================== الأعضاء (طلاب/مشرفون) ===================== -->
     <div class="flex items-center justify-between gap-3 mb-5 flex-wrap">
       <div class="flex items-center gap-3">
-        <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><GraduationCap :size="18" /></span>
-        <div><h3 class="text-h3 font-bold text-text-900">أعضاء الطلاب</h3><p class="text-caption text-text-600">{{ filteredStudents.length }} من أصل {{ students.length }} طالبًا</p></div>
+        <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
+          <component :is="memberKind === 'student' ? GraduationCap : Users" :size="18" />
+        </span>
+        <div>
+          <h3 class="text-h3 font-bold text-text-900">{{ memberKind === 'student' ? 'أعضاء الطلاب' : 'المشرفون' }}</h3>
+          <p class="text-caption text-text-600">{{ activeFiltered.length }} من أصل {{ activeList.length }} {{ memberKind === 'student' ? 'طالبًا' : 'مشرفًا' }}</p>
+        </div>
       </div>
+      <BaseSelect v-model="memberKind" class="min-w-[170px]" :options="memberKindOptions" />
     </div>
 
     <div class="flex flex-wrap gap-3 mb-4">
-      <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-success-bg text-success text-caption font-bold hover:brightness-95 transition-all duration-fast" @click="sendWhatsAll(students)">
+      <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-success-bg text-success text-caption font-bold hover:brightness-95 transition-all duration-fast" @click="sendWhatsAll(activeList)">
         <MessageCircle :size="15" /> إرسال واتساب للجميع
       </button>
-      <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-primary-50 text-primary-700 text-caption font-bold hover:bg-primary-100 transition-colors duration-fast" @click="sendMailAll(studentEmails)">
+      <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-primary-50 text-primary-700 text-caption font-bold hover:bg-primary-100 transition-colors duration-fast" @click="sendMailAll(activeEmails)">
         <Mail :size="15" /> إرسال بريد للجميع (Gmail)
       </button>
     </div>
@@ -34,14 +40,16 @@
     <div class="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-lg bg-surface border border-border shadow-card">
       <div class="relative flex-1 min-w-[220px]">
         <Search :size="16" class="pointer-events-none absolute top-1/2 -translate-y-1/2 start-3 text-text-400" />
-        <input v-model.trim="studentSearch" type="search" placeholder="ابحث عن طالب، مشرف أو رقم جامعي..." class="w-full h-icon-btn ps-10 pe-3 rounded-sm border border-border bg-bg text-body text-text-900 focus:border-primary-600 transition-colors duration-fast">
+        <input v-model.trim="memberSearch" type="search" :placeholder="memberKind === 'student' ? 'ابحث عن طالب، مشرف أو رقم جامعي...' : 'ابحث عن مشرف بالاسم أو الرقم الوظيفي...'" class="w-full h-icon-btn ps-10 pe-3 rounded-sm border border-border bg-bg text-body text-text-900 focus:border-primary-600 transition-colors duration-fast">
       </div>
-      <BaseSelect v-model="specFilter" class="min-w-[170px]" placeholder="جميع التخصصات" include-placeholder-option :options="specializationOptions" />
-      <BaseSelect v-model="studentSupFilter" class="min-w-[180px]" placeholder="جميع المشرفين" include-placeholder-option :options="supervisorOptions" />
+      <template v-if="memberKind === 'student'">
+        <BaseSelect v-model="specFilter" class="min-w-[170px]" placeholder="جميع التخصصات" include-placeholder-option :options="specializationOptions" />
+        <BaseSelect v-model="studentSupFilter" class="min-w-[180px]" placeholder="جميع المشرفين" include-placeholder-option :options="supervisorOptions" />
+      </template>
     </div>
 
     <div class="mb-12">
-      <DataTable :columns="studentColumns" :rows="studentPageRows" row-key="id" :primary-keys="['name', 'actions']" :loading="studentsLoading" empty-title="لا توجد نتائج مطابقة">
+      <DataTable :columns="activeColumns" :rows="memberPageRows" row-key="id" :primary-keys="['name', 'actions']" :loading="activeLoading" empty-title="لا توجد نتائج مطابقة">
         <template #cell-grp="{ row }">
           <router-link v-if="row.grp" :to="{ name: 'committee-teams' }" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-border-soft text-text-600 text-caption font-semibold hover:bg-primary-100 hover:text-primary-700 transition-colors duration-fast">
             {{ row.grp }} <ExternalLink :size="11" class="opacity-65" />
@@ -57,6 +65,7 @@
           <div v-if="row.restricted && row.restrictedReason" class="text-label text-error mt-0.5">السبب: {{ row.restrictedReason }}</div>
         </template>
         <template #cell-uid="{ value }"><span class="mono">{{ value || '—' }}</span></template>
+        <template #cell-empId="{ value }"><span class="mono">{{ value || '—' }}</span></template>
         <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
         <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value || '—' }}</span></template>
         <template #cell-pw="{ row }">
@@ -74,89 +83,24 @@
           <div class="flex gap-1.5">
             <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
             <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, 'student')"><Pencil :size="14" /></button>
+            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, memberKind)"><Pencil :size="14" /></button>
+            <button v-if="isSuperAdmin && memberKind === 'supervisor'" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="القيود على وحدات النظام" @click="openModuleRestrict(row)"><SlidersHorizontal :size="14" /></button>
             <button v-if="isSuperAdmin" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" :disabled="reinvitingId === row.id" title="نسخ رابط دعوة جديد" @click="quickReinvite(row)"><Link2 :size="14" /></button>
             <button
               type="button"
               class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast"
               :class="row.restricted ? 'bg-error text-white border-error hover:brightness-95' : 'border-border text-text-600 hover:bg-error-bg hover:text-error'"
-              :title="row.restricted ? 'إلغاء الإيقاف' : 'إيقاف دخول الطالب'"
-              @click="toggleRestrict(row, 'student')"
+              :title="row.restricted ? 'إلغاء الإيقاف' : (memberKind === 'student' ? 'إيقاف دخول الطالب' : 'إيقاف دخول المشرف')"
+              @click="toggleRestrict(row, memberKind)"
             >
               <Lock :size="14" />
             </button>
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete(row, 'student')"><Trash2 :size="14" /></button>
+            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete(row, memberKind)"><Trash2 :size="14" /></button>
           </div>
         </template>
       </DataTable>
-      <Pagination class="mt-4" :current-page="studentPage" :last-page="studentTotalPages" :total="filteredStudents.length" @change="studentPage = $event" />
+      <Pagination class="mt-4" :current-page="memberPage" :last-page="memberTotalPages" :total="activeFiltered.length" @change="memberPage = $event" />
     </div>
-
-    <!-- ===================== المشرفون ===================== -->
-    <div class="flex items-center gap-3 mb-5">
-      <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><Users :size="18" /></span>
-      <div><h3 class="text-h3 font-bold text-text-900">المشرفون</h3><p class="text-caption text-text-600">{{ filteredSupervisors.length }} من أصل {{ supervisors.length }} مشرفًا</p></div>
-    </div>
-
-    <div class="flex flex-wrap gap-3 mb-4">
-      <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-success-bg text-success text-caption font-bold hover:brightness-95 transition-all duration-fast" @click="sendWhatsAll(supervisors)">
-        <MessageCircle :size="15" /> إرسال واتساب للجميع
-      </button>
-      <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-primary-50 text-primary-700 text-caption font-bold hover:bg-primary-100 transition-colors duration-fast" @click="sendMailAll(supervisorEmails)">
-        <Mail :size="15" /> إرسال بريد للجميع (Gmail)
-      </button>
-    </div>
-
-    <div class="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-lg bg-surface border border-border shadow-card">
-      <div class="relative flex-1 min-w-[220px]">
-        <Search :size="16" class="pointer-events-none absolute top-1/2 -translate-y-1/2 start-3 text-text-400" />
-        <input v-model.trim="supervisorSearch" type="search" placeholder="ابحث عن مشرف بالاسم أو الرقم الوظيفي..." class="w-full h-icon-btn ps-10 pe-3 rounded-sm border border-border bg-bg text-body text-text-900 focus:border-primary-600 transition-colors duration-fast">
-      </div>
-    </div>
-
-    <DataTable :columns="supervisorColumns" :rows="supervisorPageRows" row-key="id" :primary-keys="['name', 'actions']" :loading="supervisorsLoading" empty-title="لا توجد نتائج مطابقة">
-      <template #cell-name="{ row }">
-        <div>
-          <span class="font-bold text-text-900">{{ row.name }}</span>
-          <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">موقوف</span>
-        </div>
-        <div v-if="row.restricted && row.restrictedReason" class="text-label text-error mt-0.5">السبب: {{ row.restrictedReason }}</div>
-      </template>
-      <template #cell-empId="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-      <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value || '—' }}</span></template>
-      <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-      <template #cell-pw="{ row }">
-        <div class="flex items-center gap-2">
-          <button type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="توليد كلمة سر" :disabled="generatingPwFor === row.id" @click="generatePw(row)">
-            <RefreshCw :size="13" />
-          </button>
-          <span class="mono text-caption tracking-wider min-w-[70px] inline-block">{{ passwords[row.id] ? (visiblePw.includes(row.id) ? passwords[row.id] : maskPw(passwords[row.id])) : '—' }}</span>
-          <button v-if="passwords[row.id]" type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="إظهار/إخفاء كلمة السر" @click="togglePw(row.id)">
-            <Eye :size="13" />
-          </button>
-        </div>
-      </template>
-      <template #cell-actions="{ row }">
-        <div class="flex gap-1.5">
-          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
-          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
-          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, 'supervisor')"><Pencil :size="14" /></button>
-          <button v-if="isSuperAdmin" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="القيود على وحدات النظام" @click="openModuleRestrict(row)"><SlidersHorizontal :size="14" /></button>
-          <button v-if="isSuperAdmin" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" :disabled="reinvitingId === row.id" title="نسخ رابط دعوة جديد" @click="quickReinvite(row)"><Link2 :size="14" /></button>
-          <button
-            type="button"
-            class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast"
-            :class="row.restricted ? 'bg-error text-white border-error hover:brightness-95' : 'border-border text-text-600 hover:bg-error-bg hover:text-error'"
-            :title="row.restricted ? 'إلغاء الإيقاف' : 'إيقاف دخول المشرف'"
-            @click="toggleRestrict(row, 'supervisor')"
-          >
-            <Lock :size="14" />
-          </button>
-          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete(row, 'supervisor')"><Trash2 :size="14" /></button>
-        </div>
-      </template>
-    </DataTable>
-    <Pagination class="mt-4" :current-page="supervisorPage" :last-page="supervisorTotalPages" :total="filteredSupervisors.length" @change="supervisorPage = $event" />
 
     <!-- ===================== إرسال بيانات الدخول الجماعي (سوبر أدمن فقط) ===================== -->
     <template v-if="isSuperAdmin">
@@ -415,19 +359,22 @@ export default {
 
   data() {
     return {
-      Check, Lock, Trash2, RotateCcw, Archive, UserPlus, Send, Copy,
+      Check, Lock, Trash2, RotateCcw, Archive, UserPlus, Send, Copy, GraduationCap, Users,
       emailComposeOpen: false,
       emailComposeTarget: '',
       passwords: {},
       visiblePw: [],
       generatingPwFor: null,
       reinvitingId: null,
-      studentSearch: '',
+      memberKind: 'student',
+      memberKindOptions: [
+        { value: 'student', label: 'الطلاب' },
+        { value: 'supervisor', label: 'المشرفون' }
+      ],
+      memberSearch: '',
       specFilter: '',
       studentSupFilter: '',
-      supervisorSearch: '',
-      studentPage: 1,
-      supervisorPage: 1,
+      memberPage: 1,
       submitting: false,
 
       studentUsers: [],
@@ -596,7 +543,7 @@ export default {
     },
 
     filteredStudents() {
-      const q = this.studentSearch.trim()
+      const q = this.memberSearch.trim()
       return this.students.filter((s) => {
         const specName = this.specializationName(s.spec)
         const matchQ = !q || `${s.name}${s.uid}${s.sup}`.includes(q)
@@ -606,23 +553,32 @@ export default {
       })
     },
     filteredSupervisors() {
-      const q = this.supervisorSearch.trim()
+      const q = this.memberSearch.trim()
       return this.supervisors.filter((s) => !q || `${s.name}${s.empId}`.includes(q))
     },
 
-    studentTotalPages() {
-      return Math.max(1, Math.ceil(this.filteredStudents.length / PAGE_SIZE))
+    /** القسم الموحّد (طلاب/مشرفون) — يبدّل حسب memberKind */
+    activeColumns() {
+      return this.memberKind === 'student' ? this.studentColumns : this.supervisorColumns
     },
-    studentPageRows() {
-      const start = (this.studentPage - 1) * PAGE_SIZE
-      return this.filteredStudents.slice(start, start + PAGE_SIZE)
+    activeList() {
+      return this.memberKind === 'student' ? this.students : this.supervisors
     },
-    supervisorTotalPages() {
-      return Math.max(1, Math.ceil(this.filteredSupervisors.length / PAGE_SIZE))
+    activeFiltered() {
+      return this.memberKind === 'student' ? this.filteredStudents : this.filteredSupervisors
     },
-    supervisorPageRows() {
-      const start = (this.supervisorPage - 1) * PAGE_SIZE
-      return this.filteredSupervisors.slice(start, start + PAGE_SIZE)
+    activeLoading() {
+      return this.memberKind === 'student' ? this.studentsLoading : this.supervisorsLoading
+    },
+    activeEmails() {
+      return this.memberKind === 'student' ? this.studentEmails : this.supervisorEmails
+    },
+    memberTotalPages() {
+      return Math.max(1, Math.ceil(this.activeFiltered.length / PAGE_SIZE))
+    },
+    memberPageRows() {
+      const start = (this.memberPage - 1) * PAGE_SIZE
+      return this.activeFiltered.slice(start, start + PAGE_SIZE)
     },
 
     trashedTabs() {
@@ -655,11 +611,12 @@ export default {
   },
 
   watch: {
-    filteredStudents() {
-      this.studentPage = 1
+    memberKind() {
+      this.memberSearch = ''
+      this.memberPage = 1
     },
-    filteredSupervisors() {
-      this.supervisorPage = 1
+    activeFiltered() {
+      this.memberPage = 1
     }
   },
 
