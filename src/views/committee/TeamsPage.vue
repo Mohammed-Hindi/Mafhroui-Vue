@@ -69,83 +69,42 @@
         </div>
 
         <div v-show="isGroupOpen(group.id)" class="border-t border-border-soft">
-          <div class="hidden md:block overflow-x-auto scrollbar-thin">
-            <div class="min-w-[760px]">
-              <div class="grid gap-2 px-5 py-3 bg-bg border-b-2 border-border" :style="memberGridCols">
-                <span class="text-start text-label font-extrabold text-text-700">اسم العضو</span>
-                <span class="text-start text-label font-extrabold text-text-700">الرقم الجامعي</span>
-                <span class="text-start text-label font-extrabold text-text-700">الواتس</span>
-                <span class="text-start text-label font-extrabold text-text-700">البريد</span>
-                <span class="text-center text-label font-extrabold text-text-700">قائد الفريق</span>
-                <span class="text-center text-label font-extrabold text-text-700">إجراءات</span>
+          <DataTable
+            flush
+            :columns="memberColumns" :rows="group.members" row-key="memberId" :primary-keys="['name', 'actions']"
+            empty-title="لا يوجد أعضاء بعد"
+          >
+            <template #cell-name="{ row }">
+              <span class="inline-flex items-center gap-2">
+                <span class="font-bold text-text-900 truncate" :title="row.name">{{ row.name }}</span>
+                <span v-if="row.leader" class="text-label font-bold text-warning-text bg-warning-bg px-2 py-0.5 rounded-pill shrink-0">قائد</span>
+              </span>
+            </template>
+            <template #cell-uid="{ value }"><span class="mono">{{ value || '—' }}</span></template>
+            <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
+            <template #cell-mail="{ value }"><span class="mono" :title="value">{{ value }}</span></template>
+            <template #cell-leader="{ row }">
+              <div class="flex justify-center">
+                <button
+                  type="button"
+                  class="grid place-items-center w-8 h-8 rounded-pill transition-colors duration-fast"
+                  :class="row.leader ? 'bg-warning-bg text-warning-text' : 'border border-border text-text-400 hover:bg-warning-bg hover:text-warning-text'"
+                  :title="row.leader ? 'قائد الفريق الحالي' : 'تعيين قائدًا للفريق'"
+                  @click="requestLeaderChange(group, row)"
+                >
+                  <Crown :size="14" :fill="row.leader ? 'currentColor' : 'none'" />
+                </button>
               </div>
-              <div class="divide-y divide-border-soft">
-                <div v-for="member in group.members" :key="member.memberId" class="row-interactive grid gap-2 px-5 py-3 items-center" :style="memberGridCols">
-                  <span class="font-bold text-text-900 truncate" :title="member.name">{{ member.name }}</span>
-                  <span class="mono truncate">{{ member.uid || '—' }}</span>
-                  <span class="mono truncate">{{ member.whats || '—' }}</span>
-                  <span class="mono truncate" :title="member.mail">{{ member.mail }}</span>
-                  <span class="text-center">
-                    <button
-                      type="button"
-                      class="grid place-items-center w-8 h-8 rounded-pill transition-colors duration-fast"
-                      :class="member.leader ? 'bg-warning-bg text-warning-text' : 'border border-border text-text-400 hover:bg-warning-bg hover:text-warning-text'"
-                      :title="member.leader ? 'قائد الفريق الحالي' : 'تعيين قائدًا للفريق'"
-                      @click="requestLeaderChange(group, member)"
-                    >
-                      <Crown :size="14" :fill="member.leader ? 'currentColor' : 'none'" />
-                    </button>
-                  </span>
-                  <span class="flex items-center justify-center gap-2">
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(group, member)"><Pencil :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95 disabled:opacity-40 disabled:pointer-events-none" :disabled="!member.whats" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-error-bg text-error hover:brightness-95 disabled:opacity-40 disabled:pointer-events-none" :disabled="member.leader" :title="member.leader ? 'لا يمكن حذف القائد' : 'إزالة من الفريق'" @click="requestRemoveMember(group, member)"><Trash2 :size="14" /></button>
-                  </span>
-                </div>
+            </template>
+            <template #cell-actions="{ row }">
+              <div class="flex items-center justify-center gap-1.5">
+                <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(group, row)"><Pencil :size="14" /></button>
+                <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95 disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
+                <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
+                <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-error-bg text-error hover:brightness-95 disabled:opacity-40 disabled:pointer-events-none" :disabled="row.leader" :title="row.leader ? 'لا يمكن حذف القائد' : 'إزالة من الفريق'" @click="requestRemoveMember(group, row)"><Trash2 :size="14" /></button>
               </div>
-            </div>
-          </div>
-
-          <div class="md:hidden divide-y divide-border-soft">
-            <div v-for="member in group.members" :key="member.memberId" class="p-4 space-y-2">
-              <div class="flex items-center justify-between gap-3">
-                <span class="font-bold text-text-900">{{ member.name }}</span>
-                <span v-if="member.leader" class="text-label font-bold text-warning-text bg-warning-bg px-2 py-0.5 rounded-pill">قائد</span>
-              </div>
-              <button
-                type="button"
-                class="w-full flex items-center justify-center gap-1.5 text-caption font-bold text-primary-600 py-1.5 rounded-sm hover:bg-primary-50 transition-colors duration-fast"
-                @click="toggleMemberDetails(group.id, member.memberId)"
-              >
-                {{ isMemberOpen(group.id, member.memberId) ? 'إخفاء التفاصيل' : 'عرض التفاصيل' }}
-                <ChevronDown :size="14" :class="['transition-transform duration-fast', isMemberOpen(group.id, member.memberId) && 'rotate-180']" />
-              </button>
-              <div v-if="isMemberOpen(group.id, member.memberId)" class="space-y-2 pt-2 border-t border-dashed border-border">
-                <div class="flex items-start justify-between gap-3"><span class="text-label font-semibold text-text-400 shrink-0">الرقم الجامعي</span><span class="mono text-body-sm text-text-700">{{ member.uid || '—' }}</span></div>
-                <div class="flex items-start justify-between gap-3"><span class="text-label font-semibold text-text-400 shrink-0">رقم الواتس</span><span class="mono text-body-sm text-text-700">{{ member.whats || '—' }}</span></div>
-                <div class="flex items-start justify-between gap-3"><span class="text-label font-semibold text-text-400 shrink-0">البريد الإلكتروني</span><span class="mono text-body-sm text-text-700 whitespace-nowrap">{{ member.mail }}</span></div>
-                <div class="flex items-start justify-between gap-3">
-                  <span class="text-label font-semibold text-text-400 shrink-0">إجراءات</span>
-                  <div class="flex gap-1.5">
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(group, member)"><Pencil :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95 disabled:opacity-40" :disabled="!member.whats" title="واتساب" @click="sendWhats(member.whats)"><MessageCircle :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member.mail)"><Mail :size="14" /></button>
-                    <button
-                      type="button"
-                      class="grid place-items-center w-8 h-8 rounded-pill transition-colors duration-fast"
-                      :class="member.leader ? 'bg-warning-bg text-warning-text' : 'border border-border text-text-400'"
-                      title="تعيين قائدًا"
-                      @click="requestLeaderChange(group, member)"
-                    >
-                      <Crown :size="14" :fill="member.leader ? 'currentColor' : 'none'" />
-                    </button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-error-bg text-error hover:brightness-95 disabled:opacity-40" :disabled="member.leader" title="إزالة من الفريق" @click="requestRemoveMember(group, member)"><Trash2 :size="14" /></button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+            </template>
+          </DataTable>
 
           <div class="px-5 py-3 border-t border-border-soft">
             <button type="button" class="inline-flex items-center gap-1.5 text-caption font-bold text-primary-600 hover:underline disabled:opacity-40 disabled:pointer-events-none" :disabled="group.members.length >= 4" @click="openAddMember(group)">
@@ -327,7 +286,7 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Plus, Upload, Download, FileDown, Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Crown, Archive, RotateCcw, UserPlus, Send, Copy } from 'lucide-vue-next'
+import { Plus, Upload, Download, FileDown, Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, Check, Crown, Archive, RotateCcw, UserPlus, Send, Copy } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -335,6 +294,7 @@ import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
+import DataTable from '@/components/ui/DataTable.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useUsersStore } from '@/stores/users.store'
@@ -356,11 +316,19 @@ const emptySupervisorForm = () => ({ name: '', employee_number: '', email: '', w
 export default {
   name: 'CommitteeTeamsPage',
 
-  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, UserPlus, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, FileDropzone, EmailComposeModal },
+  components: { Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, Crown, UserPlus, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, DataTable, Pagination, FileDropzone, EmailComposeModal },
 
   data() {
     return {
       Plus, Upload, Download, FileDown, Check, Trash2, Crown, Archive, RotateCcw, Send, Copy, UserPlus,
+      memberColumns: [
+        { key: 'name', label: 'اسم العضو' },
+        { key: 'uid', label: 'الرقم الجامعي' },
+        { key: 'whats', label: 'الواتس' },
+        { key: 'mail', label: 'البريد' },
+        { key: 'leader', label: 'قائد الفريق', className: 'text-center' },
+        { key: 'actions', label: 'إجراءات', className: 'text-center' }
+      ],
       exportingExcel: false,
       exportingPdf: false,
       submitting: false,
@@ -370,7 +338,6 @@ export default {
       openGroupIds: [],
       emailComposeOpen: false,
       emailComposeTarget: '',
-      openMemberKeys: [],
 
       addStudentModal: false,
       addStudentForm: emptyStudentForm(),
@@ -418,10 +385,6 @@ export default {
 
   computed: {
     ...mapState(useTeamsStore, ['teams', 'teamsLoading', 'specializations', 'trashedTeamsForDisplay', 'trashedTeamsLoading']),
-
-    memberGridCols() {
-      return { gridTemplateColumns: '22% 16% 16% 22% 12% 12%' }
-    },
 
     groups() {
       return this.teams.map((team) => ({
@@ -508,14 +471,6 @@ export default {
     },
     toggleGroup(id) {
       this.openGroupIds = this.isGroupOpen(id) ? this.openGroupIds.filter((x) => x !== id) : [...this.openGroupIds, id]
-    },
-
-    isMemberOpen(groupId, memberId) {
-      return this.openMemberKeys.includes(`${groupId}-${memberId}`)
-    },
-    toggleMemberDetails(groupId, memberId) {
-      const key = `${groupId}-${memberId}`
-      this.openMemberKeys = this.isMemberOpen(groupId, memberId) ? this.openMemberKeys.filter((k) => k !== key) : [...this.openMemberKeys, key]
     },
 
     openAddStudent() {

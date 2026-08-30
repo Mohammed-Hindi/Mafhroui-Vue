@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden">
+  <div :class="flush ? 'overflow-hidden' : 'bg-surface rounded-lg border border-border shadow-card overflow-hidden'">
     <!-- رأس الجدول: عنوان + أدوات -->
     <div v-if="title || $slots.toolbar" class="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-border-soft">
       <h2 v-if="title" class="font-cairo font-bold text-h3 text-text-900">{{ title }}</h2>
@@ -129,7 +129,9 @@ export default {
     emptyTitle: { type: String, default: 'لا توجد سجلات' },
     emptyDescription: { type: String, default: '' },
     /** مفاتيح الأعمدة المعروضة دومًا بالموبايل — الباقي يُخفى خلف زر "عرض التفاصيل" */
-    primaryKeys: { type: Array, default: null }
+    primaryKeys: { type: Array, default: null },
+    /** بدون خلفية/حدود/ظل خاصة به — للاستخدام متداخلًا داخل بطاقة أخرى بالفعل لها هذا التنسيق */
+    flush: { type: Boolean, default: false }
   },
 
   emits: ['retry', 'page-change'],
