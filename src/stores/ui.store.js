@@ -84,6 +84,26 @@ export const useUiStore = defineStore('ui', () => {
     localStorage.setItem(STORAGE_KEYS.SEMESTER, id)
   }
 
+  // POST /academic-terms
+  const createAcademicTerm = async (payload) => {
+    const { data } = await api.post('/academic-terms', payload)
+    await fetchSemesters()
+    return data
+  }
+
+  // PUT /academic-terms/{id}
+  const updateAcademicTerm = async (id, payload) => {
+    const { data } = await api.put(`/academic-terms/${id}`, payload)
+    await fetchSemesters()
+    return data
+  }
+
+  // DELETE /academic-terms/{id}
+  const deleteAcademicTerm = async (id) => {
+    await api.delete(`/academic-terms/${id}`)
+    await fetchSemesters()
+  }
+
   return {
     isLoading,
     setLoading,
@@ -102,6 +122,9 @@ export const useUiStore = defineStore('ui', () => {
     activeSemesterId,
     semestersLoading,
     fetchSemesters,
-    setActiveSemester
+    setActiveSemester,
+    createAcademicTerm,
+    updateAcademicTerm,
+    deleteAcademicTerm
   }
 })
