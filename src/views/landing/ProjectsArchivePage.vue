@@ -4,7 +4,7 @@
     <div class="mb-9">
       <router-link
         :to="{ name: 'landing' }"
-        class="inline-flex items-center gap-1.5 mb-4 text-body-sm font-bold text-text-600 hover:text-primary-600 transition-colors duration-fast"
+        class="inline-flex items-center gap-2 h-icon-btn px-4 mb-4 rounded-sm border border-border bg-surface text-[13px] font-bold text-text-700 hover:-translate-y-px hover:border-primary-200 hover:text-primary-700 hover:bg-primary-50 transition-all duration-fast"
       >
         <AppIcon name="chevronEnd" :size="15" :stroke-width="2.2" />
         العودة إلى الرئيسية
