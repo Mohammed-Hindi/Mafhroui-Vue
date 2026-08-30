@@ -1,7 +1,17 @@
 <template>
   <div>
-    <div class="flex justify-end mb-5">
-      <BaseButton variant="outline" :icon="Archive" @click="openTrashed">الأعضاء المحذوفون</BaseButton>
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div class="flex items-center gap-3">
+        <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><Users :size="18" /></span>
+        <div>
+          <h3 class="text-h3 font-bold text-text-900">إدارة الأعضاء</h3>
+          <p class="text-caption text-text-600">حسابات الطلاب والمشرفين، بياناتهم، وصلاحيات الدخول</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <BaseButton variant="outline" :icon="Archive" @click="openTrashed">الأعضاء المحذوفون</BaseButton>
+        <BaseButton :icon="UserPlus" @click="openAddModal">إضافة عضو</BaseButton>
+      </div>
     </div>
 
     <!-- ===================== الطلاب ===================== -->
@@ -31,11 +41,12 @@
     </div>
 
     <div class="mb-12">
-      <DataTable :columns="studentColumns" :rows="studentPageRows" row-key="id" :primary-keys="['name', 'actions']" :loading="teamsLoading" empty-title="لا توجد نتائج مطابقة">
+      <DataTable :columns="studentColumns" :rows="studentPageRows" row-key="id" :primary-keys="['name', 'actions']" :loading="studentsLoading" empty-title="لا توجد نتائج مطابقة">
         <template #cell-grp="{ row }">
-          <router-link :to="{ name: 'committee-teams' }" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-border-soft text-text-600 text-caption font-semibold hover:bg-primary-100 hover:text-primary-700 transition-colors duration-fast">
+          <router-link v-if="row.grp" :to="{ name: 'committee-teams' }" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-border-soft text-text-600 text-caption font-semibold hover:bg-primary-100 hover:text-primary-700 transition-colors duration-fast">
             {{ row.grp }} <ExternalLink :size="11" class="opacity-65" />
           </router-link>
+          <span v-else class="text-caption text-text-400">غير منضم لفريق</span>
         </template>
         <template #cell-name="{ row }">
           <div>
@@ -64,12 +75,13 @@
             <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
             <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
             <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, 'student')"><Pencil :size="14" /></button>
+            <button v-if="isSuperAdmin" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" :disabled="reinvitingId === row.id" title="نسخ رابط دعوة جديد" @click="quickReinvite(row)"><Link2 :size="14" /></button>
             <button
               type="button"
               class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast"
               :class="row.restricted ? 'bg-error text-white border-error hover:brightness-95' : 'border-border text-text-600 hover:bg-error-bg hover:text-error'"
               :title="row.restricted ? 'إلغاء الإيقاف' : 'إيقاف دخول الطالب'"
-              @click="toggleRestrict(row)"
+              @click="toggleRestrict(row, 'student')"
             >
               <Lock :size="14" />
             </button>
@@ -102,7 +114,7 @@
       </div>
     </div>
 
-    <DataTable :columns="supervisorColumns" :rows="supervisorPageRows" row-key="id" :primary-keys="['name', 'actions']" :loading="teamsLoading" empty-title="لا توجد نتائج مطابقة">
+    <DataTable :columns="supervisorColumns" :rows="supervisorPageRows" row-key="id" :primary-keys="['name', 'actions']" :loading="supervisorsLoading" empty-title="لا توجد نتائج مطابقة">
       <template #cell-name="{ row }">
         <div>
           <span class="font-bold text-text-900">{{ row.name }}</span>
@@ -129,12 +141,14 @@
           <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
           <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
           <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, 'supervisor')"><Pencil :size="14" /></button>
+          <button v-if="isSuperAdmin" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="القيود على وحدات النظام" @click="openModuleRestrict(row)"><SlidersHorizontal :size="14" /></button>
+          <button v-if="isSuperAdmin" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" :disabled="reinvitingId === row.id" title="نسخ رابط دعوة جديد" @click="quickReinvite(row)"><Link2 :size="14" /></button>
           <button
             type="button"
             class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast"
             :class="row.restricted ? 'bg-error text-white border-error hover:brightness-95' : 'border-border text-text-600 hover:bg-error-bg hover:text-error'"
             :title="row.restricted ? 'إلغاء الإيقاف' : 'إيقاف دخول المشرف'"
-            @click="toggleRestrict(row)"
+            @click="toggleRestrict(row, 'supervisor')"
           >
             <Lock :size="14" />
           </button>
@@ -143,6 +157,126 @@
       </template>
     </DataTable>
     <Pagination class="mt-4" :current-page="supervisorPage" :last-page="supervisorTotalPages" :total="filteredSupervisors.length" @change="supervisorPage = $event" />
+
+    <!-- ===================== إرسال بيانات الدخول الجماعي (سوبر أدمن فقط) ===================== -->
+    <template v-if="isSuperAdmin">
+      <div class="bg-surface rounded-lg border border-border shadow-card p-5 mt-12">
+        <div class="flex flex-wrap items-start justify-between gap-4 mb-5">
+          <div>
+            <h3 class="font-cairo font-bold text-h4 text-text-900">إرسال بيانات الدخول جماعيًا</h3>
+            <p class="text-caption text-text-600 mt-0.5">اختاري الدور، حدّدي الأعضاء، وأرسلي رابط الدعوة عبر البريد أو واتساب دفعة وحدة</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-end gap-3 mb-4">
+          <div class="min-w-[180px]">
+            <BaseSelect v-model="notifyRoleFilter" label="الدور" :options="notifyRoleOptions" @update:model-value="loadNotifyDirectory" />
+          </div>
+          <div class="min-w-[160px]">
+            <BaseSelect v-model="notifyChannel" label="طريقة الإرسال" :options="channelOptions" />
+          </div>
+          <div class="min-w-[170px]">
+            <BaseSelect v-model="notifySpecFilter" label="التخصص" placeholder="جميع التخصصات" include-placeholder-option :options="specializationOptions" />
+          </div>
+          <div class="min-w-[200px]">
+            <BaseInput v-model="notifySearch" label="بحث بالاسم" placeholder="اكتبي اسم العضو..." :icon="Search" />
+          </div>
+          <BaseButton variant="outline" :disabled="!notifySelectedIds.length" @click="previewNotify">معاينة</BaseButton>
+          <BaseButton :icon="Send" :loading="notifySending" :disabled="!notifyPreviewResult || notifySending" @click="confirmSendNotify">إرسال ({{ notifySelectedIds.length }})</BaseButton>
+        </div>
+
+        <div v-if="notifyDirectoryLoading" class="py-8 text-center text-body-sm text-text-400">جارٍ التحميل...</div>
+        <EmptyState v-else-if="!notifyDirectory.length" title="لا يوجد أعضاء" description="لا يوجد أعضاء بهذا الدور حاليًا." />
+        <EmptyState v-else-if="!filteredNotifyDirectory.length" title="لا نتائج" description="لا يوجد عضو مطابق للبحث." />
+        <template v-else>
+          <label class="flex items-center gap-3 px-3 py-2 mb-1.5 cursor-pointer text-caption font-bold text-text-700">
+            <input type="checkbox" :checked="allNotifyFilteredSelected" @change="toggleNotifySelectAll">
+            تحديد الكل ({{ filteredNotifyDirectory.length }})
+          </label>
+          <div class="border border-border rounded-sm divide-y divide-border-soft max-h-72 overflow-y-auto">
+            <label v-for="u in filteredNotifyDirectory" :key="u.id" class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-border-soft">
+              <input v-model="notifySelectedIds" type="checkbox" :value="u.id" @change="notifyPreviewResult = null">
+              <span class="flex-1 min-w-0">
+                <span class="text-body-sm font-bold text-text-900">{{ u.name }}</span>
+                <span class="text-caption text-text-400 ms-2">{{ notifyChannel === 'email' ? (u.email || 'بلا بريد') : (u.whatsapp || 'بلا واتساب') }}</span>
+              </span>
+            </label>
+          </div>
+        </template>
+
+        <div v-if="notifyPreviewResult" class="mt-5 p-4 rounded-md bg-bg border border-border-soft">
+          <div class="flex flex-wrap gap-4 mb-3">
+            <BaseBadge variant="success">جاهز للإرسال: {{ notifyPreviewResult.valid_count }}</BaseBadge>
+            <BaseBadge v-if="notifyPreviewResult.invalid_count" variant="error">غير مؤهّل: {{ notifyPreviewResult.invalid_count }}</BaseBadge>
+          </div>
+          <ul v-if="notifyPreviewResult.invalid?.length" class="flex flex-col gap-1.5">
+            <li v-for="item in notifyPreviewResult.invalid" :key="item.user_id" class="text-caption text-text-600">
+              <span class="font-bold text-text-800">{{ item.name }}</span> — {{ item.reason }}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden mt-8">
+        <div class="flex flex-wrap items-center justify-between gap-4 p-5 pb-4">
+          <h3 class="font-cairo font-bold text-h4 text-text-900">سجلّ الإرسال</h3>
+          <div class="min-w-[160px]">
+            <BaseSelect v-model="deliveryStatusFilter" placeholder="جميع الحالات" include-placeholder-option :options="statusOptions" @update:model-value="loadDeliveries" />
+          </div>
+        </div>
+
+        <DataTable
+          :columns="deliveryColumns" :rows="deliveryRows" row-key="id" :primary-keys="['name', 'status']"
+          :loading="deliveriesLoading"
+          empty-title="لا توجد محاولات إرسال بعد"
+        >
+          <template #cell-status="{ row }">
+            <BaseBadge :variant="statusVariant(row.status)">{{ statusLabel(row.status) }}</BaseBadge>
+          </template>
+          <template #cell-channel="{ value }">{{ value === 'email' ? 'بريد' : 'واتساب' }}</template>
+          <template #cell-actions="{ row }">
+            <BaseButton v-if="row.status === 'failed'" size="sm" variant="outline" :loading="retryingDeliveryId === row.id" @click="retryDeliveryRow(row)">إعادة المحاولة</BaseButton>
+          </template>
+        </DataTable>
+      </div>
+    </template>
+
+    <!-- إضافة عضو -->
+    <BaseModal v-model="addModalOpen" title="إضافة عضو جديد">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <BaseSelect v-model="addForm.role" label="الدور" :options="addRoleOptions" class="sm:col-span-2" />
+        <BaseInput v-model="addForm.name" label="الاسم" placeholder="مثال: د. نورة العتيبي" class="sm:col-span-2" />
+        <BaseInput v-if="addForm.role === 'student'" v-model="addForm.university_number" label="الرقم الجامعي" placeholder="اختياري" />
+        <BaseInput v-else v-model="addForm.employee_number" label="الرقم الوظيفي" placeholder="اختياري" />
+        <BaseInput v-model="addForm.email" type="email" label="البريد الإلكتروني" placeholder="name@mashroui.local" class="sm:col-span-2" />
+        <BaseInput v-model="addForm.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" class="sm:col-span-2" />
+      </div>
+      <template #footer>
+        <BaseButton variant="ghost" @click="addModalOpen = false">إلغاء</BaseButton>
+        <BaseButton :icon="Send" :loading="adding" @click="submitAdd">إضافة وإرسال البيانات (واتس + بريد)</BaseButton>
+      </template>
+    </BaseModal>
+
+    <!-- بيانات الحساب بعد الإنشاء -->
+    <BaseModal v-model="inviteModalOpen" title="تم إنشاء الحساب" description="تم توليد كلمة سر مؤقتة وفتح واتساب/البريد لإرسالها للعضو تلقائيًا." size="sm">
+      <label class="block mb-1.5 text-label font-semibold text-text-700">كلمة السر المؤقتة</label>
+      <div class="flex items-center gap-2 mb-3">
+        <input :value="inviteTarget?.password" readonly class="flex-1 min-w-0 h-icon-btn px-3 rounded-sm border border-border bg-bg text-body-sm mono">
+        <BaseButton :icon="Copy" variant="outline" @click="copyInvitePassword">نسخ</BaseButton>
+      </div>
+      <label class="block mb-1.5 text-label font-semibold text-text-700">رابط الدعوة (بديل)</label>
+      <div class="flex items-center gap-2">
+        <input :value="inviteLink" readonly class="flex-1 min-w-0 h-icon-btn px-3 rounded-sm border border-border bg-bg text-body-sm mono">
+        <BaseButton :icon="Copy" variant="outline" @click="copyInviteLink">نسخ</BaseButton>
+      </div>
+      <div class="flex items-center gap-2 mt-3">
+        <BaseButton :icon="MessageCircle" variant="outline" class="flex-1" :disabled="!inviteTarget?.whats" @click="sendInviteWhats">إعادة الإرسال عبر واتساب</BaseButton>
+        <BaseButton :icon="Mail" variant="outline" class="flex-1" :disabled="!inviteTarget?.mail" @click="sendInviteMail">إعادة الإرسال عبر البريد</BaseButton>
+      </div>
+      <template #footer>
+        <BaseButton block @click="inviteModalOpen = false">تم</BaseButton>
+      </template>
+    </BaseModal>
 
     <BaseModal v-model="editModalOpen" :title="editKind === 'student' ? 'تعديل بيانات الطالب' : 'تعديل بيانات المشرف'">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -171,6 +305,25 @@
       </template>
     </BaseModal>
 
+    <!-- القيود على وحدات النظام (سوبر أدمن — للمشرفين فقط) -->
+    <BaseModal v-model="moduleRestrictModalOpen" title="قيود الصلاحيات" :description="moduleRestrictTarget ? `صلاحيات ${moduleRestrictTarget.name} على وحدات النظام` : ''">
+      <div class="flex flex-col gap-4">
+        <div v-for="mod in modules" :key="mod.value" class="flex items-center justify-between gap-4">
+          <span class="text-body-sm font-bold text-text-900">{{ mod.label }}</span>
+          <BaseSelect
+            class="min-w-[170px]"
+            :model-value="moduleRestrictLevels[mod.value]"
+            :options="levelOptions"
+            @update:model-value="setModuleLevel(mod.value, $event)"
+          />
+        </div>
+        <BaseInput v-model="moduleRestrictReason" label="سبب التقييد" placeholder="سبب تقييد هذا المشرف — مطلوب عند اختيار مستوى غير 'كامل'" />
+      </div>
+      <template #footer>
+        <BaseButton block @click="moduleRestrictModalOpen = false">تم</BaseButton>
+      </template>
+    </BaseModal>
+
     <!-- حذف مع سبب -->
     <BaseModal v-model="deleteModal" title="حذف العضو" :description="deleteTarget ? `سيُحذف حساب ${deleteTarget.name} ويمكن استرجاعه لاحقًا من 'الأعضاء المحذوفون'.` : ''" size="sm">
       <BaseInput v-model="deleteReason" label="سبب الحذف" placeholder="اكتبي سبب حذف هذا العضو" required />
@@ -182,7 +335,7 @@
 
     <!-- الأعضاء المحذوفون -->
     <BaseModal v-model="trashedModal" title="الأعضاء المحذوفون" description="استرجعي أي عضو حُذف بالخطأ" size="lg">
-      <div class="flex items-center gap-1 bg-bg border border-border rounded-md p-1 mb-4 w-fit">
+      <div v-if="trashedTabs.length > 1" class="flex items-center gap-1 bg-bg border border-border rounded-md p-1 mb-4 w-fit">
         <button
           v-for="tab in trashedTabs" :key="tab.value" type="button"
           class="h-9 px-4 rounded-sm text-caption font-bold transition-colors duration-fast"
@@ -213,11 +366,12 @@
 </template>
 
 <script>
-import { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Check, Trash2, Archive, RotateCcw, RefreshCw, Eye } from 'lucide-vue-next'
+import { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Check, Trash2, Archive, RotateCcw, RefreshCw, Eye, UserPlus, Send, Copy, SlidersHorizontal, Link2 } from 'lucide-vue-next'
 import { mapState, mapActions } from 'pinia'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import DataTable from '@/components/ui/DataTable.vue'
 import Pagination from '@/components/ui/Pagination.vue'
@@ -225,6 +379,11 @@ import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useUsersStore } from '@/stores/users.store'
+import { useNotifyStore } from '@/stores/notify.store'
+import { useAuthStore } from '@/stores/auth.store'
+import { ROLES, APP_NAME } from '@/utils/constants'
+import { formatDateTime } from '@/utils/formatters'
+import { sendEmail } from '@/services/api'
 import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
 
 function digitsOnly(value) {
@@ -232,19 +391,37 @@ function digitsOnly(value) {
 }
 const PAGE_SIZE = 4
 
+const emptyAddForm = () => ({ role: 'student', name: '', employee_number: '', university_number: '', email: '', whatsapp: '' })
+
+const MODULES = [
+  { value: 'projects', label: 'المشاريع' },
+  { value: 'proposals', label: 'المقترحات' },
+  { value: 'tasks', label: 'المهام' },
+  { value: 'meetings', label: 'الاجتماعات' }
+]
+const LEVEL_OPTIONS = [
+  { value: 'full', label: 'كامل' },
+  { value: 'view_only', label: 'عرض فقط' },
+  { value: 'blocked', label: 'محظور' }
+]
+
+const STATUS_LABELS = { pending: 'قيد الإرسال', sent: 'تم الإرسال', failed: 'فشل' }
+const STATUS_VARIANTS = { pending: 'warning', sent: 'success', failed: 'error' }
+
 export default {
   name: 'CommitteeMembersPage',
 
-  components: { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, BaseInput, BaseSelect, BaseButton, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState, EmailComposeModal },
+  components: { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, SlidersHorizontal, Link2, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState, EmailComposeModal },
 
   data() {
     return {
-      Check, Lock, Trash2, RotateCcw, Archive,
+      Check, Lock, Trash2, RotateCcw, Archive, UserPlus, Send, Copy,
       emailComposeOpen: false,
       emailComposeTarget: '',
       passwords: {},
       visiblePw: [],
       generatingPwFor: null,
+      reinvitingId: null,
       studentSearch: '',
       specFilter: '',
       studentSupFilter: '',
@@ -253,6 +430,19 @@ export default {
       supervisorPage: 1,
       submitting: false,
 
+      studentUsers: [],
+      studentsLoading: false,
+      supervisorUsers: [],
+      supervisorsLoading: false,
+
+      addModalOpen: false,
+      addForm: emptyAddForm(),
+      adding: false,
+
+      inviteModalOpen: false,
+      inviteLink: '',
+      inviteTarget: null,
+
       editModalOpen: false,
       editKind: 'student',
       editTargetId: null,
@@ -260,7 +450,15 @@ export default {
 
       restrictModal: false,
       restrictTarget: null,
+      restrictKind: 'student',
       restrictReason: '',
+
+      moduleRestrictModalOpen: false,
+      moduleRestrictTarget: null,
+      moduleRestrictLevels: {},
+      moduleRestrictReason: '',
+      modules: MODULES,
+      levelOptions: LEVEL_OPTIONS,
 
       deleteModal: false,
       deleteTarget: null,
@@ -269,10 +467,6 @@ export default {
 
       trashedModal: false,
       trashedTab: 'student',
-      trashedTabs: [
-        { value: 'student', label: 'الطلاب' },
-        { value: 'supervisor', label: 'المشرفون' }
-      ],
       restoringId: null,
 
       studentColumns: [
@@ -291,61 +485,105 @@ export default {
         { key: 'whats', label: 'رقم الواتس' },
         { key: 'pw', label: 'كلمة السر' },
         { key: 'actions', label: 'إجراءات' }
+      ],
+
+      /** إرسال بيانات الدخول الجماعي — سوبر أدمن فقط */
+      notifyRoleFilter: 'supervisor',
+      notifyChannel: 'email',
+      notifySpecFilter: '',
+      notifySearch: '',
+      notifySelectedIds: [],
+      notifyPreviewResult: null,
+      notifySending: false,
+      notifyDirectory: [],
+      notifyDirectoryLoading: false,
+      deliveryStatusFilter: '',
+      retryingDeliveryId: null,
+      notifyRoleOptions: [
+        { value: 'supervisor', label: 'المشرفون' },
+        { value: 'committee', label: 'لجنة الإشراف' },
+        { value: 'student', label: 'الطلاب' }
+      ],
+      channelOptions: [
+        { value: 'email', label: 'البريد الإلكتروني' },
+        { value: 'whatsapp', label: 'واتساب' }
+      ],
+      statusOptions: [
+        { value: 'pending', label: 'قيد الإرسال' },
+        { value: 'sent', label: 'تم الإرسال' },
+        { value: 'failed', label: 'فشل' }
+      ],
+      deliveryColumns: [
+        { key: 'name', label: 'العضو' },
+        { key: 'channel', label: 'الطريقة' },
+        { key: 'status', label: 'الحالة' },
+        { key: 'sentAt', label: 'وقت الإرسال' },
+        { key: 'actions', label: '' }
       ]
     }
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['teams', 'teamsLoading']),
+    ...mapState(useTeamsStore, ['teams', 'specializations']),
     ...mapState(useUsersStore, ['trashedUsers', 'trashedUsersLoading']),
+    ...mapState(useNotifyStore, ['deliveries', 'deliveriesLoading']),
+    ...mapState(useAuthStore, ['userRole']),
 
-    students() {
-      const seen = new Set()
-      const rows = []
+    isSuperAdmin() {
+      return this.userRole === ROLES.SUPER_ADMIN
+    },
+
+    addRoleOptions() {
+      return [
+        { value: 'student', label: 'الطلاب' },
+        { value: 'supervisor', label: 'المشرفون' }
+      ]
+    },
+
+    /** خريطة طالب → فريقه (لعمود رقم المجموعة والمشرف) — الفرق تُجلب لهذا الغرض فقط الآن */
+    studentTeamMap() {
+      const map = {}
       this.teams.forEach((team) => {
         (team.members || []).forEach((m) => {
-          if (!m.student || seen.has(m.student.id)) return
-          seen.add(m.student.id)
-          rows.push({
-            id: m.student.id,
-            grp: team.id,
-            spec: team.specialization_id,
-            sup: team.supervisor?.name || 'غير محدد',
-            name: m.student.name,
-            uid: m.student.university_number,
-            whats: m.student.whatsapp,
-            mail: m.student.email,
-            isLeader: !!m.is_leader,
-            restricted: m.student.status === 'restricted',
-            restrictedReason: m.student.restricted_reason
-          })
+          if (m.student?.id) map[m.student.id] = { team, isLeader: !!m.is_leader }
         })
       })
-      return rows
+      return map
+    },
+
+    students() {
+      return this.studentUsers.map((u) => {
+        const entry = this.studentTeamMap[u.id]
+        return {
+          id: u.id,
+          grp: entry?.team.id ?? null,
+          spec: u.specialization_id,
+          sup: entry?.team.supervisor?.name || null,
+          name: u.name,
+          uid: u.university_number,
+          whats: u.whatsapp,
+          mail: u.email,
+          isLeader: !!entry?.isLeader,
+          restricted: u.status === 'restricted',
+          restrictedReason: u.restricted_reason
+        }
+      })
     },
 
     supervisors() {
-      const seen = new Set()
-      const rows = []
-      this.teams.forEach((team) => {
-        const sup = team.supervisor
-        if (!sup || seen.has(sup.id)) return
-        seen.add(sup.id)
-        rows.push({
-          id: sup.id,
-          name: sup.name,
-          empId: sup.employee_number,
-          mail: sup.email,
-          whats: sup.whatsapp,
-          restricted: sup.status === 'restricted',
-          restrictedReason: sup.restricted_reason
-        })
-      })
-      return rows
+      return this.supervisorUsers.map((u) => ({
+        id: u.id,
+        name: u.name,
+        empId: u.employee_number,
+        mail: u.email,
+        whats: u.whatsapp,
+        restricted: u.status === 'restricted',
+        restrictedReason: u.restricted_reason
+      }))
     },
 
     specializationOptions() {
-      return [...new Set(this.teams.map((t) => this.specializationName(t.specialization_id)))].map((s) => ({ value: s, label: s }))
+      return this.specializations.map((s) => ({ value: s.id, label: s.name }))
     },
     supervisorOptions() {
       return [...new Set(this.supervisors.map((s) => s.name))].map((name) => ({ value: name, label: name }))
@@ -385,6 +623,34 @@ export default {
     supervisorPageRows() {
       const start = (this.supervisorPage - 1) * PAGE_SIZE
       return this.filteredSupervisors.slice(start, start + PAGE_SIZE)
+    },
+
+    trashedTabs() {
+      return this.isSuperAdmin
+        ? [{ value: 'supervisor', label: 'المشرفون' }]
+        : [{ value: 'student', label: 'الطلاب' }, { value: 'supervisor', label: 'المشرفون' }]
+    },
+
+    /** إرسال بيانات الدخول الجماعي */
+    deliveryRows() {
+      return this.deliveries.map((d) => ({
+        id: d.id,
+        name: d.user?.name || '—',
+        channel: d.channel,
+        status: d.status,
+        sentAt: d.sent_at ? formatDateTime(d.sent_at) : '—'
+      }))
+    },
+    filteredNotifyDirectory() {
+      const q = this.notifySearch.trim()
+      return this.notifyDirectory.filter((u) => {
+        const matchQ = !q || u.name.includes(q)
+        const matchSpec = !this.notifySpecFilter || u.specialization_id === this.notifySpecFilter
+        return matchQ && matchSpec
+      })
+    },
+    allNotifyFilteredSelected() {
+      return this.filteredNotifyDirectory.length > 0 && this.filteredNotifyDirectory.every((u) => this.notifySelectedIds.includes(u.id))
     }
   },
 
@@ -398,12 +664,124 @@ export default {
   },
 
   async created() {
-    await this.fetchTeams()
+    await Promise.all([this.loadStudents(), this.loadSupervisors(), this.fetchTeams()])
+    this.fetchSpecializations()
+    if (this.isSuperAdmin) {
+      this.loadNotifyDirectory()
+      this.loadDeliveries()
+    }
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'specializationName']),
-    ...mapActions(useUsersStore, ['updateUser', 'updateUserStatus', 'deleteUser', 'fetchTrashedUsers', 'restoreUser', 'setUserPassword']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'specializationName']),
+    ...mapActions(useUsersStore, [
+      'fetchUsers', 'createUser', 'updateUser', 'updateUserStatus', 'reinviteUser',
+      'fetchRestrictions', 'setRestriction', 'removeRestriction',
+      'deleteUser', 'fetchTrashedUsers', 'restoreUser', 'setUserPassword'
+    ]),
+    ...mapActions(useNotifyStore, ['previewBulkNotify', 'sendBulkNotify', 'fetchDeliveries', 'retryDelivery']),
+
+    async loadStudents() {
+      this.studentsLoading = true
+      try {
+        this.studentUsers = await this.fetchUsers('student')
+      } finally {
+        this.studentsLoading = false
+      }
+    },
+    async loadSupervisors() {
+      this.supervisorsLoading = true
+      try {
+        this.supervisorUsers = await this.fetchUsers('supervisor')
+      } finally {
+        this.supervisorsLoading = false
+      }
+    },
+    async reloadKind(kind) {
+      await (kind === 'student' ? this.loadStudents() : this.loadSupervisors())
+    },
+
+    openAddModal() {
+      this.addForm = emptyAddForm()
+      this.addModalOpen = true
+    },
+    async submitAdd() {
+      if (!this.addForm.name || !this.addForm.email) {
+        this.$toast?.error('يرجى تعبئة الاسم والبريد الإلكتروني على الأقل')
+        return
+      }
+      this.adding = true
+      try {
+        const result = await this.createUser(this.addForm)
+        const password = await this.setUserPassword(result.user.id)
+        this.addModalOpen = false
+        this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
+        this.inviteTarget = { name: this.addForm.name, mail: this.addForm.email, whats: this.addForm.whatsapp, password }
+        this.inviteModalOpen = true
+        this.sendInviteWhats()
+        this.sendInviteMail()
+        this.$toast?.success('تم إنشاء الحساب وإرسال بياناته')
+        await this.reloadKind(this.addForm.role)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء الحساب')
+      } finally {
+        this.adding = false
+      }
+    },
+
+    inviteMessage() {
+      return `مرحبًا ${this.inviteTarget?.name || ''}،\nتم إنشاء حسابك على منصة ${APP_NAME}.\nالبريد الإلكتروني: ${this.inviteTarget?.mail || ''}\nكلمة المرور: ${this.inviteTarget?.password || ''}\nرابط الدخول: ${window.location.origin}/login`
+    },
+    async copyInvitePassword() {
+      try {
+        await navigator.clipboard.writeText(this.inviteTarget?.password || '')
+        this.$toast?.success('تم نسخ كلمة السر')
+      } catch {
+        this.$toast?.error('تعذّر نسخ كلمة السر')
+      }
+    },
+    sendInviteWhats() {
+      if (!this.inviteTarget?.whats) return
+      const num = digitsOnly(this.inviteTarget.whats)
+      const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
+      window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.inviteMessage())}`, '_blank')
+    },
+    async sendInviteMail() {
+      if (!this.inviteTarget?.mail) return
+      try {
+        await sendEmail({
+          to: this.inviteTarget.mail,
+          subject: `تم إنشاء حسابك على منصة ${APP_NAME}`,
+          message: this.inviteMessage()
+        })
+        this.$toast?.success('تم إرسال البريد')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال البريد')
+      }
+    },
+    async copyInviteLink() {
+      try {
+        await navigator.clipboard.writeText(this.inviteLink)
+        this.$toast?.success('تم نسخ الرابط')
+      } catch {
+        this.$toast?.error('تعذّر نسخ الرابط')
+      }
+    },
+
+    /** سوبر أدمن فقط — رابط دعوة جديد لعضو موجود، يُنسخ للحافظة مباشرة */
+    async quickReinvite(row) {
+      this.reinvitingId = row.id
+      try {
+        const result = await this.reinviteUser(row.id)
+        const link = `${window.location.origin}/reset-password?token=${result.token}`
+        await navigator.clipboard.writeText(link)
+        this.$toast?.success('تم نسخ رابط الدعوة الجديد')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء رابط الدعوة')
+      } finally {
+        this.reinvitingId = null
+      }
+    },
 
     openEdit(row, kind) {
       this.editKind = kind
@@ -426,7 +804,7 @@ export default {
         await this.updateUser(this.editTargetId, payload)
         this.editModalOpen = false
         this.$toast?.success('تم حفظ التعديلات')
-        await this.fetchTeams()
+        await this.reloadKind(this.editKind)
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر حفظ التعديلات')
       } finally {
@@ -434,7 +812,8 @@ export default {
       }
     },
 
-    toggleRestrict(row) {
+    toggleRestrict(row, kind) {
+      this.restrictKind = kind
       if (row.restricted) {
         this.reactivate(row)
         return
@@ -447,7 +826,7 @@ export default {
       try {
         await this.updateUserStatus(row.id, 'active')
         this.$toast?.success('تم إلغاء الإيقاف')
-        await this.fetchTeams()
+        await this.reloadKind(this.restrictKind)
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إلغاء الإيقاف')
       }
@@ -462,11 +841,45 @@ export default {
         await this.updateUserStatus(this.restrictTarget.id, 'restricted', this.restrictReason.trim())
         this.restrictModal = false
         this.$toast?.success(`تم إيقاف دخول العضو — السبب: ${this.restrictReason.trim()}`)
-        await this.fetchTeams()
+        await this.reloadKind(this.restrictKind)
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إيقاف العضو')
       } finally {
         this.submitting = false
+      }
+    },
+
+    /** القيود على وحدات النظام — سوبر أدمن، للمشرفين فقط */
+    async openModuleRestrict(row) {
+      this.moduleRestrictTarget = row
+      this.moduleRestrictReason = ''
+      this.moduleRestrictLevels = Object.fromEntries(MODULES.map((m) => [m.value, 'full']))
+      this.moduleRestrictModalOpen = true
+      try {
+        const restrictions = await this.fetchRestrictions(row.id)
+        restrictions.forEach((r) => { this.moduleRestrictLevels[r.module] = r.level })
+        this.moduleRestrictionIds = Object.fromEntries(restrictions.map((r) => [r.module, r.id]))
+        this.moduleRestrictReason = restrictions[0]?.reason || ''
+      } catch {
+        this.$toast?.error('تعذّر تحميل القيود الحالية')
+      }
+    },
+    async setModuleLevel(module, level) {
+      if (level !== 'full' && !this.moduleRestrictReason.trim()) {
+        this.$toast?.error('يرجى إدخال سبب التقييد أولًا')
+        return
+      }
+      this.moduleRestrictLevels[module] = level
+      try {
+        if (level === 'full') {
+          const id = this.moduleRestrictionIds?.[module]
+          if (id) await this.removeRestriction(id)
+        } else {
+          await this.setRestriction(this.moduleRestrictTarget.id, module, level, this.moduleRestrictReason.trim())
+        }
+        this.$toast?.success(level === 'full' ? 'تم إلغاء القيد' : `تم تحديث القيد — السبب: ${this.moduleRestrictReason.trim()}`)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث القيد')
       }
     },
 
@@ -486,7 +899,7 @@ export default {
         await this.deleteUser(this.deleteTarget.id, this.deleteReason.trim())
         this.deleteModal = false
         this.$toast?.success(`تم حذف العضو — السبب: ${this.deleteReason.trim()}`)
-        await this.fetchTeams()
+        await this.reloadKind(this.deleteKind)
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر حذف العضو')
       } finally {
@@ -495,6 +908,7 @@ export default {
     },
 
     async openTrashed() {
+      this.trashedTab = this.isSuperAdmin ? 'supervisor' : 'student'
       this.trashedModal = true
       await this.loadTrashed()
     },
@@ -514,7 +928,7 @@ export default {
       try {
         await this.restoreUser(user.id)
         this.$toast?.success(`تم استرجاع عضو ${user.name}`)
-        await this.fetchTeams()
+        await this.reloadKind(this.trashedTab)
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر استرجاع العضو')
       } finally {
@@ -553,7 +967,6 @@ export default {
       this.emailComposeTarget = mail
       this.emailComposeOpen = true
     },
-
     sendWhatsAll(list) {
       const contacts = list.filter((c) => c.whats)
       if (!contacts.length) return
@@ -563,6 +976,73 @@ export default {
     sendMailAll(emails) {
       const url = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${encodeURIComponent(emails.join(','))}&su=${encodeURIComponent('تعميم من لجنة الإشراف')}`
       window.open(url, '_blank')
+    },
+
+    /** إرسال بيانات الدخول الجماعي — سوبر أدمن فقط */
+    async loadNotifyDirectory() {
+      this.notifySelectedIds = []
+      this.notifyPreviewResult = null
+      this.notifySpecFilter = ''
+      this.notifyDirectoryLoading = true
+      try {
+        this.notifyDirectory = await this.fetchUsers(this.notifyRoleFilter)
+      } catch (_) {
+        this.$toast?.error('تعذّر تحميل الأعضاء')
+      } finally {
+        this.notifyDirectoryLoading = false
+      }
+    },
+    async loadDeliveries() {
+      try {
+        await this.fetchDeliveries(this.deliveryStatusFilter ? { status: this.deliveryStatusFilter } : {})
+      } catch (_) {
+        // الخطأ متاح عبر deliveriesError عند الحاجة
+      }
+    },
+    toggleNotifySelectAll() {
+      const filteredIds = this.filteredNotifyDirectory.map((u) => u.id)
+      this.notifySelectedIds = this.allNotifyFilteredSelected
+        ? this.notifySelectedIds.filter((id) => !filteredIds.includes(id))
+        : [...new Set([...this.notifySelectedIds, ...filteredIds])]
+      this.notifyPreviewResult = null
+    },
+    async previewNotify() {
+      try {
+        this.notifyPreviewResult = await this.previewBulkNotify(this.notifySelectedIds, this.notifyChannel)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تجهيز المعاينة')
+      }
+    },
+    async confirmSendNotify() {
+      this.notifySending = true
+      try {
+        const result = await this.sendBulkNotify(this.notifySelectedIds, this.notifyChannel)
+        this.$toast?.success(`تم إرسال ${result.dispatched.length} رسالة${result.skipped.length ? ` (تخطّي ${result.skipped.length})` : ''}`)
+        this.notifyPreviewResult = null
+        this.notifySelectedIds = []
+        await this.loadDeliveries()
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال الرسائل')
+      } finally {
+        this.notifySending = false
+      }
+    },
+    async retryDeliveryRow(row) {
+      this.retryingDeliveryId = row.id
+      try {
+        await this.retryDelivery(row.id)
+        this.$toast?.success('تمت إعادة المحاولة')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إعادة المحاولة')
+      } finally {
+        this.retryingDeliveryId = null
+      }
+    },
+    statusLabel(status) {
+      return STATUS_LABELS[status] || status
+    },
+    statusVariant(status) {
+      return STATUS_VARIANTS[status] || 'neutral'
     }
   }
 }
