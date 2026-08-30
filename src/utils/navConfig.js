@@ -22,7 +22,7 @@ export const NAV_ITEMS_BY_ROLE = {
     {
       title: 'الإدارة العامة',
       items: [
-        { label: 'الأعضاء وبيانات الدخول', to: '/super-admin', icon: UserPlus, exact: true },
+        { label: 'إدارة الأعضاء', to: '/super-admin', icon: UserPlus, exact: true },
         { label: 'لجنة الإشراف', to: '/super-admin/committee', icon: ShieldCheck },
         { label: 'الأقسام والفصول الدراسية', to: '/super-admin/structure', icon: Building2 }
       ]
@@ -32,7 +32,6 @@ export const NAV_ITEMS_BY_ROLE = {
       items: [
         { label: 'لوحة التحكم', to: '/committee', icon: LayoutDashboard, exact: true },
         { label: 'الفرق', to: '/committee/teams', icon: Users },
-        { label: 'الطلاب والمشرفين', to: '/committee/members', icon: User },
         { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList },
         { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock },
         { label: 'أرشيف المشاريع', to: '/committee/project-archive', icon: FileCheck },
@@ -45,7 +44,7 @@ export const NAV_ITEMS_BY_ROLE = {
   [ROLES.COMMITTEE]: [
     { label: 'لوحة التحكم', to: '/committee', icon: LayoutDashboard, exact: true },
     { label: 'الفرق', to: '/committee/teams', icon: Users },
-    { label: 'الأعضاء', to: '/committee/members', icon: User },
+    { label: 'إدارة الأعضاء', to: '/committee/members', icon: User },
     { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList },
     { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock },
     { label: 'أرشيف المشاريع', to: '/committee/project-archive', icon: FileCheck },

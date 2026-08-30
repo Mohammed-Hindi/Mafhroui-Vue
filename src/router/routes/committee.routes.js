@@ -44,7 +44,7 @@ export default [
         path: 'members',
         name: 'committee-members',
         component: MembersPageCommittee,
-        meta: { title: 'الأعضاء' }
+        meta: { title: 'إدارة الأعضاء' }
       },
       {
         path: 'proposals',

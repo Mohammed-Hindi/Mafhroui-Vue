@@ -1,6 +1,6 @@
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { ROLES } from '@/utils/constants'
-import MembersPage from '@/views/super-admin/MembersPage.vue'
+import MembersPage from '@/views/committee/MembersPage.vue'
 import CommitteeMembersPage from '@/views/super-admin/CommitteeMembersPage.vue'
 import OrgStructurePage from '@/views/super-admin/OrgStructurePage.vue'
 
@@ -15,7 +15,7 @@ export default [
         path: '',
         name: 'super-admin-members',
         component: MembersPage,
-        meta: { title: 'الأعضاء وبيانات الدخول' }
+        meta: { title: 'إدارة الأعضاء' }
       },
       {
         path: 'committee',
