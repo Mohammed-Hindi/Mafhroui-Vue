@@ -234,6 +234,15 @@
       </template>
     </BaseModal>
 
+    <!-- إيقاف الحساب مع سبب -->
+    <BaseModal v-model="stopModalOpen" title="إيقاف الحساب" :description="stopTarget ? `سيُمنع ${stopTarget.name} من تسجيل الدخول حتى تفعيل الحساب مجددًا.` : ''" size="sm">
+      <BaseInput v-model="stopReason" label="سبب الإيقاف" placeholder="اكتبي سبب إيقاف هذا الحساب" required />
+      <template #footer>
+        <BaseButton variant="ghost" @click="stopModalOpen = false">إلغاء</BaseButton>
+        <BaseButton variant="danger" :icon="Ban" :loading="submitting" @click="confirmStop">تأكيد الإيقاف</BaseButton>
+      </template>
+    </BaseModal>
+
     <!-- المحذوفون -->
     <BaseModal v-model="trashedModalOpen" title="المشرفون المحذوفون" description="استرجعي أي حساب حُذف بالخطأ" size="lg">
       <SkeletonLoader v-if="trashedUsersLoading" :rows="3" height="60px" />
@@ -352,6 +361,10 @@ export default {
       deleteModalOpen: false,
       deleteTarget: null,
       deleteReason: '',
+
+      stopModalOpen: false,
+      stopTarget: null,
+      stopReason: '',
 
       trashedModalOpen: false,
       restoringId: null,
@@ -584,17 +597,32 @@ export default {
       }
     },
 
+openStop(row) {
+      this.stopTarget = row
+      this.stopReason = ''
+      this.stopModalOpen = true
+    },
+    async confirmStop() {
+      if (!this.stopReason.trim()) {
+        this.$toast?.error('يرجى إدخال سبب إيقاف الحساب')
+        return
+      }
+      this.submitting = true
+      try {
+        await this.updateUserStatus(this.stopTarget.id, 'restricted', this.stopReason.trim())
+        this.$toast?.success(`تم إيقاف الحساب — السبب: ${this.stopReason.trim()}`)
+        this.stopModalOpen = false
+        await this.load()
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث حالة الحساب')
+      } finally {
+        this.submitting = false
+      }
+    },
+
     async toggleStatus(row) {
       if (row.status === 'active') {
-        const reason = window.prompt('سبب إيقاف هذا الحساب؟')
-        if (!reason) return
-        try {
-          await this.updateUserStatus(row.id, 'restricted', reason)
-          this.$toast?.success(`تم إيقاف الحساب — السبب: ${reason}`)
-          await this.load()
-        } catch (err) {
-          this.$toast?.error(err.normalized?.message || 'تعذّر تحديث حالة الحساب')
-        }
+        this.openStop(row)
         return
       }
       try {
