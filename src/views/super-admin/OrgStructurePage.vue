@@ -19,7 +19,7 @@
       </div>
 
       <DataTable
-        :columns="departmentColumns" :rows="departmentRows" row-key="id" :primary-keys="['name', 'actions']"
+        :columns="departmentColumns" :rows="departmentRows" row-key="id"
         :loading="departmentsLoading" empty-title="لا توجد أقسام بعد"
       >
         <template #cell-name="{ row }"><span class="font-bold text-text-900">{{ row.name }}</span></template>
@@ -166,18 +166,18 @@ export default {
 
       departmentColumns: [
         { key: 'name', label: 'اسم القسم' },
-        { key: 'actions', label: 'إجراءات', className: 'text-end' }
+        { key: 'actions', label: 'إجراءات', className: 'w-px whitespace-nowrap text-end' }
       ],
       specializationColumns: [
         { key: 'name', label: 'اسم التخصص' },
-        { key: 'department', label: 'القسم' },
-        { key: 'degree', label: 'الدرجة العلمية' },
-        { key: 'actions', label: 'إجراءات', className: 'text-end' }
+        { key: 'department', label: 'القسم', className: 'w-px whitespace-nowrap' },
+        { key: 'degree', label: 'الدرجة العلمية', className: 'w-px whitespace-nowrap' },
+        { key: 'actions', label: 'إجراءات', className: 'w-px whitespace-nowrap text-end' }
       ],
       termColumns: [
         { key: 'name', label: 'اسم الفصل' },
-        { key: 'status', label: 'الحالة' },
-        { key: 'actions', label: 'إجراءات', className: 'text-end' }
+        { key: 'status', label: 'الحالة', className: 'w-px whitespace-nowrap' },
+        { key: 'actions', label: 'إجراءات', className: 'w-px whitespace-nowrap text-end' }
       ],
       degreeOptions: DEGREE_OPTIONS,
 
