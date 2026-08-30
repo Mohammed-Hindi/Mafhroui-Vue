@@ -11,7 +11,8 @@ import {
   CalendarClock,
   FileCheck,
   TrendingUp,
-  Bot
+  Bot,
+  Building2
 } from 'lucide-vue-next'
 import { ROLES } from '@/utils/constants'
 
@@ -20,6 +21,7 @@ export const NAV_ITEMS_BY_ROLE = {
   [ROLES.SUPER_ADMIN]: [
     { label: 'الأعضاء وبيانات الدخول', to: '/super-admin', icon: UserPlus, exact: true },
     { label: 'إضافة لجنة الإشراف', to: '/super-admin/committee', icon: ShieldCheck },
+    { label: 'الأقسام والتخصصات والفصول', to: '/super-admin/structure', icon: Building2 },
     { label: 'لوحة التحكم', to: '/committee', icon: LayoutDashboard, exact: true },
     { label: 'الفرق', to: '/committee/teams', icon: Users },
     { label: 'أعضاء الطلاب والمشرفين', to: '/committee/members', icon: User },

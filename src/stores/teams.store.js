@@ -99,6 +99,46 @@ export const useTeamsStore = defineStore('teams', () => {
     }
   }
 
+  // POST /departments
+  const createDepartment = async (payload) => {
+    const { data } = await api.post('/departments', payload)
+    await fetchDepartments()
+    return data
+  }
+
+  // PUT /departments/{id}
+  const updateDepartment = async (id, payload) => {
+    const { data } = await api.put(`/departments/${id}`, payload)
+    await fetchDepartments()
+    return data
+  }
+
+  // DELETE /departments/{id}
+  const deleteDepartment = async (id) => {
+    await api.delete(`/departments/${id}`)
+    await fetchDepartments()
+  }
+
+  // POST /specializations
+  const createSpecialization = async (payload) => {
+    const { data } = await api.post('/specializations', payload)
+    await fetchSpecializations()
+    return data
+  }
+
+  // PUT /specializations/{id}
+  const updateSpecialization = async (id, payload) => {
+    const { data } = await api.put(`/specializations/${id}`, payload)
+    await fetchSpecializations()
+    return data
+  }
+
+  // DELETE /specializations/{id}
+  const deleteSpecialization = async (id) => {
+    await api.delete(`/specializations/${id}`)
+    await fetchSpecializations()
+  }
+
   // GET /teams/{id}/progress → { total, done, percentage }
   const fetchTeamProgress = async (id) => {
     const { data } = await api.get(`/teams/${id}/progress`)
@@ -442,6 +482,12 @@ export const useTeamsStore = defineStore('teams', () => {
     fetchTeams,
     fetchSpecializations,
     fetchDepartments,
+    createDepartment,
+    updateDepartment,
+    deleteDepartment,
+    createSpecialization,
+    updateSpecialization,
+    deleteSpecialization,
     fetchTeamProgress,
     updateTeam,
     deleteTeam,
