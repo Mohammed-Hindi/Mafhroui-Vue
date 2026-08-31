@@ -2,30 +2,19 @@
   <div>
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex items-center gap-3">
-        <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><Users :size="18" /></span>
-        <div>
-          <h3 class="text-h3 font-bold text-text-900">إدارة الأعضاء</h3>
-          <p class="text-caption text-text-600">حسابات الطلاب والمشرفين، بياناتهم، وصلاحيات الدخول</p>
-        </div>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <BaseButton variant="outline" :icon="Archive" @click="openTrashed">الأعضاء المحذوفون</BaseButton>
-        <BaseButton :icon="UserPlus" @click="openAddModal">إضافة عضو</BaseButton>
-      </div>
-    </div>
-
-    <!-- ===================== الأعضاء (طلاب/مشرفون) ===================== -->
-    <div class="flex items-center justify-between gap-3 mb-5 flex-wrap">
-      <div class="flex items-center gap-3">
         <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
           <component :is="memberKind === 'student' ? GraduationCap : Users" :size="18" />
         </span>
         <div>
-          <h3 class="text-h3 font-bold text-text-900">{{ memberKind === 'student' ? 'أعضاء الطلاب' : 'المشرفون' }}</h3>
+          <h3 class="text-h3 font-bold text-text-900">إدارة الأعضاء</h3>
           <p class="text-caption text-text-600">{{ activeFiltered.length }} من أصل {{ activeList.length }} {{ memberKind === 'student' ? 'طالبًا' : 'مشرفًا' }}</p>
         </div>
       </div>
-      <BaseSelect v-model="memberKind" class="min-w-[170px]" :options="memberKindOptions" />
+      <div class="flex flex-wrap items-center gap-2">
+        <BaseSelect v-model="memberKind" class="min-w-[150px]" :options="memberKindOptions" />
+        <BaseButton variant="outline" :icon="Archive" @click="openTrashed">الأعضاء المحذوفون</BaseButton>
+        <BaseButton :icon="UserPlus" @click="openAddModal">إضافة عضو</BaseButton>
+      </div>
     </div>
 
     <div class="flex flex-wrap gap-3 mb-4">
