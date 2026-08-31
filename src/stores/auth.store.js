@@ -75,6 +75,22 @@ export const useAuthStore = defineStore('auth', () => {
       isLoading.value = false
     }
   }
+  // POST /magic-login/{token} | Response: { user, token } — دخول مباشر لحساب عرض تقديمي عبر رابط/QR
+  const consumeMagicLogin = async (magicToken) => {
+    isLoading.value = true
+    error.value = ''
+    try {
+      const response = await api.post(`/magic-login/${magicToken}`)
+      persistSession(response.data.user, response.data.token)
+      return response.data
+    } catch (err) {
+      error.value = err.normalized?.message || 'رابط الدخول غير صالح أو منتهي الصلاحية.'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // POST /me/change-password | يتطلب توكن صالح مسبقاً
   const changePassword = async (credentials) => {
     isLoading.value = true
@@ -153,6 +169,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     acceptInvite,
+    consumeMagicLogin,
     changePassword,
     forgotPassword,
     fetchCurrentUser,
