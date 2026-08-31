@@ -29,6 +29,12 @@ export default [
         name: 'change-password',
         component: () => import('@/views/auth/ChangePasswordPage.vue'),
         meta: { title: 'تغيير كلمة المرور', guestOnly: false, requiresAuth: true }
+      },
+      {
+        path: 'magic-login/:token',
+        name: 'magic-login',
+        component: () => import('@/views/auth/MagicLoginPage.vue'),
+        meta: { title: 'تسجيل الدخول' }
       }
     ]
   }
