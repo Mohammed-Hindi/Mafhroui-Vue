@@ -4,7 +4,7 @@
       <span class="grid place-items-center w-9 h-9 rounded-md bg-gradient-to-bl from-primary-600 to-accent-500 text-white shrink-0">
         <Bot :size="18" />
       </span>
-      <h3 class="font-cairo font-bold text-h4 text-text-900">{{ title }}</h3>
+      <h3 class="portal-title font-cairo font-bold text-h4 text-text-900">{{ title }}</h3>
     </header>
 
     <div ref="body" class="flex-1 overflow-y-auto scrollbar-thin px-5 py-6 flex flex-col gap-4">

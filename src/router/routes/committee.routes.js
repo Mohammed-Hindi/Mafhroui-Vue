@@ -38,7 +38,7 @@ export default [
         path: 'teams',
         name: 'committee-teams',
         component: TeamsPageCommittee,
-        meta: { title: 'الفرق' }
+        meta: { title: 'المجموعات' }
       },
       {
         path: 'members',

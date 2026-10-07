@@ -2,7 +2,7 @@
   <div>
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex items-center gap-3">
-        <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
+        <span class="page-icon grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="--icon-color: #62BB46; background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
           <TrendingUp :size="18" />
         </span>
         <div>
@@ -15,7 +15,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 mb-6">
       <div class="bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col justify-center gap-5">
-        <p class="text-body-sm font-bold text-text-700">توزيع حالات المشاريع</p>
+        <p class="portal-title text-body-sm font-bold text-text-700">توزيع حالات المشاريع</p>
         <div v-for="row in statusDistribution" :key="row.status" class="flex flex-col gap-2">
           <div class="flex items-center justify-between text-body-sm">
             <span class="text-text-600">{{ row.label }}</span>
@@ -28,7 +28,7 @@
       </div>
 
       <div class="bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col items-center">
-        <p class="text-body-sm font-bold text-text-700 mb-5">متوسط نسبة الإنجاز</p>
+        <p class="portal-title text-body-sm font-bold text-text-700 mb-5">متوسط نسبة الإنجاز</p>
         <div class="relative w-[150px] h-[150px]">
           <svg width="150" height="150" viewBox="0 0 150 150" style="transform: rotate(-90deg)">
             <circle cx="75" cy="75" r="63" fill="none" stroke="var(--color-border-soft)" stroke-width="16" />

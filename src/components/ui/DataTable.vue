@@ -2,7 +2,7 @@
   <div :class="flush ? 'overflow-hidden' : 'bg-surface rounded-lg border border-border shadow-card overflow-hidden'">
     <!-- رأس الجدول: عنوان + أدوات -->
     <div v-if="title || $slots.toolbar" class="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-border-soft">
-      <h2 v-if="title" class="font-cairo font-bold text-h3 text-text-900">{{ title }}</h2>
+      <h2 v-if="title" class="portal-title font-cairo font-bold text-h3 text-text-900">{{ title }}</h2>
       <div class="flex items-center gap-2 ms-auto"><slot name="toolbar" /></div>
     </div>
 
