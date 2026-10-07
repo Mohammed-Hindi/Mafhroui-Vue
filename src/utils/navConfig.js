@@ -18,32 +18,34 @@ import { ROLES } from '@/utils/constants'
 
 /** عناصر القائمة الجانبية لكل دور — مصدر واحد يستهلكه DashboardLayout */
 export const NAV_ITEMS_BY_ROLE = {
+  // color: لون الأيقونة الخطية — من ألوان أيقونات عمادات الكلية (هوية UCAS، راجعي docs/design/UCAS_DESIGN_SYSTEM.md)
   [ROLES.SUPER_ADMIN]: [
     {
       title: 'الإدارة العامة',
       items: [
-        { label: 'إدارة الأعضاء', to: '/super-admin', icon: UserPlus, exact: true },
-        { label: 'لجنة الإشراف', to: '/super-admin/committee', icon: ShieldCheck },
-        { label: 'الأقسام والفصول الدراسية', to: '/super-admin/structure', icon: Building2 }
+        { label: 'الملف التعريفي', to: '/super-admin/profile', icon: UserCircle, color: '#0E699C' },
+        { label: 'إدارة الأعضاء', to: '/super-admin', icon: UserPlus, exact: true, color: '#3A9B4C' },
+        { label: 'لجنة الإشراف', to: '/super-admin/committee', icon: ShieldCheck, color: '#4C5EA8' },
+        { label: 'الأقسام والفصول الدراسية', to: '/super-admin/structure', icon: Building2, color: '#229791' }
       ]
     },
     {
       title: 'أدوات لجنة الإشراف',
       items: [
-        { label: 'لوحة التحكم', to: '/committee', icon: LayoutDashboard, exact: true },
-        { label: 'الفرق', to: '/committee/teams', icon: Users },
-        { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList },
-        { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock },
-        { label: 'أرشيف المشاريع', to: '/committee/project-archive', icon: FileCheck },
-        { label: 'تقدّم المشاريع', to: '/committee/progress', icon: TrendingUp },
-        { label: 'المساعد الآلي', to: '/committee/assistant', icon: Bot }
+        { label: 'لوحة التحكم', to: '/committee', icon: LayoutDashboard, exact: true, color: '#005BAA' },
+        { label: 'المجموعات', to: '/committee/teams', icon: Users, color: '#A9375C' },
+        { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList, color: '#F89E32' },
+        { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock, color: '#009ADC' },
+        { label: 'أرشيف المشاريع', to: '/committee/project-archive', icon: FileCheck, color: '#805C55' },
+        { label: 'تقدّم المشاريع', to: '/committee/progress', icon: TrendingUp, color: '#62BB46' },
+        { label: 'المساعد الآلي', to: '/committee/assistant', icon: Bot, color: '#233B77' }
       ]
     }
   ],
 
   [ROLES.COMMITTEE]: [
     { label: 'لوحة التحكم', to: '/committee', icon: LayoutDashboard, exact: true },
-    { label: 'الفرق', to: '/committee/teams', icon: Users },
+    { label: 'المجموعات', to: '/committee/teams', icon: Users },
     { label: 'إدارة الأعضاء', to: '/committee/members', icon: User },
     { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList },
     { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock },

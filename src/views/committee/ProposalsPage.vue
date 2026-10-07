@@ -1,5 +1,7 @@
 <template>
   <div>
+    <PortalPageHead :icon="ClipboardList" color="#F89E32" title="مقترحات مشاريع التخرج" subtitle="مراجعة مقترحات الفرق واعتمادها أو رفضها مع ذكر السبب" />
+
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <div class="reveal group bg-surface rounded-lg border border-border shadow-card p-5 flex items-center lg:flex-col lg:items-start gap-4 lg:gap-0 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200 active:scale-[0.98]">
         <span class="grid place-items-center w-11 h-11 rounded-md bg-error-bg text-error shrink-0 lg:mb-4"><XCircle :size="20" /></span>
@@ -33,7 +35,7 @@
 
     <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden">
       <div class="flex flex-wrap items-center justify-between gap-4 p-5 pb-4">
-        <h3 class="font-cairo font-bold text-h4 text-text-900">قائمة المقترحات</h3>
+        <h3 class="portal-title font-cairo font-bold text-h4 text-text-900">قائمة المقترحات</h3>
         <div class="flex items-center gap-1 bg-bg border border-border rounded-md p-1">
           <button
             v-for="tab in tabs" :key="tab.value" type="button"
@@ -100,7 +102,8 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, X, Check } from 'lucide-vue-next'
+import { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, X, Check, ClipboardList } from 'lucide-vue-next'
+import PortalPageHead from '@/components/shared/PortalPageHead.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -114,11 +117,11 @@ const STATUS_LABELS = { pending: 'قيد المراجعة', approved: 'معتم�
 export default {
   name: 'CommitteeProposalsPage',
 
-  components: { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, X, Check, BaseBadge, BaseButton, BaseModal, DataTable, CountUp },
+  components: { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, X, Check, BaseBadge, BaseButton, BaseModal, DataTable, CountUp, PortalPageHead },
 
   data() {
     return {
-      X,
+      X, ClipboardList,
       search: '',
       activeTab: 'all',
       page: 1,
