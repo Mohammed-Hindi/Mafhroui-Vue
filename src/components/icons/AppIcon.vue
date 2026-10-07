@@ -56,7 +56,8 @@ const ICON_PATHS = {
   inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/>',
   refresh: '<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/>',
   home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9.5h14V10"/>',
-  x: '<path d="M18 6 6 18M6 6l12 12"/>'
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  chevronUp: '<path d="m18 15-6-6-6 6"/>'
 }
 
 export default {

@@ -2,7 +2,7 @@
   <div class="max-w-content mx-auto px-6 py-12">
     <router-link
       :to="{ name: 'projects-archive' }"
-      class="inline-flex items-center gap-1.5 mb-6 text-body-sm font-bold text-text-600 hover:text-primary-600 transition-colors duration-fast"
+      class="inline-flex items-center gap-1.5 mb-6 text-body-sm font-bold text-text-600 hover:text-ucas-blue transition-colors duration-fast"
     >
       <AppIcon name="chevronEnd" :size="15" :stroke-width="2.2" />
       رجوع
@@ -34,7 +34,7 @@
 
         <button
           type="button"
-          class="relative w-full aspect-video grid place-items-center overflow-hidden group bg-gradient-to-bl from-primary-900 via-primary-600 to-accent-500"
+          class="relative w-full aspect-video grid place-items-center overflow-hidden group bg-gradient-to-bl from-ucas-navy900 via-ucas-teal to-ucas-green"
           :aria-label="`تشغيل فيديو عرض مشروع ${project.title}`"
           @click="openPlaceholderVideo"
         >
@@ -45,7 +45,7 @@
             <AppIcon name="graduation" :size="18" />
           </span>
 
-          <span class="relative z-[1] grid place-items-center w-16 h-16 rounded-pill bg-white text-primary-600 shadow-[0_12px_30px_rgba(0,0,0,.35)] transition-transform duration-fast group-hover:scale-110">
+          <span class="relative z-[1] grid place-items-center w-16 h-16 rounded-pill bg-white text-ucas-blue shadow-[0_12px_30px_rgba(0,0,0,.35)] transition-transform duration-fast group-hover:scale-110">
             <AppIcon name="play" :size="24" class="ms-1" />
           </span>
 
@@ -60,13 +60,13 @@
       <div class="grid sm:grid-cols-2 gap-4">
         <div
           v-for="info in infoRows" :key="info.label"
-          class="reveal group flex items-center justify-between gap-3 p-4 rounded-lg bg-surface border border-border shadow-card transition-all duration-base hover:-translate-y-0.5 hover:shadow-card-hover hover:border-primary-200"
+          class="reveal group flex items-center justify-between gap-3 p-4 rounded-lg bg-surface border border-border shadow-card transition-all duration-base hover:-translate-y-0.5 hover:shadow-card-hover hover:border-ucas-blue/30"
         >
           <div class="min-w-0">
             <div class="text-label text-text-400 mb-1">{{ info.label }}</div>
             <div class="text-body-sm font-bold text-text-900 break-words">{{ info.value }}</div>
           </div>
-          <span class="grid place-items-center w-10 h-10 rounded-pill shrink-0 text-white transition-transform duration-base group-hover:scale-110" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
+          <span class="grid place-items-center w-10 h-10 rounded-pill shrink-0 text-white transition-transform duration-base group-hover:scale-110" style="background: linear-gradient(135deg, var(--ucas-green), var(--ucas-blue))">
             <AppIcon :name="info.icon" :size="17" />
           </span>
         </div>

@@ -1,5 +1,6 @@
 <template>
   <div class="min-h-screen bg-bg flex flex-col">
+    <div aria-hidden="true" class="h-[5px] w-full bg-gradient-to-l from-ucas-green via-ucas-teal to-ucas-blue" />
     <WaterBackground />
     <LandingNavBar />
     <main class="flex-1">
@@ -16,11 +17,13 @@
       </router-view>
     </main>
     <LandingFooter />
+    <BackToTopButton />
   </div>
 </template>
 
 <script setup>
 import LandingNavBar from '@/components/landing/LandingNavBar.vue'
 import LandingFooter from '@/components/landing/LandingFooter.vue'
+import BackToTopButton from '@/components/landing/BackToTopButton.vue'
 import WaterBackground from '@/components/shared/WaterBackground.vue'
 </script>

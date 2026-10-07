@@ -61,6 +61,21 @@ export default {
         border: 'var(--color-border)',
         'border-soft': 'var(--color-border-soft)',
 
+        /* هوية UCAS — صفحات اللاندنج العامة فقط، راجع docs/brand/BRAND_IDENTITY.md */
+        ucas: {
+          green: 'var(--ucas-green)',
+          teal: 'var(--ucas-teal)',
+          blue: 'var(--ucas-blue)',
+          navy: 'var(--ucas-navy)',
+          navy900: 'var(--ucas-navy-900)',
+          footer: 'var(--ucas-footer)',
+          orange: 'var(--ucas-orange)',
+          maroon: 'var(--ucas-maroon)',
+          brown: 'var(--ucas-brown)',
+          indigo: 'var(--ucas-indigo)',
+          cyan: 'var(--ucas-cyan)'
+        },
+
         text: {
           900: 'var(--color-text-900)',
           700: 'var(--color-text-700)',
@@ -144,5 +159,8 @@ export default {
       }
     }
   },
-  plugins: []
+  plugins: [
+    // ucas: — يُطبَّق فقط حين <html data-brand="ucas"> (لوحة السوبر أدمن، راجع DashboardLayout)
+    ({ addVariant }) => addVariant('ucas', ':root[data-brand="ucas"] &')
+  ]
 }

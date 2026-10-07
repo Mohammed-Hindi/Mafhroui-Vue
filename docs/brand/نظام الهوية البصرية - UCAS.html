@@ -1,0 +1,748 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>نظام الهوية البصرية — UCAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   مستخرج حصرياً من لقطات شاشة موقع UCAS (31 صورة مرفقة بالمحادثة) —
+   لا توجد قيمة واحدة هنا من كود مصدر فعلي (ما عنديش وصول لملفات CSS
+   الأصلية لموقع UCAS)، كل الألوان تقدير بصري من الصور. ما في أي
+   إضافة أو اقتراح من عندي خارج اللي ظاهر بالصور — أي عنصر غير مؤكد
+   محدد بوضوح بوسم "غير متوفر بالصور".
+   ========================================================= */
+:root{
+  /* كحلي/أزرق العلامة */
+  --navy-900:#0B1A33; --navy-800:#122A4E; --blue-700:#17397A; --blue-600:#1C3F8C;
+  /* أخضر/تركواز العلامة */
+  --green-600:#3E9B32; --green-500:#4FAE3C; --teal-600:#157D86; --teal-500:#1C8F93;
+  /* برتقالي وأحمر (لمسات) */
+  --orange-500:#F28C28; --maroon-600:#A83246; --brown-600:#8B5A2B;
+  /* ألوان عمادات إضافية مرصودة */
+  --dean-navy:#1B3A6B; --dean-indigo:#3B4C9E; --dean-cyan:#1C94A0; --dean-green:#3E9B32;
+  /* أسطح */
+  --surface:#FFFFFF; --surface-soft:#F4F6F8; --footer-bg:#0A1424;
+  --border:#E6E9EE;
+  --text-900:#16222E; --text-700:#3A4A58; --text-600:#5C6B78; --text-400:#8B98A3;
+
+  --radius-sm:8px; --radius-md:14px; --radius-lg:20px; --radius-pill:999px;
+  --shadow-card:0 1px 2px rgba(10,20,36,.05), 0 8px 22px -12px rgba(10,20,36,.12);
+  --ease-standard:cubic-bezier(.22,.9,.32,1);
+
+  --doc-sidebar-w:272px;
+  --font-heading:'Cairo', sans-serif;
+  --font-body:'Tajawal', sans-serif;
+  --font-mono:ui-monospace, 'Cascadia Code', Consolas, Menlo, monospace;
+}
+
+*{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  background:var(--surface-soft);
+  color:var(--text-900);
+  font-family:var(--font-body);
+  font-size:14.5px;
+  line-height:1.9;
+  direction:rtl;
+}
+h1,h2,h3,h4{ font-family:var(--font-heading); margin:0; text-wrap:balance; }
+p{ margin:0; }
+code, .mono{ font-family:var(--font-mono); direction:ltr; unicode-bidi:isolate; }
+
+:focus-visible{ outline:2px solid var(--blue-600); outline-offset:2px; border-radius:4px; }
+
+.shell{ display:flex; min-height:100vh; }
+.toc{
+  width:var(--doc-sidebar-w); flex-shrink:0; position:sticky; top:0; align-self:flex-start;
+  height:100vh; overflow-y:auto; background:var(--surface); border-inline-start:1px solid var(--border);
+  padding:22px 18px 40px; scrollbar-width:thin;
+}
+.toc-brand{ display:flex; align-items:center; gap:10px; padding-bottom:18px; margin-bottom:14px; border-bottom:1px solid var(--border); }
+.toc-brand .mark{
+  width:36px; height:36px; border-radius:var(--radius-md); flex-shrink:0;
+  background:linear-gradient(90deg, var(--green-500), var(--teal-500), var(--blue-600));
+  display:grid; place-items:center; color:#fff; font-weight:800; font-family:var(--font-heading); font-size:15px;
+}
+.toc-brand .name{ font-family:var(--font-heading); font-weight:800; font-size:14.5px; color:var(--text-900); }
+.toc-brand .sub{ font-size:11px; color:var(--text-400); }
+.toc nav{ display:flex; flex-direction:column; gap:2px; }
+.toc a{ display:flex; align-items:baseline; gap:8px; padding:7px 10px; border-radius:var(--radius-sm);
+  color:var(--text-600); text-decoration:none; font-size:12.8px; font-weight:600;
+  transition:background-color .15s var(--ease-standard), color .15s var(--ease-standard); }
+.toc a:hover{ background:var(--surface-soft); color:var(--text-900); }
+.toc a .n{ font-family:var(--font-mono); font-size:11px; color:var(--text-400); min-width:16px; }
+.toc .group-label{ font-size:10.5px; font-weight:800; letter-spacing:.06em; color:var(--text-400); text-transform:uppercase; padding:14px 10px 6px; }
+.toc .group-label:first-of-type{ padding-top:4px; }
+
+main{ flex:1; min-width:0; max-width:980px; padding:48px 56px 120px; }
+.doc-head{ margin-bottom:40px; }
+.doc-head .eyebrow{ font-size:12px; font-weight:800; color:var(--blue-600); letter-spacing:.04em; margin-bottom:10px; }
+.doc-head h1{ font-size:30px; font-weight:800; color:var(--text-900); margin-bottom:10px; }
+.doc-head .lede{ font-size:14.5px; color:var(--text-600); max-width:680px; line-height:1.9; }
+.doc-head .meta{ display:flex; gap:18px; margin-top:18px; flex-wrap:wrap; }
+.doc-head .meta div{ font-size:12px; color:var(--text-400); }
+.doc-head .meta b{ color:var(--text-700); font-weight:700; }
+
+section.block{ margin-bottom:56px; padding-top:8px; }
+section.block > .block-head{ display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+section.block > .block-head .num{
+  font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--blue-600);
+  background:#EAF0FB; border-radius:var(--radius-pill); width:26px; height:26px;
+  display:grid; place-items:center; flex-shrink:0; }
+section.block h2{ font-size:20px; font-weight:800; color:var(--text-900); }
+section.block > .block-sub{ font-size:13px; color:var(--text-600); margin:0 0 20px 38px; max-width:640px; line-height:1.85; }
+
+.card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-card); padding:22px 24px; margin-bottom:16px; }
+.card h3{ font-size:14.5px; font-weight:700; color:var(--text-900); margin-bottom:12px; }
+
+.tag{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700;
+  padding:3px 9px; border-radius:var(--radius-pill); }
+.tag.actual{ background:#E8F6E9; color:#2C7A39; }       /* ظاهر مباشرة بالصورة */
+.tag.inferred{ background:#FFF4E2; color:#B4660B; }     /* تقدير بصري من صورة، بدون أداة سحب لون */
+.tag.missing{ background:#FDEBEC; color:#C23B3B; }      /* غير متوفر بالصور المرفقة */
+
+.swatch-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(118px,1fr)); gap:10px; }
+.swatch{ border-radius:var(--radius-md); overflow:hidden; border:1px solid var(--border); }
+.swatch .fill{ height:58px; }
+.swatch .info{ padding:8px 9px; background:var(--surface); }
+.swatch .step{ font-size:10.5px; font-weight:700; color:var(--text-400); }
+.swatch .hex{ font-family:var(--font-mono); font-size:11.5px; font-weight:700; color:var(--text-900); direction:ltr; display:block; }
+
+.semantic-row{ display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px dashed var(--border); }
+.semantic-row:last-child{ border-bottom:none; }
+.semantic-row .chip{ width:40px; height:40px; border-radius:var(--radius-md); flex-shrink:0; border:1px solid rgba(0,0,0,.06); }
+.semantic-row .label{ font-size:13px; font-weight:700; color:var(--text-900); min-width:170px; }
+.semantic-row .vals{ font-family:var(--font-mono); font-size:11.5px; color:var(--text-600); direction:ltr; text-align:start; }
+.semantic-row .usage{ font-size:12px; color:var(--text-400); margin-inline-start:auto; text-align:end; }
+
+table.ds{ width:100%; border-collapse:collapse; font-size:13px; }
+table.ds th{ text-align:start; font-size:11px; font-weight:800; color:var(--text-400); text-transform:uppercase; letter-spacing:.03em; padding:9px 10px; border-bottom:2px solid var(--border); }
+table.ds td{ padding:10px 10px; border-bottom:1px solid #EEF1F4; color:var(--text-700); vertical-align:middle; }
+table.ds tr:hover td{ background:var(--surface-soft); }
+table.ds td.mono, table.ds code{ font-family:var(--font-mono); direction:ltr; text-align:start; display:inline-block; }
+.scroll-x{ overflow-x:auto; }
+
+pre.codeblock{ background:var(--navy-900); color:#D7E3F4; border-radius:var(--radius-md);
+  padding:16px 18px; font-family:var(--font-mono); font-size:12px; line-height:1.7;
+  overflow-x:auto; direction:ltr; text-align:start; }
+pre.codeblock .c{ color:#64748B; }
+pre.codeblock .k{ color:#7CC4FF; }
+pre.codeblock .s{ color:#7CE8E8; }
+
+.pill-row{ display:flex; gap:8px; flex-wrap:wrap; }
+.pill{ font-size:12px; font-weight:700; padding:6px 13px; border-radius:var(--radius-pill); background:var(--surface-soft); color:var(--text-700); }
+
+.radius-demo{ display:flex; gap:16px; flex-wrap:wrap; align-items:end; }
+.radius-demo .box{ background:#EAF0FB; border:1.5px solid #CBDAF5; width:84px; height:64px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; }
+.radius-demo .box b{ font-size:12px; color:var(--blue-700); }
+.radius-demo .box span{ font-family:var(--font-mono); font-size:10.5px; color:var(--blue-600); }
+
+.icon-strip{ display:flex; gap:14px; flex-wrap:wrap; }
+.icon-strip .ic{ width:46px; height:46px; border-radius:var(--radius-sm); background:var(--surface-soft); display:grid; place-items:center; }
+
+.type-sample{ border-bottom:1px solid #EEF1F4; padding:14px 0; display:flex; align-items:baseline; justify-content:space-between; gap:16px; }
+.type-sample:last-child{ border-bottom:none; }
+.type-sample .tok{ font-family:var(--font-mono); font-size:11px; color:var(--text-400); min-width:120px; }
+
+.btn-demo{ display:inline-flex; align-items:center; justify-content:center; height:38px; padding:0 18px; border-radius:var(--radius-sm); font-family:var(--font-heading); font-weight:700; font-size:13px; }
+.btn-outline-green{ background:transparent; color:var(--green-600); border:1.5px solid var(--green-600); }
+.btn-outline-red{ background:transparent; color:var(--maroon-600); border:1.5px solid var(--maroon-600); }
+.btn-outline-blue{ background:transparent; color:var(--blue-600); border:1.5px solid var(--blue-600); }
+.btn-solid-blue{ background:var(--blue-600); color:#fff; }
+.btn-solid-green{ background:var(--green-600); color:#fff; }
+
+.gradient-bar{ height:5px; border-radius:var(--radius-pill); background:linear-gradient(90deg, var(--green-500), var(--teal-500), var(--blue-600)); }
+.dual-line{ display:flex; height:4px; width:90px; border-radius:var(--radius-pill); overflow:hidden; }
+.dual-line span{ flex:1; }
+
+.stat-bar-demo{ display:flex; border-radius:var(--radius-md); overflow:hidden; }
+.stat-bar-demo div{ flex:1; padding:16px 10px; text-align:center; color:#fff; }
+.stat-bar-demo b{ display:block; font-family:var(--font-heading); font-size:22px; font-weight:800; }
+.stat-bar-demo span{ font-size:11px; opacity:.9; }
+
+.master-spec{ background:linear-gradient(165deg, var(--navy-900), #0E2240); color:#EAF1FB; border-radius:var(--radius-lg); padding:36px 38px; box-shadow:0 24px 64px -12px rgba(10,20,36,.4); }
+.master-spec h2{ color:#fff; font-size:22px; margin-bottom:4px; }
+.master-spec .sub{ color:#9FB2C8; font-size:12.5px; margin-bottom:24px; display:block; }
+.master-spec .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:22px; }
+.master-spec .col h4{ font-family:var(--font-heading); font-size:12px; color:#7CE8E8; letter-spacing:.04em; text-transform:uppercase; margin-bottom:10px; }
+.master-spec .col ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px; }
+.master-spec .col li{ font-size:12.5px; color:#CBD5E1; line-height:1.6; }
+.master-spec .col li b{ color:#fff; font-family:var(--font-mono); font-weight:600; }
+.master-spec .swbar{ display:flex; height:10px; border-radius:var(--radius-pill); overflow:hidden; margin-top:14px; }
+.master-spec .swbar span{ flex:1; }
+
+footer.doc-foot{ margin-top:50px; padding-top:20px; border-top:1px solid var(--border); font-size:11.5px; color:var(--text-400); }
+
+@media (max-width: 860px){ .toc{ display:none; } main{ padding:28px 20px 80px; max-width:100%; } }
+</style>
+
+<div class="shell">
+  <aside class="toc" aria-label="فهرس المحتوى">
+    <div class="toc-brand">
+      <span class="mark">U</span>
+      <span>
+        <span class="name" style="display:block;">UCAS</span>
+        <span class="sub">هوية بصرية — من لقطات شاشة</span>
+      </span>
+    </div>
+    <nav>
+      <p class="group-label">الأساسيات</p>
+      <a href="#colors"><span class="n">01</span> نظام الألوان</a>
+      <a href="#typography"><span class="n">02</span> نظام الخطوط</a>
+      <a href="#spacing"><span class="n">03</span> المسافات والشبكات</a>
+      <p class="group-label">السطوح</p>
+      <a href="#radius"><span class="n">04</span> الزوايا الدائرية</a>
+      <a href="#elevation"><span class="n">05</span> الارتفاع والظلال</a>
+      <a href="#borders"><span class="n">06</span> نظام الحدود والخطوط</a>
+      <a href="#icons"><span class="n">07</span> الأيقونات والشعارات</a>
+      <p class="group-label">السلوك</p>
+      <a href="#components"><span class="n">08</span> المكوّنات</a>
+      <a href="#motion"><span class="n">09</span> الحركة والتفاعل</a>
+      <p class="group-label">المرجع</p>
+      <a href="#tokens"><span class="n">10</span> جدول Design Tokens</a>
+      <a href="#sources"><span class="n">··</span> مصدر كل قيمة (الصور)</a>
+      <a href="#master"><span class="n">★</span> Master Spec</a>
+    </nav>
+  </aside>
+
+  <main id="main-start">
+    <div class="doc-head">
+      <p class="eyebrow">تحليل هوية بصرية — استخراج من لقطات شاشة فقط، بلا وصول لكود المصدر</p>
+      <h1>نظام الهوية البصرية — UCAS</h1>
+      <p class="lede">
+        توثيق كامل لنظام التصميم الظاهر بموقع الكلية الجامعية للعلوم التطبيقية (UCAS)، مُستخرج حصراً من 31 لقطة شاشة
+        أرسلتها بالمحادثة (الصفحة الرئيسية، عن الكلية، العمادات، الوحدات والمراكز، القبول والتسجيل، البحث العلمي،
+        وبوابة الطالب القديمة). <b>كل قيمة هون إما ظاهرة مباشرة بالصورة <span class="tag actual">من الصورة</span>،
+        أو تقدير بصري للون/القياس بدون أداة سحب لون دقيقة <span class="tag inferred">تقدير بصري</span>، أو غير ظاهرة
+        إطلاقاً بالصور المرفقة <span class="tag missing">غير متوفر</span>. ما في ولا قيمة واحدة مُخترعة أو مُقترحة من
+        عندي خارج إطار الصور.</b>
+      </p>
+      <div class="meta">
+        <div>المصدر: <b>لقطات شاشة فقط (31 صورة)</b></div>
+        <div>الاتجاه: <b>RTL (عربي)</b></div>
+        <div>دقة الألوان: <b>تقدير بصري — بدون color-picker على بكسلات حقيقية</b></div>
+        <div>لا كود مصدر: <b>ucas.edu.ps غير متاح لي للفحص المباشر</b></div>
+      </div>
+    </div>
+
+    <!-- 01 COLORS -->
+    <section class="block" id="colors">
+      <div class="block-head"><span class="num">01</span><h2>نظام الألوان — Color System</h2></div>
+      <p class="block-sub">كل درجات الألوان الظاهرة بالصور، مجمّعة حسب الاستخدام. القيم تقديرية بصرياً <span class="tag inferred">تقدير بصري</span> — ما عندي وصول لملف تصميم أصلي ولا لأداة سحب لون على بكسل حقيقي.</p>
+
+      <div class="card">
+        <h3>التدرّج الأساسي للعلامة — Brand Gradient</h3>
+        <p style="font-size:13px;color:var(--text-600);margin-bottom:14px;">يظهر كخط علوي رفيع بكل صفحة، وكخلفية شريط عنوان كل قسم داخلي، وكخلفية قسم "ما يميز الكلية" بالصفحة الرئيسية.</p>
+        <div class="gradient-bar" style="height:14px;margin-bottom:14px;"></div>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="fill" style="background:#4FAE3C"></div><div class="info"><span class="step">بداية التدرّج — أخضر</span><span class="hex">#4FAE3C</span></div></div>
+          <div class="swatch"><div class="fill" style="background:#1C8F93"></div><div class="info"><span class="step">منتصف التدرّج — تركواز</span><span class="hex">#1C8F93</span></div></div>
+          <div class="swatch"><div class="fill" style="background:#1C3F8C"></div><div class="info"><span class="step">نهاية التدرّج — أزرق</span><span class="hex">#1C3F8C</span></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>كحلي/أزرق العلامة — Navy &amp; Blue</h3>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="fill" style="background:#0B1A33"></div><div class="info"><span class="step">كحلي غامق جداً — خلفية التذييل</span><span class="hex">#0B1A33</span></div></div>
+          <div class="swatch"><div class="fill" style="background:#122A4E"></div><div class="info"><span class="step">كحلي — نص الهيدر/عناوين</span><span class="hex">#122A4E</span></div></div>
+          <div class="swatch"><div class="fill" style="background:#1C3F8C"></div><div class="info"><span class="step">أزرق العلامة — روابط نشطة</span><span class="hex">#1C3F8C</span></div></div>
+          <div class="swatch"><div class="fill" style="background:#3FA9D9"></div><div class="info"><span class="step">أزرق فاتح — رؤوس جداول بوابة الطالب</span><span class="hex">#3FA9D9</span></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>أخضر/تركواز العلامة — Green &amp; Teal</h3>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="fill" style="background:#4FAE3C"></div><div class="info"><span class="step">أخضر — نجاح، زر "الصفحة التعريفية"</span><span class="hex">#4FAE3C</span></div></div>
+          <div class="swatch"><div class="fill" style="background:#1C8F93"></div><div class="info"><span class="step">تركواز — منتصف التدرّج</span><span class="hex">#1C8F93</span></div></div>
+          <div class="swatch"><div class="fill" style="background:#2E9B3F"></div><div class="info"><span class="step">أخضر مصمت — أشرطة المعدل (بوابة الطالب)</span><span class="hex">#2E9B3F</span></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>لمسات تنبيه — Orange / Maroon / Brown <span class="tag actual">من الصورة</span></h3>
+        <div class="semantic-row">
+          <span class="chip" style="background:#F28C28"></span>
+          <span class="label">برتقالي — زر العودة للأعلى</span>
+          <span class="vals">#F28C28</span>
+          <span class="usage">زر دائري ثابت، أيضاً لون/شعار عمادة TVET</span>
+        </div>
+        <div class="semantic-row">
+          <span class="chip" style="background:#A83246"></span>
+          <span class="label">عنابي/أحمر غامق</span>
+          <span class="vals">#A83246</span>
+          <span class="usage">أيقونة + عنوان "عمادة التربية"، زر "شاهد أكثر" ببعض صفحات البرامج</span>
+        </div>
+        <div class="semantic-row">
+          <span class="chip" style="background:#8B5A2B"></span>
+          <span class="label">بني</span>
+          <span class="vals">#8B5A2B</span>
+          <span class="usage">أيقونة + عنوان "عمادة العلوم الإنسانية والإعلام"</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>ألوان أيقونات العمادات السبع — كلها <span class="tag actual">من الصورة</span> (Mega Menu + صفحة العمادات)</h3>
+        <table class="ds">
+          <thead><tr><th>العمادة</th><th>لون الأيقونة/العنوان</th><th>تقريب</th></tr></thead>
+          <tbody>
+            <tr><td>الهندسة والنظم الذكية</td><td>كحلي</td><td class="mono">#1B3A6B</td></tr>
+            <tr><td>تكنولوجيا المعلومات</td><td>كحلي-بنفسجي</td><td class="mono">#3B4C9E</td></tr>
+            <tr><td>التمريض وعلوم الصحة</td><td>تركواز طبي</td><td class="mono">#1C94A0</td></tr>
+            <tr><td>إدارة المال والأعمال</td><td>أخضر</td><td class="mono">#3E9B32</td></tr>
+            <tr><td>التربية</td><td>عنابي/أحمر غامق</td><td class="mono">#A83246</td></tr>
+            <tr><td>العلوم الإنسانية والإعلام</td><td>بني</td><td class="mono">#8B5A2B</td></tr>
+            <tr><td>الدبلوم المهني والتعليم المستمر (TVET)</td><td>برتقالي</td><td class="mono">#F28C28</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>ألوان مرصودة ببوابة الطالب القديمة (نظام منفصل) <span class="tag actual">من الصورة</span></h3>
+        <div class="semantic-row">
+          <span class="chip" style="background:#3FA9D9"></span>
+          <span class="label">أزرق فاتح — رأس جدول</span>
+          <span class="vals">#3FA9D9</span>
+          <span class="usage">جدول الامتحانات، جدول العلامات (رأس الفصل)</span>
+        </div>
+        <div class="semantic-row">
+          <span class="chip" style="background:#5A6472"></span>
+          <span class="label">رمادي غامق — رأس جدول</span>
+          <span class="vals">#5A6472</span>
+          <span class="usage">جدول مالية الطلبة</span>
+        </div>
+        <div class="semantic-row">
+          <span class="chip" style="background:#2E9B3F"></span>
+          <span class="label">أخضر مصمت — شريط ملخص</span>
+          <span class="vals">#2E9B3F</span>
+          <span class="usage">المعدل الفصلي/التراكمي</span>
+        </div>
+        <div class="semantic-row">
+          <span class="chip" style="background:#E6F7EA;border:1px solid #BFE6C7"></span>
+          <span class="label">أخضر فاتح جداً — بطاقة نجاح</span>
+          <span class="vals">#E6F7EA</span>
+          <span class="usage">خلفية بطاقة "تم تفعيل حسابك البريدي"</span>
+        </div>
+        <div class="semantic-row">
+          <span class="chip" style="background:#E8E8E8"></span>
+          <span class="label">رمادي فاتح — حقل معبّأ مسبقاً</span>
+          <span class="vals">#E8E8E8</span>
+          <span class="usage">حقول نموذج المعلومات الشخصية (قراءة فقط)</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>الأسطح والنصوص — Surfaces &amp; Text</h3>
+        <div class="semantic-row">
+          <span class="chip" style="background:#FFFFFF;border:1px solid #E6E9EE"></span>
+          <span class="label">أبيض</span>
+          <span class="vals">#FFFFFF</span>
+          <span class="usage">خلفية الهيدر، أغلب المحتوى، البطاقات</span>
+        </div>
+        <div class="semantic-row">
+          <span class="chip" style="background:#F4F6F8"></span>
+          <span class="label">رمادي فاتح جداً</span>
+          <span class="vals">#F4F6F8</span>
+          <span class="usage">خلفية أقسام/بطاقات فرعية <span class="tag inferred">تقدير بصري</span></span>
+        </div>
+        <div class="semantic-row">
+          <span class="chip" style="background:#0A1424"></span>
+          <span class="label">كحلي أسود تقريباً</span>
+          <span class="vals">#0A1424</span>
+          <span class="usage">خلفية التذييل الكاملة</span>
+        </div>
+        <p style="font-size:12px;color:var(--text-400);margin-top:4px;">
+          <span class="tag missing">غير متوفر بالصور</span> درجات نص دقيقة (900/700/600/400) زي أي نظام تصميم مكوّد — الصور ما بتسمح بتمييز أكتر من "غامق جداً للعناوين" و"رمادي متوسط للنصوص الوصفية"، بدون hex دقيق لكل درجة.
+        </p>
+      </div>
+    </section>
+
+    <!-- 02 TYPOGRAPHY -->
+    <section class="block" id="typography">
+      <div class="block-head"><span class="num">02</span><h2>نظام الخطوط — Typography</h2></div>
+      <p class="block-sub">خط عربي Sans-serif واحد ظاهر بكل الصور — بدون وصول لملف CSS ما بقدر أأكد اسم العائلة بدقة 100%، بس الشكل البصري (استدارة الحروف، تباين الوزن بين العناوين الثقيلة والنص العادي) قريب جداً من Cairo/Tajawal.</p>
+
+      <div class="card">
+        <h3>العائلة <span class="tag inferred">تقدير بصري — اسم العائلة مش مقروء من صورة، شكل الحروف بس</span></h3>
+        <div class="type-sample">
+          <span class="tok">عناوين</span>
+          <span style="font-family:Cairo;font-weight:800;font-size:22px;">مثال عنوان ثقيل — "العمادات الأكاديمية"</span>
+        </div>
+        <div class="type-sample">
+          <span class="tok">نص عادي</span>
+          <span style="font-family:Tajawal;font-weight:400;font-size:16px;">مثال نص عادي — فقرات المحتوى والوصف</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>أحجام ظاهرة فعلياً بالصور <span class="tag actual">من الصورة — تقدير نسبي للحجم، مو قياس بالبكسل</span></h3>
+        <table class="ds">
+          <thead><tr><th>الاستخدام</th><th>تقدير الحجم</th><th>الوزن</th></tr></thead>
+          <tbody>
+            <tr><td>عنوان الهيرو الرئيسي ("فوج تخريج 2026" على اللافتة)</td><td class="mono">~28-34px</td><td>Bold/Extra-bold</td></tr>
+            <tr><td>أرقام شريط الإحصائيات (71، +32000، 42، +20000، 65)</td><td class="mono">~30-36px</td><td>Extra-bold</td></tr>
+            <tr><td>عنوان شريط القسم الداخلي ("عن الكلية"، "القبول والتسجيل")</td><td class="mono">~22-26px</td><td>Bold</td></tr>
+            <tr><td>عنوان بطاقة (اسم عمادة/خبر)</td><td class="mono">~15-17px</td><td>Bold/Semibold</td></tr>
+            <tr><td>نص وصفي بالبطاقات/الفقرات</td><td class="mono">~13-14px</td><td>Regular</td></tr>
+            <tr><td>Meta صغير (تاريخ، عدد مشاهدات)</td><td class="mono">~11-12px</td><td>Regular</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>الاتجاه — RTL <span class="tag actual">من الصورة</span></h3>
+        <p style="font-size:13px;color:var(--text-600);">كل الصفحات RTL كامل، بدون أي استثناء LTR ظاهر بالصور المرفقة (ولا حتى بجداول بوابة الطالب — الأرقام نفسها بالاتجاه العربي الطبيعي للقراءة بالجدول).</p>
+      </div>
+    </section>
+
+    <!-- 03 SPACING/GRIDS -->
+    <section class="block" id="spacing">
+      <div class="block-head"><span class="num">03</span><h2>المسافات والشبكات — Spacing &amp; Grids</h2></div>
+      <p class="block-sub"><span class="tag missing">غير متوفر بالصور</span> أي قيمة مسافة بالبكسل (padding/margin دقيق) — ما بتنقاس من سكرين شوت بدون أداة قياس على ملف تصميم. اللي متوفر فقط هو عدد أعمدة/عناصر كل شبكة، وهو مرصود مباشرة من عدّ العناصر بالصور.</p>
+
+      <div class="card">
+        <h3>عدد أعمدة/عناصر كل شبكة <span class="tag actual">من الصورة — عدّ مباشر</span></h3>
+        <table class="ds">
+          <thead><tr><th>الشبكة</th><th>العدد المرصود</th></tr></thead>
+          <tbody>
+            <tr><td>شريط الإحصائيات بالهيرو</td><td>5 خلايا</td></tr>
+            <tr><td>العمادات الأكاديمية</td><td>7 بطاقات</td></tr>
+            <tr><td>أخبار "الكلية اليوم"</td><td>3 أعمدة</td></tr>
+            <tr><td>الوحدات والمراكز</td><td>6 أعمدة × عدة صفوف (16 وحدة بالمجموع بصورة واحدة)</td></tr>
+            <tr><td>ما يميز الكلية</td><td>2 صف × 3 أعمدة = 6 عناصر</td></tr>
+            <tr><td>شركاء العلاقات الدولية</td><td>6 أعمدة × صفين (12 شعار بصورة واحدة)</td></tr>
+            <tr><td>شريط صور "قصص نجاح"</td><td>6 صور متجاورة</td></tr>
+            <tr><td>أعمدة التذييل</td><td>4 أعمدة نص + عمود صور (2×2) جانبي</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 04 RADIUS -->
+    <section class="block" id="radius">
+      <div class="block-head"><span class="num">04</span><h2>الزوايا الدائرية — Border Radius</h2></div>
+      <p class="block-sub">3 مستويات ظاهرة بوضوح بالصور <span class="tag inferred">القيم بالبكسل تقدير بصري نسبي، العدد والفئة من الصورة</span>.</p>
+      <div class="card">
+        <div class="radius-demo">
+          <div class="box" style="border-radius:8px;"><b>صغير</b><span>~8px</span></div>
+          <div class="box" style="border-radius:14px;"><b>متوسط</b><span>~14px</span></div>
+          <div class="box" style="border-radius:20px;"><b>كبير</b><span>~20px</span></div>
+          <div class="box" style="border-radius:999px;width:64px;"><b>كبسولي</b><span>999px</span></div>
+        </div>
+        <table class="ds" style="margin-top:18px;">
+          <thead><tr><th>الفئة</th><th>أين ظهرت</th></tr></thead>
+          <tbody>
+            <tr><td>صغير</td><td>حقول فلترة، شارات تاريخ فوق صور الأخبار</td></tr>
+            <tr><td>متوسط</td><td>بطاقات الأخبار، بطاقات العمادات/الوحدات، صور الكاروسيل</td></tr>
+            <tr><td>كبير</td><td>صندوق إحصائيات/أخبار متراكب على الهيرو</td></tr>
+            <tr><td>كبسولي (pill)</td><td>أزرار outline ("المزيد"، "الصفحة التعريفية"، "شاهد أكثر")، زر العودة للأعلى (دائرة كاملة)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 05 ELEVATION -->
+    <section class="block" id="elevation">
+      <div class="block-head"><span class="num">05</span><h2>الارتفاع والظلال — Elevation</h2></div>
+      <div class="card">
+        <p style="font-size:13px;color:var(--text-600);margin-bottom:14px;">
+          ظل بطاقات ناعم وخفيف جداً (مو ظل قوي/درامي) ظاهر ببطاقات الأخبار والعمادات والوحدات — <span class="tag inferred">قيمة rgba الدقيقة غير قابلة للقياس من سكرين شوت</span>.
+          <span class="tag missing">غير متوفر بالصور</span> أكتر من مستوى ظل واحد ظاهر بوضوح — ما في دليل على مستويات متعددة (card-hover، dropdown، modal) زي نظام تصميم مكوّد كامل.
+        </p>
+        <div style="width:220px;padding:20px;border-radius:var(--radius-lg);background:#fff;box-shadow:var(--shadow-card);text-align:center;font-size:12.5px;color:var(--text-600);">
+          مستوى ظل واحد مرصود — بطاقات عامة
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 BORDERS -->
+    <section class="block" id="borders">
+      <div class="block-head"><span class="num">06</span><h2>نظام الحدود والخطوط — Borders</h2></div>
+      <div class="card">
+        <table class="ds">
+          <thead><tr><th>العنصر</th><th>الوصف</th></tr></thead>
+          <tbody>
+            <tr><td>الخط العلوي (Brand line)</td><td>شريط رفيع جداً (~4-5px) بتدرّج أخضر-تركواز-أزرق، أعلى كل صفحة <span class="tag actual">من الصورة</span></td></tr>
+            <tr><td>الخط ثنائي اللون تحت العناوين</td><td>قطعتين لون منفصلتين (أخضر + أزرق) متلاصقتين بعرض متساوٍ تقريباً، مو تدرّج ناعم — مؤكد من صورتين closeup (الحياة الجامعية، عناوين أعمدة التذييل) <span class="tag actual">من الصورة</span></td></tr>
+            <tr><td>حدود البطاقات</td><td>حد رفيع فاتح جداً، أو بدون حد مع الاعتماد على الظل فقط <span class="tag inferred">تقدير بصري</span></td></tr>
+            <tr><td>فواصل صفوف الجداول (بوابة الطالب)</td><td>خط أفقي فاتح بدون حدود عمودية <span class="tag actual">من الصورة</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 07 ICONS -->
+    <section class="block" id="icons">
+      <div class="block-head"><span class="num">07</span><h2>الأيقونات والشعارات — Iconography</h2></div>
+      <p class="block-sub">كل الأيقونات بالموقع التسويقي خطية (outline) ملوّنة، لون مختلف لكل عمادة/سياق — مو مجموعة أيقونات أحادية اللون موحّدة <span class="tag actual">من الصورة</span>.</p>
+
+      <div class="card">
+        <h3>نمط الأيقونات — العمادات</h3>
+        <div class="icon-strip">
+          <div class="ic" style="color:#1B3A6B;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="3"/></svg></div>
+          <div class="ic" style="color:#3B4C9E;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/></svg></div>
+          <div class="ic" style="color:#1C94A0;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h16M12 4v16"/></svg></div>
+          <div class="ic" style="color:#3E9B32;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 18 9 9l4 4 8-9"/></svg></div>
+          <div class="ic" style="color:#A83246;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19V5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/></svg></div>
+          <div class="ic" style="color:#8B5A2B;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h7v14H4zM13 5h7v14h-7z"/></svg></div>
+          <div class="ic" style="color:#F28C28;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 2 12l10 10 10-10Z"/></svg></div>
+        </div>
+        <p style="font-size:12px;color:var(--text-400);margin-top:12px;">
+          <span class="tag missing">غير متوفر بالصور</span> الأيقونات الفعلية بدقة SVG — الأشكال فوق تقريب عام ناخذو كموقع مؤقت لنفس الألوان المؤكدة، مش نسخ من الأيقونة الحقيقية.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>شعارات الوحدات والمراكز <span class="tag actual">من الصورة</span></h3>
+        <p style="font-size:13px;color:var(--text-600);">
+          كل وحدة إلها لوجو خاص بيها (مو أيقونة موحّدة): يوكاس فاشن (شعلة متعددة الألوان)، مركز الهندسة الطبية (قلب + سماعة طبيب)، مركز خدمة المجتمع (شكل لانهاية كحلي/أزرق)، حضانة طفلي (شخصيات ملوّنة بالونات)، ورشة صيانة سيارات (أيقونة سيارة كحلية)، حاضنة يوكاس التكنولوجية "UCASTI" (حلزون DNA أزرق/تركواز).
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>الشعار الرئيسي — Logo <span class="tag actual">من الصورة</span></h3>
+        <p style="font-size:13px;color:var(--text-600);">رمز تجريدي منحني بتدرّج أخضر-تركواز-أزرق (شكل أقرب لورقة/قطرة)، مع نقطتين صغيرتين فوقه. يظهر بالهيدر (أعلى يمين) وبالتذييل (أكبر، مع الاسم الكامل بالعربي والإنجليزي).</p>
+        <p style="font-size:12px;color:var(--text-400);margin-top:6px;"><span class="tag missing">غير متوفر بالصور</span> ملف SVG دقيق للشعار — محتاج الملف الأصلي من الكلية.</p>
+      </div>
+    </section>
+
+    <!-- 08 COMPONENTS -->
+    <section class="block" id="components">
+      <div class="block-head"><span class="num">08</span><h2>المكوّنات — Components</h2></div>
+      <p class="block-sub">كل مكوّن موثّق هون ظاهر مباشرة بصورة واحدة على الأقل من الصور المرفقة.</p>
+
+      <div class="card">
+        <h3>الهيدر <span class="tag actual">من الصورة</span></h3>
+        <p style="font-size:13px;color:var(--text-600);">خط تدرّج رفيع أعلى الصفحة، هيدر أبيض ثابت، الشعار أقصى اليمين، قائمة تنقل تمتد لليسار، همبرغر أقصى اليسار. الرابط النشط بخط سفلي بلون التدرّج. عنصر "العمادات الاكاديمية" يفتح Mega Menu: بطاقة بيضاء، كل عمادة = أيقونة ملوّنة + عنوان bold + وصف قصير.</p>
+      </div>
+
+      <div class="card">
+        <h3>شريط الإحصائيات بالهيرو <span class="tag actual">من الصورة</span></h3>
+        <div class="stat-bar-demo">
+          <div style="background:#4FAE3C;">
+            <b>71</b><span>مختبر متخصص</span>
+          </div>
+          <div style="background:#2A9D6B;">
+            <b>+32000</b><span>خريج</span>
+          </div>
+          <div style="background:#1C8F93;">
+            <b>42</b><span>شراكة دولية</span>
+          </div>
+          <div style="background:#1A6FA8;">
+            <b>+20000</b><span>طالب و طالبة</span>
+          </div>
+          <div style="background:#1C3F8C;">
+            <b>65</b><span>إختصاص</span>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--text-400);margin-top:10px;">5 خلايا بتدرّج أخضر→تركواز→أزرق، أرقام ونصوص مقروءة حرفياً من الصورة: 71 / +32000 / 42 / +20000 / 65.</p>
+      </div>
+
+      <div class="card">
+        <h3>شريط عنوان القسم الداخلي <span class="tag actual">من الصورة</span></h3>
+        <div style="background:linear-gradient(90deg, var(--green-500), var(--teal-500), var(--blue-600)); color:#fff; padding:14px 20px; border-radius:var(--radius-sm); font-weight:800; font-family:Cairo; margin-bottom:10px;">عن الكلية</div>
+        <p style="font-size:13px;color:var(--text-600);">صندوق عرض كامل تقريباً، تدرّج قطري، عنوان أبيض bold. يرافقه عمود جانبي (يمين) قائمة روابط فرعية ببطاقات بيضاء، الرابط النشط أزرق.</p>
+      </div>
+
+      <div class="card">
+        <h3>أزرار <span class="tag actual">من الصورة</span></h3>
+        <div class="pill-row">
+          <span class="btn-demo btn-outline-green" style="border-radius:var(--radius-pill);">الصفحة التعريفية</span>
+          <span class="btn-demo btn-outline-red" style="border-radius:var(--radius-pill);">شاهد أكثر</span>
+          <span class="btn-demo btn-outline-blue" style="border-radius:var(--radius-pill);">المزيد من الأخبار</span>
+          <span class="btn-demo btn-solid-blue" style="border-radius:var(--radius-sm);">البريد الإلكتروني (بوابة الطالب)</span>
+          <span class="btn-demo btn-solid-green" style="border-radius:var(--radius-sm);">تغيير كلمة المرور (بوابة الطالب)</span>
+        </div>
+        <p style="font-size:12px;color:var(--text-400);margin-top:10px;">أزرار الموقع التسويقي: outline كبسولي بألوان متعددة حسب السياق. أزرار بوابة الطالب: مستطيلة مصمتة (أزرق/أخضر) — نمط مختلف تماماً.</p>
+      </div>
+
+      <div class="card">
+        <h3>بطاقات الأخبار / الإعلانات <span class="tag actual">من الصورة</span></h3>
+        <p style="font-size:13px;color:var(--text-600);">أخبار: صورة بزوايا دائرية + عنوان bold كحلي + سطرين وصف رمادي. إعلانات: بطاقة بيضاء بحد خفيف، عنوان رابط أزرق، صف سفلي (أيقونة عين + عدد مشاهدات، أيقونة تقويم + تاريخ).</p>
+      </div>
+
+      <div class="card">
+        <h3>قسم "ما يميز الكلية" <span class="tag actual">من الصورة</span></h3>
+        <div style="background:linear-gradient(135deg, var(--green-500), var(--teal-500), var(--blue-600)); color:#fff; border-radius:var(--radius-lg); padding:24px; text-align:center; font-size:13px;">
+          خلفية تملأ القسم بالتدرّج الكامل، 6 عناصر (أيقونة بيضاء + عنوان bold + فقرة وصف)، محاذاة وسط.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>التذييل <span class="tag actual">من الصورة</span></h3>
+        <div style="background:var(--footer-bg); color:#fff; border-radius:var(--radius-md); padding:20px; font-size:12.5px;">
+          خلفية كحلي أسود تقريباً، 4 أعمدة نص (اتصل بنا / روابط سريعة / أقسام الجامعة / الرئيسية) + صور خرائط صغيرة جانبية، أيقونات تواصل اجتماعي دائرية outline، خط فاصل رفيع قبل شريط الحقوق.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>زر العودة للأعلى <span class="tag actual">من الصورة</span></h3>
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--orange-500);display:grid;place-items:center;color:#fff;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m18 15-6-6-6 6"/></svg>
+        </div>
+        <p style="font-size:12px;color:var(--text-400);margin-top:10px;">دائرة برتقالية صلبة، سهم أبيض لأعلى، ثابتة أسفل يسار الشاشة — بكل الصفحات بما فيها بوابة الطالب القديمة.</p>
+      </div>
+
+      <div class="card">
+        <h3>مكوّنات بوابة الطالب القديمة (نظام منفصل) <span class="tag actual">من الصورة</span></h3>
+        <table class="ds">
+          <thead><tr><th>المكوّن</th><th>الوصف</th></tr></thead>
+          <tbody>
+            <tr><td>جدول بيانات</td><td>رأس مصمت (أزرق فاتح أو رمادي غامق)، صفوف بيضاء بفاصل أفقي فقط</td></tr>
+            <tr><td>شريط ملخص بعرض كامل</td><td>لون مصمت (أخضر للمعدل، أزرق فاتح لعنوان الفصل) يفصل أقسام الصفحة</td></tr>
+            <tr><td>تبويبات أفقية أيقونية</td><td>صف أزرق غامق، أيقونة بيضاء + تسمية لكل تبويب، النشط بخلفية تركواز/سماوي مختلفة عن الصف</td></tr>
+            <tr><td>بطاقة تنبيه نجاح</td><td>خلفية خضراء فاتحة جداً + أيقونة ✓ دائرية خضراء</td></tr>
+            <tr><td>حقل قراءة فقط</td><td>خلفية رمادية فاتحة (#E8E8E8) بدل الأبيض</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 09 MOTION -->
+    <section class="block" id="motion">
+      <div class="block-head"><span class="num">09</span><h2>الحركة والتفاعل — Motion</h2></div>
+      <p class="block-sub">الصور كلها ثابتة (static) — ما في فيديو. اللي تحت هون محصور حصراً بحالات "قبل/بعد" شفتها فعلياً بصورتين مختلفتين لنفس العنصر. ما في ولا سطر تخمين لحركة ما إلها دليل بصري مباشر.</p>
+
+      <div class="card">
+        <h3>أدلة مؤكدة من مقارنة صورتين لنفس العنصر <span class="tag actual">من الصورة</span></h3>
+        <table class="ds">
+          <thead><tr><th>العنصر</th><th>الحالتان المرصودتان</th></tr></thead>
+          <tbody>
+            <tr><td>شعارات الشركاء</td><td>لوجو "Observatory" ظاهر رمادي بالكامل (grayscale)، ولوجو "EURAS" بنفس الصف بألوانه الكاملة (أخضر/أزرق) — حالتين مختلفتين لنفس نوع العنصر بنفس اللقطة</td></tr>
+            <tr><td>بطاقة عمادة التربية</td><td>عليها badge صغير شكل سلسلة/رابط بالزاوية العلوية اليمنى، بينما بطاقات عمادات تانية بنفس الصف (العلوم الإنسانية) بدون الـ badge ظاهر</td></tr>
+            <tr><td>بطاقة وحدة "حضانة طفلي"</td><td>خلفية بيضاء + حد + ظل واضح، بينما بطاقة "مركز خدمة المجتمع" جنبها بدون خلفية/حدّ</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="font-size:12px;color:var(--text-400);"><span class="tag missing">غير متوفر بالصور</span> أي حركة أخرى (مدة، نوع easing، سلوك الكاروسيل، سلوك Mega Menu عند الفتح، عدّاد الأرقام) — محتاج فيديو أو تسجيل شاشة فعلي من الموقع.</p>
+    </section>
+
+    <!-- 10 TOKENS -->
+    <section class="block" id="tokens">
+      <div class="block-head"><span class="num">10</span><h2>جدول Design Tokens الموحّد</h2></div>
+      <p class="block-sub">تجميع كل القيم أعلاه بصيغة متغيرات CSS جاهزة للنسخ — نفس القيم بالضبط، بدون أي إضافة.</p>
+      <div class="card">
+        <pre class="codeblock"><span class="c">/* مستخرج من لقطات شاشة UCAS — تقدير بصري، ليس من كود مصدر */</span>
+:root{
+  <span class="c">/* تدرّج العلامة */</span>
+  <span class="k">--ucas-green</span>: <span class="s">#4FAE3C</span>;
+  <span class="k">--ucas-teal</span>: <span class="s">#1C8F93</span>;
+  <span class="k">--ucas-blue</span>: <span class="s">#1C3F8C</span>;
+  <span class="k">--ucas-gradient-brand</span>: <span class="s">linear-gradient(90deg, var(--ucas-green), var(--ucas-teal), var(--ucas-blue))</span>;
+
+  <span class="c">/* كحلي */</span>
+  <span class="k">--ucas-navy-900</span>: <span class="s">#0B1A33</span>;
+  <span class="k">--ucas-navy-800</span>: <span class="s">#122A4E</span>;
+
+  <span class="c">/* لمسات */</span>
+  <span class="k">--ucas-orange</span>: <span class="s">#F28C28</span>;
+  <span class="k">--ucas-maroon</span>: <span class="s">#A83246</span>;
+  <span class="k">--ucas-brown</span>: <span class="s">#8B5A2B</span>;
+
+  <span class="c">/* ألوان العمادات السبع */</span>
+  <span class="k">--dean-engineering</span>: <span class="s">#1B3A6B</span>;
+  <span class="k">--dean-it</span>: <span class="s">#3B4C9E</span>;
+  <span class="k">--dean-nursing</span>: <span class="s">#1C94A0</span>;
+  <span class="k">--dean-business</span>: <span class="s">#3E9B32</span>;
+  <span class="k">--dean-education</span>: <span class="s">#A83246</span>;
+  <span class="k">--dean-humanities</span>: <span class="s">#8B5A2B</span>;
+  <span class="k">--dean-tvet</span>: <span class="s">#F28C28</span>;
+
+  <span class="c">/* بوابة الطالب القديمة */</span>
+  <span class="k">--portal-table-head-blue</span>: <span class="s">#3FA9D9</span>;
+  <span class="k">--portal-table-head-gray</span>: <span class="s">#5A6472</span>;
+  <span class="k">--portal-summary-green</span>: <span class="s">#2E9B3F</span>;
+  <span class="k">--portal-success-bg</span>: <span class="s">#E6F7EA</span>;
+  <span class="k">--portal-field-disabled</span>: <span class="s">#E8E8E8</span>;
+
+  <span class="c">/* أسطح */</span>
+  <span class="k">--ucas-surface</span>: <span class="s">#FFFFFF</span>;
+  <span class="k">--ucas-surface-soft</span>: <span class="s">#F4F6F8</span>;
+  <span class="k">--ucas-footer-bg</span>: <span class="s">#0A1424</span>;
+
+  <span class="c">/* زوايا (تقدير نسبي) */</span>
+  <span class="k">--ucas-radius-sm</span>: <span class="s">8px</span>;
+  <span class="k">--ucas-radius-md</span>: <span class="s">14px</span>;
+  <span class="k">--ucas-radius-lg</span>: <span class="s">20px</span>;
+  <span class="k">--ucas-radius-pill</span>: <span class="s">999px</span>;
+}</pre>
+      </div>
+    </section>
+
+    <!-- SOURCES -->
+    <section class="block" id="sources">
+      <div class="block-head"><span class="num">··</span><h2>مصدر كل قيمة — خريطة الصور</h2></div>
+      <p class="block-sub">أي قيمة بهاد الملف ترجع لصورة واحدة أو أكتر من الـ 31 صورة المرفقة بالمحادثة (موثّقة بالتفصيل بـ <code>BRAND_IDENTITY.md</code> بنفس المجلد). ما في قيمة من غير مصدر صورة محدد.</p>
+      <div class="card">
+        <p style="font-size:13px;color:var(--text-600);line-height:1.9;">
+          جدول الصور الكامل (31 صورة، بالاسم والمحتوى) موجود بـ <code>BRAND_IDENTITY.md</code> قسم "جرد الصور المرفقة" — ما كررتوش هون تفادياً للازدواجية. أي تحديث على الألوان بهاد الملف لازم يترافق بتحديث مرجع الصورة المقابلة بنفس المكان.
+        </p>
+      </div>
+    </section>
+
+    <!-- MASTER SPEC -->
+    <section class="block" id="master">
+      <div class="block-head"><span class="num">★</span><h2>Master Specification</h2></div>
+      <div class="master-spec">
+        <h2>UCAS — خلاصة الهوية المرجعية</h2>
+        <span class="sub">كل قيمة هون مستخرجة من صورة فعلية — لا إضافات</span>
+
+        <div class="swbar">
+          <span style="background:#4FAE3C"></span><span style="background:#1C8F93"></span><span style="background:#1C3F8C"></span>
+          <span style="background:#F28C28"></span><span style="background:#A83246"></span><span style="background:#0B1A33"></span>
+        </div>
+
+        <div class="grid" style="margin-top:24px;">
+          <div class="col">
+            <h4>الألوان</h4>
+            <ul>
+              <li>تدرّج العلامة: <b>#4FAE3C → #1C8F93 → #1C3F8C</b></li>
+              <li>كحلي غامق (تذييل): <b>#0B1A33</b></li>
+              <li>برتقالي (زر العودة للأعلى): <b>#F28C28</b></li>
+              <li>عنابي (عمادة التربية): <b>#A83246</b></li>
+              <li>بني (العلوم الإنسانية): <b>#8B5A2B</b></li>
+              <li>أبيض <b>#FFFFFF</b> / رمادي فاتح <b>#F4F6F8</b></li>
+            </ul>
+          </div>
+          <div class="col">
+            <h4>الخطوط</h4>
+            <ul>
+              <li>عربي Sans-serif واحد (شكل Cairo/Tajawal-ish)</li>
+              <li>عناوين: Bold/Extra-bold</li>
+              <li>نص: Regular</li>
+              <li>RTL كامل بدون استثناء</li>
+            </ul>
+          </div>
+          <div class="col">
+            <h4>الشبكات</h4>
+            <ul>
+              <li>إحصائيات: <b>5</b> خلايا</li>
+              <li>عمادات: <b>7</b> بطاقات</li>
+              <li>وحدات: <b>6</b> أعمدة</li>
+              <li>أخبار: <b>3</b> أعمدة</li>
+              <li>ما يميز الكلية: <b>2×3</b></li>
+            </ul>
+          </div>
+          <div class="col">
+            <h4>السطوح والزوايا</h4>
+            <ul>
+              <li>زوايا: <b>~8 / 14 / 20 / 999px</b></li>
+              <li>ظل واحد ناعم مرصود</li>
+              <li>خط علوي تدرّج ~4-5px بكل صفحة</li>
+              <li>خط عناوين ثنائي اللون (مو تدرّج)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="doc-foot">
+      مستخرج حصراً من 31 لقطة شاشة لموقع UCAS أُرسلت بالمحادثة — بدون وصول لكود المصدر الفعلي. كل قيمة موسومة actual/inferred/missing حسب مدى تأكّدها من الصور. راجع <code>BRAND_IDENTITY.md</code> بنفس المجلد للتحليل النصي الكامل وجدول الصور.
+    </footer>
+  </main>
+</div>
+
+</body></html>

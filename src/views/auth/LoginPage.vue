@@ -30,7 +30,7 @@
         <BaseCheckbox v-model="form.remember" label="تذكرني" />
         <router-link
           :to="{ name: 'forgot-password' }"
-          class="text-[12.5px] font-bold text-primary-600 hover:text-primary-700 hover:underline transition-colors duration-fast"
+          class="text-[12.5px] font-bold text-ucas-blue hover:underline transition-colors duration-fast"
         >
           نسيت كلمة المرور؟
         </router-link>
@@ -44,7 +44,7 @@
       <button
         type="submit"
         :disabled="isLoading"
-        class="w-full h-[50px] rounded-sm bg-gradient-to-bl from-primary-600 to-primary-700 text-white font-cairo font-extrabold text-[14px] shadow-[0_10px_22px_-8px_rgba(37,99,235,.55)] hover:-translate-y-px transition-transform duration-fast disabled:opacity-60 disabled:pointer-events-none flex items-center justify-center gap-2.5"
+        class="w-full h-[50px] rounded-sm bg-ucas-blue text-white font-cairo font-extrabold text-[14px] shadow-[0_10px_22px_-8px_rgba(28,63,140,.55)] hover:-translate-y-px transition-transform duration-fast disabled:opacity-60 disabled:pointer-events-none flex items-center justify-center gap-2.5"
       >
         <LoadingSpinner v-if="isLoading" :size="17" inline class="text-white" />
         <template v-else>
@@ -62,7 +62,7 @@
 
     <router-link
       :to="{ name: 'landing' }"
-      class="flex items-center justify-center gap-2 h-icon-btn rounded-sm border border-border bg-surface text-[13px] font-bold text-text-700 hover:-translate-y-px hover:border-primary-200 hover:text-primary-700 hover:bg-primary-50 transition-all duration-fast"
+      class="flex items-center justify-center gap-2 h-icon-btn rounded-sm border border-border bg-surface text-[13px] font-bold text-text-700 hover:-translate-y-px hover:border-ucas-blue/30 hover:text-ucas-blue hover:bg-ucas-blue/5 transition-all duration-fast"
     >
       <AppIcon name="home" :size="16" />
       العودة إلى الصفحة الرئيسية

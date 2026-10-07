@@ -1,5 +1,13 @@
 <template>
   <div class="min-h-screen bg-bg flex relative">
+    <!-- خط تدرّج العلامة أعلى الصفحة (هوية UCAS — السوبر أدمن فقط) -->
+    <div
+      v-if="isUcasBrand"
+      aria-hidden="true"
+      class="pointer-events-none fixed top-0 inset-x-0 h-1 z-[41]"
+      style="background: var(--ucas-gradient-brand)"
+    />
+
     <!-- خلفية متحركة زخرفية — قطرات ماء + فقاعات، خلف كل المحتوى، لا تتفاعل مع الفأرة -->
     <WaterBackground />
     <div aria-hidden="true" class="pointer-events-none fixed inset-0 overflow-hidden">
@@ -35,7 +43,7 @@ import AppTopbar from '@/components/layout/AppTopbar.vue'
 import WaterBackground from '@/components/shared/WaterBackground.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { NAV_ITEMS_BY_ROLE } from '@/utils/navConfig'
-import { ROLE_LABELS } from '@/utils/constants'
+import { ROLES, ROLE_LABELS } from '@/utils/constants'
 
 /**
  * تخطيط لوحات التحكم الموحّد لكل الأدوار (سوبر أدمن/لجنة/مشرف/قائد فريق/طالب).
@@ -55,7 +63,26 @@ export default {
 
     roleLabel() {
       return ROLE_LABELS[this.userRole] || ''
+    },
+
+    isUcasBrand() {
+      return this.userRole === ROLES.SUPER_ADMIN
     }
+  },
+
+  watch: {
+    // على <html> وليس على جذر الـ layout حتى ترث المودالات المنقولة بـ Teleport نفس الألوان
+    isUcasBrand: {
+      immediate: true,
+      handler(on) {
+        if (on) document.documentElement.setAttribute('data-brand', 'ucas')
+        else document.documentElement.removeAttribute('data-brand')
+      }
+    }
+  },
+
+  unmounted() {
+    document.documentElement.removeAttribute('data-brand')
   }
 }
 </script>

@@ -22,6 +22,10 @@
           <span class="grid place-items-center w-8 h-8 rounded-pill bg-warning-bg text-warning-text shrink-0"><Hand :size="16" /></span>
         </div>
         <h1 v-else class="font-cairo font-bold text-h3 lg:text-h2 text-text-900 truncate">{{ pageTitle }}</h1>
+        <!-- خط العنوان ثنائي اللون (أخضر + أزرق) — هوية UCAS -->
+        <span aria-hidden="true" class="hidden ucas:flex mt-1 h-[3px] w-14 rounded-pill overflow-hidden">
+          <span class="flex-1 bg-ucas-green" /><span class="flex-1 bg-ucas-blue" />
+        </span>
         <p v-if="subtitle" class="text-caption text-text-400 truncate">{{ subtitle }}</p>
       </div>
 

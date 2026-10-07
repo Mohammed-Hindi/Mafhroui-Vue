@@ -3,14 +3,14 @@
     <!-- معاينة الفيديو — واجهة على هويتنا البصرية، بدون تضمين خارجي -->
     <button
       type="button"
-      class="relative aspect-[16/10] w-full grid place-items-center overflow-hidden group bg-gradient-to-bl from-primary-900 via-primary-600 to-accent-500"
+      class="relative aspect-[16/10] w-full grid place-items-center overflow-hidden group bg-gradient-to-bl from-ucas-navy900 via-ucas-teal to-ucas-green"
       :aria-label="`تشغيل فيديو عرض مشروع ${project.title}`"
       @click="openPlaceholderVideo"
     >
       <span class="absolute inset-0 opacity-[0.12] pointer-events-none" style="background-image:radial-gradient(currentColor 1px, transparent 1px); background-size:20px 20px; color:#fff;" />
       <span class="absolute inset-0 bg-gradient-to-b from-[rgba(11,18,32,.1)] via-transparent to-[rgba(11,18,32,.7)] pointer-events-none" />
 
-      <span v-if="badgeText" class="absolute top-3.5 start-3.5 z-[2] px-3 py-1 rounded-pill bg-surface text-primary-700 text-[11px] font-bold shadow-[0_4px_10px_rgba(0,0,0,.15)]">
+      <span v-if="badgeText" class="absolute top-3.5 start-3.5 z-[2] px-3 py-1 rounded-pill bg-surface text-ucas-blue text-[11px] font-bold shadow-[0_4px_10px_rgba(0,0,0,.15)]">
         {{ badgeText }}
       </span>
 
@@ -18,7 +18,7 @@
         <AppIcon name="graduation" :size="16" />
       </span>
 
-      <span class="relative z-[1] grid place-items-center w-[58px] h-[58px] rounded-pill bg-white text-primary-600 shadow-[0_10px_24px_rgba(0,0,0,.35)] transition-transform duration-fast group-hover:scale-110">
+      <span class="relative z-[1] grid place-items-center w-[58px] h-[58px] rounded-pill bg-white text-ucas-blue shadow-[0_10px_24px_rgba(0,0,0,.35)] transition-transform duration-fast group-hover:scale-110">
         <AppIcon name="play" :size="22" class="ms-[3px]" />
       </span>
 
@@ -51,7 +51,7 @@
 
       <router-link
         :to="{ name: 'project-showcase', params: { id: project.id } }"
-        class="flex items-center justify-center gap-2 w-full h-11 rounded-pill border border-border bg-surface text-body-sm font-bold text-primary-600 hover:bg-primary-50 hover:border-primary-200 hover:-translate-y-px transition-all duration-fast"
+        class="flex items-center justify-center gap-2 w-full h-11 rounded-pill border-2 border-ucas-green text-body-sm font-bold text-ucas-green hover:bg-ucas-green hover:text-white hover:-translate-y-px transition-all duration-fast"
       >
         عرض المزيد
         <AppIcon name="chevronStart" :size="15" :stroke-width="2.2" />

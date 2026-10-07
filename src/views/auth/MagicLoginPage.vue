@@ -1,7 +1,7 @@
 <template>
   <div class="text-center">
     <template v-if="!failed">
-      <LoadingSpinner :size="30" class="mx-auto mb-5 text-primary-600" />
+      <LoadingSpinner :size="30" class="mx-auto mb-5 text-ucas-blue" />
       <h2 class="font-cairo font-extrabold text-[18px] text-text-900 mb-2">جارٍ تسجيل الدخول...</h2>
       <p class="text-[13px] text-text-600">لحظات ويتم تحويلك تلقائيًا</p>
     </template>
@@ -15,7 +15,7 @@
 
       <router-link
         :to="{ name: 'login' }"
-        class="inline-flex items-center justify-center gap-2.5 h-[50px] w-full px-6 rounded-sm bg-gradient-to-bl from-primary-600 to-primary-700 text-white font-cairo font-extrabold text-[14px] shadow-[0_10px_22px_-8px_rgba(37,99,235,.55)] hover:-translate-y-px transition-transform duration-fast"
+        class="inline-flex items-center justify-center gap-2.5 h-[50px] w-full px-6 rounded-sm bg-ucas-blue text-white font-cairo font-extrabold text-[14px] shadow-[0_10px_22px_-8px_rgba(28,63,140,.55)] hover:-translate-y-px transition-transform duration-fast"
       >
         الذهاب لتسجيل الدخول
         <AppIcon name="chevronStart" :size="16" :stroke-width="2.4" />

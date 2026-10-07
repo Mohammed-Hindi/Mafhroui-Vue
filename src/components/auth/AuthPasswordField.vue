@@ -20,7 +20,7 @@
         :aria-invalid="Boolean(error)"
         :aria-describedby="error ? `${fieldId}-error` : undefined"
         class="w-full h-12 ps-11 pe-4 rounded-sm border bg-surface text-body text-text-900 outline-none transition-colors duration-fast"
-        :class="error ? 'border-error bg-error-bg' : 'border-border focus:border-primary-500'"
+        :class="error ? 'border-error bg-error-bg' : 'border-border focus:border-ucas-blue'"
         @input="$emit('update:modelValue', $event.target.value)"
         @blur="$emit('blur')"
       >

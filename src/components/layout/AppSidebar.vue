@@ -19,7 +19,7 @@
     <aside
       id="app-sidebar"
       :class="[
-        'flex flex-col bg-surface border-l border-border',
+        'flex flex-col bg-surface border-l border-border ucas:bg-ucas-navy ucas:border-ucas-navy',
         // ثابت بالتخطيط على lg فأعلى
         'lg:sticky lg:top-0 lg:h-screen lg:w-sidebar lg:translate-x-0 lg:shadow-none',
         // Drawer منزلق من اليمين تحت lg
@@ -32,16 +32,16 @@
       aria-label="القائمة الجانبية"
     >
       <!-- رأس الشريط: الشعار + زر الإغلاق -->
-      <div class="flex items-center justify-between gap-3 px-4 h-16 shrink-0 border-b border-border-soft">
+      <div class="flex items-center justify-between gap-3 px-4 h-16 shrink-0 border-b border-border-soft ucas:border-white/10">
         <router-link :to="homeRoute" class="flex items-center gap-3 min-w-0">
           <span
-            class="grid place-items-center w-10 h-10 rounded-md shrink-0 bg-gradient-to-bl from-primary-600 to-accent-500 text-white"
+            class="grid place-items-center w-10 h-10 rounded-md shrink-0 bg-gradient-to-bl from-primary-600 to-accent-500 text-white ucas:[background:var(--ucas-gradient-brand)]"
           >
             <GraduationCap :size="20" />
           </span>
           <span class="min-w-0">
-            <span class="block font-cairo font-bold text-h4 text-text-900 truncate">{{ appName }}</span>
-            <span class="block text-label text-text-400 truncate">{{ appDescription }}</span>
+            <span class="block font-cairo font-bold text-h4 text-text-900 truncate ucas:text-white">{{ appName }}</span>
+            <span class="block text-label text-text-400 truncate ucas:text-white/60">{{ appDescription }}</span>
           </span>
         </router-link>
 
@@ -49,7 +49,7 @@
         <button
           v-if="!isDesktop"
           type="button"
-          class="grid place-items-center w-9 h-9 rounded-sm text-text-600 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-fast lg:hidden"
+          class="grid place-items-center w-9 h-9 rounded-sm text-text-600 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-fast lg:hidden ucas:text-white/70 ucas:hover:bg-white/10 ucas:hover:text-white"
           aria-label="إغلاق القائمة"
           @click="closeSidebar"
         >
@@ -62,7 +62,7 @@
         <template v-for="(group, groupIndex) in normalizedGroups" :key="groupIndex">
           <p
             v-if="group.title"
-            class="px-3 pt-4 pb-2 text-label font-semibold text-text-400 tracking-wide first:pt-0"
+            class="px-3 pt-4 pb-2 text-label font-semibold text-text-400 tracking-wide first:pt-0 ucas:text-white/50"
           >
             {{ group.title }}
           </p>
@@ -79,8 +79,8 @@
                   :class="[
                     'flex items-center gap-3 px-3 py-2.5 rounded-sm text-body-sm font-medium transition-colors duration-fast',
                     (item.exact ? isExactActive : isActive)
-                      ? 'bg-primary-50 text-primary-600'
-                      : 'text-text-700 hover:bg-border-soft hover:text-text-900'
+                      ? 'bg-primary-50 text-primary-600 ucas:bg-white/10 ucas:text-white ucas:shadow-[inset_-3px_0_0_var(--ucas-green)]'
+                      : 'text-text-700 hover:bg-border-soft hover:text-text-900 ucas:text-white/75 ucas:hover:bg-white/5 ucas:hover:text-white'
                   ]"
                   :aria-current="(item.exact ? isExactActive : isActive) ? 'page' : undefined"
                   @click="navigate"
@@ -101,22 +101,22 @@
       </nav>
 
       <!-- تذييل الشريط: المستخدم + تسجيل الخروج -->
-      <div class="shrink-0 border-t border-border-soft p-3">
+      <div class="shrink-0 border-t border-border-soft p-3 ucas:border-white/10">
         <div class="flex items-center gap-3 px-2 py-2 rounded-sm">
           <span
-            class="grid place-items-center w-9 h-9 rounded-pill bg-primary-50 text-primary-600 font-cairo font-bold text-caption shrink-0"
+            class="grid place-items-center w-9 h-9 rounded-pill bg-primary-50 text-primary-600 font-cairo font-bold text-caption shrink-0 ucas:bg-white/10 ucas:text-white"
           >
             {{ userInitials }}
           </span>
           <span class="min-w-0 flex-1">
-            <span class="block text-body-sm font-semibold text-text-900 truncate">{{ userName || '—' }}</span>
-            <span class="block text-label text-text-400 truncate">{{ roleLabel }}</span>
+            <span class="block text-body-sm font-semibold text-text-900 truncate ucas:text-white">{{ userName || '—' }}</span>
+            <span class="block text-label text-text-400 truncate ucas:text-white/60">{{ roleLabel }}</span>
           </span>
         </div>
 
         <button
           type="button"
-          class="mt-2 w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-body-sm font-medium text-text-700 hover:bg-error-bg hover:text-error transition-colors duration-fast"
+          class="mt-2 w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-body-sm font-medium text-text-700 hover:bg-error-bg hover:text-error transition-colors duration-fast ucas:text-white/75 ucas:hover:bg-white/10 ucas:hover:text-white"
           @click="handleLogout"
         >
           <LogOut :size="19" class="shrink-0" />

@@ -180,6 +180,22 @@
   /* ============ 13) إضاءة مؤثرات الفأرة/الخلفيات المتحركة (JS) — قناة RGB خام تُستخدم داخل rgba() ============ */
   --glow-rgb: 37, 99, 235;
   --glow-alpha: 0.14;
+
+  /* ============ 14) هوية UCAS البصرية — صفحات اللاندنج العامة فقط (LandingLayout) ============ */
+  /* مستخرجة بصرياً من لقطات شاشة ucas.edu.ps — راجع docs/brand/BRAND_IDENTITY.md */
+  /* لا تُستبدل بيها primary/secondary/accent أعلاه — تلك مستخدمة بلوحات التحكم الداخلية ولوحظ إنها هوية مختلفة */
+  --ucas-green: #4FAE3C;
+  --ucas-teal: #1C8F93;
+  --ucas-blue: #1C3F8C;
+  --ucas-navy: #122A4E;
+  --ucas-navy-900: #0B1A33;
+  --ucas-footer: #0A1424;
+  --ucas-orange: #F28C28;
+  --ucas-maroon: #A83246;
+  --ucas-brown: #8B5A2B;
+  --ucas-indigo: #3B4C9E;
+  --ucas-cyan: #1C94A0;
+  --ucas-gradient-brand: linear-gradient(90deg, var(--ucas-green), var(--ucas-teal), var(--ucas-blue));
 }
 
 
@@ -228,4 +244,91 @@
 
   --glow-rgb: 96, 165, 250;
   --glow-alpha: 0.22;
+}
+
+
+/* ============================================================
+   هوية UCAS على لوحة تحكم السوبر أدمن
+   تُفعَّل بإضافة data-brand="ucas" على <html> (يديره DashboardLayout حسب الدور)
+   تعيد تعريف primary/secondary/accent فتتبعها كل الصفحات والمودالات تلقائياً
+   القيم الأساسية من docs/brand/نظام الهوية البصرية - UCAS.html
+   ============================================================ */
+:root[data-brand="ucas"]{
+  /* Primary — كحلي/أزرق العلامة (600 = blue-600, 700 = blue-700, 800 = navy-800, 900 = navy-900) */
+  --color-primary-50:  #EEF2FA;
+  --color-primary-100: #D9E1F2;
+  --color-primary-200: #B4C3E4;
+  --color-primary-300: #8AA0D1;
+  --color-primary-400: #5A78BC;
+  --color-primary-500: #2F55A6;
+  --color-primary-600: #1C3F8C;
+  --color-primary-700: #17397A;
+  --color-primary-800: #122A4E;
+  --color-primary-900: #0B1A33;
+
+  /* Secondary — أخضر العلامة (500 = green-500, 600 = green-600) */
+  --color-secondary-50:  #F0F8EE;
+  --color-secondary-100: #DCEFD6;
+  --color-secondary-200: #BADFAF;
+  --color-secondary-300: #93CC83;
+  --color-secondary-400: #6EBC5C;
+  --color-secondary-500: #4FAE3C;
+  --color-secondary-600: #3E9B32;
+  --color-secondary-700: #317C28;
+  --color-secondary-800: #275F20;
+  --color-secondary-900: #1D4718;
+
+  /* Accent — تركواز العلامة (500 = teal-500, 600 = teal-600) */
+  --color-accent-50:  #EAF6F6;
+  --color-accent-100: #CCEAEB;
+  --color-accent-200: #9DD5D7;
+  --color-accent-300: #67BDC0;
+  --color-accent-400: #3AA5A9;
+  --color-accent-500: #1C8F93;
+  --color-accent-600: #157D86;
+  --color-accent-700: #11636B;
+  --color-accent-800: #0E4C52;
+  --color-accent-900: #0A383D;
+
+  --color-success:        #3E9B32;
+  --color-success-bg:     #F0F8EE;
+  --color-success-border: #DCEFD6;
+  --color-info:           #1C3F8C;
+  --color-info-bg:        #EEF2FA;
+
+  --glow-rgb: 28, 63, 140;
+  --radius-sm: 8px;
+}
+
+/* الأسطح والنصوص من الهوية — بالوضع الفاتح فقط، حتى لا تطغى على ألوان الوضع الداكن */
+:root[data-brand="ucas"]:not([data-theme="dark"]){
+  --color-bg:       #F4F6F8;
+  --color-border:   #E6E9EE;
+  --color-text-900: #16222E;
+  --color-text-700: #3A4A58;
+  --color-text-600: #5C6B78;
+  --color-text-400: #8B98A3;
+  --shadow-card: 0 1px 2px rgba(10,20,36,.05), 0 8px 22px -12px rgba(10,20,36,.12);
+}
+
+/* الوضع الداكن: خلفيات خفيفة داكنة + تفتيح الكحلي ليبقى مقروءاً فوق الأسطح الداكنة */
+:root[data-brand="ucas"][data-theme="dark"]{
+  --color-primary-50:  #111C33;
+  --color-primary-100: #172647;
+  --color-primary-500: #6E8FD6;
+  --color-primary-600: #4F74C6;
+  --color-primary-700: #3D63B8;
+
+  --color-secondary-50:  #11240E;
+  --color-secondary-100: #183316;
+
+  --color-accent-50:  #082628;
+  --color-accent-100: #0C3437;
+
+  --color-success-bg:     #12260F;
+  --color-success-border: #1E3D19;
+  --color-info:           #6E8FD6;
+  --color-info-bg:        #121E38;
+
+  --glow-rgb: 79, 116, 198;
 }

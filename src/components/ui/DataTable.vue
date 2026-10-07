@@ -23,12 +23,12 @@
     <div v-else class="hidden md:block overflow-x-auto scrollbar-thin">
       <table class="w-full text-start border-collapse" :style="{ minWidth: tableMinWidth }">
         <thead>
-          <tr class="bg-bg border-b-2 border-border divide-x divide-border-soft">
+          <tr class="bg-bg border-b-2 border-border divide-x divide-border-soft ucas:bg-ucas-navy ucas:border-ucas-navy ucas:divide-x-0">
             <th
               v-for="column in columns"
               :key="column.key"
               scope="col"
-              :class="['px-4 py-3 text-start text-label font-extrabold text-text-700 whitespace-nowrap', column.className]"
+              :class="['px-4 py-3 text-start text-label font-extrabold text-text-700 whitespace-nowrap ucas:text-white', column.className]"
             >
               {{ column.label }}
             </th>
@@ -36,7 +36,7 @@
         </thead>
         <tbody class="divide-y divide-border-soft">
           <template v-for="(row, index) in rows" :key="rowKey ? row[rowKey] : index">
-            <tr class="row-interactive divide-x divide-border-soft">
+            <tr class="row-interactive divide-x divide-border-soft ucas:divide-x-0">
               <td
                 v-for="column in columns"
                 :key="column.key"

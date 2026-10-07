@@ -16,19 +16,19 @@
       <div
         v-for="(stat, index) in committeeStore.summaryCards"
         :key="stat.label"
-        class="reveal group bg-surface rounded-lg border border-border shadow-card p-6 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200 active:scale-[0.98]"
+        class="reveal group bg-surface rounded-lg border border-border shadow-card p-6 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200 active:scale-[0.98] ucas:border-transparent ucas:hover:border-transparent ucas:[background:var(--ucas-gradient-brand)]"
       >
-        <span class="grid place-items-center w-11 h-11 rounded-md mb-4" :class="[statTheme[index]?.bg, statTheme[index]?.color]">
+        <span class="grid place-items-center w-11 h-11 rounded-md mb-4 ucas:bg-white/15 ucas:text-white" :class="[statTheme[index]?.bg, statTheme[index]?.color]">
           <component :is="statTheme[index]?.icon" :size="20" />
         </span>
-        <div class="text-body-sm text-text-600 font-medium">{{ stat.label }}</div>
+        <div class="text-body-sm text-text-600 font-medium ucas:text-white/85">{{ stat.label }}</div>
         <div
-          class="font-cairo font-extrabold text-h1 text-text-900 mt-2 transition-colors duration-base group-hover:text-primary-600"
+          class="font-cairo font-extrabold text-h1 text-text-900 mt-2 transition-colors duration-base group-hover:text-primary-600 ucas:text-white ucas:group-hover:text-white"
         >
           <CountUp v-if="stat.value !== null" :value="stat.value" />
           <span v-else>—</span>
         </div>
-        <div class="text-caption text-text-400 mt-0.5">{{ stat.hint }}</div>
+        <div class="text-caption text-text-400 mt-0.5 ucas:text-white/70">{{ stat.hint }}</div>
       </div>
     </div>
 

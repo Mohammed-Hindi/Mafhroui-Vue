@@ -1,7 +1,7 @@
 <template>
-  <aside class="hidden lg:flex order-1 flex-1 relative overflow-hidden flex-col justify-between p-14 text-white bg-gradient-to-bl from-primary-700 via-primary-600 to-accent-500">
+  <aside class="hidden lg:flex order-1 flex-1 relative overflow-hidden flex-col justify-between p-14 text-white bg-gradient-to-bl from-ucas-green via-ucas-teal to-ucas-blue">
     <span class="animate-blob absolute rounded-pill w-[280px] h-[280px] bg-white/10 -top-20 -end-16" />
-    <span class="animate-blob absolute rounded-pill w-[200px] h-[200px] bg-accent-500/35 -bottom-16 -start-12" style="animation-delay:2s" />
+    <span class="animate-blob absolute rounded-pill w-[200px] h-[200px] bg-white/15 -bottom-16 -start-12" style="animation-delay:2s" />
     <span class="animate-blob absolute rounded-pill w-[140px] h-[140px] bg-white/10 bottom-28 end-16" style="animation-delay:4s" />
 
     <div class="relative z-10 flex items-center gap-3.5">

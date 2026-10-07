@@ -73,7 +73,8 @@ export default {
       const variants = {
         primary: 'bg-primary-600 text-white hover:bg-primary-700 shadow-card',
         secondary: 'bg-secondary-600 text-white hover:bg-secondary-700 shadow-card',
-        outline: 'bg-surface text-text-700 border border-border hover:border-primary-100 hover:text-primary-600 hover:bg-primary-50',
+        // ucas: زر outline بلون العلامة يتعبّأ عند hover (هوية UCAS)
+        outline: 'bg-surface text-text-700 border border-border hover:border-primary-100 hover:text-primary-600 hover:bg-primary-50 ucas:border-primary-600 ucas:text-primary-600 ucas:hover:bg-primary-600 ucas:hover:border-primary-600 ucas:hover:text-white',
         ghost: 'bg-transparent text-text-600 hover:bg-border-soft hover:text-text-900',
         danger: 'bg-error text-white hover:brightness-95 shadow-card',
         soft: 'bg-primary-50 text-primary-600 hover:bg-primary-100'

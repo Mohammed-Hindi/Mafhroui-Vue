@@ -4,7 +4,7 @@
     <div class="mb-9">
       <router-link
         :to="{ name: 'landing' }"
-        class="inline-flex items-center gap-2 h-icon-btn px-4 mb-4 rounded-sm border border-border bg-surface text-[13px] font-bold text-text-700 hover:-translate-y-px hover:border-primary-200 hover:text-primary-700 hover:bg-primary-50 transition-all duration-fast"
+        class="inline-flex items-center gap-2 h-icon-btn px-4 mb-4 rounded-sm border border-border bg-surface text-[13px] font-bold text-text-700 hover:-translate-y-px hover:border-ucas-blue/30 hover:text-ucas-blue hover:bg-ucas-blue/5 transition-all duration-fast"
       >
         <AppIcon name="chevronEnd" :size="15" :stroke-width="2.2" />
         العودة إلى الرئيسية
@@ -28,7 +28,7 @@
           type="search"
           maxlength="80"
           placeholder="اسم المشروع"
-          class="w-full h-icon-btn ps-10 pe-3 rounded-sm border border-border bg-surface text-body text-text-900 focus:border-primary-600 transition-colors duration-fast"
+          class="w-full h-icon-btn ps-10 pe-3 rounded-sm border border-border bg-surface text-body text-text-900 focus:border-ucas-blue transition-colors duration-fast"
           @input="onFilterChange"
         >
       </div>
@@ -75,7 +75,7 @@
       <p class="mt-2 max-w-sm text-body-sm text-text-600">{{ projectsError }}</p>
       <button
         type="button"
-        class="mt-6 inline-flex items-center gap-2 h-10 px-5 rounded-pill border border-border bg-surface text-body-sm font-bold text-text-700 hover:text-primary-700 transition-colors duration-fast"
+        class="mt-6 inline-flex items-center gap-2 h-10 px-5 rounded-pill border border-border bg-surface text-body-sm font-bold text-text-700 hover:text-ucas-blue transition-colors duration-fast"
         @click="loadProjects"
       >
         <AppIcon name="refresh" :size="15" />
@@ -85,7 +85,7 @@
 
     <!-- فارغ -->
     <div v-else-if="!projects.length" class="flex flex-col items-center text-center py-16 bg-surface border border-border rounded-lg">
-      <span class="grid place-items-center w-16 h-16 rounded-pill bg-primary-50 text-primary-600 mb-4">
+      <span class="grid place-items-center w-16 h-16 rounded-pill bg-ucas-blue/10 text-ucas-blue mb-4">
         <AppIcon name="inbox" :size="28" />
       </span>
       <h2 class="font-cairo font-bold text-h3 text-text-900">لا توجد مشاريع مطابقة</h2>

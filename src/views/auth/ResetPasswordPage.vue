@@ -33,7 +33,7 @@
         <button
           type="submit"
           :disabled="isLoading"
-          class="w-full h-[50px] rounded-sm bg-gradient-to-bl from-primary-600 to-primary-700 text-white font-cairo font-extrabold text-[14px] shadow-[0_10px_22px_-8px_rgba(37,99,235,.55)] hover:-translate-y-px transition-transform duration-fast disabled:opacity-60 disabled:pointer-events-none flex items-center justify-center gap-2.5"
+          class="w-full h-[50px] rounded-sm bg-ucas-blue text-white font-cairo font-extrabold text-[14px] shadow-[0_10px_22px_-8px_rgba(28,63,140,.55)] hover:-translate-y-px transition-transform duration-fast disabled:opacity-60 disabled:pointer-events-none flex items-center justify-center gap-2.5"
         >
           <LoadingSpinner v-if="isLoading" :size="17" inline class="text-white" />
           <template v-else>
@@ -51,7 +51,7 @@
 
       <router-link
         :to="{ name: 'landing' }"
-        class="flex items-center justify-center gap-2 h-icon-btn rounded-sm border border-border bg-surface text-[13px] font-bold text-text-700 hover:-translate-y-px hover:border-primary-200 hover:text-primary-700 hover:bg-primary-50 transition-all duration-fast"
+        class="flex items-center justify-center gap-2 h-icon-btn rounded-sm border border-border bg-surface text-[13px] font-bold text-text-700 hover:-translate-y-px hover:border-ucas-blue/30 hover:text-ucas-blue hover:bg-ucas-blue/5 transition-all duration-fast"
       >
         <AppIcon name="home" :size="16" />
         العودة إلى الصفحة الرئيسية
@@ -62,7 +62,7 @@
 
     <!-- نجاح التحديث -->
     <div v-else class="text-center">
-      <span class="grid place-items-center w-16 h-16 rounded-pill bg-secondary-50 text-secondary-600 mx-auto mb-5">
+      <span class="grid place-items-center w-16 h-16 rounded-pill bg-ucas-green/10 text-ucas-green mx-auto mb-5">
         <AppIcon name="check" :size="28" :stroke-width="2.6" />
       </span>
       <h2 class="font-cairo font-extrabold text-[20px] text-text-900 mb-2.5">تم تحديث كلمة المرور</h2>
@@ -70,7 +70,7 @@
 
       <router-link
         :to="{ name: 'login' }"
-        class="inline-flex items-center justify-center gap-2.5 h-[50px] w-full px-6 rounded-sm bg-gradient-to-bl from-primary-600 to-primary-700 text-white font-cairo font-extrabold text-[14px] shadow-[0_10px_22px_-8px_rgba(37,99,235,.55)] hover:-translate-y-px transition-transform duration-fast"
+        class="inline-flex items-center justify-center gap-2.5 h-[50px] w-full px-6 rounded-sm bg-ucas-blue text-white font-cairo font-extrabold text-[14px] shadow-[0_10px_22px_-8px_rgba(28,63,140,.55)] hover:-translate-y-px transition-transform duration-fast"
       >
         تسجيل الدخول
         <AppIcon name="chevronStart" :size="16" :stroke-width="2.4" />

@@ -26,14 +26,14 @@
           ref="dialog"
           :class="['pointer-events-auto w-full bg-surface rounded-lg shadow-modal flex flex-col max-h-[calc(100vh-2rem)]', widthClass]"
         >
-          <header class="flex items-start justify-between gap-4 px-6 py-4 border-b border-border-soft shrink-0">
+          <header class="flex items-start justify-between gap-4 px-6 py-4 border-b border-border-soft shrink-0 ucas:rounded-t-lg ucas:border-transparent ucas:[background:var(--ucas-gradient-brand)]">
             <div>
-              <h2 class="font-cairo font-bold text-h3 text-text-900">{{ title }}</h2>
-              <p v-if="description" class="mt-1 text-body-sm text-text-600">{{ description }}</p>
+              <h2 class="font-cairo font-bold text-h3 text-text-900 ucas:text-white">{{ title }}</h2>
+              <p v-if="description" class="mt-1 text-body-sm text-text-600 ucas:text-white/85">{{ description }}</p>
             </div>
             <button
               type="button"
-              class="grid place-items-center w-9 h-9 rounded-sm text-text-400 hover:bg-border-soft hover:text-text-900 transition-colors duration-fast shrink-0"
+              class="grid place-items-center w-9 h-9 rounded-sm text-text-400 hover:bg-border-soft hover:text-text-900 transition-colors duration-fast shrink-0 ucas:text-white/80 ucas:hover:bg-white/15 ucas:hover:text-white"
               aria-label="إغلاق"
               @click="close"
             >

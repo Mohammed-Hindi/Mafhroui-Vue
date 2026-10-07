@@ -3,7 +3,7 @@
     <div class="max-w-content mx-auto px-6">
       <div class="flex flex-wrap items-end justify-between gap-5 mb-9">
         <div class="reveal">
-          <span class="inline-block px-4 py-1.5 rounded-pill bg-primary-50 text-primary-700 text-label font-bold">
+          <span class="inline-block px-4 py-1.5 rounded-pill bg-ucas-blue/10 text-ucas-blue text-label font-bold">
             أفضل مشاريع التخرج
           </span>
           <h2 class="font-cairo font-extrabold text-sec-title-sm sm:text-sec-title text-text-900 mt-2">
@@ -14,7 +14,7 @@
 
         <router-link
           :to="{ name: 'projects-archive' }"
-          class="reveal reveal-delay-1 inline-flex items-center gap-2 h-[38px] px-[18px] rounded-pill border border-border bg-surface shadow-card text-[12.5px] font-bold text-text-700 hover:text-primary-700 hover:border-primary-200 transition-colors duration-fast"
+          class="reveal reveal-delay-1 inline-flex items-center gap-2 h-[38px] px-[18px] rounded-pill border-2 border-ucas-blue bg-surface text-[12.5px] font-bold text-ucas-blue hover:bg-ucas-blue hover:text-white transition-colors duration-fast"
         >
           عرض الكل<span v-if="projects.length"> ({{ projects.length }})</span>
           <AppIcon name="chevronStart" :size="14" :stroke-width="2.2" />
@@ -23,7 +23,7 @@
 
       <!-- فارغ -->
       <div v-if="!projects.length" class="flex flex-col items-center text-center py-12 bg-surface border border-border rounded-lg">
-        <span class="grid place-items-center w-16 h-16 rounded-pill bg-primary-50 text-primary-600 mb-4">
+        <span class="grid place-items-center w-16 h-16 rounded-pill bg-ucas-blue/10 text-ucas-blue mb-4">
           <AppIcon name="inbox" :size="28" />
         </span>
         <h3 class="font-cairo font-bold text-h3 text-text-900">لا توجد مشاريع منشورة بعد</h3>
@@ -46,7 +46,7 @@
         <div v-if="slides.length > 1" class="flex items-center justify-center gap-5 mt-9">
           <button
             type="button"
-            class="grid place-items-center shrink-0 w-11 h-11 rounded-pill bg-surface border border-border shadow-dropdown text-text-700 hover:text-primary-700 hover:border-primary-200 disabled:opacity-30 disabled:pointer-events-none transition-colors duration-fast"
+            class="grid place-items-center shrink-0 w-11 h-11 rounded-pill bg-surface border border-border shadow-dropdown text-text-700 hover:text-ucas-blue hover:border-ucas-blue/30 disabled:opacity-30 disabled:pointer-events-none transition-colors duration-fast"
             :disabled="activeSlide === 0"
             aria-label="المجموعة السابقة"
             @click="activeSlide--"
@@ -60,7 +60,7 @@
                 v-for="(slide, index) in slides" :key="index"
                 type="button"
                 class="h-2 rounded-pill transition-all duration-fast"
-                :class="index === activeSlide ? 'w-6 bg-primary-600' : 'w-2 bg-border hover:bg-primary-200'"
+                :class="index === activeSlide ? 'w-6 bg-ucas-blue' : 'w-2 bg-border hover:bg-ucas-blue/30'"
                 :aria-label="`الانتقال إلى المجموعة ${index + 1}`"
                 @click="activeSlide = index"
               />
@@ -72,7 +72,7 @@
 
           <button
             type="button"
-            class="grid place-items-center shrink-0 w-11 h-11 rounded-pill bg-surface border border-border shadow-dropdown text-text-700 hover:text-primary-700 hover:border-primary-200 disabled:opacity-30 disabled:pointer-events-none transition-colors duration-fast"
+            class="grid place-items-center shrink-0 w-11 h-11 rounded-pill bg-surface border border-border shadow-dropdown text-text-700 hover:text-ucas-blue hover:border-ucas-blue/30 disabled:opacity-30 disabled:pointer-events-none transition-colors duration-fast"
             :disabled="activeSlide === slides.length - 1"
             aria-label="المجموعة التالية"
             @click="activeSlide++"

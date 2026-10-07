@@ -1,9 +1,9 @@
 <template>
-  <div class="relative overflow-hidden py-[52px] bg-gradient-to-l from-primary-900 via-primary-700 to-accent-600 dark:from-[#0B1220] dark:via-primary-900 dark:to-accent-600">
+  <div class="relative overflow-hidden py-[52px] bg-gradient-to-l from-ucas-green via-ucas-teal to-ucas-blue">
     <span aria-hidden="true" data-parallax="0.07" class="animate-blob pointer-events-none absolute rounded-pill w-[260px] h-[260px] bg-white/10 -top-20 -start-16" />
     <span aria-hidden="true" data-parallax="-0.09" class="animate-blob pointer-events-none absolute rounded-pill w-[200px] h-[200px] bg-white/10 -bottom-16 -end-12" style="animation-delay:2s" />
-    <div class="relative max-w-content mx-auto px-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5 gap-y-7 text-center">
-      <div v-for="(stat, index) in bannerStats" :key="stat.key" class="reveal" :style="{ transitionDelay: `${index * 70}ms` }">
+    <div class="relative max-w-content mx-auto px-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-white/20 rtl:divide-x-reverse text-center">
+      <div v-for="(stat, index) in bannerStats" :key="stat.key" class="reveal px-3" :style="{ transitionDelay: `${index * 70}ms` }">
         <span class="grid place-items-center w-11 h-11 rounded-md bg-white/15 text-white mx-auto mb-3">
           <AppIcon :name="stat.icon" :size="19" />
         </span>
