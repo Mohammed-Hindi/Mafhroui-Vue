@@ -1,14 +1,6 @@
 <template>
   <div>
-    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-      <div class="flex items-center gap-3">
-        <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><ShieldCheck :size="18" /></span>
-        <div>
-          <h3 class="text-h3 font-bold text-text-900">إضافة وإدارة لجنة الإشراف</h3>
-          <p class="text-caption text-text-600">إنشاء حسابات أعضاء لجنة الإشراف والتحكم في صلاحياتها</p>
-        </div>
-      </div>
-    </div>
+    <PortalPageHead :icon="ShieldCheck" color="#4C5EA8" title="إضافة وإدارة لجنة الإشراف" subtitle="إنشاء حسابات أعضاء لجنة الإشراف والتحكم في صلاحياتها" />
 
     <div class="flex flex-wrap items-center gap-2 mb-6">
       <BaseButton variant="outline" :icon="Archive" @click="openTrashed">المشرفون المحذوفون</BaseButton>
@@ -17,7 +9,7 @@
 
     <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden">
       <div class="flex items-center justify-between gap-3 p-5 pb-4">
-        <h4 class="text-h4 font-bold text-text-900">أعضاء لجنة الإشراف</h4>
+        <h4 class="portal-title text-h4 font-bold text-text-900">أعضاء لجنة الإشراف</h4>
         <BaseBadge>{{ filteredUsers.length }} {{ filteredUsers.length === 1 ? 'عضو' : 'أعضاء' }}</BaseBadge>
       </div>
 
@@ -164,6 +156,7 @@
 </template>
 
 <script>
+import PortalPageHead from '@/components/shared/PortalPageHead.vue'
 import { ShieldCheck, UserPlus, RefreshCw, Pencil, Send, Check, Copy, Trash2, Archive, RotateCcw, KeyRound, Mail, MessageCircle } from 'lucide-vue-next'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -191,11 +184,11 @@ function digitsOnly(value) {
 export default {
   name: 'SuperAdminCommitteeMembersPage',
 
-  components: { ShieldCheck, UserPlus, Pencil, Copy, Trash2, Archive, RotateCcw, KeyRound, Mail, MessageCircle, RefreshCw, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState, EmailComposeModal },
+  components: { PortalPageHead, UserPlus, Pencil, Copy, Trash2, Archive, RotateCcw, KeyRound, Mail, MessageCircle, RefreshCw, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState, EmailComposeModal },
 
   data() {
     return {
-      RefreshCw, Send, Check, Archive, Copy, KeyRound, RotateCcw, Trash2, UserPlus,
+      RefreshCw, Send, Check, Archive, Copy, KeyRound, RotateCcw, Trash2, UserPlus, ShieldCheck,
       page: 1,
       emailComposeOpen: false,
       emailComposeTarget: '',

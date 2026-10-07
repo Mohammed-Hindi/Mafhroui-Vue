@@ -1,5 +1,7 @@
 <template>
   <div>
+    <PortalPageHead :icon="FileCheck" color="#805C55" title="أرشيف المشاريع" subtitle="المشاريع المكتملة عبر جميع الفصول الدراسية وملفاتها" />
+
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       <div class="reveal group bg-surface rounded-lg border border-border shadow-card p-5 flex items-center gap-4 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200 active:scale-[0.98]">
         <span class="grid place-items-center w-11 h-11 rounded-md bg-primary-50 text-primary-600 shrink-0"><FileCheck :size="20" /></span>
@@ -18,7 +20,7 @@
     <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden">
       <div class="flex flex-wrap items-center justify-between gap-4 p-5 pb-4">
         <div>
-          <h3 class="font-cairo font-bold text-h4 text-text-900">المشاريع المؤرشفة مؤخرًا</h3>
+          <h3 class="portal-title font-cairo font-bold text-h4 text-text-900">المشاريع المؤرشفة مؤخرًا</h3>
           <p class="text-caption text-text-600 mt-0.5">سجلّ المشاريع المكتملة عبر جميع الفصول الدراسية</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
@@ -69,16 +71,18 @@ import { formatDate } from '@/utils/formatters'
 import DataTable from '@/components/ui/DataTable.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import CountUp from '@/components/ui/CountUp.vue'
+import PortalPageHead from '@/components/shared/PortalPageHead.vue'
 
 const PAGE_SIZE = 5
 
 export default {
   name: 'CommitteeProjectArchivePage',
 
-  components: { CheckCircle2, Star, Search, FileText, FileCheck, ExternalLink, DataTable, BaseSelect, CountUp },
+  components: { CheckCircle2, Star, Search, FileText, FileCheck, ExternalLink, DataTable, BaseSelect, CountUp, PortalPageHead },
 
   data() {
     return {
+      FileCheck,
       search: '',
       specFilter: '',
       page: 1,

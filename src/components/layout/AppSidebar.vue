@@ -32,9 +32,15 @@
       aria-label="القائمة الجانبية"
     >
       <!-- رأس الشريط: الشعار + زر الإغلاق -->
-      <div class="flex items-center justify-between gap-3 px-4 h-16 shrink-0 border-b border-border-soft">
+      <!-- السوبر أدمن: sidebar-head يأخذ لون وارتفاع الشريط العلوي فيظهران شريطًا واحدًا -->
+      <div :class="['flex items-center justify-between gap-3 px-4 h-16 shrink-0 border-b border-border-soft', isUcasBrand && 'sidebar-head']">
         <router-link :to="homeRoute" class="flex items-center gap-3 min-w-0">
+          <!-- هوية الكلية (السوبر أدمن): علامة UCAS بدون نص بدل أيقونة القبعة -->
+          <span v-if="isUcasBrand" class="sidebar-ucas-logo grid place-items-center shrink-0">
+            <UcasLogo :size="48" />
+          </span>
           <span
+            v-else
             class="grid place-items-center w-10 h-10 rounded-md shrink-0 bg-gradient-to-bl from-primary-600 to-accent-500 text-white"
           >
             <GraduationCap :size="20" />
@@ -62,12 +68,13 @@
         <template v-for="(group, groupIndex) in normalizedGroups" :key="groupIndex">
           <p
             v-if="group.title"
-            class="px-3 pt-4 pb-2 text-label font-semibold text-text-400 tracking-wide first:pt-0"
+            :class="isUcasBrand ? 'sidebar-section-title' : 'px-3 pt-4 pb-2 text-label font-semibold text-text-400 tracking-wide first:pt-0'"
           >
             {{ group.title }}
           </p>
 
-          <ul class="space-y-1">
+          <!-- السوبر أدمن: مستطيلات تحت بعض — أيقونة خطية ملوّنة + الاسم -->
+          <ul :class="isUcasBrand ? 'sidebar-rows' : 'space-y-1'">
             <li v-for="item in group.items" :key="item.to">
               <router-link
                 v-slot="{ href, navigate, isActive, isExactActive }"
@@ -76,17 +83,27 @@
               >
                 <a
                   :href="href"
-                  :class="[
-                    'flex items-center gap-3 px-3 py-2.5 rounded-sm text-body-sm font-medium transition-colors duration-fast',
-                    (item.exact ? isExactActive : isActive)
-                      ? 'bg-primary-50 text-primary-600'
-                      : 'text-text-700 hover:bg-border-soft hover:text-text-900'
-                  ]"
+                  :class="isUcasBrand
+                    ? ['sidebar-row', (item.exact ? isExactActive : isActive) && 'is-active']
+                    : [
+                      'flex items-center gap-3 px-3 py-2.5 rounded-sm text-body-sm font-medium transition-colors duration-fast',
+                      (item.exact ? isExactActive : isActive)
+                        ? 'bg-primary-50 text-primary-600'
+                        : 'text-text-700 hover:bg-border-soft hover:text-text-900'
+                    ]"
+                  :style="item.color ? { '--tile-color': item.color } : null"
                   :aria-current="(item.exact ? isExactActive : isActive) ? 'page' : undefined"
                   @click="navigate"
                 >
-                  <component :is="item.icon" v-if="item.icon" :size="19" class="shrink-0" />
-                  <span class="flex-1 truncate">{{ item.label }}</span>
+                  <component
+                    :is="item.icon"
+                    v-if="item.icon"
+                    :size="isUcasBrand ? 21 : 19"
+                    :stroke-width="item.color ? 1.75 : 2"
+                    class="nav-icon shrink-0"
+                    :style="item.color ? { color: item.color } : null"
+                  />
+                  <span :class="isUcasBrand ? 'sidebar-row-label' : 'flex-1 truncate'">{{ item.label }}</span>
                   <span
                     v-if="item.badge"
                     class="shrink-0 min-w-[20px] px-1.5 py-0.5 rounded-pill bg-error text-white text-label font-bold text-center"
@@ -132,14 +149,15 @@ import { mapState, mapActions } from 'pinia'
 import { X, LogOut, GraduationCap } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
-import { SIDEBAR_BREAKPOINT, APP_NAME, APP_DESCRIPTION } from '@/utils/constants'
+import UcasLogo from '@/components/icons/UcasLogo.vue'
+import { SIDEBAR_BREAKPOINT, APP_NAME, APP_DESCRIPTION, ROLES } from '@/utils/constants'
 import { initials } from '@/utils/formatters'
 import { lockScroll, unlockScroll } from '@/utils/scrollLock'
 
 export default {
   name: 'AppSidebar',
 
-  components: { X, LogOut, GraduationCap },
+  components: { X, LogOut, GraduationCap, UcasLogo },
 
   props: {
     /**
@@ -164,7 +182,11 @@ export default {
 
   computed: {
     ...mapState(useUiStore, ['sidebarOpen', 'isDesktop']),
-    ...mapState(useAuthStore, ['userName', 'homeRoute']),
+    ...mapState(useAuthStore, ['userName', 'homeRoute', 'userRole']),
+
+    isUcasBrand() {
+      return this.userRole === ROLES.SUPER_ADMIN
+    },
 
     appName() {
       return APP_NAME

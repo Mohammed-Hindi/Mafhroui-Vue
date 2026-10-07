@@ -1,5 +1,7 @@
 <template>
   <div>
+    <PortalPageHead :icon="Users" color="#A9375C" title="المجموعات" subtitle="إدارة مجموعات مشاريع التخرج وأعضائها ومشرفيها" />
+
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex flex-wrap gap-3">
         <BaseButton :icon="UserPlus" @click="openAddStudent">إضافة طالب</BaseButton>
@@ -7,7 +9,7 @@
         <BaseButton variant="outline" :icon="Upload" @click="openImport">استيراد من Excel</BaseButton>
       </div>
       <div class="flex flex-wrap gap-2">
-        <BaseButton variant="outline" :icon="Archive" @click="openTrashed">الفرق المحذوفة</BaseButton>
+        <BaseButton variant="outline" :icon="Archive" @click="openTrashed">المجموعات المحذوفة</BaseButton>
         <BaseButton variant="outline" :icon="Download" :loading="exportingExcel" @click="exportExcel">تصدير Excel</BaseButton>
         <BaseButton variant="outline" :icon="FileDown" :loading="exportingPdf" @click="exportPdf">تصدير PDF</BaseButton>
       </div>
@@ -32,7 +34,7 @@
     </div>
 
     <SkeletonLoader v-if="teamsLoading" :rows="4" height="80px" />
-    <EmptyState v-else-if="!filteredGroups.length" title="لا توجد مجموعات مطابقة" description="جرّبي تعديل البحث أو الفلاتر، أو أنشئي فريقًا جديدًا." />
+    <EmptyState v-else-if="!filteredGroups.length" title="لا توجد مجموعات مطابقة" description="جرّبي تعديل البحث أو الفلاتر، أو أنشئي مجموعة جديدة." />
 
     <div v-else class="flex flex-col gap-4">
       <div
@@ -254,18 +256,18 @@
     </BaseModal>
 
     <!-- تأكيد حذف فريق -->
-    <BaseModal v-model="deleteModal" title="حذف الفريق" :description="deleteTarget ? `حذف فريق ‏${deleteTarget.name} بالكامل` : ''" size="sm">
-      <p class="text-body-sm text-text-600">سيُحذف الفريق ويمكن استرجاعه لاحقًا من "الفرق المحذوفة".</p>
+    <BaseModal v-model="deleteModal" title="حذف المجموعة" :description="deleteTarget ? `حذف مجموعة ‏${deleteTarget.name} بالكامل` : ''" size="sm">
+      <p class="text-body-sm text-text-600">ستُحذف المجموعة ويمكن استرجاعها لاحقًا من "المجموعات المحذوفة".</p>
       <template #footer>
         <BaseButton variant="ghost" @click="deleteModal = false">إلغاء</BaseButton>
         <BaseButton variant="danger" :icon="Trash2" :loading="submitting" @click="confirmDelete">تأكيد الحذف</BaseButton>
       </template>
     </BaseModal>
 
-    <!-- الفرق المحذوفة -->
-    <BaseModal v-model="trashedModal" title="الفرق المحذوفة" description="استرجعي أي فريق حُذف بالخطأ" size="lg">
+    <!-- المجموعات المحذوفة -->
+    <BaseModal v-model="trashedModal" title="المجموعات المحذوفة" description="استرجعي أي مجموعة حُذفت بالخطأ" size="lg">
       <SkeletonLoader v-if="trashedTeamsLoading" :rows="3" height="60px" />
-      <EmptyState v-else-if="!trashedTeamsForDisplay.length" title="لا يوجد فرق محذوفة" description="كل الفرق المحذوفة ستظهر هنا وبإمكانك استرجاعها." />
+      <EmptyState v-else-if="!trashedTeamsForDisplay.length" title="لا توجد مجموعات محذوفة" description="كل المجموعات المحذوفة ستظهر هنا وبإمكانك استرجاعها." />
       <div v-else class="flex flex-col gap-2 max-h-96 overflow-y-auto scrollbar-thin">
         <div v-for="group in trashedTeamsForDisplay" :key="group.id" class="flex items-center justify-between gap-3 p-3 rounded-sm border border-border bg-bg">
           <div class="min-w-0">
@@ -286,7 +288,8 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Plus, Upload, Download, FileDown, Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, Check, Crown, Archive, RotateCcw, UserPlus, Send, Copy } from 'lucide-vue-next'
+import { Plus, Upload, Download, FileDown, Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, Check, Crown, Archive, RotateCcw, UserPlus, Send, Copy, Users } from 'lucide-vue-next'
+import PortalPageHead from '@/components/shared/PortalPageHead.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -316,11 +319,11 @@ const emptySupervisorForm = () => ({ name: '', employee_number: '', email: '', w
 export default {
   name: 'CommitteeTeamsPage',
 
-  components: { Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, Crown, UserPlus, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, DataTable, Pagination, FileDropzone, EmailComposeModal },
+  components: { Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, Crown, UserPlus, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, DataTable, Pagination, FileDropzone, EmailComposeModal, PortalPageHead },
 
   data() {
     return {
-      Plus, Upload, Download, FileDown, Check, Trash2, Crown, Archive, RotateCcw, Send, Copy, UserPlus,
+      Plus, Upload, Download, FileDown, Check, Trash2, Crown, Archive, RotateCcw, Send, Copy, UserPlus, Users,
       memberColumns: [
         { key: 'name', label: 'اسم العضو' },
         { key: 'uid', label: 'الرقم الجامعي' },
@@ -737,7 +740,7 @@ export default {
       try {
         await this.fetchTrashedTeams()
       } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر تحميل الفرق المحذوفة')
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحميل المجموعات المحذوفة')
       }
     },
     async confirmRestore(group) {
@@ -782,8 +785,8 @@ export default {
           num: g.id, section: g.section || '', spec: g.spec, name: m.name, uid: m.uid || '', sup: g.sup, whats: m.whats || '', mail: m.mail
         })))
         await exportStyledExcel({
-          fileName: 'فرق-مشاريع-التخرج.xlsx',
-          sheetTitle: 'الفرق',
+          fileName: 'مجموعات-مشاريع-التخرج.xlsx',
+          sheetTitle: 'المجموعات',
           columns: [
             { key: 'num', label: 'رقم المجموعة', width: 14 },
             { key: 'section', label: 'الشعبة', width: 12 },
@@ -806,9 +809,9 @@ export default {
       this.exportingPdf = true
       try {
         await exportGroupsPdf({
-          fileName: 'فرق-مشاريع-التخرج.pdf',
-          title: 'تقرير فرق مشاريع التخرج',
-          subtitle: `${this.groups.length} فرق — ${this.totalMembers} عضوًا`,
+          fileName: 'مجموعات-مشاريع-التخرج.pdf',
+          title: 'تقرير مجموعات مشاريع التخرج',
+          subtitle: `${this.groups.length} مجموعة — ${this.totalMembers} عضوًا`,
           sections: this.groups.map((g) => ({
             heading: `${g.name}`,
             meta: [

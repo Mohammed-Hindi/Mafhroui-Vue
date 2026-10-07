@@ -7,7 +7,7 @@
     <EmptyState v-if="!loading && !project" title="لم يتم العثور على المشروع" description="ربما تم حذف هذا المشروع أو الرابط غير صحيح." />
 
     <template v-else-if="project">
-      <div class="rounded-lg p-8 sm:p-10 mb-8 text-white" style="background: linear-gradient(120deg, var(--color-primary-600), var(--color-accent-500))">
+      <div class="ucas-hero rounded-lg p-8 sm:p-10 mb-8 text-white" style="background: linear-gradient(120deg, var(--color-primary-600), var(--color-accent-500))">
         <p class="text-caption text-white/80">{{ project.department?.name || 'غير محدد' }} — {{ project.specialization?.name || 'غير محدد' }}</p>
         <h2 class="font-cairo font-extrabold text-h1 mt-2">{{ project.name }}</h2>
         <p class="text-body-sm text-white/85 mt-3 max-w-2xl">{{ project.description }}</p>
@@ -27,7 +27,7 @@
       </div>
 
       <div class="flex items-center gap-3 mb-5">
-        <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><FileText :size="18" /></span>
+        <span class="page-icon grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="--icon-color: #805C55; background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><FileText :size="18" /></span>
         <div>
           <h3 class="text-h3 font-bold text-text-900">ملفات المشروع</h3>
           <p class="text-caption text-text-600">الفيديو، التقرير النهائي، والمقترح</p>

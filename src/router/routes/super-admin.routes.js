@@ -28,6 +28,18 @@ export default [
         name: 'super-admin-structure',
         component: OrgStructurePage,
         meta: { title: 'الأقسام والتخصصات والفصول' }
+      },
+      {
+        path: 'profile',
+        name: 'super-admin-profile',
+        component: () => import('@/views/super-admin/ProfilePage.vue'),
+        meta: { title: 'الملف التعريفي' }
+      },
+      {
+        path: 'change-password',
+        name: 'super-admin-change-password',
+        component: () => import('@/views/super-admin/ChangePasswordPage.vue'),
+        meta: { title: 'تغيير كلمة المرور' }
       }
     ]
   }

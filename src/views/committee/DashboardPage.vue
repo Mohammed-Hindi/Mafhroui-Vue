@@ -1,6 +1,9 @@
 <template>
   <div>
-    <div class="flex justify-end mb-5">
+    <PortalPageHead :icon="LayoutDashboard" color="#005BAA" title="لوحة تحكم لجنة الإشراف" subtitle="ملخص المشاريع والفرق والطلاب للفصل الدراسي الحالي" />
+
+    <!-- تغيير كلمة السر للسوبر أدمن من قائمة الاسم بالشريط العلوي — الزر هنا للجنة فقط -->
+    <div class="ucas-hide flex justify-end mb-5">
       <button
         type="button"
         v-magnetic
@@ -34,8 +37,8 @@
 
     <div class="flex items-center gap-3 mb-5">
       <span
-        class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white"
-        style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"
+        class="page-icon grid place-items-center w-9 h-9 rounded-md shrink-0 text-white"
+        style="--icon-color: #229791; background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"
       >
         <LayoutGrid :size="18" />
       </span>
@@ -47,7 +50,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-6">
       <div class="bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col items-center">
-        <p class="text-body-sm font-bold text-text-700 mb-5">متوسط نسبة الإنجاز</p>
+        <p class="portal-title text-body-sm font-bold text-text-700 mb-5">متوسط نسبة الإنجاز</p>
         <div class="relative w-[150px] h-[150px]">
           <svg width="150" height="150" viewBox="0 0 150 150" style="transform: rotate(-90deg)">
             <circle cx="75" cy="75" r="63" fill="none" stroke="var(--color-border-soft)" stroke-width="16" />
@@ -84,7 +87,7 @@
       </div>
 
       <div class="bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col justify-center gap-5">
-        <p class="text-body-sm font-bold text-text-700">توزيع حالات المشاريع</p>
+        <p class="portal-title text-body-sm font-bold text-text-700">توزيع حالات المشاريع</p>
         <template v-if="committeeStore.statusDistribution.length">
           <div v-for="row in committeeStore.statusDistribution" :key="row.status" class="flex flex-col gap-2">
             <div class="flex items-center justify-between text-body-sm">
@@ -105,8 +108,9 @@
 </template>
 
 <script>
-import { Users, GraduationCap, UserCog, LayoutGrid, KeyRound } from 'lucide-vue-next'
+import { Users, GraduationCap, UserCog, LayoutGrid, KeyRound, LayoutDashboard } from 'lucide-vue-next'
 import CountUp from '@/components/ui/CountUp.vue'
+import PortalPageHead from '@/components/shared/PortalPageHead.vue'
 import ChangePasswordModal from '@/components/shared/ChangePasswordModal.vue'
 import { useCommitteeStore } from '@/stores/committee.store'
 
@@ -120,10 +124,11 @@ const STAT_THEME = [
 export default {
   name: 'CommitteeDashboardPage',
 
-  components: { Users, GraduationCap, UserCog, LayoutGrid, KeyRound, CountUp, ChangePasswordModal },
+  components: { Users, GraduationCap, UserCog, LayoutGrid, KeyRound, CountUp, ChangePasswordModal, PortalPageHead },
 
   data() {
     return {
+      LayoutDashboard,
       committeeStore: useCommitteeStore(),
       changePasswordOpen: false,
       statTheme: STAT_THEME

@@ -1,5 +1,7 @@
 <template>
   <div>
+    <PortalPageHead :icon="CalendarClock" color="#009ADC" title="مواعيد المناقشات" subtitle="جدولة مناقشات مشاريع التخرج ولجانها وإبلاغ الطلاب" />
+
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <BaseButton :icon="Plus" @click="openAddModal">تسجيل موعد مناقشة جديد</BaseButton>
       <div class="flex flex-wrap gap-2">
@@ -28,7 +30,7 @@
     </div>
 
     <div class="flex items-center justify-between gap-4 mb-4">
-      <h3 class="font-cairo font-bold text-h4 text-text-900">مواعيد المناقشات المسجلة</h3>
+      <h3 class="portal-title font-cairo font-bold text-h4 text-text-900">مواعيد المناقشات المسجلة</h3>
       <span class="text-caption text-text-600">{{ filteredDiscussions.length }} مجموعة — {{ filteredStudentsCount }} طالبًا</span>
     </div>
 
@@ -242,7 +244,8 @@
 </template>
 
 <script>
-import { Plus, Upload, Download, FileDown, Search, MessageCircle, Mail, Pencil, Trash2, Check, MapPin, Users, ChevronDown } from 'lucide-vue-next'
+import { Plus, Upload, Download, FileDown, Search, MessageCircle, Mail, Pencil, Trash2, Check, MapPin, Users, ChevronDown, CalendarClock } from 'lucide-vue-next'
+import PortalPageHead from '@/components/shared/PortalPageHead.vue'
 import { mapState, mapActions } from 'pinia'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -270,11 +273,11 @@ const emptyForm = () => ({ project_id: '', place: '', date: '', time: '', commit
 export default {
   name: 'CommitteeAppointmentsPage',
 
-  components: { Search, MessageCircle, Mail, Pencil, Trash2, MapPin, Users, ChevronDown, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, EmailComposeModal },
+  components: { Search, MessageCircle, Mail, Pencil, Trash2, MapPin, Users, ChevronDown, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, EmailComposeModal, PortalPageHead },
 
   data() {
     return {
-      Plus, Upload, Download, FileDown, Check, Trash2,
+      Plus, Upload, Download, FileDown, Check, Trash2, CalendarClock,
       exportingExcel: false,
       exportingPdf: false,
       submitting: false,

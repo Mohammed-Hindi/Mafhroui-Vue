@@ -2,7 +2,7 @@
   <div>
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex items-center gap-3">
-        <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
+        <span class="page-icon grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="--icon-color: #3A9B4C; background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
           <component :is="memberKind === 'student' ? GraduationCap : Users" :size="18" />
         </span>
         <div>
@@ -96,7 +96,7 @@
       <div class="bg-surface rounded-lg border border-border shadow-card p-5 mt-12">
         <div class="flex flex-wrap items-start justify-between gap-4 mb-5">
           <div>
-            <h3 class="font-cairo font-bold text-h4 text-text-900">إرسال بيانات الدخول جماعيًا</h3>
+            <h3 class="portal-title font-cairo font-bold text-h4 text-text-900">إرسال بيانات الدخول جماعيًا</h3>
             <p class="text-caption text-text-600 mt-0.5">اختاري الدور، حدّدي الأعضاء، وأرسلي رابط الدعوة عبر البريد أو واتساب دفعة وحدة</p>
           </div>
         </div>
@@ -152,7 +152,7 @@
 
       <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden mt-8">
         <div class="flex flex-wrap items-center justify-between gap-4 p-5 pb-4">
-          <h3 class="font-cairo font-bold text-h4 text-text-900">سجلّ الإرسال</h3>
+          <h3 class="portal-title font-cairo font-bold text-h4 text-text-900">سجلّ الإرسال</h3>
           <div class="min-w-[160px]">
             <BaseSelect v-model="deliveryStatusFilter" placeholder="جميع الحالات" include-placeholder-option :options="statusOptions" @update:model-value="loadDeliveries" />
           </div>
