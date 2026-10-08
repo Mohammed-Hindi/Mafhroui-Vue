@@ -1,99 +1,148 @@
 <template>
   <div>
-    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-      <div class="flex items-center gap-3">
-        <span class="page-icon grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="--icon-color: #3A9B4C; background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
-          <component :is="memberKind === 'student' ? GraduationCap : Users" :size="18" />
-        </span>
-        <div>
-          <h3 class="text-h3 font-bold text-text-900">إدارة الأعضاء</h3>
-          <p class="text-caption text-text-600">{{ activeFiltered.length }} من أصل {{ activeList.length }} {{ memberKind === 'student' ? 'طالبًا' : 'مشرفًا' }}</p>
+    <!-- صفحة "إرسال بيانات الدخول" (الإدارة العامة) — رأسها فقط، ومحتواها القسم الجماعي بالأسفل -->
+    <header v-if="mode === 'credentials'" class="dash-head mb-6">
+      <div>
+        <h2 class="dash-title">إرسال بيانات الدخول</h2>
+        <p class="dash-sub">اختر الدور والأعضاء وأرسل روابط الدعوة عبر البريد أو واتساب، وتابع سجل الإرسال</p>
+      </div>
+    </header>
+
+    <template v-else>
+      <div class="portal-head-card flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div class="flex items-center gap-3">
+          <span class="page-icon grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="--icon-color: #3A9B4C; background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
+            <component :is="memberKind === 'student' ? GraduationCap : Users" :size="18" />
+          </span>
+          <div>
+            <h3 class="portal-title text-h3 font-bold text-text-900">إدارة الأعضاء</h3>
+            <p class="text-caption text-text-600">{{ activeFiltered.length }} من أصل {{ activeList.length }} {{ { student: 'طالبًا', supervisor: 'مشرفًا', committee: 'عضو لجنة' }[memberKind] }}</p>
+          </div>
         </div>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <BaseSelect v-model="memberKind" class="min-w-[150px]" :options="memberKindOptions" />
-        <BaseButton variant="outline" :icon="Archive" @click="openTrashed">الأعضاء المحذوفون</BaseButton>
-        <BaseButton :icon="UserPlus" @click="openAddModal">إضافة عضو</BaseButton>
+
+      <!-- كل الأزرار في صف واحد: التواصل الجماعي يمينًا وإدارة الأعضاء يسارًا -->
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div class="flex flex-wrap gap-3">
+          <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-success-bg text-success text-caption font-bold hover:brightness-95 transition-all duration-fast" @click="sendWhatsAll(activeList)">
+            <MessageCircle :size="15" /> إرسال واتساب للجميع
+          </button>
+          <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-primary-50 text-primary-700 text-caption font-bold hover:bg-primary-100 transition-colors duration-fast" @click="sendMailAll(activeEmails)">
+            <Mail :size="15" /> إرسال بريد للجميع (Gmail)
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <BaseButton variant="outline" :icon="Archive" @click="openTrashed">الأعضاء المحذوفون</BaseButton>
+          <BaseButton :icon="UserPlus" @click="openAddModal">إضافة عضو</BaseButton>
+        </div>
       </div>
-    </div>
 
-    <div class="flex flex-wrap gap-3 mb-4">
-      <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-success-bg text-success text-caption font-bold hover:brightness-95 transition-all duration-fast" @click="sendWhatsAll(activeList)">
-        <MessageCircle :size="15" /> إرسال واتساب للجميع
-      </button>
-      <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-primary-50 text-primary-700 text-caption font-bold hover:bg-primary-100 transition-colors duration-fast" @click="sendMailAll(activeEmails)">
-        <Mail :size="15" /> إرسال بريد للجميع (Gmail)
-      </button>
-    </div>
+      <!-- أقسام الأعضاء -->
+      <nav class="hm-tabs mb-4 w-fit" aria-label="نوع العضو">
+        <button v-for="k in memberKindOptions" :key="k.value" type="button" :class="memberKind === k.value && 'is-active'" @click="memberKind = k.value">
+          {{ k.label }} <span>{{ listOf(k.value).length }}</span>
+        </button>
+      </nav>
 
-    <div class="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-lg bg-surface border border-border shadow-card">
-      <div class="relative flex-1 min-w-[220px]">
-        <Search :size="16" class="pointer-events-none absolute top-1/2 -translate-y-1/2 start-3 text-text-400" />
-        <input v-model.trim="memberSearch" type="search" :placeholder="memberKind === 'student' ? 'ابحث عن طالب، مشرف أو رقم جامعي...' : 'ابحث عن مشرف بالاسم أو الرقم الوظيفي...'" class="w-full h-icon-btn ps-10 pe-3 rounded-sm border border-border bg-bg text-body text-text-900 focus:border-primary-600 transition-colors duration-fast">
+      <div class="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-lg bg-surface border border-border shadow-card">
+        <div class="relative flex-1 min-w-[220px]">
+          <Search :size="16" class="pointer-events-none absolute top-1/2 -translate-y-1/2 start-3 text-text-400" />
+          <input v-model.trim="memberSearch" type="search" :placeholder="memberKind === 'student' ? 'ابحث عن طالب، مشرف أو رقم جامعي...' : 'ابحث عن مشرف بالاسم أو الرقم الوظيفي...'" class="w-full h-icon-btn ps-10 pe-3 rounded-sm border border-border bg-bg text-body text-text-900 focus:border-primary-600 transition-colors duration-fast">
+        </div>
+        <template v-if="memberKind === 'student'">
+          <BaseSelect v-if="!isSuperAdmin" v-model="specFilter" class="min-w-[170px]" placeholder="جميع التخصصات" include-placeholder-option :options="specializationOptions" />
+          <BaseSelect v-if="!isSuperAdmin" v-model="studentSupFilter" class="min-w-[180px]" placeholder="جميع المشرفين" include-placeholder-option :options="supervisorOptions" />
+          <!-- الإدارة العامة: فلترا طلاب/طالبات ومكان التواجد فقط -->
+          <template v-if="isSuperAdmin">
+            <BaseSelect v-model="genderFilter" class="min-w-[150px]" placeholder="طلاب وطالبات" include-placeholder-option :options="genderOptions" />
+            <BaseSelect v-model="regionFilter" class="min-w-[150px]" placeholder="كل المناطق" include-placeholder-option :options="regionOptions" />
+          </template>
+        </template>
+        <BaseSelect v-if="memberKind === 'supervisor'" v-model="supSpecFilter" class="min-w-[170px]" placeholder="جميع التخصصات" include-placeholder-option :options="specializationOptions" aria-label="التخصص" />
       </div>
-      <template v-if="memberKind === 'student'">
-        <BaseSelect v-model="specFilter" class="min-w-[170px]" placeholder="جميع التخصصات" include-placeholder-option :options="specializationOptions" />
-        <BaseSelect v-model="studentSupFilter" class="min-w-[180px]" placeholder="جميع المشرفين" include-placeholder-option :options="supervisorOptions" />
-      </template>
-    </div>
 
-    <div class="mb-12">
-      <DataTable :columns="activeColumns" :rows="memberPageRows" row-key="id" :primary-keys="['name', 'actions']" :loading="activeLoading" empty-title="لا توجد نتائج مطابقة">
-        <template #cell-grp="{ row }">
-          <router-link v-if="row.grp" :to="{ name: 'committee-teams' }" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-border-soft text-text-600 text-caption font-semibold hover:bg-primary-100 hover:text-primary-700 transition-colors duration-fast">
-            {{ row.grp }} <ExternalLink :size="11" class="opacity-65" />
-          </router-link>
-          <span v-else class="text-caption text-text-400">غير منضم لفريق</span>
-        </template>
-        <template #cell-name="{ row }">
-          <div>
-            <span class="font-bold text-text-900">{{ row.name }}</span>
-            <span v-if="row.isLeader" class="ms-1.5 text-label font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-pill">قائد</span>
-            <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">موقوف</span>
-          </div>
-          <div v-if="row.restricted && row.restrictedReason" class="text-label text-error mt-0.5">السبب: {{ row.restrictedReason }}</div>
-        </template>
-        <template #cell-uid="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-        <template #cell-empId="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-        <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-        <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value || '—' }}</span></template>
-        <template #cell-pw="{ row }">
-          <div class="flex items-center gap-2">
-            <button type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="توليد كلمة سر" :disabled="generatingPwFor === row.id" @click="generatePw(row)">
-              <RefreshCw :size="13" />
+      <div class="mb-12">
+        <DataTable fixed :columns="activeColumns" :rows="memberPageRows" row-key="id" :primary-keys="['name', 'actions']" :loading="activeLoading" empty-title="لا توجد نتائج مطابقة">
+          <template #cell-grp="{ row }">
+            <router-link v-if="row.grp" :to="{ name: 'committee-teams' }" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-border-soft text-text-600 text-caption font-semibold hover:bg-primary-100 hover:text-primary-700 transition-colors duration-fast">
+              {{ row.grp }} <ExternalLink :size="11" class="opacity-65" />
+            </router-link>
+            <span v-else class="text-caption text-text-400">غير منضم لفريق</span>
+          </template>
+          <template #cell-name="{ row }">
+            <div>
+              <button v-if="isSuperAdmin" type="button" class="gr-link font-bold text-text-900" title="عرض البروفايل" @click="openProfile(row)">{{ row.name }}</button>
+              <span v-else class="font-bold text-text-900">{{ row.name }}</span>
+              <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">موقوف</span>
+            </div>
+            <div v-if="row.restricted && row.restrictedReason" class="text-label text-error mt-0.5">السبب: {{ row.restrictedReason }}</div>
+          </template>
+          <!-- المشرف ← مجموعاته (دليل الأعضاء — الإدارة العامة) -->
+          <template #cell-groups="{ row }">
+            <button v-if="supGroups(row.id).length" type="button" class="gr-link mb-groups-btn" :aria-expanded="openSupId === row.id" @click="openSupId = openSupId === row.id ? null : row.id">
+              {{ supGroups(row.id).length }} مجموعات <ChevronDown :size="14" :class="openSupId === row.id && 'rotate-180'" />
             </button>
-            <span class="mono text-caption tracking-wider min-w-[70px] inline-block">{{ passwords[row.id] ? (visiblePw.includes(row.id) ? passwords[row.id] : maskPw(passwords[row.id])) : '—' }}</span>
-            <button v-if="passwords[row.id]" type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="إظهار/إخفاء كلمة السر" @click="togglePw(row.id)">
-              <Eye :size="13" />
-            </button>
-          </div>
-        </template>
-        <template #cell-actions="{ row }">
-          <div class="flex gap-1.5">
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, memberKind)"><Pencil :size="14" /></button>
-            <button v-if="isSuperAdmin && memberKind === 'supervisor'" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="القيود على وحدات النظام" @click="openModuleRestrict(row)"><SlidersHorizontal :size="14" /></button>
-            <button v-if="isSuperAdmin" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" :disabled="reinvitingId === row.id" title="نسخ رابط دعوة جديد" @click="quickReinvite(row)"><Link2 :size="14" /></button>
-            <button
-              type="button"
-              class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast"
-              :class="row.restricted ? 'bg-error text-white border-error hover:brightness-95' : 'border-border text-text-600 hover:bg-error-bg hover:text-error'"
-              :title="row.restricted ? 'إلغاء الإيقاف' : (memberKind === 'student' ? 'إيقاف دخول الطالب' : 'إيقاف دخول المشرف')"
-              @click="toggleRestrict(row, memberKind)"
-            >
-              <Lock :size="14" />
-            </button>
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete(row, memberKind)"><Trash2 :size="14" /></button>
-          </div>
-        </template>
-      </DataTable>
-      <Pagination class="mt-4" :current-page="memberPage" :last-page="memberTotalPages" :total="activeFiltered.length" @change="memberPage = $event" />
-    </div>
+            <span v-else class="text-caption text-text-400">لا توجد</span>
+          </template>
+          <template v-if="isSuperAdmin && memberKind === 'supervisor'" #row-extra="{ row }">
+            <div v-if="openSupId === row.id" class="pe-groups">
+              <div v-for="g in supGroups(row.id)" :key="g.id" class="pe-group">
+                <button type="button" class="pe-group-head" :aria-expanded="openGroupId === g.id" @click="openGroupId = openGroupId === g.id ? null : g.id">
+                  <ChevronLeft :size="16" :class="openGroupId === g.id && 'is-open'" />
+                  <b>{{ g.name }}</b>
+                  <span class="text-caption text-text-400">{{ g.section ? 'شعبة ' + g.section + ' · ' : '' }}{{ g.project?.name || 'بلا مشروع' }} · {{ (g.members || []).length }} طلاب</span>
+                </button>
+                <ul v-if="openGroupId === g.id" class="pe-members">
+                  <li v-for="m in g.members || []" :key="m.id">
+                    <button type="button" class="gr-link" @click="openProfile({ id: m.student?.id, name: m.student?.name }, 'student')">{{ m.student?.name }}</button>
+                    <span class="text-caption text-text-400">{{ REGIONS[m.student?.region] || 'غير محدد' }} · {{ GENDERS[m.student?.gender] || 'غير محدد' }} · <span class="mono">{{ m.student?.whatsapp || '—' }}</span></span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </template>
+          <template #cell-uid="{ value }"><span class="mono">{{ value || '—' }}</span></template>
+          <template #cell-empId="{ value }"><span class="mono">{{ value || '—' }}</span></template>
+          <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
+          <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value || '—' }}</span></template>
+          <template #cell-pw="{ row }">
+            <div class="flex items-center gap-2">
+              <button type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="توليد كلمة سر" :disabled="generatingPwFor === row.id" @click="generatePw(row)">
+                <RefreshCw :size="13" />
+              </button>
+              <span class="mono text-caption tracking-wider min-w-[70px] inline-block">{{ passwords[row.id] ? (visiblePw.includes(row.id) ? passwords[row.id] : maskPw(passwords[row.id])) : '—' }}</span>
+              <button v-if="passwords[row.id]" type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="إظهار/إخفاء كلمة السر" @click="togglePw(row.id)">
+                <Eye :size="13" />
+              </button>
+            </div>
+          </template>
+          <template #cell-actions="{ row }">
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
+              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
+              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, memberKind)"><Pencil :size="14" /></button>
+              <button v-if="isSuperAdmin && memberKind === 'supervisor'" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="القيود على وحدات النظام" @click="openModuleRestrict(row)"><SlidersHorizontal :size="14" /></button>
+              <button v-if="isSuperAdmin" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" :disabled="reinvitingId === row.id" title="نسخ رابط دعوة جديد" @click="quickReinvite(row)"><Link2 :size="14" /></button>
+              <button
+                type="button"
+                class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast"
+                :class="row.restricted ? 'bg-error text-white border-error hover:brightness-95' : 'border-border text-text-600 hover:bg-error-bg hover:text-error'"
+                :title="row.restricted ? 'إلغاء الإيقاف' : (memberKind === 'student' ? 'إيقاف دخول الطالب' : 'إيقاف دخول المشرف')"
+                @click="toggleRestrict(row, memberKind)"
+              >
+                <Lock :size="14" />
+              </button>
+              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete(row, memberKind)"><Trash2 :size="14" /></button>
+            </div>
+          </template>
+        </DataTable>
+        <Pagination class="mt-4" :current-page="memberPage" :last-page="memberTotalPages" :total="activeFiltered.length" @change="memberPage = $event" />
+      </div>
+    </template>
 
-    <!-- ===================== إرسال بيانات الدخول الجماعي (سوبر أدمن فقط) ===================== -->
-    <template v-if="isSuperAdmin">
-      <div class="bg-surface rounded-lg border border-border shadow-card p-5 mt-12">
+    <!-- ===================== إرسال بيانات الدخول الجماعي (صفحة مستقلة للإدارة العامة) ===================== -->
+    <template v-if="isSuperAdmin && mode === 'credentials'">
+      <div class="bg-surface rounded-lg border border-border shadow-card p-5">
         <div class="flex flex-wrap items-start justify-between gap-4 mb-5">
           <div>
             <h3 class="portal-title font-cairo font-bold text-h4 text-text-900">إرسال بيانات الدخول جماعيًا</h3>
@@ -295,11 +344,13 @@
     </BaseModal>
 
     <EmailComposeModal v-model="emailComposeOpen" :to="emailComposeTarget" />
+
+    <ProfileModal v-if="isSuperAdmin" v-model="profile.open" :kind="profile.kind" :person-id="profile.id" :name="profile.name" />
   </div>
 </template>
 
 <script>
-import { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Check, Trash2, Archive, RotateCcw, RefreshCw, Eye, UserPlus, Send, Copy, SlidersHorizontal, Link2 } from 'lucide-vue-next'
+import { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Check, Trash2, Archive, RotateCcw, RefreshCw, Eye, UserPlus, Send, Copy, SlidersHorizontal, Link2, ChevronDown, ChevronLeft } from 'lucide-vue-next'
 import { mapState, mapActions } from 'pinia'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -318,6 +369,8 @@ import { ROLES, APP_NAME } from '@/utils/constants'
 import { formatDateTime } from '@/utils/formatters'
 import { sendEmail } from '@/services/api'
 import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
+import ProfileModal from '@/components/shared/ProfileModal.vue'
+import { GENDERS, REGIONS } from '@/utils/progressData'
 
 function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
@@ -344,10 +397,26 @@ const STATUS_VARIANTS = { pending: 'warning', sent: 'success', failed: 'error' }
 export default {
   name: 'CommitteeMembersPage',
 
-  components: { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, SlidersHorizontal, Link2, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState, EmailComposeModal },
+  components: { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, SlidersHorizontal, Link2, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState, EmailComposeModal, ProfileModal, ChevronDown, ChevronLeft },
+
+  props: {
+    /** 'members' = إدارة الأعضاء (افتراضي) · 'credentials' = صفحة إرسال بيانات الدخول (الإدارة العامة) */
+    mode: { type: String, default: 'members' }
+  },
 
   data() {
     return {
+      GENDERS, REGIONS,
+      // الإدارة العامة تبدأ بعرض الطلاب (الذكور) أولًا
+      genderFilter: useAuthStore().userRole === ROLES.SUPER_ADMIN ? 'male' : '',
+      regionFilter: '',
+      assignedFilter: '',
+      genderOptions: [{ value: 'male', label: 'طلاب' }, { value: 'female', label: 'طالبات' }],
+      regionOptions: Object.entries(REGIONS).map(([value, label]) => ({ value, label })),
+      assignedOptions: [{ value: 'yes', label: 'ضمن مجموعة' }, { value: 'no', label: 'بدون مجموعة' }],
+      openSupId: null,
+      openGroupId: null,
+      profile: { open: false, kind: 'student', id: null, name: '' },
       Check, Lock, Trash2, RotateCcw, Archive, UserPlus, Send, Copy, GraduationCap, Users,
       emailComposeOpen: false,
       emailComposeTarget: '',
@@ -355,12 +424,15 @@ export default {
       visiblePw: [],
       generatingPwFor: null,
       reinvitingId: null,
-      memberKind: 'student',
+      // /super-admin/committee القديمة تحوّل هنا على تبويب اللجنة
+      memberKind: ['student', 'supervisor', 'committee'].includes(this.$route?.query.kind) ? this.$route.query.kind : 'student',
       memberKindOptions: [
         { value: 'student', label: 'الطلاب' },
-        { value: 'supervisor', label: 'المشرفون' }
+        { value: 'supervisor', label: 'المشرفون' },
+        { value: 'committee', label: 'لجنة الإشراف' }
       ],
       memberSearch: '',
+      supSpecFilter: '',
       specFilter: '',
       studentSupFilter: '',
       memberPage: 1,
@@ -370,6 +442,8 @@ export default {
       studentsLoading: false,
       supervisorUsers: [],
       supervisorsLoading: false,
+      committeeUsers: [],
+      committeeLoading: false,
 
       addModalOpen: false,
       addForm: emptyAddForm(),
@@ -410,21 +484,21 @@ export default {
         { key: 'name', label: 'اسم العضو' },
         { key: 'uid', label: 'الرقم الجامعي' },
         { key: 'whats', label: 'رقم الواتس' },
-        { key: 'mail', label: 'البريد الإلكتروني' },
+        { key: 'mail', label: 'البريد الإلكتروني', className: 'break-all' },
         { key: 'pw', label: 'كلمة السر' },
-        { key: 'actions', label: 'إجراءات' }
+        { key: 'actions', label: 'إجراءات', className: 'w-[170px]' }
       ],
       supervisorColumns: [
         { key: 'name', label: 'اسم الموظف' },
         { key: 'empId', label: 'الرقم الوظيفي' },
-        { key: 'mail', label: 'البريد الإلكتروني' },
+        { key: 'mail', label: 'البريد الإلكتروني', className: 'break-all' },
         { key: 'whats', label: 'رقم الواتس' },
         { key: 'pw', label: 'كلمة السر' },
-        { key: 'actions', label: 'إجراءات' }
+        { key: 'actions', label: 'إجراءات', className: 'w-[170px]' }
       ],
 
       /** إرسال بيانات الدخول الجماعي — سوبر أدمن فقط */
-      notifyRoleFilter: 'supervisor',
+      notifyRoleFilter: 'student',
       notifyChannel: 'email',
       notifySpecFilter: '',
       notifySearch: '',
@@ -472,7 +546,8 @@ export default {
     addRoleOptions() {
       return [
         { value: 'student', label: 'الطلاب' },
-        { value: 'supervisor', label: 'المشرفون' }
+        { value: 'supervisor', label: 'المشرفون' },
+        ...(this.isSuperAdmin ? [{ value: 'committee', label: 'لجنة الإشراف' }] : [])
       ]
     },
 
@@ -481,7 +556,7 @@ export default {
       const map = {}
       this.teams.forEach((team) => {
         (team.members || []).forEach((m) => {
-          if (m.student?.id) map[m.student.id] = { team, isLeader: !!m.is_leader }
+          if (m.student?.id) map[m.student.id] = { team }
         })
       })
       return map
@@ -499,7 +574,8 @@ export default {
           uid: u.university_number,
           whats: u.whatsapp,
           mail: u.email,
-          isLeader: !!entry?.isLeader,
+          gender: u.gender,
+          region: u.region,
           restricted: u.status === 'restricted',
           restrictedReason: u.restricted_reason
         }
@@ -508,6 +584,18 @@ export default {
 
     supervisors() {
       return this.supervisorUsers.map((u) => ({
+        id: u.id,
+        name: u.name,
+        empId: u.employee_number,
+        mail: u.email,
+        whats: u.whatsapp,
+        restricted: u.status === 'restricted',
+        restrictedReason: u.restricted_reason
+      }))
+    },
+
+    committee() {
+      return this.committeeUsers.map((u) => ({
         id: u.id,
         name: u.name,
         empId: u.employee_number,
@@ -531,36 +619,35 @@ export default {
       return this.supervisors.map((s) => s.mail)
     },
 
+    /** الجنس والمكان والبحث تُفلتر في الخادم؛ هنا فقط فلاتر اللجنة (التخصص/المشرف) المبنية على بيانات الفرق */
     filteredStudents() {
-      const q = this.memberSearch.trim()
-      return this.students.filter((s) => {
-        const specName = this.specializationName(s.spec)
-        const matchQ = !q || `${s.name}${s.uid}${s.sup}`.includes(q)
-        const matchSpec = !this.specFilter || specName === this.specFilter
-        const matchSup = !this.studentSupFilter || s.sup === this.studentSupFilter
-        return matchQ && matchSpec && matchSup
-      })
-    },
-    filteredSupervisors() {
-      const q = this.memberSearch.trim()
-      return this.supervisors.filter((s) => !q || `${s.name}${s.empId}`.includes(q))
+      return this.students.filter((s) =>
+        (!this.specFilter || String(s.spec) === String(this.specFilter)) &&
+        (!this.studentSupFilter || s.sup === this.studentSupFilter) &&
+        (!this.assignedFilter || (this.assignedFilter === 'yes') === !!s.grp)
+      )
     },
 
     /** القسم الموحّد (طلاب/مشرفون) — يبدّل حسب memberKind */
     activeColumns() {
-      return this.memberKind === 'student' ? this.studentColumns : this.supervisorColumns
+      if (this.memberKind === 'student') return this.studentColumns
+      if (this.memberKind === 'committee') return this.supervisorColumns
+      if (!this.isSuperAdmin) return this.supervisorColumns
+      const cols = [...this.supervisorColumns]
+      cols.splice(1, 0, { key: 'groups', label: 'المجموعات' })
+      return cols
     },
     activeList() {
-      return this.memberKind === 'student' ? this.students : this.supervisors
+      return this.listOf(this.memberKind)
     },
     activeFiltered() {
-      return this.memberKind === 'student' ? this.filteredStudents : this.filteredSupervisors
+      return this.memberKind === 'student' ? this.filteredStudents : this.listOf(this.memberKind)
     },
     activeLoading() {
-      return this.memberKind === 'student' ? this.studentsLoading : this.supervisorsLoading
+      return { student: this.studentsLoading, supervisor: this.supervisorsLoading, committee: this.committeeLoading }[this.memberKind]
     },
     activeEmails() {
-      return this.memberKind === 'student' ? this.studentEmails : this.supervisorEmails
+      return this.activeList.map((s) => s.mail)
     },
     memberTotalPages() {
       return Math.max(1, Math.ceil(this.activeFiltered.length / PAGE_SIZE))
@@ -572,7 +659,7 @@ export default {
 
     trashedTabs() {
       return this.isSuperAdmin
-        ? [{ value: 'supervisor', label: 'المشرفون' }]
+        ? [{ value: 'supervisor', label: 'المشرفون' }, { value: 'committee', label: 'لجنة الإشراف' }]
         : [{ value: 'student', label: 'الطلاب' }, { value: 'supervisor', label: 'المشرفون' }]
     },
 
@@ -600,6 +687,23 @@ export default {
   },
 
   watch: {
+    // كل فلتر مستقل: اختيار أحدهما يلغي الآخر، وأي تغيير يعيد الطلب من الخادم
+    genderFilter(v) {
+      if (v && this.regionFilter) this.regionFilter = ''
+      else this.loadStudents()
+    },
+    regionFilter(v) {
+      if (v && this.genderFilter) this.genderFilter = ''
+      else this.loadStudents()
+    },
+    supSpecFilter() {
+      this.loadSupervisors()
+    },
+    // البحث يُرسل للخادم بعد توقف الكتابة
+    memberSearch() {
+      clearTimeout(this.searchTimer)
+      this.searchTimer = setTimeout(() => this.reloadKind(this.memberKind), 350)
+    },
     memberKind() {
       this.memberSearch = ''
       this.memberPage = 1
@@ -610,7 +714,7 @@ export default {
   },
 
   async created() {
-    await Promise.all([this.loadStudents(), this.loadSupervisors(), this.fetchTeams()])
+    await Promise.all([this.loadStudents(), this.loadSupervisors(), this.loadCommittee(), this.fetchTeams()])
     this.fetchSpecializations()
     if (this.isSuperAdmin) {
       this.loadNotifyDirectory()
@@ -627,10 +731,28 @@ export default {
     ]),
     ...mapActions(useNotifyStore, ['previewBulkNotify', 'sendBulkNotify', 'fetchDeliveries', 'retryDelivery']),
 
+
+    /** مجموعات المشرف (من الفرق المحمّلة أصلًا) */
+    supGroups(supId) {
+      return this.teams.filter((t) => t.supervisor?.id === supId)
+    },
+
+    openProfile(row, kind = this.memberKind) {
+      if (!row?.id) return
+      this.profile = { open: true, kind: kind === 'student' ? 'student' : 'supervisor', id: row.id, name: row.name }
+    },
+
+    /** الفلاتر تُرسل للخادم (GET /users?role=…&gender=&region=&specialization_id=&search=) — القائمة المعروضة هي نتيجته */
+    filterParams(kind) {
+      const p = { search: this.memberSearch.trim() }
+      if (kind === 'student') Object.assign(p, { gender: this.genderFilter, region: this.regionFilter })
+      if (kind === 'supervisor') p.specialization_id = this.supSpecFilter
+      return Object.fromEntries(Object.entries(p).filter(([, v]) => v !== '' && v != null))
+    },
     async loadStudents() {
       this.studentsLoading = true
       try {
-        this.studentUsers = await this.fetchUsers('student')
+        this.studentUsers = await this.fetchUsers('student', this.filterParams('student'))
       } finally {
         this.studentsLoading = false
       }
@@ -638,17 +760,32 @@ export default {
     async loadSupervisors() {
       this.supervisorsLoading = true
       try {
-        this.supervisorUsers = await this.fetchUsers('supervisor')
+        this.supervisorUsers = await this.fetchUsers('supervisor', this.filterParams('supervisor'))
       } finally {
         this.supervisorsLoading = false
       }
     },
+    listOf(kind) {
+      return { student: this.students, supervisor: this.supervisors, committee: this.committee }[kind] || []
+    },
+    async loadCommittee() {
+      this.committeeLoading = true
+      try {
+        this.committeeUsers = await this.fetchUsers('committee', this.filterParams('committee'))
+      } catch {
+        this.committeeUsers = [] // فشل تحميل اللجنة لا يوقف تحميل الطلاب والمشرفين
+      } finally {
+        this.committeeLoading = false
+      }
+    },
     async reloadKind(kind) {
-      await (kind === 'student' ? this.loadStudents() : this.loadSupervisors())
+      await ({ student: this.loadStudents, supervisor: this.loadSupervisors, committee: this.loadCommittee }[kind] || this.loadSupervisors)()
     },
 
     openAddModal() {
-      this.addForm = emptyAddForm()
+      // الدور الافتراضي = التبويب الحالي (الطلاب / المشرفون / لجنة الإشراف)
+      const role = this.addRoleOptions.some((o) => o.value === this.memberKind) ? this.memberKind : 'student'
+      this.addForm = { ...emptyAddForm(), role }
       this.addModalOpen = true
     },
     async submitAdd() {
@@ -854,7 +991,7 @@ export default {
     },
 
     async openTrashed() {
-      this.trashedTab = this.isSuperAdmin ? 'supervisor' : 'student'
+      this.trashedTab = this.isSuperAdmin ? (this.memberKind === 'committee' ? 'committee' : 'supervisor') : 'student'
       this.trashedModal = true
       await this.loadTrashed()
     },

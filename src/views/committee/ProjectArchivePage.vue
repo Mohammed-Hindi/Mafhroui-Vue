@@ -1,5 +1,8 @@
 <template>
   <div>
+    <!-- الإدارة العامة: أرشفة جماعية + معرض المشاريع المميّزة (بيانات تجريبية) -->
+    <ArchiveBoard v-if="isSuperAdmin" />
+    <template v-else>
     <PortalPageHead :icon="FileCheck" color="#805C55" title="أرشيف المشاريع" subtitle="المشاريع المكتملة عبر جميع الفصول الدراسية وملفاتها" />
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -28,7 +31,10 @@
             <Search :size="16" class="pointer-events-none absolute top-1/2 -translate-y-1/2 start-3 text-text-400" />
             <input v-model.trim="search" type="search" placeholder="بحث في المشاريع..." class="w-full h-icon-btn ps-10 pe-3 rounded-pill border border-border bg-bg text-body text-text-900 focus:border-primary-600 transition-colors duration-fast">
           </div>
-          <BaseSelect v-model="specFilter" class="min-w-[220px]" placeholder="جميع التخصصات" include-placeholder-option :options="specOptions" />
+          <BaseSelect v-model="specFilter" class="min-w-[200px]" placeholder="جميع التخصصات" include-placeholder-option :options="specOptions" />
+          <BaseSelect v-model="deptFilter" class="min-w-[170px]" placeholder="جميع الأقسام" include-placeholder-option :options="deptOptions" />
+          <BaseSelect v-model="featuredFilter" class="min-w-[150px]" placeholder="كل المشاريع" include-placeholder-option :options="featuredOptions" />
+          <button v-if="search || specFilter || deptFilter || featuredFilter" type="button" class="gr-clear" @click="search = ''; specFilter = ''; deptFilter = ''; featuredFilter = ''">مسح الفلاتر</button>
         </div>
       </div>
 
@@ -60,6 +66,7 @@
         </template>
       </DataTable>
     </div>
+    </template>
   </div>
 </template>
 
@@ -67,6 +74,9 @@
 import { CheckCircle2, Star, Search, FileText, FileCheck, ExternalLink } from 'lucide-vue-next'
 import { mapState, mapActions } from 'pinia'
 import { useTeamsStore } from '@/stores/teams.store'
+import { useAuthStore } from '@/stores/auth.store'
+import { ROLES } from '@/utils/constants'
+import ArchiveBoard from '@/views/super-admin/ArchiveBoard.vue'
 import { formatDate } from '@/utils/formatters'
 import DataTable from '@/components/ui/DataTable.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -78,13 +88,16 @@ const PAGE_SIZE = 5
 export default {
   name: 'CommitteeProjectArchivePage',
 
-  components: { CheckCircle2, Star, Search, FileText, FileCheck, ExternalLink, DataTable, BaseSelect, CountUp, PortalPageHead },
+  components: { CheckCircle2, Star, Search, FileText, FileCheck, ExternalLink, DataTable, BaseSelect, CountUp, PortalPageHead, ArchiveBoard },
 
   data() {
     return {
       FileCheck,
       search: '',
       specFilter: '',
+      deptFilter: '',
+      featuredFilter: '',
+      featuredOptions: [{ value: 'yes', label: 'المميّزة فقط' }, { value: 'no', label: 'غير المميّزة' }],
       page: 1,
 
       columns: [
@@ -101,6 +114,12 @@ export default {
 
   computed: {
     ...mapState(useTeamsStore, ['projectArchive', 'projectArchiveLoading']),
+    ...mapState(useAuthStore, ['userRole']),
+
+    isSuperAdmin() {
+      return this.userRole === ROLES.SUPER_ADMIN
+    },
+
 
     archive() {
       return this.projectArchive.map((p) => ({
@@ -118,6 +137,9 @@ export default {
       return this.archive.filter((a) => a.featured).length
     },
 
+    deptOptions() {
+      return [...new Set(this.archive.map((a) => a.dept))].map((d) => ({ value: d, label: d }))
+    },
     specOptions() {
       return [...new Set(this.archive.map((a) => a.spec))].map((s) => ({ value: s, label: s }))
     },
@@ -127,7 +149,9 @@ export default {
       return this.archive.filter((a) => {
         const matchQ = !q || `${a.proj}${a.team}${a.spec}${a.dept}`.includes(q)
         const matchSpec = !this.specFilter || a.spec === this.specFilter
-        return matchQ && matchSpec
+        const matchDept = !this.deptFilter || a.dept === this.deptFilter
+        const matchFeatured = !this.featuredFilter || (this.featuredFilter === 'yes') === a.featured
+        return matchQ && matchSpec && matchDept && matchFeatured
       })
     },
 

@@ -6,7 +6,6 @@ import authRoutes from './routes/auth.routes'
 import superAdminRoutes from './routes/super-admin.routes'
 import committeeRoutes from './routes/committee.routes'
 import supervisorRoutes from './routes/supervisor.routes'
-import teamLeaderRoutes from './routes/team-leader.routes'
 import studentRoutes from './routes/student.routes'
 
 const routes = [
@@ -15,7 +14,6 @@ const routes = [
   ...superAdminRoutes,
   ...committeeRoutes,
   ...supervisorRoutes,
-  ...teamLeaderRoutes,
   ...studentRoutes,
   {
     path: '/403',

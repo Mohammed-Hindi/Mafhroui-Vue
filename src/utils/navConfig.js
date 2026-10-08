@@ -4,7 +4,6 @@ import {
   Users,
   User,
   UserPlus,
-  ShieldCheck,
   ClipboardList,
   ListTodo,
   CalendarDays,
@@ -12,7 +11,11 @@ import {
   FileCheck,
   TrendingUp,
   Bot,
-  Building2
+  Building2,
+  Megaphone,
+  KeyRound,
+  ClipboardCheck,
+  LifeBuoy
 } from 'lucide-vue-next'
 import { ROLES } from '@/utils/constants'
 
@@ -25,19 +28,22 @@ export const NAV_ITEMS_BY_ROLE = {
       items: [
         { label: 'الملف التعريفي', to: '/super-admin/profile', icon: UserCircle, color: '#0E699C' },
         { label: 'إدارة الأعضاء', to: '/super-admin', icon: UserPlus, exact: true, color: '#3A9B4C' },
-        { label: 'لجنة الإشراف', to: '/super-admin/committee', icon: ShieldCheck, color: '#4C5EA8' },
+        { label: 'إرسال بيانات الدخول', to: '/super-admin/credentials', icon: KeyRound },
         { label: 'الأقسام والفصول الدراسية', to: '/super-admin/structure', icon: Building2, color: '#229791' }
       ]
     },
     {
       title: 'أدوات لجنة الإشراف',
       items: [
-        { label: 'لوحة التحكم', to: '/committee', icon: LayoutDashboard, exact: true, color: '#005BAA' },
+        { label: 'الرئيسية', to: '/committee', icon: LayoutDashboard, exact: true, color: '#005BAA' },
         { label: 'المجموعات', to: '/committee/teams', icon: Users, color: '#A9375C' },
         { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList, color: '#F89E32' },
+        { label: 'التكليفات والإعلانات', to: '/super-admin/assignments', icon: Megaphone },
         { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock, color: '#009ADC' },
+        { label: 'التقييمات', to: '/super-admin/evaluations', icon: ClipboardCheck },
         { label: 'أرشيف المشاريع', to: '/committee/project-archive', icon: FileCheck, color: '#805C55' },
         { label: 'تقدّم المشاريع', to: '/committee/progress', icon: TrendingUp, color: '#62BB46' },
+        { label: 'الشكاوى والملاحظات', to: '/super-admin/tickets', icon: LifeBuoy },
         { label: 'المساعد الآلي', to: '/committee/assistant', icon: Bot, color: '#233B77' }
       ]
     }
@@ -64,14 +70,6 @@ export const NAV_ITEMS_BY_ROLE = {
     { label: 'أرشيف المشاريع', to: '/supervisor/project-archive', icon: FileCheck },
     { label: 'نسبة تقدّم الفرق', to: '/supervisor/progress', icon: TrendingUp },
     { label: 'المساعد الآلي', to: '/supervisor/assistant', icon: Bot }
-  ],
-
-  [ROLES.TEAM_LEADER]: [
-    { label: 'الملف الشخصي', to: '/team-leader', icon: UserCircle, exact: true },
-    { label: 'المقترح / التقرير النهائي', to: '/team-leader/proposal', icon: ClipboardList },
-    { label: 'المساعد الآلي', to: '/team-leader/assistant', icon: Bot },
-    { label: 'المهام (Kanban)', to: '/team-leader/tasks', icon: ListTodo },
-    { label: 'الاجتماعات', to: '/team-leader/meetings', icon: CalendarDays }
   ],
 
   [ROLES.STUDENT]: [
