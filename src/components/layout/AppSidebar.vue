@@ -32,22 +32,28 @@
       aria-label="القائمة الجانبية"
     >
       <!-- رأس الشريط: الشعار + زر الإغلاق -->
-      <div class="flex items-center justify-between gap-3 px-4 h-16 shrink-0 border-b border-border-soft">
+      <!-- السوبر أدمن: sidebar-head يأخذ لون وارتفاع الشريط العلوي فيظهران شريطًا واحدًا -->
+      <div :class="['flex items-center justify-between gap-3 px-4 h-16 shrink-0 border-b border-border-soft', isUcasBrand && 'sidebar-head']">
         <router-link :to="homeRoute" class="flex items-center gap-3 min-w-0">
+          <!-- هوية الكلية (السوبر أدمن): علامة UCAS بدون نص بدل أيقونة القبعة -->
+          <span v-if="isUcasBrand" class="sidebar-ucas-logo grid place-items-center shrink-0">
+            <UcasLogo :size="48" />
+          </span>
           <span
+            v-else
             class="grid place-items-center w-10 h-10 rounded-md shrink-0 bg-gradient-to-bl from-primary-600 to-accent-500 text-white"
           >
             <GraduationCap :size="20" />
           </span>
           <span class="min-w-0">
-            <span class="block font-cairo font-bold text-h4 text-text-900 truncate">{{ appName }}</span>
+            <span :class="['block font-cairo font-bold text-h4 truncate', isUcasBrand ? 'sidebar-app-name' : 'text-text-900']">{{ appName }}</span>
             <span class="block text-label text-text-400 truncate">{{ appDescription }}</span>
           </span>
         </router-link>
 
         <!-- طريقة الإغلاق رقم 2: زر ✕ داخل الشريط -->
         <button
-          v-if="!isDesktop"
+          v-if="!isDesktop && !isUcasBrand"
           type="button"
           class="grid place-items-center w-9 h-9 rounded-sm text-text-600 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-fast lg:hidden"
           aria-label="إغلاق القائمة"
@@ -58,16 +64,28 @@
       </div>
 
       <!-- عناصر التنقل -->
-      <nav class="flex-1 overflow-y-auto scrollbar-thin px-3 py-4">
+      <nav :class="['flex-1 overflow-y-auto scrollbar-thin', isUcasBrand ? 'sidebar-nav' : 'px-3 py-4']">
         <template v-for="(group, groupIndex) in normalizedGroups" :key="groupIndex">
+          <!-- السوبر أدمن: عنوان المجموعة زر يطوي/يفتح عناصرها -->
+          <button
+            v-if="group.title && isUcasBrand"
+            type="button"
+            class="sidebar-section-title"
+            :aria-expanded="!collapsed[groupIndex]"
+            @click="collapsed[groupIndex] = !collapsed[groupIndex]"
+          >
+            <span>{{ group.title }}</span>
+            <ChevronDown :size="16" :class="['sidebar-section-chevron', collapsed[groupIndex] && 'is-collapsed']" />
+          </button>
           <p
-            v-if="group.title"
+            v-else-if="group.title"
             class="px-3 pt-4 pb-2 text-label font-semibold text-text-400 tracking-wide first:pt-0"
           >
             {{ group.title }}
           </p>
 
-          <ul class="space-y-1">
+          <!-- السوبر أدمن: قائمة مسطّحة بنمط البوابة — أيقونة خطية رمادية + الاسم، والنشط سماوي -->
+          <ul v-show="!isUcasBrand || !collapsed[groupIndex]" :class="isUcasBrand ? 'sidebar-rows' : 'space-y-1'">
             <li v-for="item in group.items" :key="item.to">
               <router-link
                 v-slot="{ href, navigate, isActive, isExactActive }"
@@ -76,17 +94,25 @@
               >
                 <a
                   :href="href"
-                  :class="[
-                    'flex items-center gap-3 px-3 py-2.5 rounded-sm text-body-sm font-medium transition-colors duration-fast',
-                    (item.exact ? isExactActive : isActive)
-                      ? 'bg-primary-50 text-primary-600'
-                      : 'text-text-700 hover:bg-border-soft hover:text-text-900'
-                  ]"
+                  :class="isUcasBrand
+                    ? ['sidebar-row', (item.exact ? isExactActive : isActive) && 'is-active']
+                    : [
+                      'flex items-center gap-3 px-3 py-2.5 rounded-sm text-body-sm font-medium transition-colors duration-fast',
+                      (item.exact ? isExactActive : isActive)
+                        ? 'bg-primary-50 text-primary-600'
+                        : 'text-text-700 hover:bg-border-soft hover:text-text-900'
+                    ]"
                   :aria-current="(item.exact ? isExactActive : isActive) ? 'page' : undefined"
                   @click="navigate"
                 >
-                  <component :is="item.icon" v-if="item.icon" :size="19" class="shrink-0" />
-                  <span class="flex-1 truncate">{{ item.label }}</span>
+                  <component
+                    :is="item.icon"
+                    v-if="item.icon"
+                    :size="isUcasBrand ? 21 : 19"
+                    :stroke-width="isUcasBrand ? 1.75 : 2"
+                    class="nav-icon shrink-0"
+                  />
+                  <span :class="isUcasBrand ? 'sidebar-row-label' : 'flex-1 truncate'">{{ item.label }}</span>
                   <span
                     v-if="item.badge"
                     class="shrink-0 min-w-[20px] px-1.5 py-0.5 rounded-pill bg-error text-white text-label font-bold text-center"
@@ -102,7 +128,7 @@
 
       <!-- تذييل الشريط: المستخدم + تسجيل الخروج -->
       <div class="shrink-0 border-t border-border-soft p-3">
-        <div class="flex items-center gap-3 px-2 py-2 rounded-sm">
+        <div v-if="!isUcasBrand" class="flex items-center gap-3 px-2 py-2 rounded-sm">
           <span
             class="grid place-items-center w-9 h-9 rounded-pill bg-primary-50 text-primary-600 font-cairo font-bold text-caption shrink-0"
           >
@@ -116,7 +142,7 @@
 
         <button
           type="button"
-          class="mt-2 w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-body-sm font-medium text-text-700 hover:bg-error-bg hover:text-error transition-colors duration-fast"
+          :class="['w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-body-sm font-medium text-text-700 hover:bg-error-bg hover:text-error transition-colors duration-fast', !isUcasBrand && 'mt-2']"
           @click="handleLogout"
         >
           <LogOut :size="19" class="shrink-0" />
@@ -129,17 +155,18 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { X, LogOut, GraduationCap } from 'lucide-vue-next'
+import { X, LogOut, GraduationCap, ChevronDown } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
-import { SIDEBAR_BREAKPOINT, APP_NAME, APP_DESCRIPTION } from '@/utils/constants'
+import UcasLogo from '@/components/icons/UcasLogo.vue'
+import { SIDEBAR_BREAKPOINT, APP_NAME, APP_DESCRIPTION, ROLES } from '@/utils/constants'
 import { initials } from '@/utils/formatters'
 import { lockScroll, unlockScroll } from '@/utils/scrollLock'
 
 export default {
   name: 'AppSidebar',
 
-  components: { X, LogOut, GraduationCap },
+  components: { X, LogOut, GraduationCap, ChevronDown, UcasLogo },
 
   props: {
     /**
@@ -158,13 +185,18 @@ export default {
 
   data() {
     return {
-      resizeTimer: null
+      resizeTimer: null,
+      collapsed: {} // groupIndex → مطوية؟ (السوبر أدمن)
     }
   },
 
   computed: {
     ...mapState(useUiStore, ['sidebarOpen', 'isDesktop']),
-    ...mapState(useAuthStore, ['userName', 'homeRoute']),
+    ...mapState(useAuthStore, ['userName', 'homeRoute', 'userRole']),
+
+    isUcasBrand() {
+      return this.userRole === ROLES.SUPER_ADMIN
+    },
 
     appName() {
       return APP_NAME

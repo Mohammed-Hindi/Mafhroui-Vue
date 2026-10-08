@@ -1,0 +1,2327 @@
+/* ============================================================
+   ucas-portal.css — هوية الكلية الجامعية للعلوم التطبيقية (UCAS)
+   نمط بوابة my.ucas.edu.ps — مفعّل فقط عند وجود data-brand="ucas" على <html>
+   (يضعه DashboardLayout.vue للسوبر أدمن). بدونه هذا الملف لا يؤثر على أي شيء.
+   كل القيم مقاسة بكسل-بكسل من صور المجلد المرجعي — التفاصيل في docs/design/UCAS_DESIGN_SYSTEM.md
+   ============================================================ */
+
+/* ============ 1) التوكنز — الوضع النهاري ============ */
+:root[data-brand="ucas"] {
+  /* هوية الكلية (الشعار + الموقع الرئيسي) */
+  --ucas-blue: #005BAA;
+  --ucas-blue-deep: #025DA9;
+  --ucas-green: #62BB46;
+  --ucas-orange: #FF9800;
+  --ucas-navy: #0E1825;
+  --ucas-gradient: linear-gradient(to left, #62BB46, #50A16E 45%, #0E699C 80%, #025DA9);
+
+  /* ألوان البوابة */
+  --portal-header-bg: #435966;
+  --portal-nav-bg: #FFFFFF;
+  --portal-nav-text: #6C757D;
+  --portal-nav-active: #71B6F8;
+  --portal-footer-bg: #E3E9ED;
+  --portal-footer-text: #98A6AD;
+  --portal-cyan: #35B8E0;
+  --portal-sky: #71B6F9;
+  --portal-gray-btn: #6C757D;
+  --portal-pink: #FF8ACC;
+  --portal-thead-bg: #35B8E0;
+  --portal-thead-text: #FFFFFF;
+  --portal-menu-hover: #F3F7F9;
+
+  /* Primary = سماوي البوابة (أزرار الإجراء، رؤوس الجداول، العناوين المساعدة) */
+  --color-primary-50:  #EBF8FC;
+  --color-primary-100: #D7F1F9;
+  --color-primary-200: #AFE3F3;
+  --color-primary-300: #86D4EC;
+  --color-primary-400: #5EC6E6;
+  --color-primary-500: #71B6F9;
+  --color-primary-600: #35B8E0;
+  --color-primary-700: #2A9DC2;
+  --color-primary-800: #1F7C9A;
+  --color-primary-900: #165C73;
+
+  /* Secondary = أخضر الإجراءات الإيجابية (طباعة الجدول، تقديم الطلب، صف المعدل) */
+  --color-secondary-50:  #E7F9F0;
+  --color-secondary-100: #CFF3E1;
+  --color-secondary-200: #9FE7C3;
+  --color-secondary-300: #6FDBA5;
+  --color-secondary-400: #3FCF87;
+  --color-secondary-500: #10C469;
+  --color-secondary-600: #10C469;
+  --color-secondary-700: #0DA859;
+  --color-secondary-800: #0A8747;
+  --color-secondary-900: #086636;
+
+  /* Accent = أزرق الشعار */
+  --color-accent-50:  #E6EFF7;
+  --color-accent-100: #CCDEEE;
+  --color-accent-200: #99BDDD;
+  --color-accent-300: #669DCC;
+  --color-accent-400: #337CBB;
+  --color-accent-500: #005BAA;
+  --color-accent-600: #005BAA;
+  --color-accent-700: #004A8C;
+  --color-accent-800: #003A6E;
+  --color-accent-900: #002A50;
+
+  /* الحالات — كما تظهر تنبيهات البوابة */
+  --color-success: #10C469;
+  --color-success-bg: #E2F8ED;
+  --color-success-border: #C3EFD9;
+  --color-warning: #F9C851;
+  --color-warning-text: #B47A00;
+  --color-warning-bg: #FEF8EA;
+  --color-warning-border: #FBEBC4;
+  --color-error: #FF5B5B;
+  --color-error-bg: #F9DFE1;
+  --color-error-border: #F3C2C6;
+  --color-info: #0A8EBA;
+  --color-info-bg: #D5F0F9;
+
+  /* الأسطح والنصوص */
+  --color-bg: #EBEFF2;
+  --color-surface: #FFFFFF;
+  --color-border: #DEE2E6;
+  --color-border-soft: #EEF1F3;
+  --color-text-900: #343A40;
+  --color-text-700: #4C5667;
+  --color-text-600: #6C757D;
+  --color-text-400: #98A6AD;
+
+  /* الخط: Cairo لكل شيء بالبوابة، بأحجام أكبر من الافتراضي */
+  --font-body: 'Cairo', sans-serif;
+  --fs-display: 34px;
+  --fs-h1: 26px;
+  --fs-h2: 22px;
+  --fs-h3: 20px;
+  --fs-h4: 18px;
+  --fs-body: 15px;
+  --fs-body-sm: 14.5px;
+  --fs-caption: 13px;
+  --fs-label: 13px;
+
+  /* زوايا Bootstrap (0.25rem) وظل البطاقات الضبابي العريض */
+  --radius-sm: 4px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
+  --shadow-card: 0 0 35px 0 rgba(154, 161, 171, 0.15);
+  --shadow-card-hover: 0 0 35px 0 rgba(154, 161, 171, 0.3);
+  --shadow-modal: 0 0 45px 0 rgba(52, 58, 64, 0.25);
+  --shadow-dropdown: 0 0 35px 0 rgba(154, 161, 171, 0.3);
+
+  /* الحركة — منحنى Material القياسي */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --glow-alpha: 0;
+}
+
+/* ============ 2) التوكنز — الوضع الليلي (لوحة البوابة الداكنة) ============ */
+:root[data-brand="ucas"][data-theme="dark"] {
+  --portal-header-bg: #282E38;
+  --portal-nav-bg: #363F4C;
+  --portal-nav-text: #ADB5BD;
+  --portal-footer-bg: #2D343F;
+  --portal-footer-text: #8C98A4;
+  --portal-thead-bg: #2A303A;
+  --portal-thead-text: #E3E7EB;
+  --portal-menu-hover: #3A4351;
+
+  --color-bg: #282E38;
+  --color-surface: #323A46;
+  --color-border: #414B5A;
+  --color-border-soft: #3A4351;
+  --color-text-900: #F1F3F5;
+  --color-text-700: #CED4DA;
+  --color-text-600: #ADB5BD;
+  --color-text-400: #8C98A4;
+
+  --color-primary-50: #2C4552;
+  --color-primary-100: #335463;
+  --color-secondary-50: #1F3D33;
+  --color-secondary-100: #24493B;
+  --color-accent-50: #22324A;
+  --color-accent-100: #283C58;
+
+  --color-success-bg: #1F3D33;
+  --color-success-border: #2A5244;
+  --color-warning-text: #F9C851;
+  --color-warning-bg: #3E3828;
+  --color-warning-border: #574C30;
+  --color-error-bg: #4A2C33;
+  --color-error-border: #613840;
+  --color-info: #5CC8EA;
+  --color-info-bg: #23404D;
+
+  --shadow-card: 0 0 35px 0 rgba(0, 0, 0, 0.22);
+  --shadow-card-hover: 0 0 35px 0 rgba(0, 0, 0, 0.35);
+  --shadow-dropdown: 0 0 35px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* ============ 3) أساسيات ============ */
+:root[data-brand="ucas"] body,
+:root[data-brand="ucas"] .font-tajawal {
+  font-family: 'Cairo', sans-serif;
+}
+
+.ucas-portal .mono {
+  direction: ltr;
+  display: inline-block;
+}
+/* خلية جدول بكلاس mono تبقى table-cell (inline-block كان يخرجها من تخطيط الجدول فتنكسر الحدود) */
+.ucas-portal :is(td, th).mono { display: table-cell; }
+
+/* ============ 4) الشعار + الأيقونات الخطية الملوّنة (نمط أيقونات عمادات الكلية) ============ */
+
+
+/* ============ 5) بطاقة بيانات الحساب ============ */
+.portal-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 32px;
+  padding: 24px 28px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+.portal-identity-logo {
+  animation: ucasLogoIn 900ms var(--ease-spring) 150ms backwards;
+}
+.portal-identity-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 32px;
+  margin: 0;
+  font-size: 14.5px;
+}
+.portal-identity-details > div {
+  display: flex;
+  gap: 4px;
+}
+.portal-identity-details dt {
+  font-weight: 700;
+  color: var(--portal-cyan);
+}
+.portal-identity-details dd {
+  margin: 0;
+  color: var(--portal-cyan);
+}
+
+/* ============ 6) الفوتر + زر العودة للأعلى ============ */
+.portal-footer {
+  background: var(--portal-footer-bg);
+  color: var(--portal-footer-text);
+  font-size: 14.5px;
+}
+.portal-footer a { color: var(--portal-nav-active); }
+.portal-footer a:hover { text-decoration: underline; }
+
+.portal-back-top {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: var(--z-sticky-header);
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 4px;
+  background: var(--ucas-orange);
+  color: #FFFFFF;
+  box-shadow: 0 6px 16px rgba(255, 152, 0, 0.35);
+  transition: transform 300ms var(--ease-spring), background-color 150ms;
+}
+.portal-back-top:hover { transform: translateY(-4px); background: #F57C00; }
+.portal-back-top:active { transform: scale(0.94); }
+
+/* ============ 7) مكونات الصفحات ============ */
+
+/* عنوان البطاقة: أيقونة ≡ قبل العنوان كما في "القضايا التي قمت بتقديمها" */
+:root[data-brand="ucas"] .portal-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--color-text-900);
+}
+:root[data-brand="ucas"] .portal-title::before {
+  content: '';
+  width: 16px;
+  height: 12px;
+  flex-shrink: 0;
+  background: var(--color-text-600);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 12'%3E%3Cpath d='M0 1h16M4 6h12M8 11h8' stroke='black' stroke-width='2'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 12'%3E%3Cpath d='M0 1h16M4 6h12M8 11h8' stroke='black' stroke-width='2'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* الجداول: رأس سماوي بنص أبيض، صفوف بفواصل أفقية فقط */
+:root[data-brand="ucas"] table thead tr {
+  background: var(--portal-thead-bg);
+  border-bottom: 0;
+}
+:root[data-brand="ucas"] table thead th {
+  color: var(--portal-thead-text);
+  font-size: 15px;
+  font-weight: 700;
+  padding-block: 16px;
+}
+:root[data-brand="ucas"] table tbody td {
+  padding-block: 16px;
+  font-size: 15px;
+}
+/* خلية الصف الإضافي (row-extra) بلا حشوة — وإلا ظهر صف فارغ بين كل صفين */
+:root[data-brand="ucas"] table tbody td.p-0 { padding-block: 0; }
+:root[data-brand="ucas"] table .divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--color-border);
+}
+:root[data-brand="ucas"] table .divide-x > :not([hidden]) ~ :not([hidden]) {
+  border-left-width: 0;
+  border-right-width: 0;
+}
+
+/* الأزرار مسطّحة بلا ظل (البوابة لا تستخدم ظلالًا على الأزرار) */
+:root[data-brand="ucas"] button.shadow-card,
+:root[data-brand="ucas"] a.shadow-card {
+  box-shadow: none;
+}
+
+/* الحقول: إطار #CED4DA وتركيز سماوي */
+:root[data-brand="ucas"] :is(input, textarea).border-border,
+:root[data-brand="ucas"] button[aria-haspopup="listbox"].border-border {
+  border-color: #CED4DA;
+}
+:root[data-brand="ucas"][data-theme="dark"] :is(input, textarea).border-border,
+:root[data-brand="ucas"][data-theme="dark"] button[aria-haspopup="listbox"].border-border {
+  border-color: var(--color-border);
+}
+:root[data-brand="ucas"] :is(input, textarea):focus {
+  border-color: var(--portal-cyan);
+  box-shadow: 0 0 0 3px rgba(53, 184, 224, 0.15);
+}
+
+/* المودال: خط سفلي سماوي تحت الرأس */
+:root[data-brand="ucas"] [role="dialog"] header {
+  border-bottom: 2px solid var(--portal-cyan);
+}
+
+/* ============ 8) الحركة — لوحة السوبر أدمن كاملة ============
+   منحنيان فقط: Material القياسي للحركة العادية، ونابض خفيف للأيقونات والأزرار.
+   كل الحركات تنتهي بـ transform: none مع fill-mode: backwards — لا transform دائم يكسر العناصر fixed.
+   prefers-reduced-motion يلغي كل هذا تلقائيًا (main.css). */
+:root[data-brand="ucas"] {
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 8.1 السايد بار — رأسه أبيض (قرار المستخدم 2026-10-08) بنفس ارتفاع الشريط العلوي 72px */
+#app-sidebar .sidebar-head {
+  height: 72px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 300ms var(--ease-standard);
+}
+#app-sidebar .sidebar-head .sidebar-app-name { color: var(--color-text-900); }
+@media (min-width: 1024px) {
+  .ucas-portal #app-sidebar { border-left-width: 0; box-shadow: inset 1px 0 0 var(--color-border); }
+}
+.sidebar-head .text-text-400 { color: var(--ucas-green); font-weight: 700; }
+/* الشعار مباشرة على الخلفية — بدون دائرة أو إطار */
+.sidebar-ucas-logo {
+  width: 30px;
+  height: 52px;
+}
+.sidebar-ucas-logo svg {
+  animation: ucasLogoIn 900ms var(--ease-spring) 100ms backwards;
+  transform-origin: bottom center;
+  transition: transform 500ms var(--ease-spring);
+}
+#app-sidebar a:hover .sidebar-ucas-logo svg { transform: rotate(-6deg) scale(1.06); }
+
+/* القائمة: صفوف مسطّحة بعرض كامل بلا إطارات — كقائمة البوابة العمودية */
+.sidebar-nav { padding: 6px 0 12px; }
+
+/* عنوان المجموعة: زر يطوي/يفتح، نص رمادي عريض صغير + سهم */
+.sidebar-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 22px 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-400);
+  transition: color var(--ucas-color-speed) var(--ease-standard);
+}
+.sidebar-section-title:hover { color: var(--color-text-600); }
+.sidebar-section-chevron { transition: transform 300ms var(--ease-standard); }
+.sidebar-section-chevron.is-collapsed { transform: rotate(90deg); }
+
+.sidebar-rows {
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 8px 22px;
+  transition: background-color var(--ucas-color-speed) var(--ease-standard);
+}
+/* شريط سماوي 3px على الحافة عند التفعيل */
+.sidebar-row::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  background: var(--portal-cyan);
+  transform: scaleY(0);
+  transition: transform 400ms var(--ease-standard);
+}
+.sidebar-row.is-active::before { transform: none; }
+.sidebar-row:hover { background: var(--portal-menu-hover); }
+.sidebar-row.is-active { background: color-mix(in srgb, var(--portal-cyan) 9%, var(--color-surface)); }
+.sidebar-row-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--portal-nav-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--ucas-color-speed) var(--ease-standard);
+}
+/* الأيقونات بلا تلوين: رمادية كالنص، وتأخذ لون التحويم/النشط معه */
+.sidebar-row .nav-icon {
+  color: var(--portal-nav-text);
+  transition: color var(--ucas-color-speed) var(--ease-standard);
+}
+.sidebar-row:hover :is(.sidebar-row-label, .nav-icon) { color: var(--portal-nav-active); }
+.sidebar-row.is-active .nav-icon { color: var(--portal-cyan); }
+.sidebar-row.is-active .sidebar-row-label {
+  color: var(--portal-cyan);
+  font-weight: 700;
+}
+
+.ucas-portal #app-sidebar nav li {
+  animation: ucasSlideIn 450ms var(--ease-standard) backwards;
+}
+.ucas-portal #app-sidebar nav ul li:nth-child(1) { animation-delay: 60ms; }
+.ucas-portal #app-sidebar nav ul li:nth-child(2) { animation-delay: 100ms; }
+.ucas-portal #app-sidebar nav ul li:nth-child(3) { animation-delay: 140ms; }
+.ucas-portal #app-sidebar nav ul li:nth-child(4) { animation-delay: 180ms; }
+.ucas-portal #app-sidebar nav ul li:nth-child(5) { animation-delay: 220ms; }
+.ucas-portal #app-sidebar nav ul li:nth-child(6) { animation-delay: 260ms; }
+.ucas-portal #app-sidebar nav ul li:nth-child(n + 7) { animation-delay: 300ms; }
+
+.ucas-portal #app-sidebar .nav-icon {
+  transition: transform 400ms var(--ease-spring);
+}
+.ucas-portal #app-sidebar .sidebar-row:hover .nav-icon {
+  transform: scale(1.15) rotate(-6deg);
+}
+.ucas-portal #app-sidebar .sidebar-row.is-active .nav-icon {
+  animation: ucasIconIn 600ms var(--ease-spring);
+}
+
+@keyframes ucasTileIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 8.1.1 الأزرار — ألوان البوابة فقط (Adminto/my.ucas): سماوي للإجراء، أخضر للإيجابي، أحمر للحذف،
+   والمحدد بإطار سماوي يمتلئ عند التحويم. لا أزرق محدد ولا ألوان أخرى عشوائية */
+.ucas-portal :is(button, a).select-none.bg-primary-600,
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-primary-600 { background: #35B8E0; color: #FFFFFF; }
+.ucas-portal :is(button, a).select-none.bg-primary-600:not(:disabled):hover,
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-primary-600:not(:disabled):hover { background: #2A9DC2; }
+.ucas-portal :is(button, a).select-none.bg-secondary-600,
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-secondary-600 { background: #10C469; color: #FFFFFF; }
+.ucas-portal :is(button, a).select-none.bg-secondary-600:not(:disabled):hover,
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-secondary-600:not(:disabled):hover { background: #0DA859; }
+.ucas-portal :is(button, a).select-none.bg-error,
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-error { background: #FF5B5B; color: #FFFFFF; }
+.ucas-portal :is(button, a).select-none.border-border,
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.border-border {
+  background: transparent;
+  border-color: #35B8E0;
+  color: #35B8E0;
+}
+.ucas-portal :is(button, a).select-none.border-border:not(:disabled):hover,
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.border-border:not(:disabled):hover {
+  background: #35B8E0;
+  border-color: #35B8E0;
+  color: #FFFFFF;
+}
+
+/* أزرار الإرسال الجماعي (واتساب/بريد للجميع) — مسطّحة بألوان البوابة بدل الخلفيات الباهتة */
+.ucas-portal button.h-10.bg-success-bg { background: #10C469; color: #FFFFFF; }
+.ucas-portal button.h-10.bg-success-bg:not(:disabled):hover { background: #0DA859; filter: none; }
+.ucas-portal button.h-10.bg-primary-50 { background: #35B8E0; color: #FFFFFF; }
+.ucas-portal button.h-10.bg-primary-50:not(:disabled):hover { background: #2A9DC2; }
+
+/* 8.2 الشريط العلوي: ينزل بلطف عند الدخول */
+.ucas-portal header.sticky {
+  animation: ucasFadeDown 500ms var(--ease-standard) backwards;
+}
+
+/* 8.3 البطاقات: ظهور من الأسفل بالتتابع عند فتح أي صفحة + ظل أعمق عند التحويم */
+.ucas-portal .portal-identity,
+.ucas-portal .portal-page > * {
+  animation: ucasFadeUp 600ms var(--ease-standard) backwards;
+}
+.ucas-portal .portal-page > :nth-child(1) { animation-delay: 120ms; }
+.ucas-portal .portal-page > :nth-child(2) { animation-delay: 220ms; }
+.ucas-portal .portal-page > :nth-child(3) { animation-delay: 320ms; }
+.ucas-portal .portal-page > :nth-child(4) { animation-delay: 420ms; }
+.ucas-portal .portal-page > :nth-child(n + 5) { animation-delay: 520ms; }
+
+.ucas-portal .portal-page .shadow-card:not(button):not(a) {
+  transition: box-shadow 300ms var(--ease-standard);
+}
+.ucas-portal .portal-page .shadow-card:not(button):not(a):hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* 8.4 صفوف الجداول: تلاشي متتابع (opacity فقط — transform على <tr> يكسر القوائم المنسدلة داخل الصف) */
+.ucas-portal table tbody tr {
+  animation: ucasFadeIn 450ms var(--ease-standard) backwards;
+}
+.ucas-portal table tbody tr:nth-child(1) { animation-delay: 250ms; }
+.ucas-portal table tbody tr:nth-child(2) { animation-delay: 300ms; }
+.ucas-portal table tbody tr:nth-child(3) { animation-delay: 350ms; }
+.ucas-portal table tbody tr:nth-child(4) { animation-delay: 400ms; }
+.ucas-portal table tbody tr:nth-child(5) { animation-delay: 450ms; }
+.ucas-portal table tbody tr:nth-child(n + 6) { animation-delay: 500ms; }
+
+/* 8.5 الأزرار: رفع خفيف عند التحويم وضغط عند النقر (BaseButton يحمل select-none) */
+.ucas-portal :is(button, a).select-none:not(:disabled) {
+  transition: transform 250ms var(--ease-spring), background-color 150ms, color 150ms, border-color 150ms;
+}
+.ucas-portal :is(button, a).select-none:not(:disabled):hover { transform: translateY(-2px); }
+.ucas-portal :is(button, a).select-none:not(:disabled):active { transform: scale(0.96); }
+.ucas-portal :is(button, a).select-none:not(:disabled):hover svg { animation: ucasNudge 500ms var(--ease-spring); }
+
+/* أزرار الإجراءات الصغيرة داخل الجداول */
+.ucas-portal table button.w-8 {
+  transition: transform 250ms var(--ease-spring), background-color 150ms, color 150ms;
+}
+.ucas-portal table button.w-8:not(:disabled):hover { transform: scale(1.12); }
+.ucas-portal table button.w-8:not(:disabled):active { transform: scale(0.92); }
+
+/* 8.6 المودالات والقوائم المنقولة لـ <body>: دخول نابض */
+:root[data-brand="ucas"] [role="dialog"] > div {
+  animation: ucasPop 380ms var(--ease-spring);
+}
+:root[data-brand="ucas"] [role="listbox"] {
+  animation: ucasFadeDown 220ms var(--ease-standard);
+}
+
+/* 8.7 الإشعارات: الجرس يهتز مرتين عند وجود غير مقروء */
+.ucas-portal header button[aria-label="الإشعارات"]:has(span) svg {
+  animation: ucasRing 2.4s var(--ease-standard) 1s 2;
+  transform-origin: top center;
+}
+
+/* 8.8 انتقالات Vue */
+.portal-top-enter-active { animation: ucasBounceIn 600ms var(--ease-standard); }
+.portal-top-leave-active { transition: opacity 300ms, transform 300ms; }
+.portal-top-leave-to { opacity: 0; transform: translateY(16px); }
+
+/* ============ 9) Keyframes ============ */
+@keyframes ucasFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes ucasFadeDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes ucasFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes ucasSlideIn {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes ucasIconIn {
+  0% { opacity: 0; transform: scale(0.6) rotate(-12deg); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes ucasLogoIn {
+  0% { opacity: 0; transform: translateY(12px) scale(0.85); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes ucasLineGrow {
+  from { transform: scaleX(0); }
+  to { transform: none; }
+}
+@keyframes ucasBarIn {
+  from { transform: scaleY(0); }
+  to { transform: none; }
+}
+@keyframes ucasPop {
+  0% { opacity: 0; transform: translateY(12px) scale(0.96); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes ucasNudge {
+  0%, 100% { transform: none; }
+  40% { transform: translateX(-3px); }
+}
+@keyframes ucasRing {
+  0%, 30%, 100% { transform: none; }
+  5% { transform: rotate(14deg); }
+  10% { transform: rotate(-12deg); }
+  15% { transform: rotate(8deg); }
+  20% { transform: rotate(-5deg); }
+}
+@keyframes ucasBounceIn {
+  0% { opacity: 0; transform: translateY(24px); }
+  60% { opacity: 1; transform: translateY(-8px); }
+  100% { transform: none; }
+}
+
+/* ============ 10) الشريط العلوي الداكن (بوابة الكلية — 200515/200540) ============ */
+.portal-topbar {
+  background: var(--portal-header-bg);
+  color: #FFFFFF;
+  transition: background-color 300ms var(--ease-standard);
+}
+.portal-topbar-title {
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.4;
+  color: #FFFFFF;
+}
+.portal-topbar-sub {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ucas-green);
+}
+.portal-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 4px;
+  color: #FFFFFF;
+  flex-shrink: 0;
+  transition: background-color var(--ucas-color-speed) var(--ease-standard);
+}
+.portal-icon-btn:hover { background: rgba(255, 255, 255, 0.08); }
+.portal-icon-btn:hover svg { animation: ucasSpin 600ms var(--ease-spring); }
+
+.portal-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 72px;
+  padding-inline: 12px;
+  color: #FFFFFF;
+  font-size: 15.5px;
+  font-weight: 600;
+  transition: background-color var(--ucas-color-speed) var(--ease-standard);
+}
+.portal-user:hover,
+.portal-user.is-open { background: rgba(255, 255, 255, 0.07); }
+.portal-avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  flex-shrink: 0;
+}
+
+/* جرس الإشعارات: أيقونة بيضاء مسطّحة بلا إطار + شارة حمراء */
+.portal-bell > div > button {
+  border-color: transparent;
+  color: #FFFFFF;
+  background: transparent;
+}
+.portal-bell > div > button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  border-color: transparent;
+}
+.portal-bell > div > button > span { background: #FF5B5B; }
+
+/* محدد الفصل داخل الشريط الداكن */
+.portal-semester button[aria-haspopup="listbox"] {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  color: #FFFFFF;
+}
+.portal-semester button[aria-haspopup="listbox"] span,
+.portal-semester button[aria-haspopup="listbox"] svg { color: #FFFFFF; }
+
+/* القائمة المنسدلة للمستخدم */
+.portal-menu {
+  position: absolute;
+  top: 100%;
+  z-index: var(--z-dropdown);
+  padding-block: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-dropdown);
+  border-radius: 0 0 4px 4px;
+}
+.portal-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 20px;
+  font-size: 15px;
+  color: var(--color-text-700);
+  text-align: start;
+  transition: background-color 150ms var(--ease-standard), color 150ms var(--ease-standard), padding 200ms var(--ease-standard);
+}
+.portal-menu-item:hover,
+.portal-menu-item.router-link-active {
+  background: var(--portal-menu-hover);
+  color: var(--portal-nav-active);
+  padding-inline-start: 24px;
+}
+.portal-menu-sep {
+  margin-block: 6px;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+.portal-drop-enter-active { transition: opacity 250ms var(--ease-standard), transform 250ms var(--ease-standard); }
+.portal-drop-leave-active { transition: opacity 150ms var(--ease-standard), transform 150ms var(--ease-standard); }
+.portal-drop-enter-from,
+.portal-drop-leave-to { opacity: 0; transform: translateY(-8px); }
+
+/* ============ 11) نماذج البوابة (صفحة تغيير كلمة المرور — 201137) ============ */
+.portal-alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-radius: 4px;
+  font-size: 15px;
+}
+.portal-alert-info { background: var(--color-info-bg); color: var(--color-info); }
+
+.portal-form-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  align-items: start;
+}
+@media (min-width: 768px) {
+  .portal-form-row { grid-template-columns: 200px minmax(0, 340px); gap: 24px; }
+}
+.portal-form-row > label {
+  padding-top: 10px;
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--color-text-900);
+}
+.portal-input {
+  width: 100%;
+  height: 46px;
+  padding-inline: 14px;
+  border: 1px solid #CED4DA;
+  border-radius: 4px;
+  background: var(--color-surface);
+  font-size: 15px;
+  text-align: center;
+  color: var(--color-text-900);
+  transition: border-color 150ms var(--ease-standard), box-shadow 150ms var(--ease-standard);
+}
+:root[data-theme="dark"] .portal-input { border-color: var(--color-border); }
+.portal-input::placeholder { color: var(--color-text-400); }
+.portal-input.is-invalid { border-color: var(--color-error); }
+.portal-field-error { margin-top: 6px; font-size: 13px; color: var(--color-error); }
+
+/* قائمة النقاط الزرقاء بفواصل (بطاقة "عزيزي الطالب") */
+.portal-bullets { margin: 0; padding: 0; list-style: none; }
+.portal-bullets li {
+  display: flex;
+  gap: 14px;
+  padding: 16px 4px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--color-text-900);
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 200ms var(--ease-standard);
+}
+.portal-bullets li:last-child { border-bottom: 0; }
+.portal-bullets li:hover { background: var(--color-border-soft); }
+.portal-bullets li::before {
+  content: '';
+  width: 13px;
+  height: 13px;
+  margin-top: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--portal-sky);
+}
+
+/* ============ 12) صفحات أدوات اللجنة داخل هوية الكلية — إزالة طابع "واجهات الذكاء الاصطناعي" ============ */
+
+/* تدرجات المربعات الصغيرة → سماوي البوابة المسطّح */
+.ucas-portal .rounded-md[style*="linear-gradient"],
+.ucas-portal .bg-gradient-to-bl {
+  background: var(--portal-cyan) !important;
+}
+/* الشريط البطولي لتفاصيل المشروع → تدرج الهوية (أخضر ← أزرق) كشريط إحصائيات موقع الكلية */
+.ucas-portal .ucas-hero {
+  background: var(--ucas-gradient) !important;
+  border-radius: 4px;
+}
+
+/* لا قفز ولا انضغاط للبطاقات عند التحويم — الكلية هادئة، يكفي الظل */
+.ucas-portal .portal-page [class*="hover:-translate-y"]:hover,
+.ucas-portal .portal-page [class*="active:scale"]:active {
+  transform: none;
+}
+
+/* الكبسولات (pill) → زوايا Bootstrap 4px للحقول والأزرار والشارات */
+.ucas-portal :is(input, button, a).rounded-pill,
+.ucas-portal span.rounded-pill[class*="px-"],
+:root[data-brand="ucas"] [role="dialog"] span.rounded-pill[class*="px-"] {
+  border-radius: 4px;
+}
+
+/* 12.1 مطابقة قوالب البوابة (my.ucas) — قرار المستخدم 2026-10-08 */
+
+/* رأس الصفحة = بطاقة بوابة: عنوان ≡ + وصف رمادي بجانبه ("طلب إفادة  الفصل الدراسي…" — 201350) */
+.portal-head,
+.ucas-portal .portal-head-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  padding: 20px 28px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  border-radius: 4px;
+}
+.portal-head-sub {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-600);
+}
+
+/* لا مربعات أيقونات ملوّنة في رؤوس الصفحات — البوابة عناوين نصية فقط */
+.ucas-portal .page-icon { display: none !important; }
+
+/* بطاقات الإحصائيات: بيضاء مسطّحة كبطاقة "بيانات أكاديمية" — الرقم سماوي والأيقونة سماوية خفيفة */
+.ucas-portal .portal-page .grid > .reveal.group {
+  border-color: transparent;
+}
+.ucas-portal .portal-page .grid > .reveal.group > span:first-child {
+  background: color-mix(in srgb, var(--portal-cyan) 10%, var(--color-surface));
+  color: var(--portal-cyan);
+  border-radius: 4px;
+}
+.ucas-portal .portal-page .grid > .reveal.group .text-h1 { color: var(--portal-cyan); }
+
+/* حقول البحث بيضاء بإطار #CED4DA (البوابة لا تستخدم حقولًا رمادية) */
+.ucas-portal .portal-page input.bg-bg { background: var(--color-surface); }
+
+/* التبويبات = شريط تبويبات الملف (201300): أزرق #109AD2 بنص أبيض، والنشط #00BCD4 */
+:root[data-brand="ucas"] .portal-tabs {
+  gap: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: #109AD2;
+  overflow: hidden;
+}
+:root[data-brand="ucas"] .portal-tabs > button {
+  height: 40px;
+  padding-inline: 20px;
+  border-radius: 0;
+  color: #FFFFFF;
+  background: transparent;
+  box-shadow: none;
+  transition: background-color var(--ucas-color-speed) var(--ease-standard);
+}
+:root[data-brand="ucas"] .portal-tabs > button:hover { background: rgba(255, 255, 255, 0.12); color: #FFFFFF; }
+:root[data-brand="ucas"] .portal-tabs > button.bg-primary-600 { background: #00BCD4; }
+
+/* عناصر خاصة بباقي الأدوار تُخفى داخل لوحة السوبر أدمن */
+.ucas-portal .ucas-hide { display: none !important; }
+
+/* بلا توهج يتبع الفأرة */
+:root[data-brand="ucas"] [class*="blur-[90px]"] { display: none; }
+
+/* شريط تقدّم التمرير بتدرج الهوية */
+:root[data-brand="ucas"] .fixed.top-0.inset-x-0 > .bg-gradient-to-l {
+  background: var(--ucas-gradient);
+}
+
+@keyframes ucasSpin {
+  from { transform: rotate(0); }
+  to { transform: rotate(180deg); }
+}
+
+/* ============ 12.2) زر القائمة على الموبايل والتابلت (تحت lg) ============
+   زر واحد ثابت أعلى اليمين فوق الشريط العلوي والـ Drawer معًا: يفتح السايد بار ويغلقه من نفس المكان،
+   وتتحوّل خطوطه الثلاثة ☰ إلى ✕ بهدوء. أبيض على الشريط الداكن، وغامق فوق رأس السايد بار الأبيض. */
+.portal-burger {
+  position: fixed;
+  top: 14px;
+  inset-inline-start: 16px;
+  z-index: calc(var(--z-drawer) + 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  border-radius: 4px;
+  color: #FFFFFF;
+  transition: background-color var(--ucas-color-speed) var(--ease-standard), color 300ms var(--ease-standard);
+}
+.portal-burger:hover { background: rgba(255, 255, 255, 0.1); }
+.portal-burger:focus-visible { outline: 2px solid var(--portal-cyan); outline-offset: 2px; }
+.portal-burger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: transform 350ms var(--ease-standard), opacity 200ms var(--ease-standard);
+}
+.portal-burger.is-open { color: var(--color-text-900); }
+.portal-burger.is-open:hover { background: var(--portal-menu-hover); }
+.portal-burger.is-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.portal-burger.is-open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.portal-burger.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+/* رأس الـ Drawer يترك مكان الزر حتى لا يغطي الشعار */
+@media (max-width: 1023.98px) {
+  .ucas-portal #app-sidebar .sidebar-head { padding-inline-start: 72px; }
+}
+
+/* ============ 12.3) الريسبونسيف — موبايل (< 640px) ============ */
+/* تسمية بيانات الحساب لا تنكسر (كان ":" ينزل لسطر وحده)، والقيمة تلتف تحتها عند الحاجة */
+.portal-identity-details dt { white-space: nowrap; }
+.portal-identity-details > div { flex-wrap: wrap; }
+
+@media (max-width: 639.98px) {
+  /* بطاقة بيانات الحساب أخف: حشوة أقل وتفاصيل بأسطر متتالية */
+  .portal-identity { padding: 18px 20px; gap: 12px; }
+  .portal-identity-details { flex-direction: column; gap: 6px; font-size: 14px; }
+
+  /* الشريط العلوي: مساحة أكبر لعنوان الصفحة — كتلة المستخدم شعار فقط */
+  .portal-user { padding-inline: 6px; gap: 4px; }
+  .portal-user > svg { display: none; }
+  .portal-topbar-title { font-size: 17px; }
+
+  /* رؤوس الصفحات والبطاقات: حشوة أصغر */
+  .portal-head,
+  .ucas-portal .portal-head-card,
+  .profile-card { padding: 18px 20px; }
+
+  /* أزرار شريط أدوات الصفحة تملأ العرض بعمودين مرتّبين بدل التفاف عشوائي */
+  .ucas-portal .portal-page .flex.flex-wrap > :is(button, a).select-none,
+  .ucas-portal .portal-page > .flex.flex-wrap > button {
+    flex: 1 1 calc(50% - 8px);
+    justify-content: center;
+  }
+  .ucas-portal .portal-page .flex.flex-wrap:has(> :is(button, a).select-none) { width: 100%; }
+
+  /* شريط البحث والفلاتر: كل عنصر بعرض كامل تحت بعض */
+  .ucas-portal .portal-page .flex.flex-wrap:has(> .relative > input[type="search"]) > * {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+}
+
+/* ============ 12.4) الرئيسية + أساسيات الصفحات (رأس الصفحة، البطاقة، الروابط) ============ */
+.dash { display: flex; flex-direction: column; gap: 24px; }
+.dash-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+.dash-title { font-size: 24px; font-weight: 800; color: var(--color-text-900); line-height: 1.3; }
+.dash-sub { margin-top: 4px; font-size: 14px; color: var(--color-text-600); }
+.dash-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.dash-link {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding-inline: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text-700);
+  font-size: 14px;
+  font-weight: 600;
+  transition: border-color var(--ucas-color-speed) var(--ease-standard), color var(--ucas-color-speed) var(--ease-standard);
+}
+.dash-link:hover { border-color: var(--portal-cyan); color: var(--portal-cyan); }
+.dash-link.is-primary { background: var(--portal-cyan); border-color: var(--portal-cyan); color: #FFFFFF; }
+.dash-link.is-primary:hover { background: #2A9DC2; color: #FFFFFF; }
+.dash-card {
+  padding: 24px;
+  background: var(--color-surface);
+  border-radius: 4px;
+  box-shadow: var(--shadow-card);
+}
+.dash-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.dash-card-head h3 { font-size: 17px; font-weight: 700; color: var(--color-text-900); }
+.dash-chip {
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: var(--color-bg);
+  color: var(--color-text-600);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.dash-empty { padding: 32px 0; text-align: center; color: var(--color-text-400); font-size: 14px; }
+.dash-stack {
+  display: flex;
+  gap: 3px;
+  height: 12px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.dash-stack > span { min-width: 4px; transition: width 900ms var(--ease-standard); }
+.dash-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; margin-inline-end: 8px; }
+.dash-dot.is-rest { background: var(--color-border); }
+
+/* الرئيسية — إحصاءات مصنّفة بخانات وفواصل (نمط تقارير أنظمة الجامعات) */
+.hm-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: var(--color-surface);
+  border-radius: 4px;
+  box-shadow: var(--shadow-card);
+}
+.hm-stat { display: flex; flex-direction: column; gap: 4px; padding: 20px 22px; min-width: 0; }
+.hm-stat + .hm-stat { border-inline-start: 1px solid var(--color-border); }
+.hm-stat-label { font-size: 13px; font-weight: 700; color: var(--color-text-400); }
+.hm-stat-value { font-size: 30px; font-weight: 800; line-height: 1.2; color: var(--color-text-900); font-variant-numeric: tabular-nums; }
+.hm-stat-split { font-size: 13px; color: var(--color-text-600); }
+.hm-stat-split b { color: var(--color-text-900); font-weight: 800; }
+.hm-sep { margin-inline: 8px; color: var(--color-text-400); }
+
+.hm-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.hm-tabs { display: flex; gap: 2px; padding: 3px; border-radius: 4px; background: var(--color-bg); }
+.hm-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding-inline: 12px;
+  border-radius: 4px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--color-text-600);
+  transition: background-color var(--ucas-color-speed) var(--ease-standard), color var(--ucas-color-speed) var(--ease-standard);
+}
+.hm-tabs button span { font-size: 11.5px; color: var(--color-text-400); }
+.hm-tabs button.is-active { background: var(--color-surface); color: var(--color-text-900); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); }
+.hm-filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.hm-table-wrap { overflow-x: auto; max-height: 460px; overflow-y: auto; border: 1px solid var(--color-border); border-radius: 4px; }
+.hm-table { width: 100%; min-width: 560px; border-collapse: collapse; }
+:root[data-brand="ucas"] .hm-table thead tr { background: var(--color-bg); }
+:root[data-brand="ucas"] .hm-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 12px;
+  background: var(--color-bg);
+  color: var(--color-text-600);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: start;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--color-border);
+}
+:root[data-brand="ucas"] .hm-table tbody td {
+  padding: 11px 12px;
+  font-size: 13.5px;
+  color: var(--color-text-700);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+  min-width: 0;
+}
+:root[data-brand="ucas"] .hm-table tbody tr:last-child td { border-bottom: 0; }
+.hm-table tr.is-link { cursor: pointer; transition: background-color var(--ucas-color-speed) var(--ease-standard); }
+.hm-table tr.is-link:hover { background: var(--portal-menu-hover); }
+.hm-strong { font-weight: 700; color: var(--color-text-900) !important; }
+.hm-muted { color: var(--color-text-400) !important; }
+.hm-hint { margin-top: 10px; font-size: 12.5px; color: var(--color-text-400); }
+.hm-legend { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.hm-legend li { display: flex; align-items: center; gap: 4px; font-size: 14px; color: var(--color-text-700); }
+.hm-legend b { margin-inline-start: auto; margin-inline-end: 10px; color: var(--color-text-900); font-variant-numeric: tabular-nums; }
+.hm-avg { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding-top: 16px; border-top: 1px solid var(--color-border); font-size: 13.5px; color: var(--color-text-600); }
+.hm-avg b { font-size: 18px; color: var(--color-text-900); }
+.hm-avg-bar { grid-column: 1 / -1; width: 100%; height: 8px; }
+
+@media (max-width: 1023.98px) {
+  .hm-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hm-stat:nth-child(3) { border-inline-start: 0; }
+  .hm-stat:nth-child(n + 3) { border-top: 1px solid var(--color-border); }
+  .hm-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 639.98px) {
+  .hm-stat { padding: 14px 16px; }
+  .hm-stat-value { font-size: 24px; }
+  .hm-filters .gr-select { flex: 1 1 100%; max-width: none; }
+}
+
+/* نافذة البروفايل */
+.pf { display: flex; flex-direction: column; gap: 18px; }
+.pf-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.pf-grid > div { padding: 10px 14px; border-bottom: 1px solid var(--color-border); border-inline-start: 1px solid var(--color-border); }
+.pf-grid > div:nth-child(3n + 1) { border-inline-start: 0; }
+.pf-grid > div:nth-last-child(-n + 3) { border-bottom: 0; }
+.pf-grid dt { font-size: 12px; font-weight: 600; color: var(--color-text-400); }
+.pf-grid dd { margin: 3px 0 0; font-size: 14px; font-weight: 700; color: var(--color-text-900); overflow-wrap: anywhere; }
+.pf-block h4 { margin-bottom: 8px; font-size: 13px; font-weight: 700; color: var(--color-text-400); }
+.pf-strong { font-size: 15px; font-weight: 700; color: var(--color-text-900); }
+.pf-muted { font-size: 13px; color: var(--color-text-400); }
+.pf-link { font-size: 13px; color: var(--portal-cyan); }
+.pf-tag { margin-inline-start: 6px; padding: 1px 6px; border-radius: 4px; background: #FEF3D7; color: #B7791F; font-size: 11px; font-weight: 700; }
+.pf-table { width: 100%; border-collapse: collapse; }
+:root[data-brand="ucas"] [role="dialog"] .pf-table thead tr { background: var(--color-bg); }
+:root[data-brand="ucas"] [role="dialog"] .pf-table thead th { padding: 8px 10px; color: var(--color-text-600); font-size: 12.5px; font-weight: 700; text-align: start; }
+:root[data-brand="ucas"] [role="dialog"] .pf-table tbody td { padding: 9px 10px; font-size: 13.5px; color: var(--color-text-700); border-bottom: 1px solid var(--color-border); }
+@media (max-width: 639.98px) {
+  .pf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pf-grid > div { border-inline-start: 0 !important; }
+  .pf-grid > div:nth-child(2n) { border-inline-start: 1px solid var(--color-border) !important; }
+  .pf-grid > div:nth-last-child(-n + 3) { border-bottom: 1px solid var(--color-border); }
+  .pf-grid > div:nth-last-child(-n + 2) { border-bottom: 0; }
+}
+
+@media (max-width: 639.98px) {
+  .dash-actions { width: 100%; }
+  .dash-link { flex: 1 1 0; justify-content: center; padding-inline: 8px; }
+  .dash-card { padding: 18px; }
+}
+
+/* ============ 12.5) مراجعة المقترحات — صندوق مراجعة (GitHub / Linear) ============ */
+.rv-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+/* تبويبات حالة بعدّادات (GitHub "Open 4 · Closed 15") */
+.rv-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--color-surface);
+  border-radius: 4px;
+  box-shadow: var(--shadow-card);
+  overflow-x: auto;
+}
+.rv-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding-inline: 14px;
+  border-radius: 4px;
+  color: var(--color-text-600);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color var(--ucas-color-speed) var(--ease-standard), color var(--ucas-color-speed) var(--ease-standard);
+}
+.rv-tab:hover { color: var(--color-text-900); background: var(--portal-menu-hover); }
+.rv-tab.is-active { background: var(--portal-cyan); color: #FFFFFF; }
+.rv-count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--color-bg);
+  color: var(--color-text-700);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+.rv-tab.is-active .rv-count { background: rgba(255, 255, 255, 0.25); color: #FFFFFF; }
+.rv-search {
+  flex: 1 1 260px;
+  max-width: 420px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding-inline: 14px;
+  border: 1px solid #CED4DA;
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text-400);
+}
+.rv-search:focus-within { border-color: var(--portal-cyan); box-shadow: 0 0 0 3px rgba(53, 184, 224, 0.15); }
+.rv-search input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; color: var(--color-text-900); font-size: 14.5px; box-shadow: none !important; }
+:root[data-theme="dark"] .rv-search { border-color: var(--color-border); }
+
+/* التخطيط: قائمة + تفاصيل */
+.rv-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.rv-list {
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  background: var(--color-surface);
+  border-radius: 4px;
+  box-shadow: var(--shadow-card);
+}
+.rv-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 18px;
+  text-align: start;
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color var(--ucas-color-speed) var(--ease-standard);
+}
+.rv-item:last-child { border-bottom: 0; }
+.rv-item:hover { background: var(--portal-menu-hover); }
+.rv-item.is-selected { background: color-mix(in srgb, var(--portal-cyan) 9%, var(--color-surface)); }
+.rv-item.is-selected::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  background: var(--portal-cyan);
+}
+.rv-status-dot { width: 10px; height: 10px; margin-top: 7px; border-radius: 50%; flex-shrink: 0; background: var(--color-text-400); }
+.rv-status-dot.is-pending { background: #F9C851; }
+.rv-status-dot.is-approved { background: #10C469; }
+.rv-status-dot.is-rejected { background: #FF5B5B; }
+.rv-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.rv-item-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--color-text-900);
+}
+.rv-item-meta { font-size: 12.5px; color: var(--color-text-400); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rv-item-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.rv-item-note { font-size: 11.5px; font-weight: 700; color: #E81E63; }
+.rv-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: var(--color-bg);
+  color: var(--color-text-600);
+}
+.rv-pill.is-pending { background: #FEF8EA; color: #B7791F; }
+.rv-pill.is-approved { background: #E2F8ED; color: #0A8A4A; }
+.rv-pill.is-rejected { background: #F9DFE1; color: #E81E63; }
+:root[data-theme="dark"] .rv-pill.is-pending { background: rgba(249, 200, 81, 0.15); color: #F9C851; }
+:root[data-theme="dark"] .rv-pill.is-approved { background: rgba(16, 196, 105, 0.15); color: #34D399; }
+:root[data-theme="dark"] .rv-pill.is-rejected { background: rgba(255, 91, 91, 0.15); color: #FF8A8A; }
+
+/* لوحة التفاصيل */
+.rv-detail {
+  position: sticky;
+  top: 96px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 120px);
+  background: var(--color-surface);
+  border-radius: 4px;
+  box-shadow: var(--shadow-card);
+}
+.rv-detail-scroll { flex: 1; overflow-y: auto; padding: 28px; }
+.rv-back { display: none; }
+.rv-detail-head { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+.rv-detail-head h3 { font-size: 22px; font-weight: 800; line-height: 1.5; color: var(--color-text-900); }
+.rv-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0 0 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+@media (min-width: 1280px) { .rv-meta { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.rv-meta > div { padding: 12px 14px; background: var(--color-surface); }
+.rv-meta dt { font-size: 12px; font-weight: 600; color: var(--color-text-400); }
+.rv-meta dd { margin: 4px 0 0; font-size: 14.5px; font-weight: 700; color: var(--color-text-900); }
+.rv-alert {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  border-radius: 4px;
+  background: #F9DFE1;
+  color: #E81E63;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.rv-alert svg { flex-shrink: 0; margin-top: 3px; }
+:root[data-theme="dark"] .rv-alert { background: rgba(255, 91, 91, 0.12); color: #FF8A8A; }
+.rv-section { padding: 18px 0; border-top: 1px solid var(--color-border); }
+.rv-section h4 { margin-bottom: 8px; font-size: 13px; font-weight: 700; color: var(--color-text-400); }
+.rv-section p { font-size: 15px; line-height: 1.9; color: var(--color-text-700); white-space: pre-line; }
+.rv-members { display: flex; flex-wrap: wrap; gap: 8px; }
+.rv-members li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  font-size: 14px;
+  color: var(--color-text-900);
+}
+.rv-avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--portal-cyan) 15%, var(--color-surface));
+  color: var(--portal-cyan);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* شريط القرار ثابت أسفل التفاصيل */
+.rv-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 28px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: 0 0 4px 4px;
+}
+.rv-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding-inline: 18px;
+  border-radius: 4px;
+  font-size: 14.5px;
+  font-weight: 700;
+  transition: background-color var(--ucas-color-speed) var(--ease-standard), border-color var(--ucas-color-speed) var(--ease-standard);
+}
+.rv-file { border: 1px solid var(--portal-cyan); color: var(--portal-cyan); margin-inline-end: auto; }
+.rv-file:hover { background: color-mix(in srgb, var(--portal-cyan) 10%, transparent); }
+.rv-reject { border: 1px solid #FF5B5B; color: #FF5B5B; }
+.rv-reject:hover { background: rgba(255, 91, 91, 0.1); }
+.rv-approve { background: #10C469; color: #FFFFFF; }
+.rv-approve:hover { background: #0DA75A; }
+.rv-decided { font-size: 13.5px; color: var(--color-text-400); }
+
+@media (max-width: 1023.98px) {
+  .rv-layout { grid-template-columns: minmax(0, 1fr); }
+  .rv-list { max-height: none; }
+  /* التفاصيل على الموبايل/التابلت: صفحة كاملة فوق القائمة عند اختيار مقترح */
+  .rv-detail { display: none; }
+  .rv-detail.is-open {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    top: 0;
+    z-index: calc(var(--z-drawer) + 2);
+    max-height: none;
+    border-radius: 0;
+  }
+  .rv-detail.is-open .rv-detail-scroll { padding: 20px; }
+  .rv-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+    color: var(--portal-cyan);
+    font-size: 14.5px;
+    font-weight: 700;
+  }
+  .rv-actions { padding: 12px 20px; }
+  .rv-actions button { flex: 1 1 auto; }
+  .rv-file { margin-inline-end: 0; }
+  .rv-search { max-width: none; }
+}
+
+/* ============ 12.6) سجل المجموعات — نمط أنظمة الجامعات (فلاتر + جدول بصفوف قابلة للطي) ============ */
+.gr { display: flex; flex-direction: column; gap: 16px; }
+
+/* شريط الفلاتر: حقول أصلية (select) بمظهر البوابة — سريعة ومألوفة كأنظمة التسجيل */
+.gr-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px;
+  background: var(--color-surface);
+  border-radius: 4px;
+  box-shadow: var(--shadow-card);
+}
+.gr-search {
+  flex: 1 1 280px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding-inline: 12px;
+  border: 1px solid #CED4DA;
+  border-radius: 4px;
+  color: var(--color-text-400);
+  background: var(--color-surface);
+}
+.gr-search:focus-within { border-color: var(--portal-cyan); box-shadow: 0 0 0 3px rgba(53, 184, 224, 0.15); }
+.gr-search input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; color: var(--color-text-900); font-size: 14px; box-shadow: none !important; }
+.gr-select {
+  flex: 0 1 auto;
+  min-width: 132px;
+  max-width: 210px;
+  height: 42px;
+  padding-inline: 10px 28px;
+  border: 1px solid #CED4DA;
+  border-radius: 4px;
+  background-color: var(--color-surface);
+  color: var(--color-text-700);
+  font-size: 14px;
+  cursor: pointer;
+}
+.gr-select:focus { outline: 0; border-color: var(--portal-cyan); box-shadow: 0 0 0 3px rgba(53, 184, 224, 0.15); }
+:root[data-theme="dark"] :is(.gr-search, .gr-select) { border-color: var(--color-border); }
+.gr-clear { height: 42px; padding-inline: 12px; color: var(--portal-cyan); font-size: 14px; font-weight: 700; }
+.gr-clear:hover { text-decoration: underline; }
+
+/* رأس الجدول */
+.gr-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.gr-summary { font-size: 14px; color: var(--color-text-600); }
+.gr-summary b { color: var(--color-text-900); font-weight: 800; }
+.gr-summary span { margin-inline: 6px; color: var(--color-text-400); }
+.gr-tools { display: flex; gap: 8px; }
+.gr-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding-inline: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text-700);
+  font-size: 13.5px;
+  font-weight: 700;
+  transition: border-color var(--ucas-color-speed) var(--ease-standard), color var(--ucas-color-speed) var(--ease-standard);
+}
+.gr-tool:hover:not(:disabled) { border-color: var(--portal-cyan); color: var(--portal-cyan); }
+.gr-tool:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* الجدول */
+.gr-table-wrap {
+  background: var(--color-surface);
+  border-radius: 4px;
+  box-shadow: var(--shadow-card);
+  overflow-x: auto;
+}
+.gr-table { width: 100%; min-width: 880px; border-collapse: collapse; font-size: 14px; }
+:root[data-brand="ucas"] .gr-table thead tr { background: var(--portal-thead-bg); }
+:root[data-brand="ucas"] .gr-table > thead th {
+  padding: 14px 12px;
+  color: #FFFFFF;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: start;
+  white-space: nowrap;
+}
+:root[data-brand="ucas"] .gr-table .gr-row > td {
+  padding: 14px 12px;
+  font-size: 14px;
+  color: var(--color-text-700);
+  border-top: 1px solid var(--color-border);
+  vertical-align: middle;
+  min-width: 0;
+}
+.gr-row { cursor: pointer; transition: background-color var(--ucas-color-speed) var(--ease-standard); }
+.gr-row:hover { background: var(--portal-menu-hover); }
+.gr-group.is-open .gr-row { background: color-mix(in srgb, var(--portal-cyan) 7%, var(--color-surface)); }
+.gr-toggle {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text-600);
+  background: var(--color-surface);
+}
+.gr-toggle svg { transition: transform 300ms var(--ease-standard); }
+.gr-group.is-open .gr-toggle { border-color: var(--portal-cyan); color: var(--portal-cyan); }
+.gr-group.is-open .gr-toggle svg { transform: rotate(-90deg); }
+.gr-section { display: block; font-weight: 800; color: var(--color-text-900); font-variant-numeric: tabular-nums; }
+.gr-id { font-size: 11.5px; color: var(--color-text-400); }
+.gr-name-cell { max-width: 280px; }
+.gr-name { display: block; font-weight: 700; color: var(--color-text-900); }
+.gr-project { display: block; margin-top: 2px; font-size: 12.5px; color: var(--color-text-400); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gr-spec { display: block; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gr-degree {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 8px;
+  border-radius: 4px;
+  background: var(--color-bg);
+  color: var(--color-text-600);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.gr-students { display: block; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gr-count { font-size: 11.5px; font-weight: 700; color: var(--color-text-400); }
+.gr-progress {
+  display: inline-block;
+  vertical-align: middle;
+  width: 90px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+.gr-progress.is-sm { width: 64px; }
+.gr-progress > span { display: block; height: 100%; transition: width 600ms var(--ease-standard); }
+.gr-progress > .is-high { background: #10C469; }
+.gr-progress > .is-mid { background: var(--portal-cyan); }
+.gr-progress > .is-low { background: #F9C851; }
+.gr-pct { margin-inline-start: 8px; font-size: 12.5px; font-weight: 700; color: var(--color-text-700); font-variant-numeric: tabular-nums; }
+.gr-actions { display: flex; gap: 4px; }
+.gr-actions button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  color: var(--color-text-400);
+  transition: background-color var(--ucas-color-speed) var(--ease-standard), color var(--ucas-color-speed) var(--ease-standard);
+}
+.gr-actions button:hover:not(:disabled) { background: var(--portal-menu-hover); color: var(--portal-cyan); }
+.gr-actions button.is-danger:hover:not(:disabled) { background: rgba(255, 91, 91, 0.1); color: #FF5B5B; }
+.gr-actions button.is-on { color: #B7791F; }
+.gr-actions button:disabled { opacity: 0.35; cursor: not-allowed; }
+.gr-empty { padding: 40px 12px !important; text-align: center; color: var(--color-text-400); }
+
+/* صف التفاصيل */
+:root[data-brand="ucas"] .gr-table .gr-detail-row > td { padding: 0; border-top: 1px solid var(--color-border); background: var(--color-bg); }
+.gr-detail {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+}
+.gr-side,
+.gr-members {
+  padding: 16px;
+  background: var(--color-surface);
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+}
+.gr-side h4 { margin: 0 0 10px; font-size: 13px; font-weight: 700; color: var(--color-text-400); }
+.gr-side h4:not(:first-child) { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--color-border); }
+.gr-stats { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--color-border); border-radius: 4px; }
+.gr-stats > div { padding: 10px 6px; text-align: center; }
+.gr-stats > div + div { border-inline-start: 1px solid var(--color-border); }
+.gr-stats b { display: block; font-size: 20px; font-weight: 800; color: var(--color-text-900); }
+.gr-stats span { font-size: 12px; color: var(--color-text-400); }
+.gr-kv { margin: 10px 0 0; }
+.gr-kv > div { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; font-size: 13px; }
+.gr-kv dt { color: var(--color-text-400); }
+.gr-kv dd { margin: 0; font-weight: 700; color: var(--color-text-900); }
+.gr-sup { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; font-weight: 700; color: var(--color-text-900); font-size: 14px; }
+.gr-sup a { font-size: 12.5px; font-weight: 600; color: var(--portal-cyan); }
+.gr-activity { display: flex; align-items: center; }
+.gr-activity .gr-progress { flex: 1; }
+.gr-muted { font-size: 13px; color: var(--color-text-400); }
+.gr-members { overflow-x: auto; }
+.gr-members table { width: 100%; min-width: 620px; border-collapse: collapse; }
+:root[data-brand="ucas"] .gr-members thead tr { background: transparent; }
+:root[data-brand="ucas"] .gr-members thead th {
+  padding: 0 8px 10px;
+  color: var(--color-text-400);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: start;
+  border-bottom: 1px solid var(--color-border);
+}
+:root[data-brand="ucas"] .gr-members tbody td {
+  vertical-align: middle;
+  padding: 10px 8px;
+  font-size: 13.5px;
+  color: var(--color-text-700);
+  border-bottom: 1px solid var(--color-border);
+  min-width: 0;
+}
+.gr-member-name { font-weight: 700; color: var(--color-text-900); }
+.gr-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  color: var(--portal-cyan);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.gr-add:disabled { opacity: 0.45; cursor: not-allowed; }
+
+@media (max-width: 1279.98px) {
+  .gr-hide-md { display: none; }
+  .gr-table { min-width: 640px; }
+}
+@media (max-width: 1023.98px) {
+  .gr-detail { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 639.98px) {
+  .gr-select { flex: 1 1 calc(50% - 5px); min-width: 0; }
+  .gr-tools { width: 100%; }
+  .gr-tool { flex: 1; justify-content: center; }
+  .gr-table { min-width: 560px; }
+}
+
+
+/* ============ 13) الملف التعريفي — نمط "ملف الطالب" في بوابة الكلية (201300) ============ */
+
+/* شريط التبويبات: أزرق #109AD2، أيقونات بيضاء كبيرة فوق نص أبيض، والنشط #00BCD4 */
+.profile-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  background: #109AD2;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.profile-tab {
+  flex: 1 1 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 116px;
+  padding: 16px 12px;
+  color: #FFFFFF;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center;
+  transition: background-color var(--ucas-color-speed) var(--ease-standard);
+}
+.profile-tab:hover { background: rgba(255, 255, 255, 0.1); }
+.profile-tab.is-active { background: #00BCD4; }
+
+/* بطاقة البوابة */
+.profile-card {
+  padding: 28px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  border-radius: 4px;
+}
+.profile-card-sub {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-600);
+}
+
+/* الحقول للقراءة فقط: تسمية رمادية + صندوق رمادي بنص في المنتصف (201300) */
+.profile-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 18px 40px;
+}
+.profile-field {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+.profile-field-label {
+  font-size: 14.5px;
+  color: var(--color-text-600);
+}
+.profile-field-value {
+  min-height: 46px;
+  display: grid;
+  place-items: center;
+  padding: 8px 12px;
+  border: 1px solid #CED4DA;
+  border-radius: 4px;
+  background: #E9ECEF;
+  color: var(--color-text-900);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  word-break: break-word;
+}
+:root[data-theme="dark"] .profile-field-value {
+  background: var(--color-bg);
+  border-color: var(--color-border);
+}
+
+/* إحصائيات المنصة: صفوف "التسمية : القيمة" بفواصل أفقية كبطاقة "بيانات أكاديمية" (200515) */
+.profile-stats { margin: 0; }
+.profile-stats > div {
+  display: flex;
+  gap: 8px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 15px;
+}
+.profile-stats > div:last-child { border-bottom: 0; }
+.profile-stats dt { color: var(--color-text-700); }
+.profile-stats dd { margin: 0; color: var(--portal-cyan); font-weight: 700; }
+
+/* أدوات الإدارة: أزرار البوابة السماوية المسطّحة كأزرار الخدمات (200515) */
+.profile-tools {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.profile-tool {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 10px 18px;
+  border-radius: 4px;
+  background: var(--portal-cyan);
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background-color var(--ucas-color-speed) var(--ease-standard);
+}
+.profile-tool:hover { background: #2A9DC2; }
+
+@media (max-width: 640px) {
+  .profile-tab { min-height: 92px; font-size: 15px; }
+  .profile-field { grid-template-columns: 1fr; gap: 6px; }
+}
+
+/* ============ 14) الطابع الرسمي — يغلب على كل ما سبق داخل لوحة السوبر أدمن ============
+   طلب المستخدم: أزرار وأيقونات رسمية متطابقة مع الكلية، وحركة بطيئة هادئة.
+   - لا ارتداد (spring) ولا قفز ولا تكبير ولا دوران عند التحويم — تغيّر لون فقط.
+   - كل الحركات بمنحنى Material القياسي ومدد أطول (700–900ms للظهور، 400ms للألوان).
+   - كل الأيقونات بسمك خط واحد 1.75. */
+:root[data-brand="ucas"] {
+  --ease-spring: cubic-bezier(0.4, 0, 0.2, 1);
+  --ucas-slow: 900ms;
+  --ucas-color-speed: 800ms;
+}
+
+/* 14.1 الأيقونات: سمك خط موحّد في كل اللوحة والمودالات */
+.ucas-portal svg.lucide,
+:root[data-brand="ucas"] [role="dialog"] svg.lucide {
+  stroke-width: 1.75;
+}
+
+/* 14.2 الأزرار (BaseButton): مسطّحة، تغيّر لون بطيء فقط */
+.ucas-portal :is(button, a).select-none,
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none {
+  font-weight: 600;
+  transition: background-color var(--ucas-color-speed) var(--ease-standard),
+    border-color var(--ucas-color-speed) var(--ease-standard),
+    color var(--ucas-color-speed) var(--ease-standard);
+}
+.ucas-portal :is(button, a).select-none:not(:disabled):hover,
+.ucas-portal :is(button, a).select-none:not(:disabled):active,
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none:not(:disabled):active {
+  transform: none;
+}
+.ucas-portal :is(button, a).select-none:not(:disabled):hover svg { animation: none; }
+
+/* 14.3 أزرار الإجراءات الصغيرة (تعديل/بريد/واتساب/حذف/إيقاف...): شكل واحد رسمي —
+   خلفية شفافة + إطار رفيع بلون وظيفتها + زاوية 4px، وعند التحويم تعبئة خفيفة بنفس اللون.
+   مستثنى منها الحالات النشطة الملوّنة (موقوف = bg-error) */
+.ucas-portal .portal-page :is(button.w-7, button.w-8, button.w-9):not(.bg-error):not(.bg-warning-bg):not([class*="!bg-"]) {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, currentColor 38%, transparent);
+  border-radius: 4px;
+  transform: none;
+  filter: none;
+  transition: background-color var(--ucas-color-speed) var(--ease-standard),
+    border-color var(--ucas-color-speed) var(--ease-standard);
+}
+.ucas-portal .portal-page :is(button.w-7, button.w-8, button.w-9):not(.bg-error):not(.bg-warning-bg):not([class*="!bg-"]):not(:disabled):hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  border-color: currentColor;
+  transform: none;
+}
+.ucas-portal .portal-page :is(button.w-7, button.w-8, button.w-9):not(:disabled):active { transform: none; }
+.ucas-portal .portal-page :is(button.w-8, button.w-9).bg-error,
+.ucas-portal .portal-page :is(button.w-8, button.w-9).bg-warning-bg { border-radius: 4px; }
+
+/* 14.4 الشريط العلوي والسايد بار: بلا دوران أو تكبير أو رنين */
+.portal-icon-btn:hover svg { animation: none; }
+.ucas-portal header button[aria-label="الإشعارات"]:has(span) svg { animation: none; }
+.ucas-portal #app-sidebar .sidebar-row:hover .nav-icon,
+#app-sidebar a:hover .sidebar-ucas-logo svg { transform: none; }
+.ucas-portal #app-sidebar .sidebar-row.is-active .nav-icon { animation: none; }
+.ucas-portal #app-sidebar nav li { animation: ucasFadeIn 800ms var(--ease-standard) backwards; }
+.ucas-portal #app-sidebar nav ul li:nth-child(1) { animation-delay: 100ms; }
+.ucas-portal #app-sidebar nav ul li:nth-child(2) { animation-delay: 180ms; }
+.ucas-portal #app-sidebar nav ul li:nth-child(3) { animation-delay: 260ms; }
+.ucas-portal #app-sidebar nav ul li:nth-child(4) { animation-delay: 340ms; }
+.ucas-portal #app-sidebar nav ul li:nth-child(5) { animation-delay: 420ms; }
+.ucas-portal #app-sidebar nav ul li:nth-child(6) { animation-delay: 500ms; }
+.ucas-portal #app-sidebar nav ul li:nth-child(n + 7) { animation-delay: 580ms; }
+.sidebar-ucas-logo svg { animation: ucasFadeIn 1200ms var(--ease-standard) backwards; }
+.ucas-portal header.sticky { animation: ucasFadeIn 800ms var(--ease-standard) backwards; }
+.portal-menu-item { transition-duration: var(--ucas-color-speed); }
+.portal-menu-item:hover,
+.portal-menu-item.router-link-active { padding-inline-start: 20px; }
+.portal-drop-enter-active { transition-duration: 400ms; }
+
+/* 14.5 ظهور المحتوى: أبطأ وبتتابع أوسع، صعود 12px فقط */
+.ucas-portal .portal-identity,
+.ucas-portal .portal-page > * {
+  animation: ucasRiseSlow var(--ucas-slow) var(--ease-standard) backwards;
+}
+.ucas-portal .portal-page > :nth-child(1) { animation-delay: 150ms; }
+.ucas-portal .portal-page > :nth-child(2) { animation-delay: 300ms; }
+.ucas-portal .portal-page > :nth-child(3) { animation-delay: 450ms; }
+.ucas-portal .portal-page > :nth-child(4) { animation-delay: 600ms; }
+.ucas-portal .portal-page > :nth-child(n + 5) { animation-delay: 750ms; }
+.portal-identity-logo { animation: ucasFadeIn 1200ms var(--ease-standard) 200ms backwards; }
+
+.ucas-portal table tbody tr { animation: ucasFadeIn 700ms var(--ease-standard) backwards; }
+.ucas-portal table tbody tr:nth-child(1) { animation-delay: 400ms; }
+.ucas-portal table tbody tr:nth-child(2) { animation-delay: 480ms; }
+.ucas-portal table tbody tr:nth-child(3) { animation-delay: 560ms; }
+.ucas-portal table tbody tr:nth-child(4) { animation-delay: 640ms; }
+.ucas-portal table tbody tr:nth-child(5) { animation-delay: 720ms; }
+.ucas-portal table tbody tr:nth-child(n + 6) { animation-delay: 800ms; }
+
+.ucas-portal .portal-page .shadow-card:not(button):not(a) { transition-duration: 500ms; }
+
+/* المودالات والقوائم: ظهور هادئ بلا ارتداد */
+:root[data-brand="ucas"] [role="dialog"] > div { animation: ucasRiseSlow 500ms var(--ease-standard); }
+:root[data-brand="ucas"] [role="listbox"] { animation: ucasFadeIn 300ms var(--ease-standard); }
+
+/* 14.7 زر العودة للأعلى: ظهور بالتلاشي، بلا ارتداد أو رفع */
+.portal-top-enter-active { animation: ucasFadeIn 600ms var(--ease-standard); }
+.portal-back-top:hover { transform: none; }
+.portal-back-top:active { transform: none; }
+
+@keyframes ucasRiseSlow {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* عمود الاسم في الجداول لا ينكسر على عدة أسطر */
+.ucas-portal table tbody td:first-child { min-width: 170px; }
+
+/* جداول السجلات الجديدة بلا حركة ظهور للصفوف: تحريك opacity على صفوف جدول بحدود مدمجة
+   يكسر رسم الحدود في Chromium (تظهر فجوات بين الخلايا) */
+.ucas-portal :is(.gr-table, .gr-members, .hm-table) tbody tr { animation: none; }
+/* شريط التقدّم ونسبته في سطر واحد */
+:is(.gr-table, .gr-members, .hm-table, .pf-table) td:has(> .gr-progress) { white-space: nowrap; }
+.gr-link { color: inherit; font: inherit; text-align: start; }
+.gr-link:hover { color: var(--portal-cyan); text-decoration: underline; }
+
+/* ============ 12.7) مكوّنات صفحات الإدارة العامة الجديدة — بهوية بوابة خدمات الطلبة ============ */
+/* عنوان البطاقة بأيقونة ≡ كبطاقات البوابة */
+.dash-card-head h3 { display: inline-flex; align-items: center; gap: 10px; }
+.dash-card-head h3::before {
+  content: '';
+  width: 16px;
+  height: 12px;
+  flex-shrink: 0;
+  background: var(--color-text-600);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 12'%3E%3Cpath d='M0 1h16M4 6h12M8 11h8' stroke='black' stroke-width='2'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 12'%3E%3Cpath d='M0 1h16M4 6h12M8 11h8' stroke='black' stroke-width='2'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+/* جداول الرئيسية برأس سماوي كجداول البوابة */
+:root[data-brand="ucas"] .hm-table thead tr,
+:root[data-brand="ucas"] .hm-table thead th { background: var(--portal-thead-bg); color: #FFFFFF; border-bottom: 0; }
+
+/* جدول البوابة العام (pt): رأس سماوي، فواصل أفقية، صفوف قابلة للضغط */
+.pt-wrap { overflow-x: auto; border-radius: 4px; border: 1px solid var(--color-border); }
+.pt { width: 100%; min-width: 640px; border-collapse: collapse; }
+:root[data-brand="ucas"] .pt thead tr { background: var(--portal-thead-bg); }
+:root[data-brand="ucas"] .pt thead th { padding: 12px; color: #FFFFFF; font-size: 13.5px; font-weight: 700; text-align: start; white-space: nowrap; }
+:root[data-brand="ucas"] .pt tbody td { padding: 12px; font-size: 14px; color: var(--color-text-700); border-top: 1px solid var(--color-border); vertical-align: middle; min-width: 0; }
+.ucas-portal .pt tbody tr { animation: none; }
+.pt tr.is-link { cursor: pointer; transition: background-color var(--ucas-color-speed) var(--ease-standard); }
+.pt tr.is-link:hover { background: var(--portal-menu-hover); }
+.pt tr.is-open { background: color-mix(in srgb, var(--portal-cyan) 7%, var(--color-surface)); }
+.pt td:has(> .gr-progress) { white-space: nowrap; }
+.pt .pt-sub > td { padding: 0 !important; background: var(--color-bg); }
+.pt-strong { font-weight: 700; color: var(--color-text-900); }
+.pt-muted { color: var(--color-text-400); font-size: 13px; }
+
+/* أزرار البوابة الموحدة */
+.pbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  padding-inline: 18px;
+  border-radius: 4px;
+  font-size: 14.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background-color var(--ucas-color-speed) var(--ease-standard), border-color var(--ucas-color-speed) var(--ease-standard), color var(--ucas-color-speed) var(--ease-standard);
+}
+.pbtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.pbtn.is-cyan { background: var(--portal-cyan); color: #FFFFFF; }
+.pbtn.is-cyan:hover:not(:disabled) { background: #2A9DC2; }
+.pbtn.is-green { background: #10C469; color: #FFFFFF; }
+.pbtn.is-green:hover:not(:disabled) { background: #0DA75A; }
+.pbtn.is-red { background: #FF5B5B; color: #FFFFFF; }
+.pbtn.is-outline { border: 1px solid var(--portal-cyan); color: var(--portal-cyan); }
+.pbtn.is-outline:hover:not(:disabled) { background: color-mix(in srgb, var(--portal-cyan) 10%, transparent); }
+.pbtn.is-sm { height: 34px; padding-inline: 12px; font-size: 13px; }
+
+/* حقول النماذج */
+.pfield { display: flex; flex-direction: column; gap: 6px; }
+.pfield > span { font-size: 13.5px; font-weight: 700; color: var(--color-text-700); }
+.pfield :is(input, textarea, select) {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #CED4DA;
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text-900);
+  font-size: 14.5px;
+}
+.pfield textarea { min-height: 110px; resize: vertical; line-height: 1.7; }
+.pfield :is(input, textarea, select):focus { outline: 0; border-color: var(--portal-cyan); box-shadow: 0 0 0 3px rgba(53, 184, 224, 0.15); }
+:root[data-theme="dark"] .pfield :is(input, textarea, select) { border-color: var(--color-border); }
+.pfield small { font-size: 12.5px; color: var(--color-text-400); }
+
+/* تنبيهات البوابة */
+.palert { display: flex; gap: 10px; padding: 12px 16px; border-radius: 4px; font-size: 14px; line-height: 1.7; }
+.palert.is-info { background: #D5F0F9; color: #0A8EBA; }
+.palert.is-success { background: #E2F8ED; color: #009700; }
+.palert.is-error { background: #F9DFE1; color: #E81E63; }
+.palert.is-warning { background: #FEF8EA; color: #58972B; }
+:root[data-theme="dark"] .palert { background: var(--color-bg); }
+
+/* التكليفات والإعلانات */
+.as-types { align-self: flex-start; }
+.as-types .rv-tab { gap: 6px; }
+.as-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 24px; align-items: start; }
+.as-form { display: flex; flex-direction: column; gap: 16px; }
+.as-assignees { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 4px; }
+.as-submit { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 16px; border-top: 1px solid var(--color-border); }
+.as-results { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+
+/* منتقي المجموعات */
+.gp { display: flex; flex-direction: column; gap: 12px; }
+.gp-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.gp-filters .gr-search { flex-basis: 100%; }
+.gp-filters .gr-select { flex: 1 1 140px; max-width: none; min-width: 0; }
+.gp-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--color-border); }
+.gp-check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--color-text-700); cursor: pointer; }
+.gp-check input, .gp-item input { width: 17px; height: 17px; accent-color: var(--portal-cyan); }
+.gp-list { max-height: 460px; overflow-y: auto; display: flex; flex-direction: column; }
+.gp-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background-color var(--ucas-color-speed) var(--ease-standard);
+}
+.gp-item:hover { background: var(--portal-menu-hover); }
+.gp-item.is-on { background: color-mix(in srgb, var(--portal-cyan) 8%, var(--color-surface)); }
+.gp-item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: var(--color-text-900); }
+
+/* دليل الأشخاص */
+.pe-filters { margin-bottom: 14px; padding: 0; box-shadow: none; }
+.pe-groups { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; }
+.pe-group { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; }
+.pe-group-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; text-align: start; font-size: 14px; color: var(--color-text-900); }
+.pe-group-head svg { color: var(--color-text-400); transition: transform 300ms var(--ease-standard); }
+.pe-group-head svg.is-open { transform: rotate(-90deg); color: var(--portal-cyan); }
+.pe-group-pct { margin-inline-start: auto; white-space: nowrap; }
+.pe-members { display: flex; flex-direction: column; border-top: 1px solid var(--color-border); }
+.pe-members li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 40px 8px 12px; font-size: 14px; font-weight: 600; color: var(--color-text-900); }
+.pe-members li + li { border-top: 1px solid var(--color-border); }
+.pe-members .pt-muted { font-weight: 400; margin-inline-start: auto; }
+.d-block { display: block; }
+
+/* التذاكر */
+.tk-thread { display: flex; flex-direction: column; gap: 12px; }
+.tk-msg { max-width: 88%; padding: 12px 14px; border-radius: 4px; border: 1px solid var(--color-border); }
+.tk-msg.is-sender { align-self: flex-start; background: var(--color-surface); }
+.tk-msg.is-staff { align-self: flex-end; background: color-mix(in srgb, var(--portal-cyan) 9%, var(--color-surface)); border-color: color-mix(in srgb, var(--portal-cyan) 30%, var(--color-border)); }
+.tk-msg-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 6px; font-size: 13.5px; color: var(--color-text-900); }
+.tk-msg p { font-size: 14.5px; line-height: 1.8; color: var(--color-text-700); white-space: pre-line; }
+.tk-reply textarea { flex: 1 1 100%; min-height: 60px; padding: 10px 12px; border: 1px solid #CED4DA; border-radius: 4px; background: var(--color-surface); color: var(--color-text-900); font-size: 14.5px; resize: vertical; }
+.tk-reply textarea:focus { outline: 0; border-color: var(--portal-cyan); }
+
+/* التقييمات */
+.ev-layout { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.ev-criteria { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.ev-criteria li { display: flex; gap: 6px; }
+.ev-input { flex: 1; min-width: 0; height: 40px; padding-inline: 10px; border: 1px solid #CED4DA; border-radius: 4px; background: var(--color-surface); color: var(--color-text-900); font-size: 14px; }
+.ev-input:focus { outline: 0; border-color: var(--portal-cyan); }
+.ev-weight { flex: 0 0 70px; text-align: center; }
+.ev-remove { display: grid; place-items: center; width: 36px; color: var(--color-text-400); border-radius: 4px; }
+.ev-remove:hover { color: #FF5B5B; background: rgba(255, 91, 91, 0.08); }
+.ev-note { margin-top: 14px; font-size: 13px; }
+.dash-chip.is-bad { background: #F9DFE1; color: #E81E63; }
+.ev-students { width: calc(100% - 32px); margin: 12px 16px; border-collapse: collapse; background: var(--color-surface); border: 1px solid var(--color-border); }
+:root[data-brand="ucas"] .ev-students thead tr { background: transparent; }
+:root[data-brand="ucas"] .ev-students thead th { padding: 10px; color: var(--color-text-400); font-size: 12.5px; text-align: start; border-bottom: 1px solid var(--color-border); }
+:root[data-brand="ucas"] .ev-students tbody td { padding: 10px; font-size: 13.5px; border-bottom: 1px solid var(--color-border); }
+.ucas-portal .ev-students tbody tr { animation: none; }
+.ev-notes { white-space: pre-line; max-width: 420px; }
+
+@media (max-width: 1023.98px) {
+  .as-layout, .ev-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* أدوات المناقشات */
+.dt-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.dt-hint { margin-top: 10px; }
+.dt-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+.dt-wide { grid-column: span 2; }
+.dt-plan { margin-top: 14px; max-height: 360px; overflow-y: auto; }
+.dt-plan .ev-input { height: 36px; }
+@media (max-width: 639.98px) { .dt-form { grid-template-columns: 1fr 1fr; } .dt-wide { grid-column: 1 / -1; } }
+.dt-print { display: none; }
+@media print {
+  .is-printing-rooms body * { visibility: hidden !important; }
+  .is-printing-rooms .dt-print, .is-printing-rooms .dt-print * { visibility: visible !important; }
+  .is-printing-rooms .dt-print { display: block; position: absolute; inset: 0; padding: 12mm; background: #fff; color: #000; direction: rtl; font-family: 'Cairo', sans-serif; }
+  .dt-print h1 { font-size: 18pt; margin: 0 0 2mm; }
+  .dt-print > p { font-size: 10pt; color: #444; margin: 0 0 6mm; }
+  .dt-print section { page-break-after: always; }
+  .dt-print h2 { font-size: 14pt; margin: 4mm 0 2mm; }
+  .dt-print table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+  .dt-print th, .dt-print td { border: 1px solid #999; padding: 2mm; text-align: start; }
+  .dt-print th { background: #E9ECEF; }
+}
+
+/* تقدّم المشاريع */
+.pb-late { color: #E81E63; font-weight: 800; }
+.pb-tasks { display: flex; flex-direction: column; gap: 6px; margin: 0 16px 14px; padding: 12px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; }
+.pb-tasks li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13.5px; color: var(--color-text-900); }
+.gr-side-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.gr-log-btn { font-size: 12.5px; font-weight: 700; color: var(--portal-cyan); }
+/* سجل المهام */
+.tl { display: flex; flex-direction: column; gap: 8px; }
+.tl-task { border: 1px solid var(--color-border); border-radius: 4px; }
+.tl-task.is-open { border-color: color-mix(in srgb, var(--portal-cyan) 45%, var(--color-border)); }
+.tl-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; text-align: start; font-size: 14px; color: var(--color-text-900); }
+.tl-head .pf-muted { flex-basis: 100%; }
+.tl-body { padding: 0 12px 12px; border-top: 1px solid var(--color-border); }
+.tl-desc { padding: 10px 0; font-size: 13.5px; line-height: 1.8; color: var(--color-text-700); white-space: pre-line; }
+.tl-log { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; }
+.tl-log li { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 10px; font-size: 13.5px; color: var(--color-text-700); }
+.tl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--portal-cyan); }
+.rv-reports { display: flex; flex-direction: column; gap: 8px; }
+.rv-reports li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* ============ 12.8) توحيد "أدوات لجنة الإشراف" على نمط بوابة خدمات الطلبة ============ */
+/* رأس الصفحة = بطاقة البوابة: عنوان ≡ + وصف رمادي بجانبه ("طلب إفادة  الفصل الدراسي…" — 201350)، والأدوات يسارًا */
+.dash-head {
+  align-items: center;
+  padding: 20px 28px;
+  background: var(--color-surface);
+  border-radius: 4px;
+  box-shadow: var(--shadow-card);
+}
+.dash-head > div:first-child { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; min-width: 0; }
+.dash-title { display: inline-flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 700; }
+.dash-title::before {
+  content: '';
+  width: 16px;
+  height: 12px;
+  flex-shrink: 0;
+  background: var(--color-text-600);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 12'%3E%3Cpath d='M0 1h16M4 6h12M8 11h8' stroke='black' stroke-width='2'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 12'%3E%3Cpath d='M0 1h16M4 6h12M8 11h8' stroke='black' stroke-width='2'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.dash-sub { margin: 0; font-size: 13px; font-weight: 600; color: var(--color-text-600); }
+
+/* التبويبات = شريط تبويبات البوابة (201300): أزرق #109AD2 بنص أبيض، والنشط #00BCD4 */
+.rv-tabs,
+.hm-tabs {
+  gap: 0;
+  padding: 0;
+  background: #109AD2;
+  border-radius: 4px;
+  box-shadow: none;
+  overflow: hidden;
+}
+.rv-tab,
+.hm-tabs button {
+  height: 44px;
+  padding-inline: 18px;
+  border-radius: 0;
+  color: #FFFFFF;
+  background: transparent;
+  box-shadow: none;
+}
+.hm-tabs button { height: 36px; padding-inline: 14px; }
+.rv-tab:hover,
+.hm-tabs button:hover { background: rgba(255, 255, 255, 0.12); color: #FFFFFF; }
+.rv-tab.is-active,
+.hm-tabs button.is-active { background: #00BCD4; color: #FFFFFF; box-shadow: none; }
+.rv-count,
+.rv-tab.is-active .rv-count { background: rgba(255, 255, 255, 0.22); color: #FFFFFF; }
+.hm-tabs button span { color: rgba(255, 255, 255, 0.85); }
+
+/* الشارات بزوايا البوابة 4px ووزن عريض */
+.dash-chip { border-radius: 4px; }
+
+/* بطاقة المحتوى: حشوة البوابة */
+.dash-card { padding: 24px 28px; }
+@media (max-width: 639.98px) {
+  .dash-head { padding: 16px 18px; }
+  .dash-title { font-size: 19px; }
+  .rv-tab { padding-inline: 12px; font-size: 13px; }
+}
+
+/* السايد بار مضغوط قليلًا حتى تظهر عناصر "أدوات لجنة الإشراف" (11 عنصرًا) كاملة على شاشات اللابتوب */
+.ucas-portal .sidebar-row { min-height: 38px; padding-block: 5px; }
+.ucas-portal .sidebar-section-title { padding-top: 12px; padding-bottom: 6px; }
+.ucas-portal .sidebar-nav { padding-block: 2px 8px; }
+.ucas-portal #app-sidebar .shrink-0.border-t { padding-block: 8px; }
+.mb-groups-btn { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: var(--portal-cyan); }
+.mb-groups-btn svg { transition: transform 300ms var(--ease-standard); }
+
+/* المقترحات: نتيجة الفلترة + التنقّل + تأكيد الاعتماد */
+.rv-result { margin-inline-start: auto; align-self: center; font-size: 13px; font-weight: 700; color: var(--color-text-600); white-space: nowrap; }
+.rv-list:focus-visible { outline: 2px solid var(--portal-cyan); outline-offset: 2px; }
+.rv-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.rv-pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--color-border); }
+.rv-pager-btns { display: flex; gap: 6px; }
+.rv-pager-btns button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding-inline: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-700);
+  transition: border-color var(--ucas-color-speed) var(--ease-standard), color var(--ucas-color-speed) var(--ease-standard);
+}
+.rv-pager-btns button:hover:not(:disabled) { border-color: var(--portal-cyan); color: var(--portal-cyan); }
+.rv-pager-btns button:disabled { opacity: 0.4; cursor: not-allowed; }
+.rv-approve.is-confirm { background: #0A8A4A; box-shadow: 0 0 0 3px rgba(16, 196, 105, 0.25); }
+.hm-filters-inline { margin: 0; flex-wrap: wrap; justify-content: flex-end; }
+
+/* الرئيسية: صفوف الطلاب داخل المجموعة + دائرة حالة المهام */
+.hm-caret { display: inline-block; vertical-align: middle; margin-inline-end: 6px; color: var(--color-text-400); transition: transform var(--ucas-color-speed) var(--ease-standard); }
+.hm-caret.is-open { transform: rotate(180deg); }
+.hm-table tr.hm-sub td { background: var(--color-bg); font-size: 13.5px; }
+.hm-table tr.hm-sub td:first-child { padding-inline-start: 36px; }
+.dash-card { --hm-c-done: #10C469; --hm-c-open: var(--portal-cyan); --hm-c-late: #FF5B5B; }
+.hm-c-done { background: var(--hm-c-done); }
+.hm-c-open { background: var(--hm-c-open); }
+.hm-c-late { background: var(--hm-c-late); }
+.hm-donut { position: relative; width: 168px; aspect-ratio: 1; margin: 8px auto 22px; border-radius: 50%; transition: background 600ms var(--ease-standard); }
+.hm-donut > span { position: absolute; inset: 22px; display: grid; place-content: center; text-align: center; border-radius: 50%; background: var(--color-surface); font-size: 12.5px; color: var(--color-text-400); }
+.hm-donut b { font-size: 26px; font-weight: 800; color: var(--color-text-900); }
+
+/* المجموعات: شريط التصنيف + إضافة مهمة/إعلان/ملف */
+.gr-add-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.gr-add-row .gr-tool { height: 34px; padding-inline: 10px; font-size: 13px; }
+.gr-tool.is-primary { border-color: #35B8E0; background: #35B8E0; color: #fff; }
+.gr-tool.is-primary:hover { color: #fff; filter: brightness(0.95); }
+.gr-items { margin-top: 16px; }
+.gr-form { display: flex; flex-direction: column; gap: 14px; }
+.gr-form label > span, .gr-form legend { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--color-text-600); }
+.gr-input { width: 100%; padding: 9px 12px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); font: inherit; color: var(--color-text-900); }
+.gr-input:focus { border-color: var(--portal-cyan); outline: none; }
+.gr-check { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 14px; }
+
+/* الرئيسية: قائمة طلاب المجموعة المنسدلة */
+.hm-table tr.hm-drop-row > td { padding: 0 !important; background: var(--color-bg); }
+.hm-drop { margin: 4px 12px 14px; border: 1px solid var(--color-border); border-inline-start: 3px solid var(--portal-cyan); border-radius: 4px; background: var(--color-surface); }
+.hm-drop-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--color-border); }
+.hm-drop-head b { display: block; font-size: 14.5px; color: var(--color-text-900); }
+.hm-drop-head span:not(.dash-chip) { font-size: 12.5px; color: var(--color-text-400); }
+.hm-drop-list { margin: 0; padding: 0; list-style: none; }
+.hm-drop-list li + li { border-top: 1px solid var(--color-border); }
+.hm-member { display: grid; grid-template-columns: auto minmax(0, 1fr) auto 150px; align-items: center; gap: 14px; width: 100%; padding: 10px 16px; text-align: start; transition: background-color var(--ucas-color-speed) var(--ease-standard); }
+.hm-member:hover { background: var(--portal-menu-hover); }
+.hm-avatar { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--color-bg); border: 1px solid var(--color-border); font-weight: 800; color: var(--portal-cyan); }
+.hm-member-info { min-width: 0; }
+.hm-member-info b { display: block; font-size: 14px; color: var(--color-text-900); }
+.hm-member-info > span { font-size: 12.5px; color: var(--color-text-400); }
+.hm-member-tasks { font-size: 12.5px; color: var(--color-text-400); white-space: nowrap; }
+.hm-member-tasks b { color: var(--color-text-900); }
+.hm-member-progress { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.hm-member-progress .gr-progress { flex: 1; }
+@media (max-width: 640px) {
+  .hm-member { grid-template-columns: auto minmax(0, 1fr); }
+  .hm-member-tasks, .hm-member-progress { grid-column: 2; }
+}
+
+/* المجموعات: التصنيف كأزرار مقسّمة (الكل + الخيارات) */
+.gr-classes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.gr-class { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); }
+.gr-class-label { font-size: 13px; font-weight: 700; color: var(--color-text-400); }
+.gr-seg { display: flex; padding: 3px; gap: 3px; border-radius: 4px; background: var(--color-bg); }
+.gr-seg button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding-inline: 10px; border-radius: 3px; font-size: 13.5px; font-weight: 600; color: var(--color-text-600); white-space: nowrap; transition: background-color var(--ucas-color-speed) var(--ease-standard), color var(--ucas-color-speed) var(--ease-standard); }
+.gr-seg button b { min-width: 22px; padding: 1px 6px; border-radius: 10px; background: var(--color-surface); font-size: 12px; color: var(--color-text-600); font-variant-numeric: tabular-nums; }
+.gr-seg button:hover:not(.is-active) { color: var(--portal-cyan); }
+.gr-seg button.is-active { background: #35B8E0; color: #fff; }
+.gr-seg button.is-active b { background: rgba(255, 255, 255, 0.25); color: #fff; }
+.gr-seg button:focus-visible { outline: 2px solid var(--portal-cyan); outline-offset: 1px; }
+
+/* المجموعات: شرائح (7 مجموعات لكل شريحة) — حركة أفقية هادئة بلا تكبير */
+.gr-slider { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; padding: 6px 0; }
+.gr-slide-btn { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text-600); transition: border-color var(--ucas-color-speed) var(--ease-standard), color var(--ucas-color-speed) var(--ease-standard); }
+.gr-slide-btn:hover:not(:disabled) { border-color: var(--portal-cyan); color: var(--portal-cyan); }
+.gr-slide-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.gr-dots { display: flex; gap: 8px; }
+.gr-dots button { width: 10px; height: 10px; border-radius: 50%; background: var(--color-border); transition: background-color var(--ucas-color-speed) var(--ease-standard), width var(--ucas-color-speed) var(--ease-standard); }
+.gr-dots button.is-active { width: 26px; border-radius: 5px; background: #35B8E0; }
+.gr-dots button:focus-visible, .gr-slide-btn:focus-visible { outline: 2px solid var(--portal-cyan); outline-offset: 2px; }
+.gr-slide-info { width: 100%; text-align: center; font-size: 12.5px; color: var(--color-text-400); }
+.gr-slide-next-enter-active, .gr-slide-next-leave-active, .gr-slide-prev-enter-active, .gr-slide-prev-leave-active { transition: opacity 320ms var(--ease-standard), transform 320ms var(--ease-standard); }
+.gr-slide-next-enter-from, .gr-slide-prev-leave-to { opacity: 0; transform: translateX(-32px); }
+.gr-slide-next-leave-to, .gr-slide-prev-enter-from { opacity: 0; transform: translateX(32px); }
+@media (prefers-reduced-motion: reduce) {
+  .gr-slide-next-enter-active, .gr-slide-next-leave-active, .gr-slide-prev-enter-active, .gr-slide-prev-leave-active { transition: none; }
+}
+
+/* مواعيد المناقشات (مخطِّط الإدارة العامة) */
+.dp-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px 16px; margin-bottom: 12px; }
+.dp-wide { grid-column: span 2; }
+.dp-hint { margin: 10px 0 14px; font-size: 12.5px; }
+.dp-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
+.dp-toolbar .gr-tools { margin-inline-start: auto; }
+.dp-toolbar label.gr-tool { cursor: pointer; }
+.dp-alert { margin-bottom: 14px; }
+.dp-alert ul { margin: 6px 0 0; padding-inline-start: 18px; font-size: 13px; }
+.dp-table td { white-space: nowrap; }
+.dp-table .ev-input { min-width: 0; height: 34px; }
+.dp-table tr.is-conflict td { background: #FDECEE; }
+.dp-table tr.is-conflict td:first-child { box-shadow: inset -3px 0 0 #FF5B5B; }
+.dp-sup { margin-bottom: 12px; }
+@media (max-width: 639.98px) { .dp-wide { grid-column: auto; } }
+
+/* أرشيف المشاريع والمعرض */
+.ar-tabs { width: fit-content; }
+.ar-star { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--color-border); border-radius: 4px; color: var(--color-text-400); transition: color var(--ucas-color-speed) var(--ease-standard), border-color var(--ucas-color-speed) var(--ease-standard); }
+.ar-star:hover, .ar-star.is-on { color: #F9C851; border-color: #F9C851; }
+.ar-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.ar-cards { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.ar-cards li { position: relative; display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; padding-inline-start: 34px; border: 1px solid var(--color-border); border-radius: 4px; font-size: 13px; }
+.ar-cards b { font-size: 14px; color: var(--color-text-900); }
+.ar-card-star { position: absolute; inset-inline-start: 12px; top: 14px; color: #F9C851; }
+
+/* المقترحات: حالة "يحتاج تعديل" وملاحظات الطلاب */
+.rv-pill.is-changes { background: #E1F5FC; color: #1A8DB5; }
+.rv-status-dot.is-changes { background: #35B8E0; }
+.rv-student-notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 10px 0; }
+.rv-last-note { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rv-actions button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* التقييمات */
+.ev-crit { font-size: 12px; white-space: nowrap; }
+.ev-star { display: inline-block; margin-inline-start: 4px; vertical-align: -2px; color: #F9C851; }
+
+/* تقييم المشرفين بالنجوم */
+.as-ratings { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; margin: 14px 0; padding: 0; list-style: none; }
+.as-ratings li { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border: 1px solid var(--color-border); border-radius: 4px; transition: border-color var(--ucas-color-speed) var(--ease-standard); }
+.as-ratings li.is-on { border-color: var(--portal-cyan); }
+.as-rating-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; }
+.as-rating-head b { flex-basis: 100%; font-size: 14.5px; color: var(--color-text-900); }
+.as-stars { display: flex; gap: 4px; }
+.as-stars button { color: var(--color-border); transition: color var(--ucas-color-speed) var(--ease-standard); }
+.as-stars button.is-on, .as-stars button:hover { color: #F9C851; }
+.as-stars button:focus-visible { outline: 2px solid var(--portal-cyan); outline-offset: 2px; border-radius: 3px; }
+
+/* المجموعات بنمط بوابة الكلية (200639 → 200940): بطاقة بيضاء واحدة تحوي كل شيء */
+.gr-card { padding: 24px 28px; background: var(--color-surface); border-radius: 4px; box-shadow: var(--shadow-card); }
+.gr-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; }
+.gr-card-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+.gr-card-title h3 { font-size: 20px; font-weight: 800; color: var(--color-text-900); }
+.gr-card-title span { font-size: 13.5px; font-weight: 600; color: var(--color-text-600); }
+.gr-card-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.gr-card .gr-filters { padding: 0; background: none; box-shadow: none; align-items: center; gap: 12px 16px; }
+.gr-pick { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: var(--color-text-700); white-space: nowrap; }
+.gr-card .gr-table-wrap { box-shadow: none; border-radius: 0; }
+.gr-card .gr-class { background: var(--color-bg); border-color: transparent; }
+.gr-sumbar { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 8px 24px; margin-top: -16px; padding: 18px 20px; background: #10C469; color: #FFFFFF; font-size: 15px; font-weight: 700; }
+.gr-card-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; padding-top: 4px; }
+.hm-report { margin-inline-start: auto; }
+@media (max-width: 639.98px) {
+  .gr-card { padding: 18px 16px; }
+  .gr-pick { width: 100%; justify-content: space-between; }
+  .gr-pick .gr-select { flex: 1; max-width: none; }
+}
+
+/* الملف التعريفي: الصورة وتعديل البيانات */
+.pf-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+.pf-avatar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 22px; }
+.pf-avatar img, .pf-avatar > span { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color-border); }
+.pf-avatar > span { display: grid; place-items: center; background: var(--color-bg); font-size: 30px; font-weight: 800; color: var(--portal-cyan); }
+.pf-avatar label { cursor: pointer; }
+.pf-avatar label[aria-disabled="true"] { opacity: 0.6; pointer-events: none; }
+.pf-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px 18px; }
+.pf-form-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* المقترحات: الجدول ونافذة "عرض المقترح" (المقترح / محاولات الرفض / التقارير) */
+.pr-table td { vertical-align: middle; }
+.pr-count { display: inline-grid; place-items: center; min-width: 28px; height: 26px; padding-inline: 8px; border-radius: 13px; background: var(--color-bg); font-weight: 800; font-variant-numeric: tabular-nums; color: var(--color-text-700); }
+.pr-count.is-bad { background: #F9DFE1; color: #E81E63; }
+.pr-tabs { width: fit-content; margin-bottom: 18px; }
+.pr-pane { display: flex; flex-direction: column; gap: 10px; min-height: 160px; }
+.pr-status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.pr-status .pbtn { margin-inline-start: auto; }
+.pr-h { margin: 8px 0 0; font-size: 14px; font-weight: 800; color: var(--color-text-900); }
+.pr-text { font-size: 14px; line-height: 1.8; color: var(--color-text-700); white-space: pre-line; }
+.pr-attempts, .pr-reports { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.pr-attempts li, .pr-reports li { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 4px; }
+.pr-attempts li div, .pr-reports li div { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; font-size: 13.5px; }
+.pr-attempts p { margin: 4px 0 0; color: var(--color-text-700); line-height: 1.7; }
+.pr-reports li { align-items: center; flex-wrap: wrap; }
+.pr-attempt-no { display: grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; background: var(--color-bg); font-weight: 800; color: var(--portal-cyan); }
+.pr-attempts .pr-attempt-no { color: #E81E63; background: #F9DFE1; }
+.pr-decision { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--color-border); }

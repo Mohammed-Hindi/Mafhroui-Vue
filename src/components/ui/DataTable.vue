@@ -2,7 +2,7 @@
   <div :class="flush ? 'overflow-hidden' : 'bg-surface rounded-lg border border-border shadow-card overflow-hidden'">
     <!-- رأس الجدول: عنوان + أدوات -->
     <div v-if="title || $slots.toolbar" class="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-border-soft">
-      <h2 v-if="title" class="font-cairo font-bold text-h3 text-text-900">{{ title }}</h2>
+      <h2 v-if="title" class="portal-title font-cairo font-bold text-h3 text-text-900">{{ title }}</h2>
       <div class="flex items-center gap-2 ms-auto"><slot name="toolbar" /></div>
     </div>
 
@@ -20,15 +20,15 @@
     </slot>
 
     <!-- الجدول (ديسكتوب) -->
-    <div v-else class="hidden md:block overflow-x-auto scrollbar-thin">
-      <table class="w-full text-start border-collapse" :style="{ minWidth: tableMinWidth }">
+    <div v-else :class="['hidden md:block', fixed ? 'overflow-hidden' : 'overflow-x-auto scrollbar-thin']">
+      <table class="w-full text-start border-collapse" :style="fixed ? { tableLayout: 'fixed' } : { minWidth: tableMinWidth }">
         <thead>
           <tr class="bg-bg border-b-2 border-border divide-x divide-border-soft">
             <th
               v-for="column in columns"
               :key="column.key"
               scope="col"
-              :class="['px-4 py-3 text-start text-label font-extrabold text-text-700 whitespace-nowrap', column.className]"
+              :class="['px-4 py-3 text-start text-label font-extrabold text-text-700', fixed ? 'break-words' : 'whitespace-nowrap', column.className]"
             >
               {{ column.label }}
             </th>
@@ -40,7 +40,7 @@
               <td
                 v-for="column in columns"
                 :key="column.key"
-                :class="['px-4 py-3 text-body-sm text-text-700 align-middle', column.className]"
+                :class="['px-4 py-3 text-body-sm text-text-700 align-middle', fixed && 'break-words', column.className]"
               >
                 <slot :name="`cell-${column.key}`" :row="row" :value="row[column.key]" :index="index">
                   {{ row[column.key] ?? '—' }}
@@ -131,7 +131,9 @@ export default {
     /** مفاتيح الأعمدة المعروضة دومًا بالموبايل — الباقي يُخفى خلف زر "عرض التفاصيل" */
     primaryKeys: { type: Array, default: null },
     /** بدون خلفية/حدود/ظل خاصة به — للاستخدام متداخلًا داخل بطاقة أخرى بالفعل لها هذا التنسيق */
-    flush: { type: Boolean, default: false }
+    flush: { type: Boolean, default: false },
+    /** عرض ثابت بعرض البطاقة: بلا سكرول أفقي، والنصوص الطويلة تنكسر داخل الخلية */
+    fixed: { type: Boolean, default: false }
   },
 
   emits: ['retry', 'page-change'],
@@ -143,7 +145,9 @@ export default {
   computed: {
     /** يمنع تكدّس الأعمدة على الشاشات المتوسطة — تمرير للسكرول الأفقي بدل الانضغاط */
     tableMinWidth() {
-      return `${Math.max(640, this.columns.length * 140)}px`
+      // الأعمدة المخفية بكلاس (hidden lg:table-cell) لا تُحسب حتى لا تُجبر التمرير الأفقي على التابلت
+      const visible = this.columns.filter((c) => !/(^|\s)hidden(\s|$)/.test(c.className || '')).length
+      return `${Math.max(640, visible * 140)}px`
     },
     visibleMobileColumns() {
       return this.primaryKeys ? this.columns.filter((c) => this.primaryKeys.includes(c.key)) : this.columns

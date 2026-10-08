@@ -1,5 +1,10 @@
 <template>
   <div>
+    <!-- الإدارة العامة: مخطِّط المناقشات (بيانات تجريبية) — اللجنة تبقى على الصفحة الأصلية -->
+    <DiscussionsTools v-if="isSuperAdmin" />
+    <template v-else>
+    <PortalPageHead :icon="CalendarClock" color="#009ADC" title="مواعيد المناقشات" subtitle="جدولة مناقشات مشاريع التخرج ولجانها وإبلاغ الطلاب" />
+
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <BaseButton :icon="Plus" @click="openAddModal">تسجيل موعد مناقشة جديد</BaseButton>
       <div class="flex flex-wrap gap-2">
@@ -8,6 +13,7 @@
         <BaseButton variant="outline" :icon="FileDown" :loading="exportingPdf" @click="exportPdf">تصدير PDF</BaseButton>
       </div>
     </div>
+
 
     <div class="flex flex-wrap gap-3 mb-6">
       <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-success-bg text-success text-caption font-bold hover:brightness-95 transition-all duration-fast disabled:opacity-40 disabled:pointer-events-none" :disabled="!allMembersWhats.length" @click="sendWhatsAll">
@@ -25,127 +31,111 @@
       </div>
       <BaseSelect v-model="deptFilter" class="min-w-[170px]" placeholder="جميع الأقسام" include-placeholder-option :options="deptOptions" />
       <BaseSelect v-model="specFilter" class="min-w-[170px]" placeholder="جميع التخصصات" include-placeholder-option :options="specOptions" />
+      <BaseSelect v-model="supFilter" class="min-w-[170px]" placeholder="جميع المشرفين" include-placeholder-option :options="supOptions" />
+      <BaseSelect v-model="placeFilter" class="min-w-[160px]" placeholder="جميع القاعات" include-placeholder-option :options="placeOptions" />
+      <BaseSelect v-model="statusFilter" class="min-w-[150px]" placeholder="كل الحالات" include-placeholder-option :options="statusOptions" />
+      <button v-if="search || deptFilter || specFilter || supFilter || placeFilter || statusFilter" type="button" class="gr-clear" @click="search = ''; deptFilter = ''; specFilter = ''; supFilter = ''; placeFilter = ''; statusFilter = ''">مسح الفلاتر</button>
     </div>
 
     <div class="flex items-center justify-between gap-4 mb-4">
-      <h3 class="font-cairo font-bold text-h4 text-text-900">مواعيد المناقشات المسجلة</h3>
+      <h3 class="portal-title font-cairo font-bold text-h4 text-text-900">مواعيد المناقشات المسجلة</h3>
       <span class="text-caption text-text-600">{{ filteredDiscussions.length }} مجموعة — {{ filteredStudentsCount }} طالبًا</span>
     </div>
 
     <SkeletonLoader v-if="discussionsLoading" :rows="4" height="80px" />
     <EmptyState v-else-if="!filteredDiscussions.length" title="لا توجد مواعيد مطابقة" description="جرّبي تعديل البحث أو الفلاتر، أو سجّلي موعدًا جديدًا." />
 
-    <div v-else class="flex flex-col gap-4">
-      <div v-for="d in pageDiscussions" :key="d.id" class="bg-surface border border-border rounded-lg shadow-card overflow-hidden">
-        <div class="flex items-center gap-4 p-4 flex-wrap">
-          <button
-            type="button" class="grid place-items-center w-9 h-9 rounded-sm bg-border-soft text-text-600 transition-all duration-base shrink-0"
-            :class="{ '!bg-primary-600 !text-white rotate-90': isDiscussionOpen(d.id) }"
-            @click="toggleDiscussion(d.id)"
-          >
-            <ChevronDown :size="16" />
-          </button>
-
-          <div class="w-10 h-10 rounded-md shrink-0 grid place-items-center font-cairo font-extrabold text-body-sm text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
-            {{ d.teamId ?? '—' }}
-          </div>
-
-          <div class="flex-1 min-w-0 flex items-center gap-3 sm:gap-6 flex-wrap">
-            <div>
-              <div class="text-body-sm font-extrabold text-text-900">{{ d.proj }}</div>
-              <div class="text-label text-text-400">{{ d.team }}</div>
-            </div>
-            <div class="text-caption"><span class="text-text-400">المشرف </span><span class="font-bold text-text-900">{{ d.sup }}</span></div>
-            <BaseBadge variant="info">{{ formatDate(d.date) }} — {{ d.time }}</BaseBadge>
-            <BaseBadge>{{ membersFor(d.teamId).length }} {{ membersFor(d.teamId).length === 1 ? 'طالب' : 'طلاب' }}</BaseBadge>
-            <BaseBadge :variant="d.status === 'confirmed' ? 'success' : 'warning'" dot>{{ d.status === 'confirmed' ? 'مؤكَّد' : 'قيد الانتظار' }}</BaseBadge>
-          </div>
-
-          <div class="flex gap-1.5 shrink-0">
-            <button v-if="d.whatsapp" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg" title="تذكير واتساب" @click="sendWhats(d.whatsapp)"><MessageCircle :size="14" /></button>
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(d)"><Pencil :size="14" /></button>
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete(d)"><Trash2 :size="14" /></button>
-          </div>
+    <!-- الإدارة العامة: جدول برأس سماوي كجداول البوابة، وتفاصيل الموعد وطلابه تُفتح تحت صفه -->
+    <DataTable
+      v-else-if="isSuperAdmin"
+      :columns="discussionColumns" :rows="pageDiscussions" row-key="id" :primary-keys="['toggle', 'proj', 'date', 'actions']"
+      :meta="{ current_page: page, last_page: totalPages, total: filteredDiscussions.length }"
+      @page-change="page = $event"
+    >
+      <template #cell-toggle="{ row }">
+        <button
+          type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 transition-colors duration-base"
+          :class="{ '!bg-primary-600 !text-white !border-primary-600': isDiscussionOpen(row.id) }"
+          :aria-expanded="isDiscussionOpen(row.id)" title="عرض التفاصيل"
+          @click="toggleDiscussion(row.id)"
+        >
+          <ChevronDown :size="16" :class="['transition-transform duration-base', isDiscussionOpen(row.id) && 'rotate-180']" />
+        </button>
+      </template>
+      <template #cell-teamId="{ value }"><span class="font-bold text-text-900">{{ value ?? '—' }}</span></template>
+      <template #cell-proj="{ row }">
+        <div class="font-bold text-text-900">{{ row.proj }}</div>
+        <div class="text-label text-text-400">{{ row.team }}</div>
+      </template>
+      <template #cell-date="{ row }"><span class="whitespace-nowrap">{{ formatDate(row.date) }} — {{ row.time }}</span></template>
+      <template #cell-count="{ row }">{{ membersFor(row.teamId).length }} {{ membersFor(row.teamId).length === 1 ? 'طالب' : 'طلاب' }}</template>
+      <template #cell-status="{ row }">
+        <BaseBadge :variant="row.status === 'confirmed' ? 'success' : 'warning'" dot>{{ row.status === 'confirmed' ? 'مؤكَّد' : 'قيد الانتظار' }}</BaseBadge>
+      </template>
+      <template #cell-actions="{ row }">
+        <div class="flex gap-1.5">
+          <button v-if="row.whatsapp" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg" title="تذكير واتساب" @click="sendWhats(row.whatsapp)"><MessageCircle :size="14" /></button>
+          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row)"><Pencil :size="14" /></button>
+          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete(row)"><Trash2 :size="14" /></button>
         </div>
+      </template>
+      <template #row-extra="{ row }">
+        <DiscussionMembersPanel
+          v-if="isDiscussionOpen(row.id)" class="border-y-2 border-primary-600"
+          :discussion="row" :members="membersFor(row.teamId)"
+          @whats="sendWhats" @mail="sendMail" @edit-student="openEditStudent" @delete-student="openDeleteStudent(row, $event)" @add-student="openAddStudentToGroup(row)"
+        />
+      </template>
+    </DataTable>
 
-        <div v-show="isDiscussionOpen(d.id)" class="border-t border-border-soft">
-          <div class="flex flex-wrap gap-x-8 gap-y-2 px-5 py-3.5 bg-bg border-b border-border-soft text-caption">
-            <div class="flex items-center gap-2 text-text-700"><MapPin :size="14" class="text-text-400 shrink-0" /><span class="text-text-400">المكان:</span> {{ d.place }}</div>
-            <div class="flex items-center gap-2 text-text-700"><span class="text-text-400">الوقت:</span> {{ d.time }}</div>
-            <div class="flex items-center gap-2 text-text-700"><Users :size="14" class="text-text-400 shrink-0" /><span class="text-text-400">لجنة المناقشة:</span> {{ d.committee }}</div>
-            <div class="flex items-center gap-2 text-text-700"><span class="text-text-400">القسم:</span> {{ d.dept }} — {{ d.spec }}</div>
-          </div>
+    <template v-else>
+      <div class="flex flex-col gap-4">
+        <div v-for="d in pageDiscussions" :key="d.id" class="bg-surface border border-border rounded-lg shadow-card overflow-hidden">
+          <div class="flex items-center gap-4 p-4 flex-wrap">
+            <button
+              type="button" class="grid place-items-center w-9 h-9 rounded-sm bg-border-soft text-text-600 transition-all duration-base shrink-0"
+              :class="{ '!bg-primary-600 !text-white rotate-90': isDiscussionOpen(d.id) }"
+              @click="toggleDiscussion(d.id)"
+            >
+              <ChevronDown :size="16" />
+            </button>
 
-          <div class="hidden md:block overflow-x-auto scrollbar-thin">
-            <table class="w-full border-collapse min-w-[600px]">
-              <thead>
-                <tr class="bg-bg border-b-2 border-border divide-x divide-border-soft">
-                  <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">اسم الطالب</th>
-                  <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">الواتس</th>
-                  <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">البريد</th>
-                  <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-border-soft">
-                <tr v-for="m in membersFor(d.teamId)" :key="m.id" class="divide-x divide-border-soft">
-                  <td class="px-5 py-3 font-bold text-text-900">{{ m.name }}</td>
-                  <td class="px-5 py-3 mono">{{ m.whats || '—' }}</td>
-                  <td class="px-5 py-3 mono whitespace-nowrap">{{ m.mail || '—' }}</td>
-                  <td class="px-5 py-3">
-                    <div class="flex gap-2">
-                      <button v-if="m.whats" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg" title="واتساب" @click="sendWhats(m.whats)"><MessageCircle :size="14" /></button>
-                      <button v-if="m.mail" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(m.mail)"><Mail :size="14" /></button>
-                      <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEditStudent(m)"><Pencil :size="14" /></button>
-                      <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDeleteStudent(d, m)"><Trash2 :size="14" /></button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+            <div class="w-10 h-10 rounded-md shrink-0 grid place-items-center font-cairo font-extrabold text-body-sm text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
+              {{ d.teamId ?? '—' }}
+            </div>
 
-          <div class="md:hidden divide-y divide-border-soft">
-            <div v-for="m in membersFor(d.teamId)" :key="m.id" class="p-4 space-y-2">
-              <div class="flex items-center justify-between gap-3">
-                <span class="font-bold text-text-900">{{ m.name }}</span>
+            <div class="flex-1 min-w-0 flex items-center gap-3 sm:gap-6 flex-wrap">
+              <div>
+                <div class="text-body-sm font-extrabold text-text-900">{{ d.proj }}</div>
+                <div class="text-label text-text-400">{{ d.team }}</div>
               </div>
-              <button
-                type="button"
-                class="w-full flex items-center justify-center gap-1.5 text-caption font-bold text-primary-600 py-1.5 rounded-sm hover:bg-primary-50 transition-colors duration-fast"
-                @click="toggleStudentDetails(d.id, m.id)"
-              >
-                {{ isStudentOpen(d.id, m.id) ? 'إخفاء التفاصيل' : 'عرض التفاصيل' }}
-                <ChevronDown :size="14" :class="['transition-transform duration-fast', isStudentOpen(d.id, m.id) && 'rotate-180']" />
-              </button>
-              <div v-if="isStudentOpen(d.id, m.id)" class="space-y-2 pt-2 border-t border-dashed border-border">
-                <div class="flex items-start justify-between gap-3"><span class="text-label font-semibold text-text-400 shrink-0">رقم الواتس</span><span class="mono text-body-sm text-text-700">{{ m.whats || '—' }}</span></div>
-                <div class="flex items-start justify-between gap-3"><span class="text-label font-semibold text-text-400 shrink-0">البريد الإلكتروني</span><span class="mono text-body-sm text-text-700 whitespace-nowrap">{{ m.mail || '—' }}</span></div>
-                <div class="flex items-start justify-between gap-3">
-                  <span class="text-label font-semibold text-text-400 shrink-0">إجراءات</span>
-                  <div class="flex gap-1.5">
-                    <button v-if="m.whats" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg" title="واتساب" @click="sendWhats(m.whats)"><MessageCircle :size="14" /></button>
-                    <button v-if="m.mail" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(m.mail)"><Mail :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEditStudent(m)"><Pencil :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDeleteStudent(d, m)"><Trash2 :size="14" /></button>
-                  </div>
-                </div>
-              </div>
+              <div class="text-caption"><span class="text-text-400">المشرف </span><span class="font-bold text-text-900">{{ d.sup }}</span></div>
+              <BaseBadge variant="info">{{ formatDate(d.date) }} — {{ d.time }}</BaseBadge>
+              <BaseBadge>{{ membersFor(d.teamId).length }} {{ membersFor(d.teamId).length === 1 ? 'طالب' : 'طلاب' }}</BaseBadge>
+              <BaseBadge :variant="d.status === 'confirmed' ? 'success' : 'warning'" dot>{{ d.status === 'confirmed' ? 'مؤكَّد' : 'قيد الانتظار' }}</BaseBadge>
+            </div>
+
+            <div class="flex gap-1.5 shrink-0">
+              <button v-if="d.whatsapp" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg" title="تذكير واتساب" @click="sendWhats(d.whatsapp)"><MessageCircle :size="14" /></button>
+              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(d)"><Pencil :size="14" /></button>
+              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete(d)"><Trash2 :size="14" /></button>
             </div>
           </div>
 
-          <div class="px-5 py-3 border-t border-border-soft">
-            <button type="button" class="inline-flex items-center gap-1.5 text-caption font-bold text-primary-600 hover:underline disabled:opacity-40 disabled:pointer-events-none" :disabled="membersFor(d.teamId).length >= 4" @click="openAddStudentToGroup(d)">
-              <Plus :size="14" /> {{ membersFor(d.teamId).length >= 4 ? 'الفريق مكتمل (4 أعضاء)' : 'إضافة طالب لهذه المجموعة' }}
-            </button>
-          </div>
+          <DiscussionMembersPanel
+            v-show="isDiscussionOpen(d.id)" class="border-t border-border-soft"
+            :discussion="d" :members="membersFor(d.teamId)"
+            @whats="sendWhats" @mail="sendMail" @edit-student="openEditStudent" @delete-student="openDeleteStudent(d, $event)" @add-student="openAddStudentToGroup(d)"
+          />
         </div>
       </div>
-    </div>
 
-    <div v-if="totalPages > 1" class="flex flex-wrap items-center justify-between gap-4 mt-6">
-      <BaseSelect v-model="pageDropdown" class="min-w-[160px]" :options="pageOptions" />
-      <Pagination :current-page="page" :last-page="totalPages" :total="filteredDiscussions.length" @change="page = $event" />
-    </div>
+      <div v-if="totalPages > 1" class="flex flex-wrap items-center justify-between gap-4 mt-6">
+        <BaseSelect v-model="pageDropdown" class="min-w-[160px]" :options="pageOptions" />
+        <Pagination :current-page="page" :last-page="totalPages" :total="filteredDiscussions.length" @change="page = $event" />
+      </div>
+    </template>
+    </template>
 
     <!-- إضافة طالب لمجموعة -->
     <BaseModal v-model="addMemberModal" title="إضافة طالب للفريق" :description="addMemberTarget ? `إضافة عضو إلى ${addMemberTarget.team}` : ''">
@@ -179,7 +169,7 @@
     </BaseModal>
 
     <!-- تسجيل / تعديل موعد مناقشة -->
-    <BaseModal v-model="apptModal" :title="isEditing ? 'تعديل موعد المناقشة' : 'تسجيل موعد مناقشة جديد'" description="سيصل إشعار داخل المنصة لقائد الفريق والمشرف فور الحفظ" size="lg">
+    <BaseModal v-model="apptModal" :title="isEditing ? 'تعديل موعد المناقشة' : 'تسجيل موعد مناقشة جديد'" description="سيصل إشعار داخل المنصة للفريق والمشرف فور الحفظ" size="lg">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <template v-if="!isEditing">
           <BaseSelect v-model="modalDeptId" label="القسم" placeholder="اختاري القسم" :options="modalDeptOptions" @update:model-value="modalSpecId = ''; apptForm.project_id = ''" />
@@ -242,7 +232,8 @@
 </template>
 
 <script>
-import { Plus, Upload, Download, FileDown, Search, MessageCircle, Mail, Pencil, Trash2, Check, MapPin, Users, ChevronDown } from 'lucide-vue-next'
+import { Plus, Upload, Download, FileDown, Search, MessageCircle, Mail, Pencil, Trash2, Check, ChevronDown, CalendarClock } from 'lucide-vue-next'
+import PortalPageHead from '@/components/shared/PortalPageHead.vue'
 import { mapState, mapActions } from 'pinia'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -258,6 +249,11 @@ import { useDiscussionsStore } from '@/stores/discussions.store'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useUsersStore } from '@/stores/users.store'
 import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
+import DiscussionMembersPanel from '@/components/shared/DiscussionMembersPanel.vue'
+import DiscussionsTools from '@/views/super-admin/DiscussionsTools.vue'
+import DataTable from '@/components/ui/DataTable.vue'
+import { useAuthStore } from '@/stores/auth.store'
+import { ROLES } from '@/utils/constants'
 
 const APPTS_PAGE_SIZE = 5
 
@@ -270,19 +266,32 @@ const emptyForm = () => ({ project_id: '', place: '', date: '', time: '', commit
 export default {
   name: 'CommitteeAppointmentsPage',
 
-  components: { Search, MessageCircle, Mail, Pencil, Trash2, MapPin, Users, ChevronDown, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, EmailComposeModal },
+  components: { Search, MessageCircle, Mail, Pencil, Trash2, ChevronDown, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, EmailComposeModal, PortalPageHead, DiscussionMembersPanel, DataTable, DiscussionsTools },
 
   data() {
     return {
-      Plus, Upload, Download, FileDown, Check, Trash2,
+      Plus, Upload, Download, FileDown, Check, Trash2, CalendarClock,
+      discussionColumns: [
+        { key: 'toggle', label: 'التفاصيل', className: 'w-20' },
+        { key: 'teamId', label: 'رقم المجموعة', className: 'hidden lg:table-cell' },
+        { key: 'proj', label: 'المشروع والفريق' },
+        { key: 'sup', label: 'المشرف', className: 'hidden lg:table-cell' },
+        { key: 'date', label: 'الموعد' },
+        { key: 'count', label: 'الطلاب', className: 'hidden lg:table-cell' },
+        { key: 'status', label: 'الحالة' },
+        { key: 'actions', label: 'إجراءات' }
+      ],
       exportingExcel: false,
       exportingPdf: false,
       submitting: false,
       search: '',
       deptFilter: '',
       specFilter: '',
+      supFilter: '',
+      placeFilter: '',
+      statusFilter: '',
+      statusOptions: [{ value: 'confirmed', label: 'مؤكَّد' }, { value: 'pending', label: 'قيد الانتظار' }],
       openDiscussionIds: [],
-      openStudentKeys: [],
 
       importModal: false,
       importPreview: null,
@@ -323,7 +332,12 @@ export default {
   },
 
   computed: {
+    ...mapState(useAuthStore, ['userRole']),
     ...mapState(useDiscussionsStore, ['discussions', 'discussionsLoading']),
+
+    isSuperAdmin() {
+      return this.userRole === ROLES.SUPER_ADMIN
+    },
     ...mapState(useTeamsStore, ['teams', 'teamsForDisplay', 'departments', 'specializations']),
 
     rows() {
@@ -399,13 +413,22 @@ export default {
       return [...new Set(this.rows.map((r) => r.spec))].map((s) => ({ value: s, label: s }))
     },
 
+    supOptions() {
+      return [...new Set(this.rows.map((r) => r.sup).filter((v) => v && v !== '—'))].map((v) => ({ value: v, label: v }))
+    },
+    placeOptions() {
+      return [...new Set(this.rows.map((r) => r.place).filter(Boolean))].map((v) => ({ value: v, label: v }))
+    },
     filteredDiscussions() {
       const q = this.search.trim()
       return this.rows.filter((r) => {
         const matchQ = !q || `${r.proj}${r.team}${r.sup}`.includes(q)
         const matchDept = !this.deptFilter || r.dept === this.deptFilter
         const matchSpec = !this.specFilter || r.spec === this.specFilter
-        return matchQ && matchDept && matchSpec
+        const matchSup = !this.supFilter || r.sup === this.supFilter
+        const matchPlace = !this.placeFilter || r.place === this.placeFilter
+        const matchStatus = !this.statusFilter || (this.statusFilter === 'confirmed') === (r.status === 'confirmed')
+        return matchQ && matchDept && matchSpec && matchSup && matchPlace && matchStatus
       })
     },
 
@@ -457,14 +480,6 @@ export default {
         whats: m.student?.whatsapp,
         mail: m.student?.email
       }))
-    },
-
-    isStudentOpen(discussionId, memberId) {
-      return this.openStudentKeys.includes(`${discussionId}-${memberId}`)
-    },
-    toggleStudentDetails(discussionId, memberId) {
-      const key = `${discussionId}-${memberId}`
-      this.openStudentKeys = this.isStudentOpen(discussionId, memberId) ? this.openStudentKeys.filter((k) => k !== key) : [...this.openStudentKeys, key]
     },
 
     openEditStudent(member) {

@@ -1,12 +1,17 @@
 <template>
-  <div>
-    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+  <ProgressBoard v-if="isSuperAdmin">
+    <template #actions>
+      <BaseButton variant="outline" :icon="Download" :loading="exporting" @click="exportExcel">تصدير Excel</BaseButton>
+    </template>
+  </ProgressBoard>
+  <div v-else>
+    <div class="portal-head-card flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex items-center gap-3">
-        <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
+        <span class="page-icon grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="--icon-color: #62BB46; background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
           <TrendingUp :size="18" />
         </span>
         <div>
-          <h3 class="text-h3 font-bold text-text-900">نسبة تقدّم المشاريع</h3>
+          <h3 class="portal-title text-h3 font-bold text-text-900">نسبة تقدّم المشاريع</h3>
           <p class="text-caption text-text-600">متابعة تقدّم الفرق وتصفية النتائج حسب الحالة والفريق</p>
         </div>
       </div>
@@ -15,7 +20,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 mb-6">
       <div class="bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col justify-center gap-5">
-        <p class="text-body-sm font-bold text-text-700">توزيع حالات المشاريع</p>
+        <p class="portal-title text-body-sm font-bold text-text-700">توزيع حالات المشاريع</p>
         <div v-for="row in statusDistribution" :key="row.status" class="flex flex-col gap-2">
           <div class="flex items-center justify-between text-body-sm">
             <span class="text-text-600">{{ row.label }}</span>
@@ -28,7 +33,7 @@
       </div>
 
       <div class="bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col items-center">
-        <p class="text-body-sm font-bold text-text-700 mb-5">متوسط نسبة الإنجاز</p>
+        <p class="portal-title text-body-sm font-bold text-text-700 mb-5">متوسط نسبة الإنجاز</p>
         <div class="relative w-[150px] h-[150px]">
           <svg width="150" height="150" viewBox="0 0 150 150" style="transform: rotate(-90deg)">
             <circle cx="75" cy="75" r="63" fill="none" stroke="var(--color-border-soft)" stroke-width="16" />
@@ -90,6 +95,9 @@ import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import DataTable from '@/components/ui/DataTable.vue'
 import { useProgressStore } from '@/stores/progress.store'
+import { useAuthStore } from '@/stores/auth.store'
+import { ROLES } from '@/utils/constants'
+import ProgressBoard from '@/views/super-admin/ProgressBoard.vue'
 import { exportStyledExcel } from '@/utils/exportReport'
 
 const STATUS_LABELS = {
@@ -102,7 +110,7 @@ const PAGE_SIZE = 4
 export default {
   name: 'CommitteeProgressPage',
 
-  components: { TrendingUp, Search, ExternalLink, BaseButton, BaseSelect, BaseBadge, DataTable },
+  components: { TrendingUp, Search, ExternalLink, BaseButton, BaseSelect, BaseBadge, DataTable, ProgressBoard },
 
   data() {
     return {
@@ -125,6 +133,10 @@ export default {
 
   computed: {
     ...mapState(useProgressStore, ['overview', 'overviewLoading']),
+    ...mapState(useAuthStore, ['userRole']),
+    isSuperAdmin() {
+      return this.userRole === ROLES.SUPER_ADMIN
+    },
 
     rows() {
       return this.overview.map((entry) => {

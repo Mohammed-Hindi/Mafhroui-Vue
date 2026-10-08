@@ -1,19 +1,23 @@
 <template>
   <div>
-    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <header v-if="isSuperAdmin" class="dash-head mb-6">
+      <h2 class="dash-title">المجموعات</h2>
+    </header>
+
+    <div v-if="!isSuperAdmin" class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex flex-wrap gap-3">
         <BaseButton :icon="UserPlus" @click="openAddStudent">إضافة طالب</BaseButton>
         <BaseButton variant="secondary" :icon="UserPlus" @click="openAddSupervisor">إضافة مشرف</BaseButton>
         <BaseButton variant="outline" :icon="Upload" @click="openImport">استيراد من Excel</BaseButton>
       </div>
       <div class="flex flex-wrap gap-2">
-        <BaseButton variant="outline" :icon="Archive" @click="openTrashed">الفرق المحذوفة</BaseButton>
-        <BaseButton variant="outline" :icon="Download" :loading="exportingExcel" @click="exportExcel">تصدير Excel</BaseButton>
-        <BaseButton variant="outline" :icon="FileDown" :loading="exportingPdf" @click="exportPdf">تصدير PDF</BaseButton>
+        <BaseButton variant="outline" :icon="Archive" @click="openTrashed">المجموعات المحذوفة</BaseButton>
+        <BaseButton v-if="!isSuperAdmin" variant="outline" :icon="Download" :loading="exportingExcel" @click="exportExcel">تصدير Excel</BaseButton>
+        <BaseButton v-if="!isSuperAdmin" variant="outline" :icon="FileDown" :loading="exportingPdf" @click="exportPdf">تصدير PDF</BaseButton>
       </div>
     </div>
 
-    <div class="flex flex-wrap gap-3 mb-6">
+    <div v-if="!isSuperAdmin" class="flex flex-wrap gap-3 mb-6">
       <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-success-bg text-success text-caption font-bold hover:brightness-95 transition-all duration-fast" @click="sendWhatsAll">
         <MessageCircle :size="15" /> إرسال واتساب للجميع ({{ totalMembers }})
       </button>
@@ -22,7 +26,7 @@
       </button>
     </div>
 
-    <div class="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-lg bg-surface border border-border shadow-card">
+    <div v-if="!isSuperAdmin" class="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-lg bg-surface border border-border shadow-card">
       <div class="relative flex-1 min-w-[220px]">
         <Search :size="16" class="pointer-events-none absolute top-1/2 -translate-y-1/2 start-3 text-text-400" />
         <input v-model.trim="search" type="search" placeholder="ابحث عن طالب، مشرف أو رقم جامعي..." class="w-full h-icon-btn ps-10 pe-3 rounded-sm border border-border bg-bg text-body text-text-900 focus:border-primary-600 transition-colors duration-fast">
@@ -31,93 +35,67 @@
       <BaseSelect v-model="specFilter" class="min-w-[170px]" placeholder="جميع التخصصات" include-placeholder-option :options="specializationOptions" />
     </div>
 
-    <SkeletonLoader v-if="teamsLoading" :rows="4" height="80px" />
-    <EmptyState v-else-if="!filteredGroups.length" title="لا توجد مجموعات مطابقة" description="جرّبي تعديل البحث أو الفلاتر، أو أنشئي فريقًا جديدًا." />
+    <!-- الإدارة العامة: سجل مجموعات ببيانات تجريبية (placeholder) — اللجنة تبقى على البطاقات -->
+    <GroupsRegister v-if="isSuperAdmin">
+      <template #actions>
+        <button type="button" class="pbtn is-green" @click="openAddStudent"><component :is="UserPlus" :size="17" /> إضافة طالب</button>
+        <button type="button" class="pbtn is-cyan" @click="openAddSupervisor"><component :is="UserPlus" :size="17" /> إضافة مشرف</button>
+        <button type="button" class="pbtn is-outline" @click="openImport"><component :is="Upload" :size="17" /> استيراد من Excel</button>
+        <button type="button" class="pbtn is-outline" @click="openTrashed"><component :is="Archive" :size="17" /> المجموعات المحذوفة</button>
+      </template>
+    </GroupsRegister>
 
-    <div v-else class="flex flex-col gap-4">
-      <div
-        v-for="group in pageGroups" :id="group.id" :key="group.id"
-        class="bg-surface border border-border rounded-lg shadow-card overflow-hidden transition-shadow duration-base"
-      >
-        <div class="flex items-center gap-4 p-4 flex-wrap">
-          <button
-            type="button" class="grid place-items-center w-9 h-9 rounded-sm bg-border-soft text-text-600 transition-all duration-base shrink-0"
-            :class="{ '!bg-primary-600 !text-white rotate-90': isGroupOpen(group.id) }"
-            @click="toggleGroup(group.id)"
-          >
-            <ChevronLeft :size="16" />
-          </button>
+    <SkeletonLoader v-else-if="teamsLoading" :rows="4" height="80px" />
+    <EmptyState v-else-if="!filteredGroups.length" title="لا توجد مجموعات مطابقة" description="جرّبي تعديل البحث أو الفلاتر، أو أنشئي مجموعة جديدة." />
 
-          <div class="w-10 h-10 rounded-md shrink-0 grid place-items-center font-cairo font-extrabold text-body-sm text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
-            {{ group.id }}
-          </div>
-
-          <div class="flex-1 min-w-0 flex items-center gap-3 sm:gap-6 flex-wrap">
-            <div>
-              <div class="text-body-sm font-extrabold text-text-900">{{ group.name }}</div>
-              <div class="text-label text-text-400">رقم المجموعة {{ group.id }}<template v-if="group.section"> — {{ group.section }}</template></div>
-            </div>
-            <div class="text-caption"><span class="text-text-400">المشرف </span><span class="font-bold text-text-900">{{ group.sup }}</span></div>
-            <BaseBadge variant="info">{{ group.spec }}</BaseBadge>
-            <BaseBadge>{{ group.members.length }} {{ group.members.length === 1 ? 'طالب' : 'طلاب' }}</BaseBadge>
-          </div>
-
-          <div class="flex gap-1.5 shrink-0">
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEditGroup(group)"><Pencil :size="14" /></button>
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDeleteGroup(group)"><Trash2 :size="14" /></button>
-          </div>
-        </div>
-
-        <div v-show="isGroupOpen(group.id)" class="border-t border-border-soft">
-          <DataTable
-            flush
-            :columns="memberColumns" :rows="group.members" row-key="memberId" :primary-keys="['name', 'actions']"
-            empty-title="لا يوجد أعضاء بعد"
-          >
-            <template #cell-name="{ row }">
-              <span class="inline-flex items-center gap-2">
-                <span class="font-bold text-text-900 truncate" :title="row.name">{{ row.name }}</span>
-                <span v-if="row.leader" class="text-label font-bold text-warning-text bg-warning-bg px-2 py-0.5 rounded-pill shrink-0">قائد</span>
-              </span>
-            </template>
-            <template #cell-uid="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-            <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-            <template #cell-mail="{ value }"><span class="mono" :title="value">{{ value }}</span></template>
-            <template #cell-leader="{ row }">
-              <div class="flex justify-center">
-                <button
-                  type="button"
-                  class="grid place-items-center w-8 h-8 rounded-pill transition-colors duration-fast"
-                  :class="row.leader ? 'bg-warning-bg text-warning-text' : 'border border-border text-text-400 hover:bg-warning-bg hover:text-warning-text'"
-                  :title="row.leader ? 'قائد الفريق الحالي' : 'تعيين قائدًا للفريق'"
-                  @click="requestLeaderChange(group, row)"
-                >
-                  <Crown :size="14" :fill="row.leader ? 'currentColor' : 'none'" />
-                </button>
-              </div>
-            </template>
-            <template #cell-actions="{ row }">
-              <div class="flex items-center justify-center gap-1.5">
-                <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(group, row)"><Pencil :size="14" /></button>
-                <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95 disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
-                <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
-                <button type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-error-bg text-error hover:brightness-95 disabled:opacity-40 disabled:pointer-events-none" :disabled="row.leader" :title="row.leader ? 'لا يمكن حذف القائد' : 'إزالة من الفريق'" @click="requestRemoveMember(group, row)"><Trash2 :size="14" /></button>
-              </div>
-            </template>
-          </DataTable>
-
-          <div class="px-5 py-3 border-t border-border-soft">
-            <button type="button" class="inline-flex items-center gap-1.5 text-caption font-bold text-primary-600 hover:underline disabled:opacity-40 disabled:pointer-events-none" :disabled="group.members.length >= 4" @click="openAddMember(group)">
-              <Plus :size="14" /> {{ group.members.length >= 4 ? 'الفريق مكتمل (4 أعضاء)' : 'إضافة طالب لهذا الفريق' }}
+    <template v-else>
+      <div class="flex flex-col gap-4">
+        <div
+          v-for="group in pageGroups" :id="group.id" :key="group.id"
+          class="bg-surface border border-border rounded-lg shadow-card overflow-hidden transition-shadow duration-base"
+        >
+          <div class="flex items-center gap-4 p-4 flex-wrap">
+            <button
+              type="button" class="grid place-items-center w-9 h-9 rounded-sm bg-border-soft text-text-600 transition-all duration-base shrink-0"
+              :class="{ '!bg-primary-600 !text-white rotate-90': isGroupOpen(group.id) }"
+              @click="toggleGroup(group.id)"
+            >
+              <ChevronLeft :size="16" />
             </button>
+
+            <div class="w-10 h-10 rounded-md shrink-0 grid place-items-center font-cairo font-extrabold text-body-sm text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
+              {{ group.id }}
+            </div>
+
+            <div class="flex-1 min-w-0 flex items-center gap-3 sm:gap-6 flex-wrap">
+              <div>
+                <div class="text-body-sm font-extrabold text-text-900">{{ group.name }}</div>
+                <div class="text-label text-text-400">رقم المجموعة {{ group.id }}<template v-if="group.section"> — {{ group.section }}</template></div>
+              </div>
+              <div class="text-caption"><span class="text-text-400">المشرف </span><span class="font-bold text-text-900">{{ group.sup }}</span></div>
+              <BaseBadge variant="info">{{ group.spec }}</BaseBadge>
+              <BaseBadge>{{ group.members.length }} {{ group.members.length === 1 ? 'طالب' : 'طلاب' }}</BaseBadge>
+            </div>
+
+            <div class="flex gap-1.5 shrink-0">
+              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEditGroup(group)"><Pencil :size="14" /></button>
+              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDeleteGroup(group)"><Trash2 :size="14" /></button>
+            </div>
           </div>
+
+          <TeamMembersPanel
+            v-show="isGroupOpen(group.id)" class="border-t border-border-soft"
+            :group="group" :columns="memberColumns"
+            @edit-member="openEditMember(group, $event)"
+            @whats="sendWhats" @mail="sendMail" @remove-member="requestRemoveMember(group, $event)" @add-member="openAddMember(group)"
+          />
         </div>
       </div>
-    </div>
-    <Pagination class="mt-6" :current-page="page" :last-page="totalPages" :total="filteredGroups.length" @change="page = $event" />
+      <Pagination class="mt-6" :current-page="page" :last-page="totalPages" :total="filteredGroups.length" @change="page = $event" />
+    </template>
 
     <!-- إضافة طالب -->
-    <BaseModal v-model="addStudentModal" title="إضافة طالب" description="إنشاء حساب الطالب، وإنشاء فريقه الجديد بقائد الفريق الأول (اختياري)" size="lg">
+    <BaseModal v-model="addStudentModal" title="إضافة طالب" description="إنشاء حساب الطالب، وإنشاء فريق جديد له (اختياري)" size="lg">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <BaseInput v-model="addStudentForm.name" label="اسم الطالب" placeholder="مثال: سيف قطناني" class="sm:col-span-2" />
         <BaseInput v-model="addStudentForm.university_number" label="الرقم الجامعي" placeholder="اختياري" />
@@ -128,7 +106,7 @@
         <div class="sm:col-span-2 pt-2 mt-1 border-t border-dashed border-border">
           <label class="flex items-center gap-2 text-body-sm font-bold text-text-900 cursor-pointer">
             <input v-model="addStudentForm.createTeam" type="checkbox">
-            إنشاء فريق جديد لهذا الطالب (كقائد الفريق)
+            إنشاء فريق جديد لهذا الطالب
           </label>
         </div>
         <template v-if="addStudentForm.createTeam">
@@ -235,14 +213,6 @@
       </template>
     </BaseModal>
 
-    <!-- تأكيد تغيير القائد -->
-    <BaseModal v-model="leaderModal" title="تعيين قائد الفريق" :description="leaderTarget ? `سيصبح ‏${leaderTarget.member.name} قائدًا لـ${leaderTarget.group.name}` : ''" size="sm">
-      <p class="text-body-sm text-text-600">سيفقد القائد الحالي صلاحية القيادة. هل تريدين المتابعة؟</p>
-      <template #footer>
-        <BaseButton variant="ghost" @click="leaderModal = false">إلغاء</BaseButton>
-        <BaseButton :icon="Crown" :loading="submitting" @click="confirmLeaderChange">تأكيد</BaseButton>
-      </template>
-    </BaseModal>
 
     <!-- تأكيد إزالة عضو -->
     <BaseModal v-model="removeMemberModal" title="إزالة عضو من الفريق" :description="removeMemberTarget ? `إزالة ‏${removeMemberTarget.member.name} من ${removeMemberTarget.group.name}` : ''" size="sm">
@@ -254,18 +224,18 @@
     </BaseModal>
 
     <!-- تأكيد حذف فريق -->
-    <BaseModal v-model="deleteModal" title="حذف الفريق" :description="deleteTarget ? `حذف فريق ‏${deleteTarget.name} بالكامل` : ''" size="sm">
-      <p class="text-body-sm text-text-600">سيُحذف الفريق ويمكن استرجاعه لاحقًا من "الفرق المحذوفة".</p>
+    <BaseModal v-model="deleteModal" title="حذف المجموعة" :description="deleteTarget ? `حذف مجموعة ‏${deleteTarget.name} بالكامل` : ''" size="sm">
+      <p class="text-body-sm text-text-600">ستُحذف المجموعة ويمكن استرجاعها لاحقًا من "المجموعات المحذوفة".</p>
       <template #footer>
         <BaseButton variant="ghost" @click="deleteModal = false">إلغاء</BaseButton>
         <BaseButton variant="danger" :icon="Trash2" :loading="submitting" @click="confirmDelete">تأكيد الحذف</BaseButton>
       </template>
     </BaseModal>
 
-    <!-- الفرق المحذوفة -->
-    <BaseModal v-model="trashedModal" title="الفرق المحذوفة" description="استرجعي أي فريق حُذف بالخطأ" size="lg">
+    <!-- المجموعات المحذوفة -->
+    <BaseModal v-model="trashedModal" title="المجموعات المحذوفة" description="استرجعي أي مجموعة حُذفت بالخطأ" size="lg">
       <SkeletonLoader v-if="trashedTeamsLoading" :rows="3" height="60px" />
-      <EmptyState v-else-if="!trashedTeamsForDisplay.length" title="لا يوجد فرق محذوفة" description="كل الفرق المحذوفة ستظهر هنا وبإمكانك استرجاعها." />
+      <EmptyState v-else-if="!trashedTeamsForDisplay.length" title="لا توجد مجموعات محذوفة" description="كل المجموعات المحذوفة ستظهر هنا وبإمكانك استرجاعها." />
       <div v-else class="flex flex-col gap-2 max-h-96 overflow-y-auto scrollbar-thin">
         <div v-for="group in trashedTeamsForDisplay" :key="group.id" class="flex items-center justify-between gap-3 p-3 rounded-sm border border-border bg-bg">
           <div class="min-w-0">
@@ -286,7 +256,7 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Plus, Upload, Download, FileDown, Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, Check, Crown, Archive, RotateCcw, UserPlus, Send, Copy } from 'lucide-vue-next'
+import { Plus, Upload, Download, FileDown, Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, Check, Archive, RotateCcw, UserPlus, Send, Copy } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -294,15 +264,17 @@ import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
-import DataTable from '@/components/ui/DataTable.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useUsersStore } from '@/stores/users.store'
 import { exportStyledExcel, exportGroupsPdf } from '@/utils/exportReport'
-import { APP_NAME } from '@/utils/constants'
+import { APP_NAME, ROLES } from '@/utils/constants'
 import { sendEmail } from '@/services/api'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
 import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
+import TeamMembersPanel from '@/components/shared/TeamMembersPanel.vue'
+import GroupsRegister from '@/views/super-admin/GroupsRegister.vue'
+import { useAuthStore } from '@/stores/auth.store'
 
 const GROUPS_PAGE_SIZE = 5
 
@@ -316,17 +288,16 @@ const emptySupervisorForm = () => ({ name: '', employee_number: '', email: '', w
 export default {
   name: 'CommitteeTeamsPage',
 
-  components: { Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, Crown, UserPlus, Plus, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, DataTable, Pagination, FileDropzone, EmailComposeModal },
+  components: { Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, FileDropzone, EmailComposeModal, TeamMembersPanel, GroupsRegister },
 
   data() {
     return {
-      Plus, Upload, Download, FileDown, Check, Trash2, Crown, Archive, RotateCcw, Send, Copy, UserPlus,
+      Plus, Upload, Download, FileDown, Check, Trash2, Archive, RotateCcw, Send, Copy, UserPlus,
       memberColumns: [
         { key: 'name', label: 'اسم العضو' },
         { key: 'uid', label: 'الرقم الجامعي' },
         { key: 'whats', label: 'الواتس' },
         { key: 'mail', label: 'البريد' },
-        { key: 'leader', label: 'قائد الفريق', className: 'text-center' },
         { key: 'actions', label: 'إجراءات', className: 'text-center' }
       ],
       exportingExcel: false,
@@ -367,8 +338,6 @@ export default {
       editMemberTargetId: null,
       editMemberForm: {},
 
-      leaderModal: false,
-      leaderTarget: null,
 
       removeMemberModal: false,
       removeMemberTarget: null,
@@ -384,6 +353,7 @@ export default {
   },
 
   computed: {
+    ...mapState(useAuthStore, ['userRole']),
     ...mapState(useTeamsStore, ['teams', 'teamsLoading', 'specializations', 'trashedTeamsForDisplay', 'trashedTeamsLoading']),
 
     groups() {
@@ -395,6 +365,8 @@ export default {
         specId: team.specialization_id,
         sup: team.supervisor?.name || 'غير محدد',
         supId: team.supervisor?.id ?? null,
+        project: team.project?.name || '',
+        projectStatus: team.project?.status || '',
         members: (team.members || []).map((m) => ({
           memberId: m.id,
           studentId: m.student?.id,
@@ -441,6 +413,10 @@ export default {
         const matchSpec = !this.specFilter || g.spec === this.specFilter
         return matchQ && matchSup && matchSpec
       })
+    },
+
+    isSuperAdmin() {
+      return this.userRole === ROLES.SUPER_ADMIN
     },
 
     totalPages() {
@@ -661,33 +637,20 @@ export default {
       }
     },
 
-    requestLeaderChange(group, member) {
-      if (member.leader) return
-      this.leaderTarget = { group, member }
-      this.leaderModal = true
-    },
-    async confirmLeaderChange() {
-      this.submitting = true
-      try {
-        await this.updateTeamLeader(this.leaderTarget.group.id, this.leaderTarget.member.studentId)
-        this.leaderModal = false
-        this.$toast?.success('تم تعيين قائد الفريق')
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر تعيين القائد')
-      } finally {
-        this.submitting = false
-      }
-    },
-
     requestRemoveMember(group, member) {
-      if (member.leader) return
       this.removeMemberTarget = { group, member }
       this.removeMemberModal = true
     },
     async confirmRemoveMember() {
       this.submitting = true
       try {
-        await this.removeTeamMember(this.removeMemberTarget.group.id, this.removeMemberTarget.member.memberId)
+        const { group, member } = this.removeMemberTarget
+        // الخادم يشترط عضوًا مسؤولًا (leader_id) لكل فريق — عند إزالته تنتقل المسؤولية تلقائيًا لعضو آخر بلا أي واجهة
+        if (member.leader) {
+          const next = group.members.find((m) => m.memberId !== member.memberId)
+          if (next) await this.updateTeamLeader(group.id, next.studentId)
+        }
+        await this.removeTeamMember(group.id, member.memberId)
         this.removeMemberModal = false
         this.$toast?.success('تمت إزالة العضو من الفريق')
       } catch (err) {
@@ -737,7 +700,7 @@ export default {
       try {
         await this.fetchTrashedTeams()
       } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر تحميل الفرق المحذوفة')
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحميل المجموعات المحذوفة')
       }
     },
     async confirmRestore(group) {
@@ -782,8 +745,8 @@ export default {
           num: g.id, section: g.section || '', spec: g.spec, name: m.name, uid: m.uid || '', sup: g.sup, whats: m.whats || '', mail: m.mail
         })))
         await exportStyledExcel({
-          fileName: 'فرق-مشاريع-التخرج.xlsx',
-          sheetTitle: 'الفرق',
+          fileName: 'مجموعات-مشاريع-التخرج.xlsx',
+          sheetTitle: 'المجموعات',
           columns: [
             { key: 'num', label: 'رقم المجموعة', width: 14 },
             { key: 'section', label: 'الشعبة', width: 12 },
@@ -806,9 +769,9 @@ export default {
       this.exportingPdf = true
       try {
         await exportGroupsPdf({
-          fileName: 'فرق-مشاريع-التخرج.pdf',
-          title: 'تقرير فرق مشاريع التخرج',
-          subtitle: `${this.groups.length} فرق — ${this.totalMembers} عضوًا`,
+          fileName: 'مجموعات-مشاريع-التخرج.pdf',
+          title: 'تقرير مجموعات مشاريع التخرج',
+          subtitle: `${this.groups.length} مجموعة — ${this.totalMembers} عضوًا`,
           sections: this.groups.map((g) => ({
             heading: `${g.name}`,
             meta: [

@@ -28,8 +28,6 @@ export const useAuthStore = defineStore('auth', () => {
         return { name: 'committee-dashboard' }
       case 'supervisor':
         return { name: 'supervisor-dashboard' }
-      case 'team_leader':
-        return { name: 'team-leader-dashboard' }
       case 'student':
         return { name: 'student-dashboard' }
       default:
@@ -139,6 +137,24 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // PATCH /me — تعديل بيانات الحساب الشخصية
+  const updateProfile = async (payload) => {
+    const { data } = await api.patch('/me', payload)
+    user.value = data
+    localStorage.setItem('user', JSON.stringify(data))
+    return data
+  }
+
+  // POST /me/avatar (multipart) — صورة الملف التعريفي
+  const uploadAvatar = async (file) => {
+    const form = new FormData()
+    form.append('avatar', file)
+    const { data } = await api.post('/me/avatar', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+    user.value = { ...user.value, avatar_url: data.avatar_url }
+    localStorage.setItem('user', JSON.stringify(user.value))
+    return data.avatar_url
+  }
+
   // POST /logout
   const logout = async () => {
     try {
@@ -173,6 +189,8 @@ export const useAuthStore = defineStore('auth', () => {
     changePassword,
     forgotPassword,
     fetchCurrentUser,
+    updateProfile,
+    uploadAvatar,
     hasRole,
   }
 })

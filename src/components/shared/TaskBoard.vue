@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="canCreate" class="flex items-center justify-between gap-4 mb-5 flex-wrap">
-      <p class="text-body-sm text-text-600">{{ canDrag ? 'اسحبي البطاقات أو استخدمي القائمة على البطاقة لتحديث الحالة' : 'قائد الفريق هو من يقدر يغيّر حالة المهمة' }}</p>
+      <p class="text-body-sm text-text-600">{{ canDrag ? 'اسحبي البطاقات أو استخدمي القائمة على البطاقة لتحديث الحالة' : 'تغيير حالة هذه المهمة غير متاح لحسابك' }}</p>
       <div class="flex items-center gap-2">
         <BaseButton v-if="canDelete" variant="outline" size="sm" :icon="ArchiveIcon" @click="openArchive">الأرشيف</BaseButton>
         <BaseButton size="sm" :icon="Plus" @click="openCreate()">مهمة جديدة</BaseButton>
@@ -251,7 +251,7 @@ export default {
     columnOptions() {
       return this.columns.map((c) => ({ value: c.id, label: c.label }))
     },
-    // التعديل مسموح فقط لمن يقدر ينشئ مهام (المشرف/قائد الفريق) — نفس صلاحية الباك-إند
+    // التعديل مسموح فقط لمن يقدر ينشئ مهام (المشرف ومسؤول الفريق في الخادم) — نفس صلاحية الباك-إند
     canEditTask() {
       return this.canCreate
     }

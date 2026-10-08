@@ -7,7 +7,6 @@ export const ROLES = {
   SUPER_ADMIN: 'super_admin',
   COMMITTEE: 'committee',
   SUPERVISOR: 'supervisor',
-  TEAM_LEADER: 'team_leader',
   STUDENT: 'student'
 }
 
@@ -16,7 +15,6 @@ export const ROLE_LABELS = {
   [ROLES.SUPER_ADMIN]: 'الإدارة العامة',
   [ROLES.COMMITTEE]: 'لجنة الإشراف',
   [ROLES.SUPERVISOR]: 'المشرف',
-  [ROLES.TEAM_LEADER]: 'قائد الفريق',
   [ROLES.STUDENT]: 'الطالب'
 }
 
@@ -25,7 +23,6 @@ export const ROLE_HOME_ROUTE = {
   [ROLES.SUPER_ADMIN]: '/super-admin',
   [ROLES.COMMITTEE]: '/committee',
   [ROLES.SUPERVISOR]: '/supervisor',
-  [ROLES.TEAM_LEADER]: '/team-leader',
   [ROLES.STUDENT]: '/student'
 }
 

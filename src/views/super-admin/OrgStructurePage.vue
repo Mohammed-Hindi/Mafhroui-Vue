@@ -1,18 +1,12 @@
 <template>
   <div class="flex flex-col gap-8">
-    <div class="flex items-center gap-3">
-      <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><Building2 :size="18" /></span>
-      <div>
-        <h3 class="text-h3 font-bold text-text-900">الأقسام والتخصصات والفصول الدراسية</h3>
-        <p class="text-caption text-text-600">الإعدادات الأساسية للمنصة — يعتمد عليها تصنيف الفرق والمشاريع، والفصل الدراسي الحالي</p>
-      </div>
-    </div>
+    <PortalPageHead :icon="Building2" color="#229791" title="الأقسام والتخصصات والفصول الدراسية" class="!mb-0" />
 
     <!-- الأقسام -->
     <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden">
       <div class="flex flex-wrap items-center justify-between gap-3 p-5 pb-4">
         <div class="flex items-center gap-2">
-          <h4 class="text-h4 font-bold text-text-900">الأقسام</h4>
+          <h4 class="portal-title text-h4 font-bold text-text-900">الأقسام</h4>
           <BaseBadge>{{ departments.length }}</BaseBadge>
         </div>
         <BaseButton :icon="Plus" size="sm" @click="openDepartmentForm()">إضافة قسم</BaseButton>
@@ -36,7 +30,7 @@
     <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden">
       <div class="flex flex-wrap items-center justify-between gap-3 p-5 pb-4">
         <div class="flex items-center gap-2">
-          <h4 class="text-h4 font-bold text-text-900">التخصصات</h4>
+          <h4 class="portal-title text-h4 font-bold text-text-900">التخصصات</h4>
           <BaseBadge>{{ specializations.length }}</BaseBadge>
         </div>
         <BaseButton :icon="Plus" size="sm" :disabled="!departments.length" @click="openSpecializationForm()">إضافة تخصص</BaseButton>
@@ -63,7 +57,7 @@
     <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden">
       <div class="flex flex-wrap items-center justify-between gap-3 p-5 pb-4">
         <div class="flex items-center gap-2">
-          <h4 class="text-h4 font-bold text-text-900">الفصول الدراسية</h4>
+          <h4 class="portal-title text-h4 font-bold text-text-900">الفصول الدراسية</h4>
           <BaseBadge>{{ semesters.length }}</BaseBadge>
         </div>
         <BaseButton :icon="Plus" size="sm" @click="openTermForm()">إضافة فصل دراسي</BaseButton>
@@ -139,6 +133,7 @@
 <script>
 import { mapState, mapActions } from 'pinia'
 import { Building2, Plus, Pencil, Trash2, Star } from 'lucide-vue-next'
+import PortalPageHead from '@/components/shared/PortalPageHead.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -157,11 +152,11 @@ const emptyTermForm = () => ({ name: '', is_current: false })
 export default {
   name: 'SuperAdminOrgStructurePage',
 
-  components: { Building2, Pencil, Star, Trash2, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, EmptyState },
+  components: { PortalPageHead, Pencil, Star, Trash2, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, EmptyState },
 
   data() {
     return {
-      Plus, Trash2,
+      Plus, Trash2, Building2,
       submitting: false,
 
       departmentColumns: [
