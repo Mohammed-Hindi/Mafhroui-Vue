@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-8">
-    <PortalPageHead :icon="Building2" color="#229791" title="الأقسام والتخصصات والفصول الدراسية" subtitle="الإعدادات الأساسية للمنصة — يعتمد عليها تصنيف الفرق والمشاريع، والفصل الدراسي الحالي" class="!mb-0" />
+    <PortalPageHead :icon="Building2" color="#229791" title="الأقسام والتخصصات والفصول الدراسية" class="!mb-0" />
 
     <!-- الأقسام -->
     <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden">

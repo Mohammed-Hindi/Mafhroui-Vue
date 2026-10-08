@@ -2306,3 +2306,22 @@
 .pf-avatar label[aria-disabled="true"] { opacity: 0.6; pointer-events: none; }
 .pf-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px 18px; }
 .pf-form-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* المقترحات: الجدول ونافذة "عرض المقترح" (المقترح / محاولات الرفض / التقارير) */
+.pr-table td { vertical-align: middle; }
+.pr-count { display: inline-grid; place-items: center; min-width: 28px; height: 26px; padding-inline: 8px; border-radius: 13px; background: var(--color-bg); font-weight: 800; font-variant-numeric: tabular-nums; color: var(--color-text-700); }
+.pr-count.is-bad { background: #F9DFE1; color: #E81E63; }
+.pr-tabs { width: fit-content; margin-bottom: 18px; }
+.pr-pane { display: flex; flex-direction: column; gap: 10px; min-height: 160px; }
+.pr-status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.pr-status .pbtn { margin-inline-start: auto; }
+.pr-h { margin: 8px 0 0; font-size: 14px; font-weight: 800; color: var(--color-text-900); }
+.pr-text { font-size: 14px; line-height: 1.8; color: var(--color-text-700); white-space: pre-line; }
+.pr-attempts, .pr-reports { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.pr-attempts li, .pr-reports li { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 4px; }
+.pr-attempts li div, .pr-reports li div { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; font-size: 13.5px; }
+.pr-attempts p { margin: 4px 0 0; color: var(--color-text-700); line-height: 1.7; }
+.pr-reports li { align-items: center; flex-wrap: wrap; }
+.pr-attempt-no { display: grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; background: var(--color-bg); font-weight: 800; color: var(--portal-cyan); }
+.pr-attempts .pr-attempt-no { color: #E81E63; background: #F9DFE1; }
+.pr-decision { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--color-border); }

@@ -4,7 +4,6 @@
     <header v-if="mode === 'credentials'" class="dash-head mb-6">
       <div>
         <h2 class="dash-title">إرسال بيانات الدخول</h2>
-        <p class="dash-sub">اختر الدور والأعضاء وأرسل روابط الدعوة عبر البريد أو واتساب، وتابع سجل الإرسال</p>
       </div>
     </header>
 
@@ -589,6 +588,9 @@ export default {
         empId: u.employee_number,
         mail: u.email,
         whats: u.whatsapp,
+        // من الخادم: عدد مهام فرقه وآخر استخدام لجلسة الدخول
+        tasks: u.tasks_count ?? 0,
+        lastActive: u.last_active_at ? formatDateTime(u.last_active_at) : 'لم يسجّل دخولًا بعد',
         restricted: u.status === 'restricted',
         restrictedReason: u.restricted_reason
       }))
@@ -634,7 +636,7 @@ export default {
       if (this.memberKind === 'committee') return this.supervisorColumns
       if (!this.isSuperAdmin) return this.supervisorColumns
       const cols = [...this.supervisorColumns]
-      cols.splice(1, 0, { key: 'groups', label: 'المجموعات' })
+      cols.splice(1, 0, { key: 'groups', label: 'المجموعات' }, { key: 'tasks', label: 'عدد المهام' }, { key: 'lastActive', label: 'آخر نشاط' })
       return cols
     },
     activeList() {
