@@ -1,52 +1,79 @@
 <template>
-  <!-- الملف التعريفي للإدارة العامة — بنمط الصفحة الرئيسية لموقع الكلية:
-       هيرو بتدرج الهوية ← شريط إحصائيات ← عناوين أقسام بخطين ← شبكة أيقونات ملوّنة كالعمادات -->
-  <div class="ucas-site flex flex-col gap-10">
-    <!-- الهيرو -->
-    <section class="ucas-profile-hero">
-      <div class="flex flex-wrap items-center gap-6 min-w-0">
-        <span class="ucas-profile-logo"><UcasLogo :size="92" /></span>
-        <div class="min-w-0">
-          <p class="ucas-profile-kicker">الكلية الجامعية للعلوم التطبيقية — منصة {{ appName }}</p>
-          <h2 class="ucas-profile-name">{{ user?.name || '—' }}</h2>
-          <div class="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 text-white/90">
-            <span class="ucas-profile-role"><ShieldCheck :size="16" /> {{ roleLabel }}</span>
-            <span v-if="user?.email" class="inline-flex items-center gap-2 mono"><Mail :size="16" /> {{ user.email }}</span>
-            <span v-if="user?.whatsapp" class="inline-flex items-center gap-2 mono"><Phone :size="16" /> {{ user.whatsapp }}</span>
-          </div>
-        </div>
-      </div>
-      <router-link :to="{ name: 'super-admin-change-password' }" class="ucas-btn-outline-light">
-        <Lock :size="17" /> تغيير كلمة المرور
+  <!-- الملف التعريفي للإدارة العامة — بنمط "ملف الطالب" في بوابة الكلية (201300):
+       شريط تبويبات أزرق بأيقونات بيضاء ← بطاقة بيانات (تسمية + حقل للقراءة) ← بطاقات البوابة -->
+  <div class="flex flex-col gap-6">
+    <nav class="profile-tabs" aria-label="أقسام الملف التعريفي">
+      <button
+        v-for="t in tabs" :key="t.key" type="button"
+        :class="['profile-tab', tab === t.key && 'is-active']"
+        :aria-current="tab === t.key ? 'page' : undefined"
+        @click="tab = t.key"
+      >
+        <component :is="t.icon" :size="34" />
+        <span>{{ t.label }}</span>
+      </button>
+      <router-link :to="{ name: 'super-admin-change-password' }" class="profile-tab">
+        <Lock :size="34" />
+        <span>تغيير كلمة المرور</span>
       </router-link>
-    </section>
+    </nav>
 
-    <!-- إحصائيات المنصة -->
-    <UcasStatsBand :items="platformStats" />
+    <!-- المعلومات الشخصية -->
+    <section v-if="tab === 'info'" class="profile-card">
+      <div class="pf-head">
+        <h3 class="portal-title">المعلومات الشخصية</h3>
+        <button v-if="!editing" type="button" class="pbtn is-cyan is-sm" @click="startEdit"><Pencil :size="15" /> تعديل البيانات</button>
+      </div>
 
-    <!-- بيانات الحساب -->
-    <section>
-      <UcasSectionTitle title="بيانات الحساب" subtitle="معلومات حساب الإدارة العامة المسجّلة على المنصة" />
-      <div class="ucas-icon-grid">
-        <div v-for="info in accountInfo" :key="info.label" class="ucas-icon-item" :style="{ '--item-color': info.color }">
-          <component :is="info.icon" :size="46" :stroke-width="1.4" class="ucas-icon-item-icon" />
-          <h3>{{ info.label }}</h3>
-          <p :class="info.mono && 'mono'">{{ info.value || '—' }}</p>
+      <!-- الصورة الشخصية -->
+      <div class="pf-avatar">
+        <img v-if="user?.avatar_url" :src="user.avatar_url" alt="الصورة الشخصية">
+        <span v-else aria-hidden="true">{{ (user?.name || '?').charAt(0) }}</span>
+        <label class="pbtn is-outline is-sm" :aria-disabled="uploading">
+          <Camera :size="15" /> {{ uploading ? 'جارٍ الرفع…' : user?.avatar_url ? 'تغيير الصورة' : 'إضافة صورة' }}
+          <input type="file" accept="image/png,image/jpeg,image/webp" hidden :disabled="uploading" @change="onAvatar">
+        </label>
+        <small class="pt-muted">PNG أو JPG أو WEBP حتى 2MB</small>
+      </div>
+
+      <!-- تعديل البيانات -->
+      <form v-if="editing" class="pf-form" @submit.prevent="saveEdit">
+        <label class="pfield"><span>الاسم</span><input v-model.trim="form.name" required maxlength="150"></label>
+        <label class="pfield"><span>البريد الإلكتروني</span><input v-model.trim="form.email" type="email" required maxlength="150" dir="ltr"></label>
+        <label class="pfield"><span>رقم الواتساب</span><input v-model.trim="form.whatsapp" dir="ltr" placeholder="مثال: 970591234567"></label>
+        <label class="pfield"><span>الرقم الوظيفي</span><input v-model.trim="form.employee_number" maxlength="30" dir="ltr"></label>
+        <div class="pf-form-actions">
+          <button type="submit" class="pbtn is-green" :disabled="saving"><Check :size="16" /> {{ saving ? 'جارٍ الحفظ…' : 'حفظ التعديلات' }}</button>
+          <button type="button" class="pbtn is-outline" :disabled="saving" @click="editing = false">إلغاء</button>
+        </div>
+      </form>
+
+      <div v-else class="profile-fields">
+        <div v-for="info in accountInfo" :key="info.label" class="profile-field">
+          <span class="profile-field-label">{{ info.label }}</span>
+          <span :class="['profile-field-value', info.mono && 'mono']">{{ info.value || '—' }}</span>
         </div>
       </div>
     </section>
 
-    <!-- أدوات الإدارة -->
-    <section>
-      <UcasSectionTitle title="أدوات الإدارة العامة" subtitle="كل صلاحيات حسابك في مكان واحد" />
-      <div class="ucas-icon-grid">
-        <router-link
-          v-for="tool in tools" :key="tool.to" :to="tool.to"
-          class="ucas-icon-item is-link" :style="{ '--item-color': tool.color }"
-        >
-          <component :is="tool.icon" :size="52" :stroke-width="1.3" class="ucas-icon-item-icon" />
-          <h3>{{ tool.label }}</h3>
-          <p>{{ tool.hint }}</p>
+    <!-- إحصائيات المنصة — صفوف "التسمية: القيمة" كبطاقة "بيانات أكاديمية" (200515) -->
+    <section v-else-if="tab === 'stats'" class="profile-card">
+      <h3 class="portal-title mb-4">إحصائيات المنصة <span class="profile-card-sub">{{ activeSemesterName }}</span></h3>
+      <dl class="profile-stats">
+        <div v-for="s in platformStats" :key="s.label">
+          <dt>{{ s.label }} :</dt>
+          <dd>{{ s.value ?? '—' }}<template v-if="s.value != null && s.suffix">{{ s.suffix }}</template></dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- أدوات الإدارة — أزرار البوابة المسطّحة كأزرار الخدمات في الرئيسية (200515) -->
+    <section v-else class="profile-card">
+      <h3 class="portal-title mb-6">أدوات الإدارة العامة</h3>
+      <div class="profile-tools">
+        <router-link v-for="tool in tools" :key="tool.to" :to="tool.to" class="profile-tool">
+          <component :is="tool.icon" :size="20" />
+          <span>{{ tool.label }}</span>
         </router-link>
       </div>
     </section>
@@ -55,39 +82,32 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { ShieldCheck, Mail, Phone, Lock, User, IdCard, CalendarDays, BadgeCheck, CalendarRange, AtSign } from 'lucide-vue-next'
-import UcasLogo from '@/components/icons/UcasLogo.vue'
-import UcasStatsBand from '@/components/shared/UcasStatsBand.vue'
-import UcasSectionTitle from '@/components/shared/UcasSectionTitle.vue'
+import { Lock, IdCard, BarChart3, LayoutGrid, Pencil, Camera, Check } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 import { useLandingStore } from '@/stores/landing.store'
 import { NAV_ITEMS_BY_ROLE } from '@/utils/navConfig'
-import { ROLES, ROLE_LABELS, APP_NAME } from '@/utils/constants'
+import { ROLES, ROLE_LABELS } from '@/utils/constants'
 import { formatDate } from '@/utils/formatters'
-
-/** وصف قصير لكل أداة — يقابل السطر الرمادي تحت اسم العمادة في موقع الكلية ("ريادة وقيادة") */
-const TOOL_HINTS = {
-  '/super-admin/profile': 'بيانات حسابك',
-  '/super-admin': 'الطلاب والمشرفون',
-  '/super-admin/committee': 'حسابات اللجنة',
-  '/super-admin/structure': 'الأقسام والفصول',
-  '/committee': 'نظرة عامة',
-  '/committee/teams': 'المجموعات والأعضاء',
-  '/committee/proposals': 'المراجعة والاعتماد',
-  '/committee/appointments': 'جدولة المناقشات',
-  '/committee/project-archive': 'المشاريع المكتملة',
-  '/committee/progress': 'متابعة الإنجاز',
-  '/committee/assistant': 'مساعد ذكي'
-}
 
 export default {
   name: 'SuperAdminProfilePage',
 
-  components: { ShieldCheck, Mail, Phone, Lock, UcasLogo, UcasStatsBand, UcasSectionTitle },
+  components: { Lock, Pencil, Camera, Check },
 
   data() {
-    return { appName: APP_NAME }
+    return {
+      tab: 'info',
+      editing: false,
+      saving: false,
+      uploading: false,
+      form: { name: '', email: '', whatsapp: '', employee_number: '' },
+      tabs: [
+        { key: 'info', label: 'المعلومات الشخصية', icon: IdCard },
+        { key: 'stats', label: 'إحصائيات المنصة', icon: BarChart3 },
+        { key: 'tools', label: 'أدوات الإدارة', icon: LayoutGrid }
+      ]
+    }
   },
 
   computed: {
@@ -106,11 +126,11 @@ export default {
     platformStats() {
       const s = this.stats || {}
       return [
-        { label: 'قسم أكاديمي', value: s.departments ?? null },
-        { label: 'فريق مشروع', value: s.teams ?? null },
-        { label: 'مشروع تخرج', value: s.projects ?? null },
-        { label: 'مشرف', value: s.supervisors ?? null },
-        { label: 'طالب و طالبة', value: s.students ?? null },
+        { label: 'الأقسام الأكاديمية', value: s.departments ?? null },
+        { label: 'فرق المشاريع', value: s.teams ?? null },
+        { label: 'مشاريع التخرج', value: s.projects ?? null },
+        { label: 'المشرفون', value: s.supervisors ?? null },
+        { label: 'الطلاب', value: s.students ?? null },
         { label: 'متوسط الإنجاز', value: s.avg_completion != null ? Math.round(s.avg_completion) : null, suffix: '%' }
       ]
     },
@@ -118,13 +138,13 @@ export default {
     accountInfo() {
       const u = this.user || {}
       return [
-        { label: 'الاسم', value: u.name, icon: User, color: '#3A9B4C' },
-        { label: 'البريد الإلكتروني', value: u.email, icon: AtSign, color: '#4C5EA8', mono: true },
-        { label: 'رقم الواتساب', value: u.whatsapp, icon: Phone, color: '#229791', mono: true },
-        { label: 'الرقم الوظيفي', value: u.employee_number, icon: IdCard, color: '#A9375C', mono: true },
-        { label: 'الصلاحية', value: this.roleLabel, icon: BadgeCheck, color: '#005BAA' },
-        { label: 'الفصل الدراسي الحالي', value: this.activeSemesterName, icon: CalendarRange, color: '#F89E32' },
-        { label: 'تاريخ إنشاء الحساب', value: u.created_at ? formatDate(u.created_at) : '', icon: CalendarDays, color: '#805C55' }
+        { label: 'الاسم', value: u.name },
+        { label: 'البريد الإلكتروني', value: u.email, mono: true },
+        { label: 'رقم الواتساب', value: u.whatsapp, mono: true },
+        { label: 'الرقم الوظيفي', value: u.employee_number, mono: true },
+        { label: 'الصلاحية', value: this.roleLabel },
+        { label: 'الفصل الدراسي الحالي', value: this.activeSemesterName },
+        { label: 'تاريخ إنشاء الحساب', value: u.created_at ? formatDate(u.created_at) : '' }
       ]
     },
 
@@ -132,7 +152,6 @@ export default {
       return NAV_ITEMS_BY_ROLE[ROLES.SUPER_ADMIN]
         .flatMap((group) => group.items)
         .filter((item) => item.to !== this.$route.path)
-        .map((item) => ({ ...item, hint: TOOL_HINTS[item.to] || '' }))
     }
   },
 
@@ -142,8 +161,43 @@ export default {
   },
 
   methods: {
-    ...mapActions(useAuthStore, ['fetchCurrentUser']),
-    ...mapActions(useLandingStore, ['fetchStats'])
+    ...mapActions(useAuthStore, ['fetchCurrentUser', 'updateProfile', 'uploadAvatar']),
+    ...mapActions(useLandingStore, ['fetchStats']),
+
+    startEdit() {
+      const u = this.user || {}
+      this.form = { name: u.name || '', email: u.email || '', whatsapp: u.whatsapp || '', employee_number: u.employee_number || '' }
+      this.editing = true
+    },
+
+    async saveEdit() {
+      this.saving = true
+      try {
+        await this.updateProfile({ ...this.form, whatsapp: this.form.whatsapp || null, employee_number: this.form.employee_number || null })
+        this.editing = false
+        this.$toast?.success('تم حفظ بياناتك')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر حفظ البيانات')
+      } finally {
+        this.saving = false
+      }
+    },
+
+    async onAvatar(ev) {
+      const file = ev.target.files[0]
+      ev.target.value = ''
+      if (!file) return
+      if (file.size > 2 * 1024 * 1024) return this.$toast?.error('حجم الصورة أكبر من 2MB')
+      this.uploading = true
+      try {
+        await this.uploadAvatar(file)
+        this.$toast?.success('تم تحديث الصورة')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر رفع الصورة')
+      } finally {
+        this.uploading = false
+      }
+    }
   }
 }
 </script>

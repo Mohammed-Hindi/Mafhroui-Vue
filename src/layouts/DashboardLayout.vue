@@ -13,6 +13,19 @@
 
     <AppSidebar :nav-items="navItems" :role-label="roleLabel" />
 
+    <!-- زر القائمة (تحت lg): نفس الزر يفتح السايد بار ويغلقه، ويبقى مكانه فوق الـ Drawer ويتحوّل ☰ ← ✕ -->
+    <button
+      v-if="isSuperAdmin"
+      type="button"
+      :class="['portal-burger lg:hidden', sidebarOpen && 'is-open']"
+      :aria-expanded="sidebarOpen"
+      aria-controls="app-sidebar"
+      :aria-label="sidebarOpen ? 'إغلاق القائمة' : 'فتح القائمة'"
+      @click="toggleSidebar"
+    >
+      <span /><span /><span />
+    </button>
+
     <div class="flex-1 flex flex-col min-w-0">
       <PortalTopbar v-if="isSuperAdmin" />
       <AppTopbar v-else />
@@ -63,7 +76,7 @@
 </template>
 
 <script>
-import { mapState } from 'pinia'
+import { mapState, mapActions } from 'pinia'
 import { ChevronUp } from 'lucide-vue-next'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
@@ -76,7 +89,7 @@ import { NAV_ITEMS_BY_ROLE } from '@/utils/navConfig'
 import { ROLE_LABELS, ROLES, APP_NAME } from '@/utils/constants'
 
 /**
- * تخطيط لوحات التحكم الموحّد لكل الأدوار (سوبر أدمن/لجنة/مشرف/قائد فريق/طالب).
+ * تخطيط لوحات التحكم الموحّد لكل الأدوار (سوبر أدمن/لجنة/مشرف/طالب).
  * عناصر القائمة تُشتق من دور المستخدم الحالي عبر NAV_ITEMS_BY_ROLE — لا layout مخصص لكل دور.
  *
  * السوبر أدمن يأخذ هوية الكلية (UCAS): data-brand="ucas" على <html> يحوّل كل التوكنز
@@ -97,7 +110,7 @@ export default {
 
   computed: {
     ...mapState(useAuthStore, ['userRole', 'userName', 'userEmail', 'homeRoute']),
-    ...mapState(useUiStore, ['semesters', 'activeSemesterId']),
+    ...mapState(useUiStore, ['semesters', 'activeSemesterId', 'sidebarOpen']),
 
     isSuperAdmin() {
       return this.userRole === ROLES.SUPER_ADMIN
@@ -135,6 +148,8 @@ export default {
   },
 
   methods: {
+    ...mapActions(useUiStore, ['toggleSidebar']),
+
     handleScroll() {
       this.showBackToTop = window.scrollY > 300
     },

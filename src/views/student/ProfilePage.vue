@@ -74,11 +74,9 @@
             <div class="flex flex-wrap gap-2">
               <span
                 v-for="m in myTeam.members" :key="m.id"
-                class="inline-flex items-center gap-1.5 text-caption font-semibold px-3 py-1.5 rounded-pill"
-                :class="m.is_leader ? 'bg-warning-bg text-warning-text' : 'bg-border-soft text-text-700'"
+                class="inline-flex items-center gap-1.5 text-caption font-semibold px-3 py-1.5 rounded-pill bg-border-soft text-text-700"
               >
-                <Crown v-if="m.is_leader" :size="12" />
-                {{ m.is_leader ? `قائد ${m.student?.name}` : m.student?.name }}
+                {{ m.student?.name }}
               </span>
             </div>
           </div>
@@ -120,7 +118,7 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { User, Users, Crown, BarChart3, Kanban, ChevronLeft } from 'lucide-vue-next'
+import { User, Users, BarChart3, Kanban, ChevronLeft } from 'lucide-vue-next'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import ChangePasswordModal from '@/components/shared/ChangePasswordModal.vue'
 import { initials } from '@/utils/formatters'
@@ -130,7 +128,7 @@ import { useAuthStore } from '@/stores/auth.store'
 export default {
   name: 'StudentProfilePage',
 
-  components: { User, Users, Crown, BarChart3, Kanban, ChevronLeft, EmptyState, ChangePasswordModal },
+  components: { User, Users, BarChart3, Kanban, ChevronLeft, EmptyState, ChangePasswordModal },
 
   data() {
     return { changePasswordOpen: false }

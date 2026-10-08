@@ -1,15 +1,9 @@
 <template>
-  <!-- رأس الصفحة بهوية الكلية — يظهر للسوبر أدمن فقط (الصفحات المشتركة مع لجنة الإشراف تبقى كما هي لهم) -->
-  <div v-if="isSuperAdmin" class="flex flex-wrap items-center justify-between gap-4 mb-6">
-    <div class="flex items-center gap-3">
-      <span class="page-icon grid place-items-center rounded-md shrink-0" :style="{ '--icon-color': color }">
-        <component :is="icon" :size="22" />
-      </span>
-      <div>
-        <h3 class="text-h3 font-bold text-text-900">{{ title }}</h3>
-        <p v-if="subtitle" class="text-caption text-text-600">{{ subtitle }}</p>
-      </div>
-    </div>
+  <!-- رأس الصفحة بنمط بطاقات البوابة ("طلب إفادة  الفصل الدراسي…" — 201350): بطاقة بيضاء، عنوان ≡ + وصف رمادي بجانبه.
+       يظهر للسوبر أدمن فقط (الصفحات المشتركة مع لجنة الإشراف تبقى كما هي لهم) -->
+  <div v-if="isSuperAdmin" class="portal-head mb-6">
+    <h3 class="portal-title">{{ title }}</h3>
+    <p v-if="subtitle" class="portal-head-sub">{{ subtitle }}</p>
     <slot />
   </div>
 </template>
@@ -23,9 +17,9 @@ export default {
   name: 'PortalPageHead',
 
   props: {
-    icon: { type: [Object, Function], required: true },
-    /** لون الأيقونة الخطية — نفس لون عنصر الصفحة في السايد بار (navConfig.js) */
-    color: { type: String, required: true },
+    // icon/color لم يعودا يُرسمان (البوابة بلا مربعات أيقونات ملوّنة) — باقيان حتى لا تنكسر الصفحات التي تمرّرهما
+    icon: { type: [Object, Function], default: null },
+    color: { type: String, default: '' },
     title: { type: String, required: true },
     subtitle: { type: String, default: '' }
   },

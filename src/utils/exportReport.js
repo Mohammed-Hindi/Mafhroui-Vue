@@ -9,7 +9,7 @@ export function downloadBlob(blob, fileName) {
   setTimeout(() => URL.revokeObjectURL(url), 60000)
 }
 
-function escapeHtml(value) {
+export function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 }
 
@@ -127,12 +127,12 @@ export async function exportGroupsPdf({ fileName, title, subtitle, sections }) {
     <div style="font-family:'Cairo','Tajawal',sans-serif; color:#0F172A;">
       <div style="background:linear-gradient(120deg,#2563EB,#06B6D4); border-radius:18px; padding:26px 34px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;">
         <div style="display:flex; align-items:center; gap:14px;">
-          <span style="display:inline-flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:14px; background:rgba(255,255,255,.18);">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg>
+          <span style="display:inline-flex; align-items:center; justify-content:center; width:54px; height:62px; border-radius:12px; background:#fff;">
+            <img src="${UCAS_LOGO}" style="height:50px;">
           </span>
           <div>
-            <div style="font-size:20px; font-weight:800; color:#fff;">مسار</div>
-            <div style="font-size:11.5px; color:rgba(255,255,255,.85); margin-top:1px;">منصة إدارة مشاريع التخرج</div>
+            <div style="font-size:18px; font-weight:800; color:#fff;">الكلية الجامعية للعلوم التطبيقية</div>
+            <div style="font-size:11.5px; color:rgba(255,255,255,.85); margin-top:1px;">مسار — منصة إدارة مشاريع التخرج</div>
           </div>
         </div>
         <div style="font-size:11px; color:rgba(255,255,255,.9); text-align:end;">
@@ -216,3 +216,23 @@ export async function exportGroupsPdf({ fileName, title, subtitle, sections }) {
 
   pdf.save(fileName)
 }
+
+/**
+ * PDF من صفحات HTML جاهزة بمقاس A4 كامل (794×1123 عمودي أو 1123×794 أفقي) — كل عنصر صفحة مستقلة.
+ * تُستخدم لنماذج الكلية الرسمية (كشف الشعبة، جدول المناقشات) حيث تصميم الصفحة ثابت.
+ */
+export async function exportPagesPdf({ fileName, pages, landscape = false }) {
+  const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([import('jspdf'), import('html2canvas')])
+  const pdf = new jsPDF({ unit: 'pt', format: 'a4', orientation: landscape ? 'landscape' : 'portrait' })
+  const w = pdf.internal.pageSize.getWidth()
+  const h = pdf.internal.pageSize.getHeight()
+  for (const [i, html] of pages.entries()) {
+    const canvas = await renderHtmlToCanvas(html2canvas, html, landscape ? 1123 : 794)
+    if (i) pdf.addPage()
+    pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, w, h)
+  }
+  pdf.save(fileName)
+}
+
+/** شعار الكلية (نفس UcasLogo.vue) كصورة SVG — html2canvas يرسم <img> أدق من SVG المضمّن */
+export const UCAS_LOGO = `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="44 18 226 568"><path d="M124 243C88 300 66 380 70 450C74 512 100 556 124 578C128 546 135 516 142 494C118 450 106 400 108 340C109 300 115 268 124 243Z" fill="#6CBB4A"/><path d="M52 98L130 25C178 95 212 200 212 330C212 440 175 525 124 578C150 500 158 420 152 340C146 240 112 160 52 98Z" fill="#1660AB"/><circle cx="203" cy="70" r="29" fill="#9B9B9B"/><circle cx="228" cy="127" r="27" fill="#9B9B9B"/></svg>')}`

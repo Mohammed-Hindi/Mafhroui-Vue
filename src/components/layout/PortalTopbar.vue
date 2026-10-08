@@ -3,16 +3,8 @@
        ويسارًا: الإشعارات ← المستخدم بقائمة منسدلة ← تبديل الوضع -->
   <header class="portal-topbar sticky top-0 z-sticky-header">
     <div class="flex items-center gap-2 sm:gap-3 px-4 lg:px-6 h-[72px]">
-      <button
-        type="button"
-        class="portal-icon-btn lg:hidden"
-        :aria-expanded="sidebarOpen"
-        aria-controls="app-sidebar"
-        aria-label="فتح القائمة"
-        @click="toggleSidebar"
-      >
-        <MenuIcon :size="22" />
-      </button>
+      <!-- مكان زر القائمة الثابت (.portal-burger في DashboardLayout) — يبقى فوق الـ Drawer فيفتح ويغلق من نفس المكان -->
+      <span class="w-11 shrink-0 lg:hidden" aria-hidden="true" />
 
       <div class="min-w-0 flex-1">
         <h1 class="portal-topbar-title truncate">{{ pageTitle }}</h1>
@@ -66,28 +58,32 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Menu as MenuIcon, ChevronDown, Lock, LogOut, Sun, Settings } from 'lucide-vue-next'
+import { ChevronDown, Lock, LogOut, Sun, Settings } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
 import NotificationBell from '@/components/shared/NotificationBell.vue'
 import SemesterSelect from '@/components/shared/SemesterSelect.vue'
 import { useUiStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
+import { NAV_ITEMS_BY_ROLE } from '@/utils/navConfig'
+import { ROLES } from '@/utils/constants'
 
 export default {
   name: 'PortalTopbar',
 
-  components: { MenuIcon, ChevronDown, Lock, LogOut, Sun, Settings, UcasLogo, NotificationBell, SemesterSelect },
+  components: { ChevronDown, Lock, LogOut, Sun, Settings, UcasLogo, NotificationBell, SemesterSelect },
 
   data() {
     return { menuOpen: false }
   },
 
   computed: {
-    ...mapState(useUiStore, ['sidebarOpen', 'isDark']),
+    ...mapState(useUiStore, ['isDark']),
     ...mapState(useAuthStore, ['userName']),
 
+    /** عنوان الصفحة = اسمها في السايد بار (الشريط العلوي خاص بالإدارة العامة)، وإلا عنوان المسار */
     pageTitle() {
-      return this.$route.meta?.title || ''
+      const item = NAV_ITEMS_BY_ROLE[ROLES.SUPER_ADMIN].flatMap((g) => g.items).find((i) => i.to === this.$route.path)
+      return item?.label || this.$route.meta?.title || ''
     }
   },
 
@@ -108,7 +104,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useUiStore, ['toggleSidebar', 'toggleTheme']),
+    ...mapActions(useUiStore, ['toggleTheme']),
     ...mapActions(useAuthStore, ['logout']),
 
     handleOutsideClick(event) {

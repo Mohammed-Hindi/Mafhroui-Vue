@@ -10,7 +10,7 @@
       <div v-if="!proposal" class="flex-1 flex items-center justify-center p-6">
         <div class="flex flex-col items-center gap-2.5 bg-bg border border-border rounded-lg px-7 py-6 max-w-[260px] text-center">
           <span class="grid place-items-center w-12 h-12 rounded-pill bg-surface border border-border text-text-400"><Lock :size="20" /></span>
-          <p class="text-body-sm font-bold text-text-900">بانتظار قائد الفريق</p>
+          <p class="text-body-sm font-bold text-text-900">بانتظار إرسال المقترح من فريقك</p>
           <p class="text-caption text-text-600">لتعبئة المقترح وإرساله</p>
         </div>
       </div>
@@ -19,7 +19,7 @@
         v-else class="flex-1 flex flex-col justify-center"
         :rejected="proposal.status === 'rejected'"
         :title="proposal.status === 'approved' ? 'تم اعتماد المقترح' : proposal.status === 'rejected' ? 'تم رفض المقترح' : 'تم تسليم الملف، بانتظار الموافقة'"
-        :description="proposal.status === 'approved' ? 'المشروع الآن قيد التنفيذ.' : proposal.status === 'rejected' ? 'قائد الفريق لازم يعدّل ويعيد الإرسال.' : 'بانتظار اعتماد المشرف للمقترح المُرسل.'"
+        :description="proposal.status === 'approved' ? 'المشروع الآن قيد التنفيذ.' : proposal.status === 'rejected' ? 'يجب على الفريق تعديل المقترح وإعادة إرساله.' : 'بانتظار اعتماد المشرف للمقترح المُرسل.'"
         :reject-reason="proposal.rejection_reason"
         :items="proposalItems"
       />
@@ -35,7 +35,7 @@
       <div v-if="!finalReport" class="flex-1 flex items-center justify-center p-6">
         <div class="flex flex-col items-center gap-2.5 bg-bg border border-border rounded-lg px-7 py-6 max-w-[260px] text-center">
           <span class="grid place-items-center w-12 h-12 rounded-pill bg-surface border border-border text-text-400"><Lock :size="20" /></span>
-          <p class="text-body-sm font-bold text-text-900">بانتظار قائد الفريق</p>
+          <p class="text-body-sm font-bold text-text-900">بانتظار إرسال المقترح من فريقك</p>
           <p class="text-caption text-text-600">لرفع التقرير النهائي والمخرج</p>
         </div>
       </div>
