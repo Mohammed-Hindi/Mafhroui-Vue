@@ -1,98 +1,262 @@
 <template>
-  <!-- مواعيد المناقشات للإدارة العامة — بيانات تجريبية (placeholder) بلا ربط بالخادم:
-       إعدادات (المدة، الساعات، الاستراحة، يوم الطالبات/الطلاب، قاعات كل منطقة) ← توليد تلقائي بالقيود
-       ← تعديل كل الجدول مع كشف التعارضات ← طباعة حسب القاعات / Excel وإعادة رفعه ← نشر لكل مشرف جدوله -->
+  <!-- مواعيد المناقشات للإدارة العامة:
+       إعدادات (القاعات لكل مكان + ساعاته الملزمة ← مدة الدبلوم/البكالوريوس ← الأيام حسب الفئة أو الدرجة) + سعة كل يوم ← توليد تلقائي بالقيود
+       ← تعديل كل الجدول (قائمة أو شبكة حسب القاعات) مع كشف التعارضات فورًا ← طباعة حسب القاعات / Excel وإعادة رفعه ← نشر لكل مشرف جدوله -->
   <div class="dash">
     <header class="dash-head">
       <h2 class="dash-title">مواعيد المناقشات</h2>
     </header>
 
+    <!-- مراحل العمل -->
+    <ol class="tk-stepper dp-steps" aria-label="مراحل جدولة المناقشات">
+      <li v-for="(st, i) in steps" :key="st.label" :class="[step === i && 'is-active', st.done && step !== i && 'is-done']">
+        <button type="button" :disabled="i > 0 && !plan.length" @click="step = i"><b>{{ i + 1 }}</b> {{ st.label }}</button>
+      </li>
+    </ol>
+
     <!-- الإعدادات -->
-    <section class="dash-card">
+    <!-- الخطوة 1 -->
+    <section v-show="step === 0" id="dp-settings" class="dash-card">
       <div class="dash-card-head">
         <h3>إعدادات الجدولة</h3>
         <span class="dash-chip">{{ loading ? 'جارٍ التحميل…' : `${groups.length} مجموعة لها مشروع` }}</span>
       </div>
-      <div class="dp-form">
-        <label class="pfield"><span>مدة المناقشة (دقيقة)</span><input v-model.number="s.duration" type="number" min="10" step="5"></label>
-        <label class="pfield"><span>بداية اليوم</span><input v-model="s.start" type="time"></label>
-        <label class="pfield"><span>نهاية اليوم</span><input v-model="s.end" type="time"></label>
-        <label class="pfield"><span>بداية الاستراحة</span><input v-model="s.breakAt" type="time"></label>
-        <label class="pfield"><span>مدة الاستراحة (دقيقة)</span><input v-model.number="s.breakMin" type="number" min="0" step="5"></label>
-        <label class="pfield"><span>يوم مناقشات الطالبات</span><input v-model="s.femaleDay" type="date"></label>
-        <label class="pfield"><span>يوم مناقشات الطلاب</span><input v-model="s.maleDay" type="date"></label>
-        <label v-for="(label, key) in REGIONS" :key="key" class="pfield dp-wide">
-          <span>قاعات {{ label }} (افصل بفاصلة)</span><input v-model="s.rooms[key]" type="text">
-        </label>
+
+      <div class="dp-blocks">
+        <!-- 1. القاعات أولًا: لكل مكان تواجد قاعاته، ونافذة ساعات ملزمة اختيارية (مثل: الجنوب من 10:00 إلى 13:00) -->
+        <fieldset class="dp-block dp-block-wide">
+          <legend><DoorOpen :size="16" /> 1. القاعات حسب مكان تواجد المجموعات</legend>
+          <div class="dp-rooms">
+            <div v-for="(label, key) in REGIONS" :key="key" class="dp-room-row">
+              <span class="dp-room-label">{{ label }}<small>{{ regionCount(key) }} مجموعة</small></span>
+              <div class="dp-chips">
+                <span v-for="r in s.rooms[key]" :key="r" class="tk-picked-chip">
+                  <span dir="ltr">{{ r }}</span>
+                  <small class="dp-chip-hours" dir="ltr">{{ roomHoursLabel(r, key) }}</small>
+                  <button type="button" :aria-label="`حذف القاعة ${r}`" @click="removeRoom(key, r)"><X :size="14" /></button>
+                </span>
+                <input
+                  v-model.trim="roomDraft[key]" type="text" class="dp-chip-input" :placeholder="s.rooms[key].length ? 'إضافة قاعة…' : 'اكتب اسم القاعة ثم Enter'"
+                  @keydown.enter.prevent="addRoom(key)" @keydown.188.prevent="addRoom(key)" @blur="addRoom(key)"
+                >
+              </div>
+              <div :class="['dp-window', badWindows.includes(key) && 'is-invalid']" :title="'ساعات ملزمة لمجموعات ' + label">
+                <span>من <b class="as-req">*</b></span><input v-model="s.windows[key].start" type="time" class="ev-input" required :aria-label="`بداية مناقشات ${label}`">
+                <span>إلى <b class="as-req">*</b></span><input v-model="s.windows[key].end" type="time" class="ev-input" required :aria-label="`نهاية مناقشات ${label}`">
+              </div>
+            </div>
+          </div>
+          <!-- ساعات كل قاعة (افتراضيًا ساعات مكانها) — مثل: E504 من 09:00 إلى 12:00 -->
+          <div class="dp-room-hours">
+            <b class="dp-room-hours-title">ساعات كل قاعة</b>
+            <template v-for="(label, key) in REGIONS" :key="key">
+              <div v-for="room in s.rooms[key]" :key="room" :class="['dp-rh', !roomHoursOk(room) && 'is-invalid']">
+                <span class="dp-rh-name" dir="ltr">{{ room }}</span>
+                <small>{{ label }}</small>
+                <span>من</span><input v-model="s.roomHours[room].start" type="time" class="ev-input" :aria-label="`بداية القاعة ${room}`">
+                <span>إلى</span><input v-model="s.roomHours[room].end" type="time" class="ev-input" :aria-label="`نهاية القاعة ${room}`">
+              </div>
+            </template>
+          </div>
+          <small v-if="badWindows.length" class="dp-note is-bad">حدّد ساعات صحيحة (من قبل إلى) لـ: {{ badWindows.map((k) => REGIONS[k]).join('، ') }}</small>
+        </fieldset>
+
+        <!-- 2. مدة المناقشة لكل درجة (الأوقات تُقسَّم تلقائيًا ضمن ساعات كل مكان) + استراحة اختيارية -->
+        <fieldset class="dp-block">
+          <legend><Clock :size="16" /> 2. مدة المناقشة والاستراحة</legend>
+          <div class="dp-form">
+            <label class="pfield"><span>مدة الدبلوم (دقيقة)</span><input v-model.number="s.durations.diploma" type="number" min="5" step="5"></label>
+            <label class="pfield"><span>مدة البكالوريوس (دقيقة)</span><input v-model.number="s.durations.bachelor" type="number" min="5" step="5"></label>
+          </div>
+          <label class="gp-check dp-break-toggle"><input v-model="s.breakOn" type="checkbox"> استراحة (اختياري)</label>
+          <div v-if="s.breakOn" class="dp-form">
+            <label class="pfield"><span>الاستراحة من</span><input v-model="s.breakFrom" type="time"></label>
+            <label class="pfield"><span>إلى</span><input v-model="s.breakTo" type="time"></label>
+          </div>
+        </fieldset>
+
+        <!-- 3. تقسيم الأيام: الطلاب/الطالبات أو الدبلوم/البكالوريوس -->
+        <fieldset class="dp-block">
+          <legend><CalendarDays :size="16" /> 3. الأيام</legend>
+          <nav class="hm-tabs dp-split" aria-label="طريقة تقسيم الأيام">
+            <button type="button" :class="s.splitBy === 'gender' && 'is-active'" @click="s.splitBy = 'gender'">الطلاب / الطالبات</button>
+            <button type="button" :class="s.splitBy === 'degree' && 'is-active'" @click="s.splitBy = 'degree'">الدبلوم / البكالوريوس</button>
+          </nav>
+          <div class="dp-form">
+            <label v-for="d in dayKeys" :key="d.key" class="pfield"><span>يوم {{ d.label }}</span><input v-model="s.days[d.key]" type="date"></label>
+          </div>
+        </fieldset>
       </div>
-      <p class="pt-muted dp-hint">القيود: الطالبات في يوم والطلاب في يوم آخر · المشرف لا يناقش مجموعته · لا يُكلَّف أي شخص بمناقشتين في نفس الوقت ولو بقاعتين مختلفتين · كل مجموعة في قاعات منطقتها.</p>
-      <button type="button" class="pbtn is-cyan" @click="generate"><CalendarPlus :size="17" /> {{ plan.length ? 'إعادة توليد الجدول' : 'توليد الجدول' }}</button>
+
+      <!-- سعة كل يوم بالدقائق (لأن مدة الدبلوم تختلف عن البكالوريوس) -->
+      <div class="dp-capacity">
+        <div v-for="c in capacity" :key="c.key" :class="['dp-cap', c.ok ? 'is-ok' : 'is-bad']">
+          <div class="dp-cap-head">
+            <b>يوم {{ c.label }}</b>
+            <span class="mono">{{ c.date || '—' }}</span>
+          </div>
+          <div class="dp-cap-num"><b>{{ c.groups }}</b> مجموعة · تحتاج <b>{{ c.need }}</b> من <b>{{ c.have }}</b> دقيقة</div>
+          <div class="dp-cap-bar"><span :style="{ width: Math.min(100, c.have ? (c.need / c.have) * 100 : 100) + '%' }" /></div>
+        </div>
+      </div>
+
+      <div class="dp-actions">
+        <button type="button" class="pbtn is-cyan" :disabled="loading || !!badWindows.length" @click="generate"><CalendarPlus :size="17" /> {{ plan.length ? 'إعادة توليد الجدول' : 'توليد الجدول' }}</button>
+        <button v-if="plan.length" type="button" class="pbtn is-outline" @click="step = 1">التالي: مراجعة الجدول الحالي</button>
+      </div>
     </section>
 
     <!-- الجدول -->
-    <section v-if="plan.length" class="dash-card">
+    <!-- الخطوة 2 -->
+    <section v-if="plan.length && step === 1" id="dp-table" class="dash-card">
       <div class="dash-card-head">
         <h3>جدول المناقشات</h3>
-        <span :class="['dash-chip', conflictCount && 'is-bad']">{{ conflictCount ? `${conflictCount} تعارض` : 'بلا تعارضات' }}</span>
+        <span :class="['dash-chip', conflictCount ? 'is-bad' : 'is-good']">{{ conflictCount ? `${conflictCount} مجموعة فيها تعارض` : 'بلا تعارضات — جاهز للنشر' }}</span>
+      </div>
+
+      <!-- أرقام سريعة عن الجدول -->
+      <div class="dp-kpis">
+        <div v-for="k in kpis" :key="k.label" :class="['dp-kpi', k.tone]"><b>{{ k.value }}</b><span>{{ k.label }}</span></div>
+      </div>
+
+      <!-- ملخص التعارضات المضغوط بدل قائمة طويلة -->
+      <div v-if="conflictCount" class="dp-issues">
+        <AlertTriangle :size="18" />
+        <span v-for="it in issueSummary" :key="it.label"><b>{{ it.count }}</b> {{ it.label }}</span>
+        <button type="button" class="pbtn is-outline is-sm" @click="onlyConflicts = !onlyConflicts">{{ onlyConflicts ? 'عرض الكل' : 'عرض المتعارضة فقط' }}</button>
       </div>
 
       <div class="dp-toolbar">
-        <div class="hm-tabs">
+        <nav class="hm-tabs" aria-label="طريقة العرض">
+          <button type="button" :class="view === 'list' && 'is-active'" @click="view = 'list'"><List :size="15" /> قائمة</button>
+          <button type="button" :class="view === 'rooms' && 'is-active'" @click="view = 'rooms'"><LayoutGrid :size="15" /> حسب القاعات</button>
+        </nav>
+        <nav class="hm-tabs" aria-label="اليوم">
           <button v-for="t in dayTabs" :key="t.value" type="button" :class="day === t.value && 'is-active'" @click="day = t.value">{{ t.label }}</button>
-        </div>
-        <select v-model="roomFilter" class="gr-select" aria-label="القاعة">
+        </nav>
+        <select v-if="view === 'list'" v-model="roomFilter" class="gr-select" aria-label="القاعة">
           <option value="">كل القاعات</option>
           <option v-for="r in allRooms" :key="r" :value="r">{{ r }}</option>
         </select>
-        <div class="gr-tools">
-          <button type="button" class="gr-tool" :disabled="busy" @click="printPlan"><Printer :size="16" /> طباعة جدول المناقشات</button>
-          <button type="button" class="gr-tool" :disabled="busy" @click="printRooms"><Printer :size="16" /> طباعة حسب القاعات</button>
-          <button type="button" class="gr-tool" :disabled="busy" @click="downloadExcel"><FileSpreadsheet :size="16" /> تنزيل Excel</button>
-          <label class="gr-tool"><Upload :size="16" /> إعادة رفع Excel<input type="file" accept=".xlsx" hidden @change="reupload"></label>
-          <button type="button" class="gr-tool" :disabled="saving" @click="saveDraft"><Save :size="16" /> {{ saving ? 'جارٍ الحفظ…' : 'حفظ الجدول' }}</button>
-          <button type="button" class="gr-tool is-primary" :disabled="!!conflictCount || saving" :title="conflictCount ? 'عالج التعارضات أولًا' : ''" @click="publish"><Send :size="16" /> نشر للمشرفين</button>
-        </div>
       </div>
 
-      <div v-if="conflictCount" class="palert is-warning dp-alert">
-        <b>تعارضات يجب معالجتها قبل النشر:</b>
-        <ul><li v-for="(c, i) in conflictList" :key="i">شعبة {{ c.section }}: {{ c.msg }}</li></ul>
-      </div>
-
-      <div class="pt-wrap">
+      <!-- عرض القائمة: أعمدة مضغوطة (حقلان فوق بعض) بلا تمرير أفقي، وسبب التعارض تحت الصف مباشرة -->
+      <div v-if="view === 'list'" class="pt-wrap dp-scroll">
         <table class="pt dp-table">
           <thead>
-            <tr><th>الشعبة</th><th>المجموعة</th><th>المكان</th><th>المشرف</th><th>التاريخ</th><th>الوقت</th><th>القاعة</th><th>المناقش الأول</th><th>المناقش الثاني</th><th>ملاحظات</th></tr>
+            <tr><th>المجموعة</th><th>الفئة والمكان</th><th>الموعد</th><th>القاعة</th><th>المناقشان</th><th>ملاحظات</th></tr>
           </thead>
-          <tbody>
-            <tr v-for="r in visiblePlan" :key="r.id" :class="conflicts[r.id] && 'is-conflict'" :title="(conflicts[r.id] || []).join(' · ')">
-              <td class="pt-strong">{{ r.g.section }}</td>
-              <td><span class="d-block">{{ DEGREES[r.g.degree] }} · {{ r.gender === 'female' ? 'طالبات' : 'طلاب' }}</span><span class="pt-muted">{{ r.g.members.length }} طلاب</span></td>
-              <td>{{ REGIONS[r.region] }}</td>
-              <td>{{ supName(r.g.supId) }}</td>
-              <td><input v-model="r.date" type="date" class="ev-input"></td>
-              <td><input v-model="r.time" type="time" class="ev-input"></td>
+          <tbody v-for="r in visiblePlan" :key="r.id" :data-row="r.id" :class="conflicts[r.id] && 'is-conflict'">
+            <tr>
+              <td class="dp-group">
+                <button type="button" class="dp-sec" title="تفاصيل المناقشة" @click="detail = r">{{ r.g.section }}</button>
+                <span class="dp-meta"><b>{{ supName(r.g.supId) }}</b>{{ DEGREES[r.g.degree] }} · {{ r.g.members.length }} طلاب</span>
+              </td>
+              <td class="dp-stack">
+                <select v-model="r.gender" class="ev-input" aria-label="الفئة" @change="r.date = dayOf(r)">
+                  <option value="female">طالبات</option><option value="male">طلاب</option>
+                </select>
+                <select v-model="r.region" class="ev-input" aria-label="مكان التواجد" @change="r.room = roomsOf(r.region).includes(r.room) ? r.room : ''">
+                  <option v-for="(l, k) in REGIONS" :key="k" :value="k">{{ l }}</option>
+                </select>
+              </td>
+              <td class="dp-stack">
+                <input v-model="r.date" type="date" class="ev-input" aria-label="التاريخ">
+                <input v-model="r.time" type="time" class="ev-input" aria-label="الوقت">
+              </td>
               <td>
-                <select v-model="r.room" class="ev-input">
+                <select v-model="r.room" class="ev-input dp-room" aria-label="القاعة">
+                  <option value="">—</option>
                   <option v-for="room in roomsOf(r.region)" :key="room" :value="room">{{ room }}</option>
                 </select>
               </td>
-              <td v-for="k in [0, 1]" :key="k">
-                <select v-model="r.examiners[k]" class="ev-input">
-                  <option :value="null">—</option>
-                  <option v-for="sp in supList" :key="sp.id" :value="sp.id" :disabled="sp.id === r.g.supId">{{ sp.name }}</option>
+              <td class="dp-stack dp-examiners">
+                <select v-for="k in [0, 1]" :key="k" v-model="r.examiners[k]" class="ev-input" :aria-label="k ? 'المناقش الثاني' : 'المناقش الأول'">
+                  <option :value="null">{{ k ? 'المناقش الثاني' : 'المناقش الأول' }}</option>
+                  <option v-for="sp in supList" :key="sp.id" :value="sp.id" :disabled="sp.id === r.g.supId">
+                    {{ sp.name }}{{ sp.id === r.g.supId ? ' (المشرف)' : isBusy(sp.id, r) ? ' (مشغول)' : '' }}
+                  </option>
                 </select>
               </td>
               <td><input v-model.trim="r.note" type="text" class="ev-input" placeholder="مثال: Online"></td>
             </tr>
+            <tr v-if="conflicts[r.id]" class="dp-why">
+              <td colspan="6">
+                <AlertTriangle :size="14" /> {{ conflicts[r.id].join(' · ') }}
+                <div class="dp-free">
+                  <span>الأوقات المتاحة في القاعات ({{ dayOf(r) }}):</span>
+                  <button v-for="o in freeSlots(r)" :key="o.room + o.time" type="button" class="dp-free-opt" :title="`نقل المناقشة إلى ${o.room} الساعة ${o.time}`" @click="applySlot(r, o)">
+                    <b dir="ltr">{{ o.time }}</b> <span dir="ltr">{{ o.room }}</span>
+                  </button>
+                  <em v-if="!freeSlots(r).length">لا يوجد وقت متاح لكل الأطراف — غيّر المناقشين أو وسّع ساعات المكان</em>
+                </div>
+              </td>
+            </tr>
           </tbody>
+          <tbody v-if="!visiblePlan.length"><tr><td colspan="6" class="gr-empty">لا توجد مناقشات مطابقة</td></tr></tbody>
         </table>
       </div>
-      <p class="pt-muted dp-hint">الصفوف الحمراء فيها تعارض — مرّر المؤشر فوقها لمعرفة السبب. التعديلات تُفحص فورًا.</p>
+
+      <!-- عرض حسب القاعات: شبكة (الوقت × القاعة) لليوم المختار -->
+      <div v-else class="dp-grid-wrap">
+        <p v-if="!gridDay" class="pt-muted">اختر يومًا لعرض شبكة القاعات.</p>
+        <table v-else class="dp-grid">
+          <thead><tr><th>الوقت</th><th v-for="room in gridRooms" :key="room" dir="ltr">{{ room }}</th></tr></thead>
+          <tbody>
+            <tr v-for="t in gridTimes" :key="t">
+              <th class="mono">{{ t }}</th>
+              <td v-for="room in gridRooms" :key="room">
+                <div v-for="r in cell(t, room)" :key="r.id" :class="['dp-slot', conflicts[r.id] && 'is-conflict']" role="button" tabindex="0" :title="(conflicts[r.id] || []).join(' · ') || 'تفاصيل المناقشة'" @click="detail = r" @keydown.enter="detail = r">
+                  <b>{{ r.g.section }}</b>
+                  <span>المشرف: {{ supName(r.g.supId) }}</span>
+                  <span>{{ r.examiners.filter(Boolean).map(supName).join('، ') || 'بلا مناقشين' }}</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p v-if="unscheduled.length" class="dp-unsched">
+          <b>بلا موعد ({{ unscheduled.length }}):</b>
+          <span v-for="r in unscheduled" :key="r.id" class="tk-picked-chip">{{ r.g.section }}</span>
+        </p>
+      </div>
+
+      <div class="dp-actions">
+        <button type="button" class="pbtn is-outline" @click="step = 0">السابق: الإعدادات</button>
+        <div class="dp-actions-main">
+          <button type="button" class="pbtn is-outline" :disabled="saving" @click="saveDraft"><Save :size="16" /> {{ saving ? 'جارٍ الحفظ…' : 'حفظ كمسودة' }}</button>
+          <button type="button" class="pbtn is-cyan" @click="step = 2">التالي: الطباعة والنشر</button>
+        </div>
+      </div>
     </section>
 
-    <!-- جدول كل مشرف بعد النشر -->
-    <section class="dash-card">
+    <!-- الخطوة 3: الطباعة والتصدير والنشر + جدول كل مشرف -->
+    <section v-if="plan.length && step === 2" class="dash-card">
+      <div class="dash-card-head">
+        <h3>الطباعة والنشر</h3>
+        <span :class="['dash-chip', conflictCount ? 'is-bad' : 'is-good']">{{ conflictCount ? `${conflictCount} مجموعة فيها تعارض` : 'بلا تعارضات — جاهز للنشر' }}</span>
+      </div>
+      <div class="dp-kpis">
+        <div v-for="k in kpis" :key="k.label" :class="['dp-kpi', k.tone]"><b>{{ k.value }}</b><span>{{ k.label }}</span></div>
+      </div>
+      <div class="dp-files">
+        <button type="button" class="dp-file" :disabled="busy" @click="printPlan"><Printer :size="22" /><b>طباعة الجدول كاملًا</b><span>PDF — صفحة لكل يوم ودرجة</span></button>
+        <button type="button" class="dp-file" :disabled="busy" @click="openRoomPrint"><DoorOpen :size="22" /><b>طباعة حسب القاعات</b><span>اختر اليوم والقاعات — PDF أو Word</span></button>
+        <button type="button" class="dp-file" :disabled="busy" @click="downloadWord"><FileText :size="22" /><b>تصدير Word</b><span>بنموذج جدول المناقشات للتعديل</span></button>
+        <button type="button" class="dp-file" :disabled="busy" @click="downloadExcel"><FileSpreadsheet :size="22" /><b>تنزيل Excel</b><span>للتعديل ثم إعادة الرفع</span></button>
+        <label class="dp-file"><Upload :size="22" /><b>إعادة رفع Excel</b><span>تحديث المواعيد من الملف المعدّل</span><input type="file" accept=".xlsx" hidden @change="reupload"></label>
+      </div>
+      <div class="dp-actions">
+        <button type="button" class="pbtn is-outline" @click="step = 1">السابق: مراجعة الجدول</button>
+        <div class="dp-actions-main">
+          <button type="button" class="pbtn is-outline" :disabled="saving" @click="saveDraft"><Save :size="16" /> {{ saving ? 'جارٍ الحفظ…' : 'حفظ كمسودة' }}</button>
+          <button type="button" class="pbtn is-green" :disabled="!!conflictCount || saving" :title="conflictCount ? 'عالج التعارضات أولًا' : ''" @click="publish"><Send :size="16" /> نشر للمشرفين</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- جدول كل مشرف بعد النشر (ضمن الخطوة 3) -->
+    <section v-show="step === 2" class="dash-card">
       <div class="dash-card-head">
         <h3>جدول مناقشات المشرف</h3>
         <span class="dash-chip">{{ published ? `آخر نشر: ${published.at}` : 'لم يُنشر بعد' }}</span>
@@ -101,32 +265,126 @@
         <select v-model="supView" class="gr-select dp-sup" aria-label="المشرف">
           <option v-for="sp in supList" :key="sp.id" :value="sp.id">{{ sp.name }}</option>
         </select>
-        <div class="pt-wrap">
-          <table class="pt">
-            <thead><tr><th>التاريخ</th><th>الوقت</th><th>القاعة</th><th>الشعبة</th><th>الدور</th><th>المشرف / المناقشون</th></tr></thead>
-            <tbody>
-              <tr v-for="r in supSchedule" :key="r.id">
-                <td><span class="mono">{{ r.date }}</span></td>
-                <td><span class="mono">{{ r.time }}</span></td>
-                <td>{{ r.room }}</td>
-                <td class="pt-strong">{{ r.section }}</td>
-                <td><span :class="['rv-pill', r.role === 'مشرف' ? 'is-approved' : 'is-pending']">{{ r.role }}</span></td>
-                <td class="pt-muted">{{ r.people }}</td>
-              </tr>
-              <tr v-if="!supSchedule.length"><td colspan="6" class="gr-empty">لا توجد مناقشات لهذا المشرف</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <!-- نفس قالب سجل المجموعات: سلايدر + شريط الملخص الأخضر -->
+        <SlideTable :rows="supSchedule" :label="'المناقشات'">
+          <template #default="{ rows: shown }">
+          <div class="gr-table-wrap">
+            <table class="gr-table">
+              <thead><tr><th>التاريخ</th><th>الوقت</th><th>القاعة</th><th>المجموعة</th><th>المشرف</th><th>المناقش الأول</th><th>المناقش الثاني</th></tr></thead>
+              <tbody>
+                <tr v-for="r in shown" :key="r.id" class="is-link" @click="detail = plan.find((x) => x.id === r.id) || null">
+                  <td><span class="mono">{{ r.date }}</span></td>
+                  <td><span class="mono">{{ r.time }}</span></td>
+                  <td>{{ r.room }}</td>
+                  <td class="pt-strong">{{ r.section }}</td>
+                  <td v-for="(pid, k) in [r.supId, ...r.examiners]" :key="k" :class="pid === supView && 'dp-me'">{{ pid ? supName(pid) : '—' }}</td>
+                </tr>
+                <tr v-if="!supSchedule.length"><td colspan="7" class="gr-empty">لا توجد مناقشات لهذا المشرف</td></tr>
+              </tbody>
+            </table>
+          </div>
+          </template>
+          <template #after>
+            <div class="gr-sumbar dp-sumbar">
+              <span>عدد المناقشات: {{ supSchedule.length }}</span>
+              <span>القاعات: {{ [...new Set(supSchedule.map((r) => r.room))].join('، ') }}</span>
+              <span>الأيام: {{ [...new Set(supSchedule.map((r) => r.date))].length }}</span>
+            </div>
+          </template>
+        </SlideTable>
       </template>
       <p v-else class="pt-muted">بعد توليد الجدول ومعالجة التعارضات اضغط "نشر للمشرفين" ليظهر لكل مشرف جدول مناقشاته ومواعيده.</p>
     </section>
+
+    <!-- تفاصيل المناقشة -->
+    <BaseModal :model-value="!!detail" :title="detail ? `مناقشة المجموعة ${detail.g.section}` : ''" :description="detail?.g.project || ''" size="lg" @update:model-value="!$event && (detail = null)">
+      <div v-if="detail" class="dd">
+        <div class="dd-tags">
+          <span :class="['rv-pill', detail.status === 'confirmed' ? 'is-approved' : 'is-pending']">{{ detail.status === 'confirmed' ? 'منشورة' : 'بانتظار النشر' }}</span>
+          <span :class="['rv-pill', conflicts[detail.id] ? 'is-rejected' : 'is-approved']">{{ conflicts[detail.id] ? `${conflicts[detail.id].length} تعارض` : 'بلا تعارض' }}</span>
+          <span class="rv-pill">{{ DEGREES[detail.g.degree] }}</span>
+          <span class="rv-pill">{{ detail.gender === 'female' ? 'طالبات' : 'طلاب' }}</span>
+        </div>
+
+        <div class="dd-when">
+          <div><CalendarDays :size="18" /><span>التاريخ</span><b class="mono">{{ detail.date || '—' }}</b></div>
+          <div><Clock :size="18" /><span>الوقت</span><b class="mono" dir="ltr">{{ detail.time ? `${detail.time} – ${fromMin(toMin(detail.time) + durOf(detail))}` : '—' }}</b></div>
+          <div><DoorOpen :size="18" /><span>القاعة</span><b dir="ltr">{{ detail.room || '—' }}</b></div>
+          <div><MapPin :size="18" /><span>المكان</span><b>{{ REGIONS[detail.region] }}</b></div>
+        </div>
+
+        <dl class="prd-kv dd-kv">
+          <div><dt>المشرف</dt><dd>{{ supName(detail.g.supId) }}</dd></div>
+          <div><dt>المناقش الأول</dt><dd>{{ detail.examiners[0] ? supName(detail.examiners[0]) : '—' }}</dd></div>
+          <div><dt>المناقش الثاني</dt><dd>{{ detail.examiners[1] ? supName(detail.examiners[1]) : '—' }}</dd></div>
+          <div><dt>التخصص</dt><dd>{{ detail.g.spec || '—' }}</dd></div>
+          <div><dt>مدة المناقشة</dt><dd>{{ durOf(detail) }} دقيقة</dd></div>
+          <div v-if="detail.note"><dt>ملاحظات</dt><dd>{{ detail.note }}</dd></div>
+        </dl>
+
+        <div>
+          <h4 class="pr-h">الطلاب ({{ detail.g.members.length }})</h4>
+          <ul class="rv-members">
+            <li v-for="m in detail.g.members" :key="m.id"><span class="rv-avatar">{{ (m.name || '?').charAt(0) }}</span><span>{{ m.name }}</span></li>
+          </ul>
+        </div>
+
+        <div v-if="conflicts[detail.id]" class="palert is-warning dd-conflicts">
+          <b>التعارضات:</b>
+          <ul><li v-for="(c, i) in conflicts[detail.id]" :key="i">{{ c }}</li></ul>
+          <div class="dp-free">
+            <span>الأوقات المتاحة في القاعات ({{ dayOf(detail) }}):</span>
+            <button v-for="o in freeSlots(detail)" :key="o.room + o.time" type="button" class="dp-free-opt" @click="applySlot(detail, o)">
+              <b dir="ltr">{{ o.time }}</b> <span dir="ltr">{{ o.room }}</span>
+            </button>
+            <em v-if="!freeSlots(detail).length">لا يوجد وقت متاح لكل الأطراف</em>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <button type="button" class="pbtn is-outline" @click="detail = null">إغلاق</button>
+        <button type="button" class="pbtn is-cyan" @click="editDetail"><Pencil :size="16" /> تعديل في الجدول</button>
+      </template>
+    </BaseModal>
+
+    <!-- طباعة حسب القاعات: اختيار اليوم والقاعات قبل الطباعة -->
+    <BaseModal v-model="roomPrint.open" title="طباعة جدول المناقشات حسب القاعات" description="صفحة لكل قاعة في كل يوم، بأسماء الطلاب والمشرف والمناقشين" size="md">
+      <div class="dp-print">
+        <div class="pfield">
+          <span>اليوم</span>
+          <nav class="hm-tabs">
+            <button v-for="t in dayTabs" :key="t.value" type="button" :class="roomPrint.day === t.value && 'is-active'" @click="roomPrint.day = t.value">{{ t.label }}</button>
+          </nav>
+        </div>
+        <div class="pfield">
+          <span>القاعات ({{ roomPrint.rooms.length }} من {{ printableRooms.length }})</span>
+          <label class="gp-check gp-bar">
+            <input type="checkbox" :checked="roomPrint.rooms.length === printableRooms.length" @change="roomPrint.rooms = roomPrint.rooms.length === printableRooms.length ? [] : [...printableRooms]"> كل القاعات
+          </label>
+          <div class="dp-print-rooms">
+            <label v-for="room in printableRooms" :key="room" :class="['gp-item', roomPrint.rooms.includes(room) && 'is-on']">
+              <input v-model="roomPrint.rooms" type="checkbox" :value="room">
+              <span class="gp-item-main"><b dir="ltr">{{ room }}</b><span class="pt-muted">{{ roomCount(room) }} مناقشة</span></span>
+            </label>
+          </div>
+        </div>
+        <div v-if="conflictCount" class="palert is-warning">في الجدول {{ conflictCount }} تعارض — ستُطبع المواعيد كما هي.</div>
+      </div>
+      <template #footer>
+        <button type="button" class="pbtn is-outline" @click="roomPrint.open = false">إلغاء</button>
+        <button type="button" class="pbtn is-cyan" :disabled="!roomPrint.rooms.length || busy" @click="wordRooms"><FileText :size="16" /> Word</button>
+        <button type="button" class="pbtn is-green" :disabled="!roomPrint.rooms.length || busy" @click="printRooms"><Printer :size="16" /> {{ busy ? 'جارٍ التجهيز…' : `طباعة ${roomPrint.rooms.length} قاعة` }}</button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
 <script>
-import { CalendarPlus, Printer, FileSpreadsheet, Upload, Send, Save } from 'lucide-vue-next'
+import SlideTable from '@/components/ui/SlideTable.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
+import { CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil } from 'lucide-vue-next'
 import { exportStyledExcel } from '@/utils/exportReport'
-import { exportPlanPdf, exportRoomsPdf } from '@/utils/ucasReports'
+import { exportPlanPdf, exportRoomsPdf, exportDiscussionsDoc } from '@/utils/ucasReports'
 import { DEGREES, REGIONS } from '@/utils/progressData'
 import api from '@/services/api'
 import { loadGroups, loadSupervisors, loadDiscussions, groupGender, groupRegion } from '@/services/adminData'
@@ -138,12 +396,12 @@ const toMin = (hhmm) => {
 const pad = (n) => String(n).padStart(2, '0')
 const fromMin = (m) => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`
 const h12 = (m) => `${pad(Math.floor(m / 60) % 12 || 12)}:${pad(m % 60)}`
-const CITY = { gaza: 'غزة', south: 'خانيونس' }
+const CITY = { gaza: 'غزة', middle: 'وسط غزة', south: 'خانيونس' }
 
 export default {
   name: 'DiscussionsTools',
 
-  components: { CalendarPlus, Printer, FileSpreadsheet, Upload, Send, Save },
+  components: { SlideTable, BaseModal, CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil },
 
   data() {
     return {
@@ -153,16 +411,217 @@ export default {
       groups: [],
       supList: [],
       s: {
-        duration: 30, start: '09:00', end: '14:00', breakAt: '12:30', breakMin: 30,
-        femaleDay: '2027-01-24', maleDay: '2027-01-25',
-        rooms: { gaza: 'E504, E506, E304', south: 'S101, S102' }
+        // مدة لكل درجة (نموذج الكلية: الدبلوم 15 دقيقة، البكالوريوس 30)
+        durations: { diploma: 15, bachelor: 30 },
+        // استراحة اختيارية من–إلى (لا مناقشات خلالها)
+        breakOn: false, breakFrom: '12:30', breakTo: '13:00',
+        // تقسيم الأيام: gender = الطالبات/الطلاب، degree = الدبلوم/البكالوريوس
+        splitBy: 'gender',
+        days: { female: '2027-01-24', male: '2027-01-25', diploma: '2027-01-24', bachelor: '2027-01-25' },
+        rooms: { gaza: ['E504', 'E506', 'E304'], middle: [], south: ['S101', 'S102'] },
+        // ساعات كل قاعة (تُملأ افتراضيًا بساعات مكانها عند إضافتها)
+        roomHours: {
+          E504: { start: '09:00', end: '14:00' }, E506: { start: '09:00', end: '14:00' }, E304: { start: '09:00', end: '14:00' },
+          S101: { start: '10:00', end: '13:00' }, S102: { start: '10:00', end: '13:00' }
+        },
+        // ساعات إلزامية لكل مكان تواجد
+        windows: { gaza: { start: '09:00', end: '14:00' }, middle: { start: '09:00', end: '14:00' }, south: { start: '10:00', end: '13:00' } }
       },
+      step: 0,
+      detail: null,
+      roomDraft: { gaza: '', middle: '', south: '' },
+      view: 'list',
+      onlyConflicts: false,
+      roomPrint: { open: false, day: '', rooms: [] },
       plan: [],
       day: '',
       roomFilter: '',
       busy: false,
       published: null,
       supView: null
+    }
+  },
+
+  computed: {
+    /** مفاتيح الأيام حسب طريقة التقسيم */
+    dayKeys() {
+      return this.s.splitBy === 'degree'
+        ? [{ key: 'diploma', label: 'الدبلوم' }, { key: 'bachelor', label: 'البكالوريوس' }]
+        : [{ key: 'female', label: 'الطالبات' }, { key: 'male', label: 'الطلاب' }]
+    },
+
+    dayTabs() {
+      return [{ value: '', label: 'كل الأيام' }, ...this.dayKeys.map((d) => ({ value: this.s.days[d.key], label: `${d.label} ${this.s.days[d.key]}` }))]
+    },
+
+    /** أماكن لها قاعات أو مجموعات وساعاتها ناقصة أو غير صحيحة (البداية بعد النهاية) — تمنع التوليد */
+    badWindows() {
+      return Object.keys(REGIONS).filter((k) => {
+        const w = this.s.windows[k]
+        const used = this.s.rooms[k].length || this.regionCount(k)
+        return used && (!w.start || !w.end || toMin(w.start) >= toMin(w.end))
+      })
+    },
+
+    roomTotal() {
+      return Object.values(this.s.rooms).flat().length
+    },
+
+    allRooms() {
+      return [...new Set(this.plan.map((r) => r.room).filter(Boolean))]
+    },
+
+    visiblePlan() {
+      return this.plan.filter((r) => (!this.day || r.date === this.day) && (!this.roomFilter || r.room === this.roomFilter) && (!this.onlyConflicts || this.conflicts[r.id]))
+    },
+
+    kpis() {
+      const done = this.plan.filter((r) => r.time && r.room).length
+      return [
+        { label: 'مناقشة', value: this.plan.length },
+        { label: 'مجدولة', value: done, tone: 'is-good' },
+        { label: 'بلا موعد', value: this.plan.length - done, tone: this.plan.length - done ? 'is-bad' : '' },
+        { label: 'فيها تعارض', value: this.conflictCount, tone: this.conflictCount ? 'is-warn' : '' },
+        { label: 'قاعة مستخدمة', value: this.allRooms.length }
+      ]
+    },
+
+    /** مراحل الجدولة؛ كل مرحلة تعرض قسمها فقط */
+    steps() {
+      return [
+        { label: 'الإعدادات والتوليد', done: this.plan.length > 0 },
+        { label: 'مراجعة الجدول ومعالجة التعارضات', done: this.plan.length > 0 && !this.conflictCount },
+        { label: 'الطباعة والنشر', done: !!this.published }
+      ]
+    },
+
+    /** الاستراحة بالدقائق [من، إلى]، أو null إن لم تُفعَّل أو كانت غير صحيحة */
+    breakRange() {
+      const a = toMin(this.s.breakFrom)
+      const b = toMin(this.s.breakTo)
+      return this.s.breakOn && this.s.breakFrom && this.s.breakTo && b > a ? [a, b] : null
+    },
+
+    /**
+     * سعة كل يوم بالدقائق: (امتداد ساعات الأماكن المستخدمة − الاستراحة) × المناقشات المتزامنة، مقابل مجموع مدد مجموعاته
+     * المتزامن = أقل من (المشرفين ÷ 3: المشرف + مناقشان) و(عدد القاعات)
+     */
+    capacity() {
+      const used = Object.keys(REGIONS).filter((k) => this.s.rooms[k].length || this.regionCount(k)).map(this.windowOf).filter(([a, b]) => b > a)
+      const from = Math.min(...used.map(([a]) => a))
+      const to = Math.max(...used.map(([, b]) => b))
+      const br = this.breakRange
+      const minutes = used.length ? to - from - (br ? Math.max(0, Math.min(to, br[1]) - Math.max(from, br[0])) : 0) : 0
+      const bySups = Math.floor(this.supList.length / 3)
+      const parallel = Math.min(this.roomTotal, bySups)
+      const rows = this.plan.length ? this.plan : this.groups.map((g) => ({ g, gender: groupGender(g) }))
+      return this.dayKeys.map(({ key, label }) => {
+        const mine = rows.filter((r) => this.dayKeyOf(r) === key)
+        const need = mine.reduce((n, r) => n + this.durOf(r), 0)
+        const have = Math.max(0, minutes) * parallel
+        return { key, label, date: this.s.days[key], groups: mine.length, need, have, ok: need <= have }
+      })
+    },
+
+    /** ملخص التعارضات حسب النوع */
+    issueSummary() {
+      const all = Object.values(this.conflicts).flat()
+      const n = (re) => all.filter((m) => re.test(m)).length
+      return [
+        { label: 'بلا موعد أو قاعة', count: n(/لم يُحدَّد/) },
+        { label: 'تعارض مشرف أو مناقش', count: n(/مرتبط بمناقشة|المشرف لا يناقش|نفس الشخص|يلزم مناقشان/) },
+        { label: 'قاعة محجوزة', count: n(/محجوزة/) },
+        { label: 'يوم غير مطابق', count: n(/يجب أن يكون يوم/) },
+        { label: 'خارج ساعات المكان أو القاعة', count: n(/خارج ساعات/) },
+        { label: 'داخل الاستراحة', count: n(/الاستراحة/) }
+      ].filter((x) => x.count)
+    },
+
+    /** شبكة القاعات: اليوم المختار (أو يوم الطالبات افتراضيًا) */
+    gridDay() {
+      return this.day || this.s.days[this.dayKeys[0].key]
+    },
+    gridRows() {
+      return this.plan.filter((r) => r.date === this.gridDay)
+    },
+    gridRooms() {
+      const used = this.gridRows.map((r) => r.room).filter(Boolean)
+      const regions = new Set(this.gridRows.map((r) => r.region))
+      const configured = [...regions].flatMap((k) => this.roomsOf(k))
+      return [...new Set([...configured, ...used])]
+    },
+    gridTimes() {
+      return [...new Set(this.gridRows.map((r) => r.time).filter(Boolean))].sort()
+    },
+    unscheduled() {
+      return this.gridRows.filter((r) => !r.time || !r.room)
+    },
+
+    /** القاعات التي فيها مناقشات في اليوم المختار للطباعة */
+    printableRooms() {
+      return [...new Set(this.plan.filter((r) => r.time && r.room && (!this.roomPrint.day || r.date === this.roomPrint.day)).map((r) => r.room))].sort()
+    },
+
+    /** التعارضات لكل صف: { rowId: [رسائل] } */
+    conflicts() {
+      const out = {}
+      const add = (r, msg) => (out[r.id] = [...(out[r.id] || []), msg])
+      const overlap = (x, y) => x.date === y.date && toMin(x.time) < toMin(y.time) + this.durOf(y) && toMin(y.time) < toMin(x.time) + this.durOf(x)
+      const people = new Map()
+      const rooms = new Map()
+      this.plan.forEach((r) => {
+        if (!r.date || !r.time || !r.room) return add(r, 'لم يُحدَّد له موعد أو قاعة')
+        const [a, b] = r.examiners
+        if (!a || !b) add(r, 'يلزم مناقشان')
+        if (a && a === b) add(r, 'المناقشان نفس الشخص')
+        if (r.examiners.includes(r.g.supId)) add(r, 'المشرف لا يناقش مجموعته')
+        const expected = this.dayOf(r)
+        if (r.date !== expected) add(r, `موعد ${this.dayLabelOf(r)} يجب أن يكون يوم ${expected}`)
+        const [ws, we] = this.windowOf(r.region)
+        if (toMin(r.time) < ws || toMin(r.time) + this.durOf(r) > we) add(r, `خارج ساعات ${REGIONS[r.region]} (${fromMin(ws)}–${fromMin(we)})`)
+        if (r.room && this.roomHoursOk(r.room) && !this.roomFits(r.room, r.region, toMin(r.time), toMin(r.time) + this.durOf(r))) {
+          add(r, `خارج ساعات القاعة ${r.room} (${this.roomHoursLabel(r.room, r.region)})`)
+        }
+        const br = this.breakRange
+        if (br && toMin(r.time) < br[1] && br[0] < toMin(r.time) + this.durOf(r)) add(r, `يتداخل مع الاستراحة (${fromMin(br[0])}–${fromMin(br[1])})`)
+        // كل شخص (مشرف المجموعة + المناقشون) في مكان واحد بفترات غير متداخلة — ولو بقاعتين مختلفتين
+        ;[r.g.supId, a, b].filter(Boolean).forEach((pid) => {
+          const list = people.get(pid) || []
+          list.forEach((o) => {
+            if (overlap(o, r)) {
+              add(r, `${this.supName(pid)} مرتبط بمناقشة أخرى بنفس الوقت (شعبة ${o.g.section})`)
+              add(o, `${this.supName(pid)} مرتبط بمناقشة أخرى بنفس الوقت (شعبة ${r.g.section})`)
+            }
+          })
+          people.set(pid, [...list, r])
+        })
+        const list = rooms.get(`${r.date}|${r.room}`) || []
+        list.forEach((o) => {
+          if (overlap(o, r)) {
+            add(r, `القاعة ${r.room} محجوزة لشعبة ${o.g.section}`)
+            add(o, `القاعة ${r.room} محجوزة لشعبة ${r.g.section}`)
+          }
+        })
+        rooms.set(`${r.date}|${r.room}`, [...list, r])
+      })
+      Object.keys(out).forEach((k) => (out[k] = [...new Set(out[k])]))
+      return out
+    },
+
+    conflictCount() {
+      return Object.keys(this.conflicts).length
+    },
+
+    conflictList() {
+      return this.plan.flatMap((r) => (this.conflicts[r.id] || []).map((msg) => ({ section: r.g.section, msg })))
+    },
+
+    supSchedule() {
+      if (!this.published) return []
+      const id = this.supView
+      return this.published.rows
+        .filter((r) => r.supId === id || r.examiners.includes(id))
+        .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))
     }
   },
 
@@ -183,99 +642,142 @@ export default {
     this.loading = false
   },
 
-  computed: {
-    dayTabs() {
-      return [
-        { value: '', label: 'كل الأيام' },
-        { value: this.s.femaleDay, label: `الطالبات ${this.s.femaleDay}` },
-        { value: this.s.maleDay, label: `الطلاب ${this.s.maleDay}` }
-      ]
-    },
+  methods: {
+    toMin,
+    fromMin,
 
-    allRooms() {
-      return [...new Set(this.plan.map((r) => r.room).filter(Boolean))]
-    },
-
-    visiblePlan() {
-      return this.plan.filter((r) => (!this.day || r.date === this.day) && (!this.roomFilter || r.room === this.roomFilter))
-    },
-
-    /** التعارضات لكل صف: { rowId: [رسائل] } */
-    conflicts() {
-      const out = {}
-      const add = (r, msg) => (out[r.id] = [...(out[r.id] || []), msg])
-      const people = new Map()
-      const rooms = new Map()
-      this.plan.forEach((r) => {
-        if (!r.date || !r.time || !r.room) return add(r, 'لم يُحدَّد له موعد أو قاعة')
-        const [a, b] = r.examiners
-        if (!a || !b) add(r, 'يلزم مناقشان')
-        if (a && a === b) add(r, 'المناقشان نفس الشخص')
-        if (r.examiners.includes(r.g.supId)) add(r, 'المشرف لا يناقش مجموعته')
-        const expected = r.gender === 'female' ? this.s.femaleDay : this.s.maleDay
-        if (r.date !== expected) add(r, `موعد ${r.gender === 'female' ? 'الطالبات' : 'الطلاب'} يجب أن يكون يوم ${expected}`)
-        // كل شخص (مشرف المجموعة + المناقشون) في مكان واحد بنفس الفترة
-        const start = toMin(r.time)
-        ;[r.g.supId, a, b].filter(Boolean).forEach((pid) => {
-          const list = people.get(pid) || []
-          list.forEach((o) => {
-            if (o !== r && o.date === r.date && start < toMin(o.time) + this.s.duration && toMin(o.time) < start + this.s.duration) {
-              const msg = `${this.supName(pid)} مرتبط بمناقشة أخرى بنفس الوقت (شعبة ${o.g.section})`
-              add(r, msg)
-              add(o, `${this.supName(pid)} مرتبط بمناقشة أخرى بنفس الوقت (شعبة ${r.g.section})`)
-            }
-          })
-          people.set(pid, [...list, r])
-        })
-        const key = `${r.date}|${r.time}|${r.room}`
-        if (rooms.has(key)) {
-          add(r, `القاعة ${r.room} محجوزة لشعبة ${rooms.get(key).g.section}`)
-          add(rooms.get(key), `القاعة ${r.room} محجوزة لشعبة ${r.g.section}`)
-        } else rooms.set(key, r)
-      })
-      Object.keys(out).forEach((k) => (out[k] = [...new Set(out[k])]))
+    /**
+     * الأوقات المتاحة لمناقشة: في يومها الصحيح وضمن ساعات مكانها، في قاعات مكانها، بحيث تكون القاعة فارغة
+     * والمشرف والمناقشان (إن حُدّدا) غير مرتبطين بمناقشة متداخلة — أول 6 خيارات
+     */
+    freeSlots(row) {
+      const date = this.dayOf(row)
+      const dur = this.durOf(row)
+      const others = this.plan.filter((o) => o !== row && o.date === date && o.time)
+      const busy = (a, b, test) => others.some((o) => test(o) && a < toMin(o.time) + this.durOf(o) && toMin(o.time) < b)
+      const people = [row.g.supId, ...row.examiners].filter(Boolean)
+      const out = []
+      for (const a of this.startsFor(row.region, dur)) {
+        const b = a + dur
+        if (busy(a, b, (o) => people.some((pid) => o.g.supId === pid || o.examiners.includes(pid)))) continue
+        for (const room of this.roomsOf(row.region)) {
+          if (this.roomFits(room, row.region, a, b) && !busy(a, b, (o) => o.room === room)) out.push({ time: fromMin(a), room, date })
+          if (out.length >= 6) return out
+        }
+      }
       return out
     },
 
-    conflictCount() {
-      return Object.keys(this.conflicts).length
+    applySlot(row, o) {
+      Object.assign(row, { date: o.date, time: o.time, room: o.room })
+      this.$toast?.success(`نُقلت مناقشة ${row.g.section} إلى ${o.room} الساعة ${o.time}`)
     },
 
-    conflictList() {
-      return this.plan.flatMap((r) => (this.conflicts[r.id] || []).map((msg) => ({ section: r.g.section, msg })))
+    /** من النافذة إلى صف المجموعة في قائمة الخطوة 2 */
+    editDetail() {
+      const id = this.detail.id
+      Object.assign(this, { detail: null, step: 1, view: 'list', day: '', roomFilter: '', onlyConflicts: false })
+      this.$nextTick(() => document.querySelector(`[data-row="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
     },
 
-    supSchedule() {
-      if (!this.published) return []
-      const id = this.supView
-      return this.published.rows
-        .filter((r) => r.supId === id || r.examiners.includes(id))
-        .map((r) => ({
-          ...r,
-          role: r.supId === id ? 'مشرف' : 'مناقش',
-          people: r.supId === id ? `المناقشون: ${r.examiners.map(this.supName).join('، ')}` : `المشرف: ${this.supName(r.supId)}`
-        }))
-        .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))
-    }
-  },
-
-  methods: {
     supName(id) {
       return this.supList.find((x) => x.id === id)?.name || '—'
     },
 
     roomsOf(region) {
-      return String(this.s.rooms[region] || '').split(/[،,]/).map((r) => r.trim()).filter(Boolean)
+      return this.s.rooms[region] || []
     },
 
-    /** الفترات المتاحة في اليوم مع تخطّي الاستراحة */
-    slots() {
-      const dur = Math.max(10, Number(this.s.duration) || 30)
-      const end = toMin(this.s.end)
-      const bFrom = toMin(this.s.breakAt)
-      const bTo = bFrom + (Number(this.s.breakMin) || 0)
+    /** مفتاح يوم الصف حسب طريقة التقسيم (الفئة أو الدرجة) */
+    dayKeyOf(row) {
+      return this.s.splitBy === 'degree' ? row.g.degree : row.gender
+    },
+
+    dayOf(row) {
+      return this.s.days[this.dayKeyOf(row)]
+    },
+
+    dayLabelOf(row) {
+      return this.dayKeys.find((d) => d.key === this.dayKeyOf(row))?.label || ''
+    },
+
+    /** مدة مناقشة المجموعة حسب درجتها */
+    durOf(row) {
+      return Math.max(5, Number(this.s.durations[row.g.degree]) || 30)
+    },
+
+    /** ساعات مكان التواجد الإلزامية بالدقائق */
+    windowOf(region) {
+      const w = this.s.windows[region] || {}
+      return [toMin(w.start), toMin(w.end)]
+    },
+
+    roomHoursOk(room) {
+      const h = this.s.roomHours[room]
+      return !!h?.start && !!h?.end && toMin(h.start) < toMin(h.end)
+    },
+
+    /** النافذة الفعلية لقاعة = تقاطع ساعات القاعة مع ساعات مكانها */
+    roomWindow(room, region) {
+      const [ws, we] = this.windowOf(region)
+      if (!this.roomHoursOk(room)) return [ws, we]
+      const h = this.s.roomHours[room]
+      return [Math.max(ws, toMin(h.start)), Math.min(we, toMin(h.end))]
+    },
+
+    roomFits(room, region, a, b) {
+      const [rs, re] = this.roomWindow(room, region)
+      return a >= rs && b <= re
+    },
+
+    roomHoursLabel(room, region) {
+      const [a, b] = this.roomWindow(room, region)
+      return `${fromMin(a)}–${fromMin(b)}`
+    },
+
+    regionCount(region) {
+      return (this.plan.length ? this.plan.filter((r) => r.region === region) : this.groups.filter((g) => groupRegion(g) === region)).length
+    },
+
+    /** إضافة قاعة كرقاقة (Enter أو فاصلة) — تقبل لصق عدة قاعات مفصولة بفواصل */
+    addRoom(region) {
+      const names = String(this.roomDraft[region] || '').split(/[،,]/).map((x) => x.trim()).filter(Boolean)
+      if (names.length) this.s.rooms[region] = [...new Set([...this.s.rooms[region], ...names])]
+      names.forEach((n) => { if (!this.s.roomHours[n]) this.s.roomHours[n] = { ...this.s.windows[region] } })
+      this.roomDraft[region] = ''
+    },
+
+    removeRoom(region, room) {
+      this.s.rooms[region] = this.s.rooms[region].filter((x) => x !== room)
+    },
+
+    /** هل الشخص مرتبط بمناقشة أخرى تتقاطع مع موعد هذا الصف؟ (لتمييزه في قائمة المناقشين) */
+    isBusy(pid, row) {
+      if (!row.date || !row.time) return false
+      const a = toMin(row.time)
+      return this.plan.some((o) => o !== row && o.date === row.date && o.time && (o.g.supId === pid || o.examiners.includes(pid)) && a < toMin(o.time) + this.durOf(o) && toMin(o.time) < a + this.durOf(row))
+    },
+
+    cell(time, room) {
+      return this.gridRows.filter((r) => r.time === time && r.room === room)
+    },
+
+    roomCount(room) {
+      return this.plan.filter((r) => r.room === room && r.time && (!this.roomPrint.day || r.date === this.roomPrint.day)).length
+    },
+
+    openRoomPrint() {
+      this.roomPrint.day = this.day
+      this.roomPrint.open = true
+      this.$nextTick(() => (this.roomPrint.rooms = [...this.printableRooms]))
+    },
+
+    /** بدايات المناقشة الممكنة لمدة معيّنة ضمن ساعات المكان مع تخطّي الاستراحة */
+    startsFor(region, dur) {
+      const [from, end] = this.windowOf(region)
+      const [bFrom, bTo] = this.breakRange || [0, 0]
       const out = []
-      let t = toMin(this.s.start)
+      let t = from
       while (t + dur <= end) {
         if (bTo > bFrom && t < bTo && t + dur > bFrom) {
           t = bTo
@@ -288,38 +790,42 @@ export default {
     },
 
     /**
-     * توليد جشِع: لكل مجموعة أول فترة + قاعة (من قاعات منطقتها) يكون فيها مشرفها متاحًا ومناقشان متاحان ليسا مشرفيها،
-     * مع تفضيل الأقل تحميلًا — ponytail: جشِع بلا تراجع؛ يكفي لعشرات المجموعات، ويُستبدل بحلّال قيود إن كبر العدد
+     * توليد جشِع بفترات متغيرة المدة (الدبلوم ≠ البكالوريوس): المجموعات مرتبة بالدرجة ثم رقم الشعبة،
+     * ولكل مجموعة أول بداية ضمن ساعات مكانها تكون فيها قاعة من قاعات مكانها فارغة، ومشرفها متاحًا، ومناقشان متاحان ليسا مشرفيها
+     * (يُفضَّل أقل المناقشين تحميلًا) — ponytail: جشِع بلا تراجع؛ يكفي لعشرات المجموعات، ويُستبدل بحلّال قيود إن كبر العدد
      */
     generate() {
-      const slots = this.slots()
-      const busy = new Set() // `${date}|${t}|${personId}` و `${date}|${t}|room:${room}`
+      if (this.badWindows.length) return this.$toast?.error(`ساعات المكان إلزامية — حدّدها لـ ${this.badWindows.map((k) => REGIONS[k]).join('، ')}`)
+      const busy = new Map() // `${date}|${personId أو room:اسم}` → [[بداية، نهاية]]
+      const free = (key, a, b) => !(busy.get(key) || []).some(([x, y]) => a < y && x < b)
+      const take = (key, a, b) => busy.set(key, [...(busy.get(key) || []), [a, b]])
       const load = Object.fromEntries(this.supList.map((x) => [x.id, 0]))
       const sorted = [...this.groups].sort((a, b) => a.degree.localeCompare(b.degree) || a.section.localeCompare(b.section, 'en', { numeric: true }))
       this.plan = sorted.map((g) => {
-        const gender = groupGender(g)
-        const region = groupRegion(g)
-        const date = gender === 'female' ? this.s.femaleDay : this.s.maleDay
-        // إعادة التوليد تحتفظ بمعرّف الموعد المحفوظ لتحديثه بدل إنشاء موعد مكرر
-        const discussionId = this.plan.find((p) => p.id === g.id)?.discussionId ?? null
-        const row = { id: g.id, g, gender, region, date, time: '', room: '', examiners: [null, null], note: '', discussionId }
-        for (const t of slots) {
-          if (busy.has(`${date}|${t}|${g.supId}`)) continue
-          const free = this.supList.filter((x) => x.id !== g.supId && !busy.has(`${date}|${t}|${x.id}`)).sort((a, b) => load[a.id] - load[b.id])
-          const room = this.roomsOf(region).find((r) => !busy.has(`${date}|${t}|room:${r}`))
-          if (free.length < 2 || !room) continue
-          const ex = free.slice(0, 2).map((x) => x.id)
-          ;[g.supId, ...ex].forEach((pid) => busy.add(`${date}|${t}|${pid}`))
-          busy.add(`${date}|${t}|room:${room}`)
+        // إعادة التوليد تحتفظ بالفئة والمكان المعدّلين يدويًا وبمعرّف الموعد المحفوظ (تحديث بدل تكرار)
+        const prev = this.plan.find((p) => p.id === g.id)
+        const row = { id: g.id, g, gender: prev?.gender || groupGender(g), region: prev?.region || groupRegion(g), time: '', room: '', examiners: [null, null], note: '', discussionId: prev?.discussionId ?? null }
+        row.date = this.dayOf(row)
+        const dur = this.durOf(row)
+        const d = row.date
+        for (const a of this.startsFor(row.region, dur)) {
+          const b = a + dur
+          if (!free(`${d}|${g.supId}`, a, b)) continue
+          const room = this.roomsOf(row.region).find((rm) => this.roomFits(rm, row.region, a, b) && free(`${d}|room:${rm}`, a, b))
+          const ex = this.supList.filter((x) => x.id !== g.supId && free(`${d}|${x.id}`, a, b)).sort((x, y) => load[x.id] - load[y.id]).slice(0, 2).map((x) => x.id)
+          if (!room || ex.length < 2) continue
+          ;[g.supId, ...ex].forEach((pid) => take(`${d}|${pid}`, a, b))
+          take(`${d}|room:${room}`, a, b)
           ex.forEach((id) => (load[id] += 1))
-          Object.assign(row, { time: fromMin(t), room, examiners: ex })
+          Object.assign(row, { time: fromMin(a), room, examiners: ex })
           break
         }
         return row
       })
       this.published = null
+      this.step = 1
       const missing = this.plan.filter((r) => !r.time).length
-      missing ? this.$toast?.error(`تعذّر جدولة ${missing} مجموعة — زد القاعات أو الساعات`) : this.$toast?.success(`جُدولت ${this.plan.length} مناقشة بلا تعارضات`)
+      missing ? this.$toast?.error(`تعذّر جدولة ${missing} مجموعة — راجع مؤشر السعة في الإعدادات`) : this.$toast?.success(`جُدولت ${this.plan.length} مناقشة بلا تعارضات`)
     },
 
     pdfRows() {
@@ -328,7 +834,9 @@ export default {
         sup: this.supName(r.g.supId),
         members: r.g.members,
         date: r.date,
-        time: `${h12(toMin(r.time))} – ${h12(toMin(r.time) + this.s.duration)}`,
+        // start = الوقت بصيغة 24 ساعة للترتيب؛ time للعرض بصيغة 12 ساعة مع ص/م
+        start: r.time,
+        time: `${h12(toMin(r.time))} – ${h12(toMin(r.time) + this.durOf(r))} ${toMin(r.time) + this.durOf(r) >= 720 ? 'م' : 'ص'}`,
         room: r.room,
         city: CITY[r.region],
         examiners: r.examiners.filter(Boolean).map(this.supName),
@@ -347,10 +855,24 @@ export default {
       }
     },
 
+    /** تصدير Word للجدول كاملًا (صفحة لكل يوم × درجة كنموذج الكلية) */
+    downloadWord() {
+      exportDiscussionsDoc(this.pdfRows())
+    },
+
+    /** تصدير Word حسب القاعات المختارة في نافذة الطباعة */
+    wordRooms() {
+      const { day, rooms } = this.roomPrint
+      exportDiscussionsDoc(this.pdfRows().filter((r) => rooms.includes(r.room) && (!day || r.date === day)), { byRoom: true })
+      this.roomPrint.open = false
+    },
+
     async printRooms() {
+      const { day, rooms } = this.roomPrint
       this.busy = true
       try {
-        await exportRoomsPdf(this.pdfRows())
+        await exportRoomsPdf(this.pdfRows().filter((r) => rooms.includes(r.room) && (!day || r.date === day)))
+        this.roomPrint.open = false
       } finally {
         this.busy = false
       }
@@ -431,7 +953,8 @@ export default {
           place: r.room,
           discussion_date: r.date,
           discussion_time: r.time,
-          committee: [...r.examiners.filter(Boolean).map(this.supName), r.note].filter(Boolean).join('، ') || '—',
+          // لجنة المناقشة = أسماء المناقشَين، والملاحظة بعد " | " (لا يوجد عمود ملاحظات في الخادم)
+          committee: [r.examiners.filter(Boolean).map(this.supName).join('، '), r.note].filter(Boolean).join(' | ') || '—',
           status
         }
         try {
@@ -464,11 +987,28 @@ export default {
       this.$toast?.[ok === total ? 'success' : 'error'](`نُشر ${ok} من ${total} موعدًا — يظهر لكل مشرف جدول مناقشاته`)
     },
 
-    snapshot() {
+    snapshot(onlyConfirmed = false) {
       this.published = {
         at: new Date().toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' }),
-        rows: this.plan.map((r) => ({ id: r.id, section: r.g.section, supId: r.g.supId, date: r.date, time: r.time, room: r.room, examiners: [...r.examiners] }))
+        rows: this.plan.filter((r) => !onlyConfirmed || r.status === 'confirmed').map((r) => ({ id: r.id, section: r.g.section, supId: r.g.supId, date: r.date, time: r.time, room: r.room, examiners: [...r.examiners] }))
       }
+    },
+
+    /**
+     * يستنتج تقسيم الأيام وتواريخها من المواعيد المحفوظة: اليوم الغالب لكل درجة (أو لكل فئة) إن اختلف عن الأخرى
+     * يُضبط التقسيم عليه، حتى لا يظهر الجدول المحفوظ كتعارضات "يوم غير مطابق"
+     */
+    adoptDays(rows) {
+      // التاريخ الأكثر تكرارًا لكل مفتاح (يتحمّل صفوفًا قليلة في يوم خاطئ — تظهر كتعارض)
+      const mode = (list) => Object.entries(list.reduce((m, d) => ({ ...m, [d]: (m[d] || 0) + 1 }), {})).sort((x, y) => y[1] - x[1])[0]?.[0]
+      const tryBy = (split, keyOf, keys) => {
+        const dates = keys.map((k) => mode(rows.filter((r) => keyOf(r) === k && r.date).map((r) => r.date)))
+        if (!dates.some(Boolean) || (dates[0] && dates[0] === dates[1])) return false
+        this.s.splitBy = split
+        keys.forEach((k, i) => dates[i] && (this.s.days[k] = dates[i]))
+        return true
+      }
+      tryBy('degree', (r) => r.g.degree, ['diploma', 'bachelor']) || tryBy('gender', (r) => r.gender, ['female', 'male'])
     },
 
     /** يبني الجدول من مواعيد المناقشات المحفوظة في الخادم */
@@ -477,7 +1017,8 @@ export default {
       const byName = (n) => this.supList.find((x) => x.name === n)?.id ?? null
       const rows = this.groups.filter((g) => byProject[g.projectId]).map((g) => {
         const d = byProject[g.projectId]
-        const names = String(d.committee || '').split(/[،,]/).map((s) => s.trim()).filter(Boolean)
+        const [who, ...rest] = String(d.committee || '').split(' | ')
+        const names = who.split(/[،,]/).map((s) => s.trim()).filter(Boolean)
         const ids = names.map(byName)
         return {
           id: g.id, g, gender: groupGender(g), region: groupRegion(g),
@@ -485,14 +1026,15 @@ export default {
           time: String(d.discussion_time || '').slice(0, 5),
           room: d.place,
           examiners: [ids.find(Boolean) ?? null, ids.filter(Boolean)[1] ?? null],
-          note: names.filter((n, i) => !ids[i]).join('، '),
+          note: [...names.filter((n, i) => !ids[i]), ...rest].join('، '),
           discussionId: d.id,
           status: d.status
         }
       })
       if (!rows.length) return
+      this.adoptDays(rows)
       this.plan = rows
-      if (rows.every((r) => r.status === 'confirmed')) this.snapshot()
+      if (rows.some((r) => r.status === 'confirmed')) this.snapshot(true)
     }
   }
 }

@@ -1,9 +1,5 @@
 <template>
-  <ProgressBoard v-if="isSuperAdmin">
-    <template #actions>
-      <BaseButton variant="outline" :icon="Download" :loading="exporting" @click="exportExcel">تصدير Excel</BaseButton>
-    </template>
-  </ProgressBoard>
+  <ProgressBoard v-if="isSuperAdmin" />
   <div v-else>
     <div class="portal-head-card flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex items-center gap-3">
@@ -96,7 +92,7 @@ import BaseBadge from '@/components/ui/BaseBadge.vue'
 import DataTable from '@/components/ui/DataTable.vue'
 import { useProgressStore } from '@/stores/progress.store'
 import { useAuthStore } from '@/stores/auth.store'
-import { ROLES } from '@/utils/constants'
+import { PORTAL_ROLES } from '@/utils/constants'
 import ProgressBoard from '@/views/super-admin/ProgressBoard.vue'
 import { exportStyledExcel } from '@/utils/exportReport'
 
@@ -134,8 +130,9 @@ export default {
   computed: {
     ...mapState(useProgressStore, ['overview', 'overviewLoading']),
     ...mapState(useAuthStore, ['userRole']),
+    /** قوالب البوابة (هوية UCAS) للإدارة العامة ولجنة الإشراف */
     isSuperAdmin() {
-      return this.userRole === ROLES.SUPER_ADMIN
+      return PORTAL_ROLES.includes(this.userRole)
     },
 
     rows() {

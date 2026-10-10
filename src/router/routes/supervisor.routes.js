@@ -9,7 +9,11 @@ import AppointmentsPageSupervisor from '@/views/supervisor/AppointmentsPage.vue'
 import ProjectArchivePageSupervisor from '@/views/supervisor/ProjectArchivePage.vue'
 import ProjectDetailPageSupervisor from '@/views/supervisor/ProjectDetailPage.vue'
 import ProgressPageSupervisor from '@/views/supervisor/ProgressPage.vue'
+import AnnouncementsInboxPageSupervisor from '@/views/shared/AnnouncementsInboxPage.vue'
+import EvaluationsPageSupervisor from '@/views/super-admin/EvaluationsPage.vue'
 import AssistantPageSupervisor from '@/views/supervisor/AssistantPage.vue'
+// نفس صفحة "مهامي" في لجنة الإشراف: مهام الإدارة العامة المسندة للمستخدم نفسه
+import MyTasksPageSupervisor from '@/views/committee/MyTasksPage.vue'
 
 // استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
 import ProfilePage from '@/views/supervisor/ProfilePage.vue'
@@ -55,6 +59,12 @@ export default [
         meta: { title: 'المهام (Kanban)' }
       },
       {
+        path: 'my-tasks',
+        name: 'supervisor-my-tasks',
+        component: MyTasksPageSupervisor,
+        meta: { title: 'مهامي من الإدارة' }
+      },
+      {
         path: 'meetings',
         name: 'supervisor-meetings',
         component: MeetingsPageSupervisor,
@@ -83,6 +93,24 @@ export default [
         name: 'supervisor-progress',
         component: ProgressPageSupervisor,
         meta: { title: 'نسبة تقدّم الفرق' }
+      },
+      {
+        path: 'announcements',
+        name: 'supervisor-announcements',
+        component: AnnouncementsInboxPageSupervisor,
+        meta: { title: 'الإعلانات والملفات' }
+      },
+      {
+        path: 'evaluations',
+        name: 'supervisor-evaluations',
+        component: EvaluationsPageSupervisor,
+        meta: { title: 'التقييمات' }
+      },
+      {
+        path: 'evaluations/:teamId(\\d+)',
+        name: 'supervisor-evaluation-sheet',
+        component: () => import('@/views/super-admin/EvaluationSheet.vue'),
+        meta: { title: 'ورقة التقييم' }
       },
       {
         path: 'assistant',

@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import api from '@/services/api'
-import { STORAGE_KEYS } from '@/utils/constants'
+import { PORTAL_ROLES, STORAGE_KEYS } from '@/utils/constants'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
@@ -13,6 +13,16 @@ export const useAuthStore = defineStore('auth', () => {
   const userRole = computed(() => user.value?.role || null)
   const userName = computed(() => user.value?.name || '')
   const userEmail = computed(() => user.value?.email || '')
+  // واجهة البوابة (هوية UCAS) للإدارة العامة ولجنة الإشراف، وبادئة مسارات صفحاتها الخاصة (الملف التعريفي، كلمة المرور)
+  const usesPortal = computed(() => PORTAL_ROLES.includes(user.value?.role))
+  const portalPrefix = computed(() => (user.value?.role === 'super_admin' ? 'super-admin' : 'committee'))
+  // الخادم يبني الرابط من APP_URL وقد يختلف عن عنوان الـ API — نربط مسار /storage بأصل الـ API
+  const avatarSrc = computed(() => {
+    const url = user.value?.avatar_url
+    if (!url) return ''
+    const i = url.indexOf('/storage/')
+    return i < 0 ? url : new URL(api.defaults.baseURL).origin + url.slice(i)
+  })
 
   const hasRole = (roles) => {
     if (!roles || !roles.length) return true
@@ -23,7 +33,7 @@ export const useAuthStore = defineStore('auth', () => {
     const role = user.value?.role
     switch (role) {
       case 'super_admin':
-        return { name: 'super-admin-members' }
+        return { name: 'committee-dashboard' }
       case 'committee':
         return { name: 'committee-dashboard' }
       case 'supervisor':
@@ -181,6 +191,9 @@ export const useAuthStore = defineStore('auth', () => {
     userRole,
     userName,
     userEmail,
+    usesPortal,
+    portalPrefix,
+    avatarSrc,
     homeRoute,
     login,
     logout,

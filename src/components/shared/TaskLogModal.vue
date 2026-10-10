@@ -10,9 +10,7 @@
           <b>{{ t.title }}</b>
           <span class="pf-muted">
             {{ (t.assignees || []).map((a) => a.name).join('، ') || 'كل الفريق' }}
-            <template v-if="t.due_date"> · التسليم {{ formatDate(t.due_date) }}</template>
-            · أنشأها {{ t.created_by?.name || '—' }}
-          </span>
+            <template v-if="t.due_date"> · التسليم {{ formatDate(t.due_date) }}</template>          </span>
         </button>
         <div v-if="openId === t.id" class="tl-body">
           <p v-if="t.description" class="tl-desc">{{ t.description }}</p>

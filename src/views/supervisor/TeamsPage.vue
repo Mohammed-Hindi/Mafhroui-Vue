@@ -38,17 +38,18 @@
           </button>
 
           <div class="w-10 h-10 rounded-md shrink-0 grid place-items-center font-cairo font-extrabold text-body-sm text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
-            {{ group.id }}
+            {{ group.section || group.id }}
           </div>
 
           <div class="flex-1 min-w-0 flex items-center gap-3 sm:gap-6 flex-wrap">
             <div>
               <div class="text-body-sm font-extrabold text-text-900">{{ group.name }}</div>
-              <div class="text-label text-text-400">رقم المجموعة {{ group.id }}<template v-if="group.section"> — {{ group.section }}</template></div>
+              <div class="text-label text-text-400">رقم المجموعة {{ group.section || '—' }}</div>
             </div>
             <BaseBadge variant="info">{{ group.spec }}</BaseBadge>
             <BaseBadge>{{ group.members.length }} {{ group.members.length === 1 ? 'طالب' : 'طلاب' }}</BaseBadge>
             <BaseBadge v-if="group.projectName" variant="info">{{ group.projectName }}</BaseBadge>
+            <ProjectTypes v-if="group.projectId" :project-id="group.projectId" :types="group.types" @saved="setProjectTypes(group.id, $event)" />
           </div>
 
           <div class="flex gap-1.5 shrink-0">
@@ -201,6 +202,7 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
+import ProjectTypes from '@/components/shared/ProjectTypes.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
@@ -226,7 +228,7 @@ function digitsOnly(value) {
 export default {
   name: 'SupervisorTeamsPage',
 
-  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Lock, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination },
+  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Lock, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, ProjectTypes },
 
   data() {
     return {
@@ -322,7 +324,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'updateTeam', 'deleteTeam', 'fetchTrashedTeams', 'restoreTeam']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'updateTeam', 'deleteTeam', 'fetchTrashedTeams', 'restoreTeam', 'setProjectTypes']),
     ...mapActions(useUsersStore, ['fetchRestrictions', 'setRestriction', 'removeRestriction', 'updateUser', 'setUserPassword']),
 
     isGroupOpen(id) {

@@ -10,9 +10,6 @@
     <template v-else>
       <div class="portal-head-card flex flex-wrap items-center justify-between gap-4 mb-6">
         <div class="flex items-center gap-3">
-          <span class="page-icon grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="--icon-color: #3A9B4C; background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
-            <component :is="memberKind === 'student' ? GraduationCap : Users" :size="18" />
-          </span>
           <div>
             <h3 class="portal-title text-h3 font-bold text-text-900">إدارة الأعضاء</h3>
             <p class="text-caption text-text-600">{{ activeFiltered.length }} من أصل {{ activeList.length }} {{ { student: 'طالبًا', supervisor: 'مشرفًا', committee: 'عضو لجنة' }[memberKind] }}</p>
@@ -43,99 +40,187 @@
         </button>
       </nav>
 
-      <div class="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-lg bg-surface border border-border shadow-card">
+      <!-- الإدارة العامة: فلاتر بنمط سجل المجموعات ("حدد …" بجانب القائمة) -->
+      <div v-if="isSuperAdmin" class="gr-filters mb-6" aria-label="تصفية الأعضاء">
+        <label class="gr-search">
+          <Search :size="16" />
+          <input v-model.trim="memberSearch" type="search" :placeholder="memberKind === 'student' ? 'بحث بالاسم أو الرقم الجامعي…' : 'بحث بالاسم أو الرقم الوظيفي…'">
+        </label>
+        <template v-if="memberKind === 'student'">
+          <label class="gr-pick">
+            <span>حدد الفئة</span>
+            <select v-model="genderFilter" class="gr-select">
+              <option value="">طلاب وطالبات</option>
+              <option v-for="o in genderOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
+            </select>
+          </label>
+          <label class="gr-pick">
+            <span>حدد مكان التواجد</span>
+            <select v-model="regionFilter" class="gr-select">
+              <option value="">كل المناطق</option>
+              <option v-for="o in regionOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
+            </select>
+          </label>
+        </template>
+      </div>
+
+      <div v-else class="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-lg bg-surface border border-border shadow-card">
         <div class="relative flex-1 min-w-[220px]">
           <Search :size="16" class="pointer-events-none absolute top-1/2 -translate-y-1/2 start-3 text-text-400" />
           <input v-model.trim="memberSearch" type="search" :placeholder="memberKind === 'student' ? 'ابحث عن طالب، مشرف أو رقم جامعي...' : 'ابحث عن مشرف بالاسم أو الرقم الوظيفي...'" class="w-full h-icon-btn ps-10 pe-3 rounded-sm border border-border bg-bg text-body text-text-900 focus:border-primary-600 transition-colors duration-fast">
         </div>
         <template v-if="memberKind === 'student'">
-          <BaseSelect v-if="!isSuperAdmin" v-model="specFilter" class="min-w-[170px]" placeholder="جميع التخصصات" include-placeholder-option :options="specializationOptions" />
-          <BaseSelect v-if="!isSuperAdmin" v-model="studentSupFilter" class="min-w-[180px]" placeholder="جميع المشرفين" include-placeholder-option :options="supervisorOptions" />
-          <!-- الإدارة العامة: فلترا طلاب/طالبات ومكان التواجد فقط -->
-          <template v-if="isSuperAdmin">
-            <BaseSelect v-model="genderFilter" class="min-w-[150px]" placeholder="طلاب وطالبات" include-placeholder-option :options="genderOptions" />
-            <BaseSelect v-model="regionFilter" class="min-w-[150px]" placeholder="كل المناطق" include-placeholder-option :options="regionOptions" />
-          </template>
+          <BaseSelect v-model="specFilter" class="min-w-[170px]" placeholder="جميع التخصصات" include-placeholder-option :options="specializationOptions" />
+          <BaseSelect v-model="studentSupFilter" class="min-w-[180px]" placeholder="جميع المشرفين" include-placeholder-option :options="supervisorOptions" />
         </template>
         <BaseSelect v-if="memberKind === 'supervisor'" v-model="supSpecFilter" class="min-w-[170px]" placeholder="جميع التخصصات" include-placeholder-option :options="specializationOptions" aria-label="التخصص" />
       </div>
 
       <div class="mb-12">
-        <DataTable fixed :columns="activeColumns" :rows="memberPageRows" row-key="id" :primary-keys="['name', 'actions']" :loading="activeLoading" empty-title="لا توجد نتائج مطابقة">
-          <template #cell-grp="{ row }">
-            <router-link v-if="row.grp" :to="{ name: 'committee-teams' }" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-border-soft text-text-600 text-caption font-semibold hover:bg-primary-100 hover:text-primary-700 transition-colors duration-fast">
-              {{ row.grp }} <ExternalLink :size="11" class="opacity-65" />
-            </router-link>
-            <span v-else class="text-caption text-text-400">غير منضم لفريق</span>
-          </template>
-          <template #cell-name="{ row }">
-            <div>
-              <button v-if="isSuperAdmin" type="button" class="gr-link font-bold text-text-900" title="عرض البروفايل" @click="openProfile(row)">{{ row.name }}</button>
-              <span v-else class="font-bold text-text-900">{{ row.name }}</span>
-              <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">موقوف</span>
-            </div>
-            <div v-if="row.restricted && row.restrictedReason" class="text-label text-error mt-0.5">السبب: {{ row.restrictedReason }}</div>
-          </template>
-          <!-- المشرف ← مجموعاته (دليل الأعضاء — الإدارة العامة) -->
-          <template #cell-groups="{ row }">
-            <button v-if="supGroups(row.id).length" type="button" class="gr-link mb-groups-btn" :aria-expanded="openSupId === row.id" @click="openSupId = openSupId === row.id ? null : row.id">
-              {{ supGroups(row.id).length }} مجموعات <ChevronDown :size="14" :class="openSupId === row.id && 'rotate-180'" />
-            </button>
-            <span v-else class="text-caption text-text-400">لا توجد</span>
-          </template>
-          <template v-if="isSuperAdmin && memberKind === 'supervisor'" #row-extra="{ row }">
-            <div v-if="openSupId === row.id" class="pe-groups">
-              <div v-for="g in supGroups(row.id)" :key="g.id" class="pe-group">
-                <button type="button" class="pe-group-head" :aria-expanded="openGroupId === g.id" @click="openGroupId = openGroupId === g.id ? null : g.id">
-                  <ChevronLeft :size="16" :class="openGroupId === g.id && 'is-open'" />
-                  <b>{{ g.name }}</b>
-                  <span class="text-caption text-text-400">{{ g.section ? 'شعبة ' + g.section + ' · ' : '' }}{{ g.project?.name || 'بلا مشروع' }} · {{ (g.members || []).length }} طلاب</span>
+        <SlideTable :rows="activeFiltered" :label="{ student: 'الطلاب', supervisor: 'المشرفون', committee: 'الأعضاء' }[memberKind]">
+          <template #default="{ rows: shown }">
+            <DataTable fixed :class="isSuperAdmin && 'mb-rows-link'" :columns="activeColumns" :rows="shown" row-key="id" :primary-keys="['name', 'actions']" :loading="activeLoading" empty-title="لا توجد نتائج مطابقة" @row-click="isSuperAdmin && openProfile($event)">
+              <!-- المجموعة: رقم الشعبة + المشرف تحته -->
+              <template #cell-grp="{ row }">
+                <template v-if="row.grp">
+                  <component :is="isSuperAdmin ? 'span' : 'router-link'" :to="isSuperAdmin ? undefined : { name: 'committee-teams' }" class="inline-flex items-center gap-1.5 font-bold text-text-900">
+                    {{ row.section ? 'شعبة ' + row.section : row.teamName }} <ExternalLink v-if="!isSuperAdmin" :size="11" class="opacity-65" />
+                  </component>
+                  <div class="text-caption text-text-400 mt-0.5">{{ row.sup || 'بلا مشرف' }}</div>
+                </template>
+                <span v-else class="text-caption text-text-400">غير منضم لمجموعة</span>
+              </template>
+              <template #cell-who="{ row }">
+                <div>{{ GENDERS[row.gender] || '—' }}</div>
+                <div class="text-caption text-text-400 mt-0.5">{{ REGIONS[row.region] || 'غير محدد' }}</div>
+              </template>
+              <!-- التواصل: الواتس والبريد معًا -->
+              <template #cell-contact="{ row }">
+                <div @click.stop>
+                  <button v-if="row.whats" type="button" class="gr-link mono" title="فتح واتساب" @click="sendWhats(row.whats)">{{ row.whats }}</button>
+                  <span v-else class="text-text-400">—</span>
+                </div>
+                <div class="mt-0.5">
+                  <button v-if="row.mail" type="button" class="gr-link mono text-caption whitespace-nowrap" title="إرسال بريد" @click="sendMail(row.mail)">{{ row.mail }}</button>
+                  <span v-else class="text-caption text-text-400">—</span>
+                </div>
+              </template>
+              <template #cell-name="{ row }">
+                <div>
+                  <button v-if="isSuperAdmin" type="button" class="mb-name font-bold" title="عرض البروفايل" @click.stop="openProfile(row)">{{ row.name }}</button>
+                  <span v-else class="font-bold text-text-900">{{ row.name }}</span>
+                  <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">موقوف</span>
+                </div>
+                <div class="mt-0.5"><span class="mono text-caption text-text-400">{{ (memberKind === 'student' ? row.uid : row.empId) || '—' }}</span></div>
+                <div v-if="row.restricted && row.restrictedReason" class="text-label text-error mt-0.5">السبب: {{ row.restrictedReason }}</div>
+              </template>
+              <!-- المشرف ← مجموعاته (دليل الأعضاء — الإدارة العامة) -->
+              <template #cell-groups="{ row }">
+                <button v-if="supGroups(row.id).length" type="button" class="gr-link mb-groups-btn" :aria-expanded="openSupId === row.id" @click.stop="openSupId = openSupId === row.id ? null : row.id">
+                  {{ supGroups(row.id).length }} مجموعات <ChevronDown :size="14" :class="openSupId === row.id && 'rotate-180'" />
                 </button>
-                <ul v-if="openGroupId === g.id" class="pe-members">
-                  <li v-for="m in g.members || []" :key="m.id">
-                    <button type="button" class="gr-link" @click="openProfile({ id: m.student?.id, name: m.student?.name }, 'student')">{{ m.student?.name }}</button>
-                    <span class="text-caption text-text-400">{{ REGIONS[m.student?.region] || 'غير محدد' }} · {{ GENDERS[m.student?.gender] || 'غير محدد' }} · <span class="mono">{{ m.student?.whatsapp || '—' }}</span></span>
-                  </li>
-                </ul>
-              </div>
+                <span v-else class="text-caption text-text-400">لا توجد</span>
+              </template>
+              <template v-if="isSuperAdmin && memberKind === 'supervisor'" #row-extra="{ row }">
+                <!-- مجموعات المشرف بنفس قائمة سجل المجموعات: صف لكل مجموعة يُفتح على جدول طلابها -->
+                <div v-if="openSupId === row.id" class="mb-sup-groups">
+                  <table class="gr-table">
+                    <thead>
+                      <tr><th class="w-12" aria-label="فتح" /><th>الشعبة</th><th>المشروع</th><th>التخصص</th><th>الطلاب</th></tr>
+                    </thead>
+                    <tbody v-for="g in supGroups(row.id)" :key="g.id" :class="['gr-group', openGroupId === g.id && 'is-open']">
+                      <tr class="gr-row" @click="openGroupId = openGroupId === g.id ? null : g.id">
+                        <td>
+                          <button type="button" class="gr-toggle" :aria-expanded="openGroupId === g.id" :aria-label="`طلاب ${g.name}`" @click.stop="openGroupId = openGroupId === g.id ? null : g.id">
+                            <ChevronLeft :size="16" />
+                          </button>
+                        </td>
+                        <td><span class="gr-section">{{ g.section || '—' }}</span></td>
+                        <td class="gr-name-cell"><span class="gr-name">{{ g.project?.name || 'بلا مشروع' }}</span></td>
+                        <td>{{ specializationName(g.specialization_id) }}</td>
+                        <td>{{ (g.members || []).length }} طلاب</td>
+                      </tr>
+                      <tr v-if="openGroupId === g.id" class="gr-detail-row">
+                        <td colspan="5">
+                          <div class="gr-members mb-sup-members">
+                            <table>
+                              <thead><tr><th>الطالب</th><th>الرقم الجامعي</th><th>الجنس</th><th>مكان التواجد</th><th>الواتس</th></tr></thead>
+                              <tbody>
+                                <tr v-for="m in g.members || []" :key="m.id">
+                                  <td><button type="button" class="gr-member-name gr-link" title="عرض بروفايل الطالب" @click="openProfile({ id: m.student?.id, name: m.student?.name }, 'student')">{{ m.student?.name }}</button></td>
+                                  <td><span class="mono">{{ m.student?.university_number || '—' }}</span></td>
+                                  <td>{{ GENDERS[m.student?.gender] || 'غير محدد' }}</td>
+                                  <td>{{ REGIONS[m.student?.region] || 'غير محدد' }}</td>
+                                  <td>
+                                    <button v-if="m.student?.whatsapp" type="button" class="gr-link mono" title="فتح واتساب" @click="sendWhats(m.student.whatsapp)">{{ m.student.whatsapp }}</button>
+                                    <span v-else>—</span>
+                                  </td>
+                                </tr>
+                                <tr v-if="!(g.members || []).length"><td colspan="5" class="gr-muted">لا يوجد طلاب في هذه المجموعة</td></tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </template>
+              <!-- كلمة السر: زر توليد، وبعد التوليد حقل مضغوط (إظهار/نسخ/توليد جديدة) -->
+              <template #cell-pw="{ row }">
+                <div class="flex justify-center" @click.stop>
+                  <button v-if="!passwords[row.id]" type="button" class="inline-flex items-center gap-1.5 h-8 px-3 rounded-sm border border-border text-caption font-bold text-text-600 hover:border-primary-600 hover:text-primary-600 transition-colors duration-fast whitespace-nowrap" :disabled="generatingPwFor === row.id" @click="generatePw(row)">
+                    <RefreshCw :size="13" /> {{ generatingPwFor === row.id ? 'جارٍ التوليد…' : 'توليد كلمة سر' }}
+                  </button>
+                  <div v-else class="inline-flex items-center h-8 rounded-sm border border-border bg-bg overflow-hidden">
+                    <span class="mono px-2.5 text-caption tracking-wider min-w-[84px]">{{ visiblePw.includes(row.id) ? passwords[row.id] : maskPw(passwords[row.id]) }}</span>
+                    <button type="button" class="grid place-items-center w-8 h-full border-s border-border text-text-400 hover:text-primary-600 transition-colors duration-fast" :title="visiblePw.includes(row.id) ? 'إخفاء' : 'إظهار'" @click="togglePw(row.id)"><Eye :size="13" /></button>
+                    <button type="button" class="grid place-items-center w-8 h-full border-s border-border text-text-400 hover:text-primary-600 transition-colors duration-fast" title="نسخ" @click="copyPw(row.id)"><Copy :size="13" /></button>
+                    <button type="button" class="grid place-items-center w-8 h-full border-s border-border text-text-400 hover:text-primary-600 transition-colors duration-fast" title="توليد كلمة سر جديدة" :disabled="generatingPwFor === row.id" @click="generatePw(row)"><RefreshCw :size="13" /></button>
+                  </div>
+                </div>
+              </template>
+              <template #cell-actions="{ row }">
+                <div class="flex flex-wrap md:flex-nowrap justify-center gap-1.5" @click.stop>
+                  <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
+                  <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
+                  <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, memberKind)"><Pencil :size="14" /></button>
+                  <button v-if="isSuperAdmin && memberKind === 'supervisor'" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="القيود على وحدات النظام" @click="openModuleRestrict(row)"><SlidersHorizontal :size="14" /></button>
+                  <button v-if="isSuperAdmin" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" :disabled="reinvitingId === row.id" title="نسخ رابط دعوة جديد" @click="quickReinvite(row)"><Link2 :size="14" /></button>
+                  <button
+                    type="button"
+                    class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast"
+                    :class="row.restricted ? 'bg-error text-white border-error hover:brightness-95' : 'border-border text-text-600 hover:bg-error-bg hover:text-error'"
+                    :title="row.restricted ? 'إلغاء الإيقاف' : (memberKind === 'student' ? 'إيقاف دخول الطالب' : 'إيقاف دخول المشرف')"
+                    @click="toggleRestrict(row, memberKind)"
+                  >
+                    <Lock :size="14" />
+                  </button>
+                  <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete(row, memberKind)"><Trash2 :size="14" /></button>
+                </div>
+              </template>
+            </DataTable>
+          </template>
+          <template #after>
+            <div class="gr-sumbar mb-sumbar">
+              <template v-if="memberKind === 'student'">
+                <span>عدد الطلاب: {{ activeFiltered.length }}</span>
+                <span>طلاب: {{ activeFiltered.filter((s) => s.gender === 'male').length }}</span>
+                <span>طالبات: {{ activeFiltered.filter((s) => s.gender === 'female').length }}</span>
+                <span>ضمن مجموعات: {{ activeFiltered.filter((s) => s.grp).length }}</span>
+              </template>
+              <template v-else-if="memberKind === 'supervisor'">
+                <span>عدد المشرفين: {{ activeFiltered.length }}</span>
+                <span>المجموعات: {{ activeFiltered.reduce((n, s) => n + supGroups(s.id).length, 0) }}</span>
+                <span>الموقوفون: {{ activeFiltered.filter((s) => s.restricted).length }}</span>
+              </template>
+              <template v-else>
+                <span>أعضاء لجنة الإشراف: {{ activeFiltered.length }}</span>
+                <span>الموقوفون: {{ activeFiltered.filter((s) => s.restricted).length }}</span>
+              </template>
             </div>
           </template>
-          <template #cell-uid="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-          <template #cell-empId="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-          <template #cell-whats="{ value }"><span class="mono">{{ value || '—' }}</span></template>
-          <template #cell-mail="{ value }"><span class="mono whitespace-nowrap">{{ value || '—' }}</span></template>
-          <template #cell-pw="{ row }">
-            <div class="flex items-center gap-2">
-              <button type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="توليد كلمة سر" :disabled="generatingPwFor === row.id" @click="generatePw(row)">
-                <RefreshCw :size="13" />
-              </button>
-              <span class="mono text-caption tracking-wider min-w-[70px] inline-block">{{ passwords[row.id] ? (visiblePw.includes(row.id) ? passwords[row.id] : maskPw(passwords[row.id])) : '—' }}</span>
-              <button v-if="passwords[row.id]" type="button" class="grid place-items-center w-7 h-7 rounded-sm border border-border text-text-400 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast shrink-0" title="إظهار/إخفاء كلمة السر" @click="togglePw(row.id)">
-                <Eye :size="13" />
-              </button>
-            </div>
-          </template>
-          <template #cell-actions="{ row }">
-            <div class="flex flex-wrap gap-1.5">
-              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
-              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
-              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, memberKind)"><Pencil :size="14" /></button>
-              <button v-if="isSuperAdmin && memberKind === 'supervisor'" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="القيود على وحدات النظام" @click="openModuleRestrict(row)"><SlidersHorizontal :size="14" /></button>
-              <button v-if="isSuperAdmin" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" :disabled="reinvitingId === row.id" title="نسخ رابط دعوة جديد" @click="quickReinvite(row)"><Link2 :size="14" /></button>
-              <button
-                type="button"
-                class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast"
-                :class="row.restricted ? 'bg-error text-white border-error hover:brightness-95' : 'border-border text-text-600 hover:bg-error-bg hover:text-error'"
-                :title="row.restricted ? 'إلغاء الإيقاف' : (memberKind === 'student' ? 'إيقاف دخول الطالب' : 'إيقاف دخول المشرف')"
-                @click="toggleRestrict(row, memberKind)"
-              >
-                <Lock :size="14" />
-              </button>
-              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete(row, memberKind)"><Trash2 :size="14" /></button>
-            </div>
-          </template>
-        </DataTable>
-        <Pagination class="mt-4" :current-page="memberPage" :last-page="memberTotalPages" :total="activeFiltered.length" @change="memberPage = $event" />
+        </SlideTable>
       </div>
     </template>
 
@@ -206,19 +291,21 @@
           </div>
         </div>
 
-        <DataTable
-          :columns="deliveryColumns" :rows="deliveryRows" row-key="id" :primary-keys="['name', 'status']"
-          :loading="deliveriesLoading"
-          empty-title="لا توجد محاولات إرسال بعد"
-        >
-          <template #cell-status="{ row }">
-            <BaseBadge :variant="statusVariant(row.status)">{{ statusLabel(row.status) }}</BaseBadge>
-          </template>
-          <template #cell-channel="{ value }">{{ value === 'email' ? 'بريد' : 'واتساب' }}</template>
-          <template #cell-actions="{ row }">
-            <BaseButton v-if="row.status === 'failed'" size="sm" variant="outline" :loading="retryingDeliveryId === row.id" @click="retryDeliveryRow(row)">إعادة المحاولة</BaseButton>
-          </template>
-        </DataTable>
+        <SlideTable v-slot="{ rows: shown }" :rows="deliveryRows" label="الرسائل">
+          <DataTable
+            :columns="deliveryColumns" :rows="shown" row-key="id" :primary-keys="['name', 'status']"
+            :loading="deliveriesLoading"
+            empty-title="لا توجد محاولات إرسال بعد"
+          >
+            <template #cell-status="{ row }">
+              <BaseBadge :variant="statusVariant(row.status)">{{ statusLabel(row.status) }}</BaseBadge>
+            </template>
+            <template #cell-channel="{ value }">{{ value === 'email' ? 'بريد' : 'واتساب' }}</template>
+            <template #cell-actions="{ row }">
+              <BaseButton v-if="row.status === 'failed'" size="sm" variant="outline" :loading="retryingDeliveryId === row.id" @click="retryDeliveryRow(row)">إعادة المحاولة</BaseButton>
+            </template>
+          </DataTable>
+        </SlideTable>
       </div>
     </template>
 
@@ -328,15 +415,17 @@
       </div>
       <SkeletonLoader v-if="trashedUsersLoading" :rows="3" height="60px" />
       <EmptyState v-else-if="!trashedUsers.length" title="لا يوجد أعضاء محذوفون" description="كل الحسابات المحذوفة ستظهر هنا وبإمكانك استرجاعها." />
-      <div v-else class="flex flex-col gap-2 max-h-96 overflow-y-auto scrollbar-thin">
-        <div v-for="u in trashedUsers" :key="u.id" class="flex items-center justify-between gap-3 p-3 rounded-sm border border-border bg-bg">
-          <div class="min-w-0">
-            <div class="font-bold text-text-900 truncate">{{ u.name }}</div>
-            <div class="text-caption text-text-400 truncate">{{ u.deleted_reason || 'بدون سبب مسجّل' }}</div>
+      <SlideTable v-else v-slot="{ rows: shown }" :rows="trashedUsers" label="المحذوفون">
+        <div class="flex flex-col gap-2">
+          <div v-for="u in shown" :key="u.id" class="flex items-center justify-between gap-3 p-3 rounded-sm border border-border bg-bg">
+            <div class="min-w-0">
+              <div class="font-bold text-text-900 truncate">{{ u.name }}</div>
+              <div class="text-caption text-text-400 truncate">{{ u.deleted_reason || 'بدون سبب مسجّل' }}</div>
+            </div>
+            <BaseButton variant="outline" size="sm" :icon="RotateCcw" :loading="restoringId === u.id" @click="confirmRestore(u)">استرجاع</BaseButton>
           </div>
-          <BaseButton variant="outline" size="sm" :icon="RotateCcw" :loading="restoringId === u.id" @click="confirmRestore(u)">استرجاع</BaseButton>
         </div>
-      </div>
+      </SlideTable>
       <template #footer>
         <BaseButton variant="ghost" @click="trashedModal = false">إغلاق</BaseButton>
       </template>
@@ -357,7 +446,7 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import DataTable from '@/components/ui/DataTable.vue'
-import Pagination from '@/components/ui/Pagination.vue'
+import SlideTable from '@/components/ui/SlideTable.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { useTeamsStore } from '@/stores/teams.store'
@@ -374,7 +463,6 @@ import { GENDERS, REGIONS } from '@/utils/progressData'
 function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
 }
-const PAGE_SIZE = 4
 
 const emptyAddForm = () => ({ role: 'student', name: '', employee_number: '', university_number: '', email: '', whatsapp: '' })
 
@@ -396,7 +484,7 @@ const STATUS_VARIANTS = { pending: 'warning', sent: 'success', failed: 'error' }
 export default {
   name: 'CommitteeMembersPage',
 
-  components: { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, SlidersHorizontal, Link2, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, Pagination, SkeletonLoader, EmptyState, EmailComposeModal, ProfileModal, ChevronDown, ChevronLeft },
+  components: { Copy, GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, SlidersHorizontal, Link2, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, SlideTable, SkeletonLoader, EmptyState, EmailComposeModal, ProfileModal, ChevronDown, ChevronLeft },
 
   props: {
     /** 'members' = إدارة الأعضاء (افتراضي) · 'credentials' = صفحة إرسال بيانات الدخول (الإدارة العامة) */
@@ -434,7 +522,6 @@ export default {
       supSpecFilter: '',
       specFilter: '',
       studentSupFilter: '',
-      memberPage: 1,
       submitting: false,
 
       studentUsers: [],
@@ -478,23 +565,6 @@ export default {
       trashedTab: 'student',
       restoringId: null,
 
-      studentColumns: [
-        { key: 'grp', label: 'رقم المجموعة' },
-        { key: 'name', label: 'اسم العضو' },
-        { key: 'uid', label: 'الرقم الجامعي' },
-        { key: 'whats', label: 'رقم الواتس' },
-        { key: 'mail', label: 'البريد الإلكتروني', className: 'break-all' },
-        { key: 'pw', label: 'كلمة السر' },
-        { key: 'actions', label: 'إجراءات', className: 'w-[170px]' }
-      ],
-      supervisorColumns: [
-        { key: 'name', label: 'اسم الموظف' },
-        { key: 'empId', label: 'الرقم الوظيفي' },
-        { key: 'mail', label: 'البريد الإلكتروني', className: 'break-all' },
-        { key: 'whats', label: 'رقم الواتس' },
-        { key: 'pw', label: 'كلمة السر' },
-        { key: 'actions', label: 'إجراءات', className: 'w-[170px]' }
-      ],
 
       /** إرسال بيانات الدخول الجماعي — سوبر أدمن فقط */
       notifyRoleFilter: 'student',
@@ -567,6 +637,8 @@ export default {
         return {
           id: u.id,
           grp: entry?.team.id ?? null,
+          section: entry?.team.section || '',
+          teamName: entry?.team.name || '',
           spec: u.specialization_id,
           sup: entry?.team.supervisor?.name || null,
           name: u.name,
@@ -631,13 +703,26 @@ export default {
     },
 
     /** القسم الموحّد (طلاب/مشرفون) — يبدّل حسب memberKind */
+    /** ترتيب الأعمدة: الهوية ← الانتماء ← النشاط ← التواصل ← الحساب ← الإجراءات */
     activeColumns() {
-      if (this.memberKind === 'student') return this.studentColumns
-      if (this.memberKind === 'committee') return this.supervisorColumns
-      if (!this.isSuperAdmin) return this.supervisorColumns
-      const cols = [...this.supervisorColumns]
-      cols.splice(1, 0, { key: 'groups', label: 'المجموعات' }, { key: 'tasks', label: 'عدد المهام' }, { key: 'lastActive', label: 'آخر نشاط' })
-      return cols
+      const actions = { key: 'actions', label: 'إجراءات', className: (this.isSuperAdmin ? 'w-[268px]' : 'w-[196px]') + ' !text-center' }
+      const tail = [{ key: 'contact', label: 'التواصل', className: 'w-[250px]' }, { key: 'pw', label: 'كلمة السر', className: 'w-[210px] !text-center' }, actions]
+      if (this.memberKind === 'student') {
+        return [
+          { key: 'name', label: 'الطالب / الرقم الجامعي' },
+          { key: 'grp', label: 'المجموعة / المشرف' },
+          { key: 'who', label: 'الفئة / مكان التواجد', className: 'w-[140px]' },
+          ...tail
+        ]
+      }
+      const name = { key: 'name', label: this.memberKind === 'committee' ? 'العضو / الرقم الوظيفي' : 'المشرف / الرقم الوظيفي' }
+      if (this.memberKind === 'committee' || !this.isSuperAdmin) return [name, ...tail]
+      return [
+        name,
+        { key: 'groups', label: 'المجموعات', className: 'w-[130px]' },
+        { key: 'lastActive', label: 'آخر نشاط', className: 'w-[150px]' },
+        ...tail
+      ]
     },
     activeList() {
       return this.listOf(this.memberKind)
@@ -650,13 +735,6 @@ export default {
     },
     activeEmails() {
       return this.activeList.map((s) => s.mail)
-    },
-    memberTotalPages() {
-      return Math.max(1, Math.ceil(this.activeFiltered.length / PAGE_SIZE))
-    },
-    memberPageRows() {
-      const start = (this.memberPage - 1) * PAGE_SIZE
-      return this.activeFiltered.slice(start, start + PAGE_SIZE)
     },
 
     trashedTabs() {
@@ -708,15 +786,12 @@ export default {
     },
     memberKind() {
       this.memberSearch = ''
-      this.memberPage = 1
-    },
-    activeFiltered() {
-      this.memberPage = 1
     }
   },
 
   async created() {
-    await Promise.all([this.loadStudents(), this.loadSupervisors(), this.loadCommittee(), this.fetchTeams()])
+    // قائمة أعضاء اللجنة للإدارة العامة فقط (الخادم يرفضها لعضو اللجنة)
+    await Promise.all([this.loadStudents(), this.loadSupervisors(), this.isSuperAdmin && this.loadCommittee(), this.fetchTeams()])
     this.fetchSpecializations()
     if (this.isSuperAdmin) {
       this.loadNotifyDirectory()
@@ -1024,6 +1099,14 @@ export default {
     maskPw(pw) {
       return '•'.repeat(pw.length)
     },
+    async copyPw(id) {
+      try {
+        await navigator.clipboard.writeText(this.passwords[id])
+        this.$toast?.success('تم نسخ كلمة السر')
+      } catch {
+        this.$toast?.error('تعذّر نسخ كلمة السر')
+      }
+    },
     togglePw(id) {
       this.visiblePw = this.visiblePw.includes(id) ? this.visiblePw.filter((x) => x !== id) : [...this.visiblePw, id]
     },
@@ -1135,4 +1218,16 @@ export default {
 
 <style scoped>
 .mono { direction: ltr; text-align: start; display: inline-block; }
+.mb-sup-groups { padding: 12px 16px; background: var(--color-bg); overflow-x: auto; }
+.mb-sup-groups .gr-table { min-width: 640px; background: var(--color-surface); box-shadow: var(--shadow-card); border-radius: 4px; }
+.mb-sup-members { margin: 12px; }
+/* قائمة مجموعات المشرف: بلا حركة ظهور (الصف الأب يعيد تشغيلها عند كل فتح) ورأس محايد بدل السماوي */
+.mb-sup-groups :deep(tr),
+:deep(tr:has(> td > .mb-sup-groups)) { animation: none !important; }
+.mb-sup-groups :deep(.gr-table thead tr) { background: var(--color-bg) !important; }
+.mb-sup-groups :deep(.gr-table > thead th) { color: var(--color-text-600) !important; border-bottom: 1px solid var(--color-border); }
+.mb-sumbar { margin-top: 0; }
+.mb-rows-link :deep(tbody > tr.row-interactive) { cursor: pointer; }
+.mb-name { color: var(--portal-cyan, var(--color-primary-600)); text-align: start; }
+.mb-name:hover { text-decoration: underline; }
 </style>

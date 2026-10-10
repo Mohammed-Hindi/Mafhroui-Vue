@@ -12,18 +12,20 @@
         <BaseButton :icon="Plus" size="sm" @click="openDepartmentForm()">إضافة قسم</BaseButton>
       </div>
 
-      <DataTable
-        :columns="departmentColumns" :rows="departmentRows" row-key="id"
-        :loading="departmentsLoading" empty-title="لا توجد أقسام بعد"
-      >
-        <template #cell-name="{ row }"><span class="font-bold text-text-900">{{ row.name }}</span></template>
-        <template #cell-actions="{ row }">
-          <div class="flex gap-1.5">
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openDepartmentForm(row)"><Pencil :size="14" /></button>
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete('department', row)"><Trash2 :size="14" /></button>
-          </div>
-        </template>
-      </DataTable>
+      <SlideTable v-slot="{ rows: shown }" :rows="departmentRows" label="الأقسام">
+        <DataTable
+          :columns="departmentColumns" :rows="shown" row-key="id"
+          :loading="departmentsLoading" empty-title="لا توجد أقسام بعد"
+        >
+          <template #cell-name="{ row }"><span class="font-bold text-text-900">{{ row.name }}</span></template>
+          <template #cell-actions="{ row }">
+            <div class="flex gap-1.5">
+              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openDepartmentForm(row)"><Pencil :size="14" /></button>
+              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete('department', row)"><Trash2 :size="14" /></button>
+            </div>
+          </template>
+        </DataTable>
+      </SlideTable>
     </div>
 
     <!-- التخصصات -->
@@ -37,20 +39,21 @@
       </div>
 
       <EmptyState v-if="!departments.length && !departmentsLoading" title="أضيفي قسمًا أولًا" description="لازم يكون في قسم واحد على الأقل قبل إضافة تخصصات." />
-      <DataTable
-        v-else
-        :columns="specializationColumns" :rows="specializationRows" row-key="id" :primary-keys="['name', 'actions']"
-        :loading="specializationsLoading" empty-title="لا توجد تخصصات بعد"
-      >
-        <template #cell-name="{ row }"><span class="font-bold text-text-900">{{ row.name }}</span></template>
-        <template #cell-degree="{ row }"><BaseBadge variant="info">{{ row.degreeLabel }}</BaseBadge></template>
-        <template #cell-actions="{ row }">
-          <div class="flex gap-1.5">
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openSpecializationForm(row)"><Pencil :size="14" /></button>
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete('specialization', row)"><Trash2 :size="14" /></button>
-          </div>
-        </template>
-      </DataTable>
+      <SlideTable v-else v-slot="{ rows: shown }" :rows="specializationRows" label="التخصصات">
+        <DataTable
+          :columns="specializationColumns" :rows="shown" row-key="id" :primary-keys="['name', 'actions']"
+          :loading="specializationsLoading" empty-title="لا توجد تخصصات بعد"
+        >
+          <template #cell-name="{ row }"><span class="font-bold text-text-900">{{ row.name }}</span></template>
+          <template #cell-degree="{ row }"><BaseBadge variant="info">{{ row.degreeLabel }}</BaseBadge></template>
+          <template #cell-actions="{ row }">
+            <div class="flex gap-1.5">
+              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openSpecializationForm(row)"><Pencil :size="14" /></button>
+              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete('specialization', row)"><Trash2 :size="14" /></button>
+            </div>
+          </template>
+        </DataTable>
+      </SlideTable>
     </div>
 
     <!-- الفصول الدراسية -->
@@ -63,24 +66,26 @@
         <BaseButton :icon="Plus" size="sm" @click="openTermForm()">إضافة فصل دراسي</BaseButton>
       </div>
 
-      <DataTable
-        :columns="termColumns" :rows="termRows" row-key="id" :primary-keys="['name', 'actions']"
-        :loading="semestersLoading" empty-title="لا توجد فصول دراسية بعد"
-      >
-        <template #cell-name="{ row }"><span class="font-bold text-text-900">{{ row.name }}</span></template>
-        <template #cell-status="{ row }">
-          <BaseBadge v-if="row.is_current" variant="success">الفصل الحالي</BaseBadge>
-          <button v-else type="button" class="inline-flex items-center gap-1.5 text-caption font-bold text-primary-600 hover:underline" @click="setCurrentTerm(row)">
-            <Star :size="13" /> تعيين كالفصل الحالي
-          </button>
-        </template>
-        <template #cell-actions="{ row }">
-          <div class="flex gap-1.5">
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openTermForm(row)"><Pencil :size="14" /></button>
-            <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete('term', row)"><Trash2 :size="14" /></button>
-          </div>
-        </template>
-      </DataTable>
+      <SlideTable v-slot="{ rows: shown }" :rows="termRows" label="الفصول">
+        <DataTable
+          :columns="termColumns" :rows="shown" row-key="id" :primary-keys="['name', 'actions']"
+          :loading="semestersLoading" empty-title="لا توجد فصول دراسية بعد"
+        >
+          <template #cell-name="{ row }"><span class="font-bold text-text-900">{{ row.name }}</span></template>
+          <template #cell-status="{ row }">
+            <BaseBadge v-if="row.is_current" variant="success">الفصل الحالي</BaseBadge>
+            <button v-else type="button" class="inline-flex items-center gap-1.5 text-caption font-bold text-primary-600 hover:underline" @click="setCurrentTerm(row)">
+              <Star :size="13" /> تعيين كالفصل الحالي
+            </button>
+          </template>
+          <template #cell-actions="{ row }">
+            <div class="flex gap-1.5">
+              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openTermForm(row)"><Pencil :size="14" /></button>
+              <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-error-bg text-error hover:bg-error-bg" title="حذف" @click="openDelete('term', row)"><Trash2 :size="14" /></button>
+            </div>
+          </template>
+        </DataTable>
+      </SlideTable>
     </div>
 
     <!-- إضافة/تعديل قسم -->
@@ -131,6 +136,7 @@
 </template>
 
 <script>
+import SlideTable from '@/components/ui/SlideTable.vue'
 import { mapState, mapActions } from 'pinia'
 import { Building2, Plus, Pencil, Trash2, Star } from 'lucide-vue-next'
 import PortalPageHead from '@/components/shared/PortalPageHead.vue'
@@ -152,7 +158,7 @@ const emptyTermForm = () => ({ name: '', is_current: false })
 export default {
   name: 'SuperAdminOrgStructurePage',
 
-  components: { PortalPageHead, Pencil, Star, Trash2, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, EmptyState },
+  components: { SlideTable, PortalPageHead, Pencil, Star, Trash2, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, EmptyState },
 
   data() {
     return {

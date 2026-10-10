@@ -79,10 +79,10 @@
 <script>
 import BaseModal from '@/components/ui/BaseModal.vue'
 import api from '@/services/api'
+import { REGIONS } from '@/utils/progressData'
 
 const DEGREES = { diploma: 'دبلوم', bachelor: 'بكالوريوس' }
 const GENDERS = { male: 'طالب', female: 'طالبة' }
-const REGIONS = { gaza: 'غزة', south: 'الجنوب' }
 const STATUS = { proposed: 'مقترح', in_progress: 'قيد التنفيذ', completed: 'مكتمل' }
 
 export default {

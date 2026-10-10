@@ -32,6 +32,8 @@ export const useTeamsStore = defineStore('teams', () => {
     supId: team.supervisor?.id ?? null,
     projectName: team.project?.name || '',
     projectStatus: team.project?.status || '',
+    projectId: team.project?.id ?? null,
+    types: team.project?.types || [],
     members: (team.members || []).map((m) => ({
       id: m.student?.id ?? null,
       name: m.student?.name || '',
@@ -44,6 +46,12 @@ export const useTeamsStore = defineStore('teams', () => {
 
   /** الفرق بشكل جاهز للعرض بالصفحة (تسطيح البيانات المتداخلة) */
   const teamsForDisplay = computed(() => teams.value.map(mapTeamForDisplay))
+
+  /** بعد حفظ نوع المشروع (PATCH /projects/{id}) — تحديث الفريق محليًا */
+  const setProjectTypes = (teamId, types) => {
+    const team = teams.value.find((t) => t.id === teamId)
+    if (team?.project) team.project.types = types
+  }
 
   const trashedTeams = ref([])
   const trashedTeamsLoading = ref(false)
@@ -474,6 +482,7 @@ export const useTeamsStore = defineStore('teams', () => {
     departmentsLoading,
     departmentsError,
     teamsForDisplay,
+    setProjectTypes,
     trashedTeams,
     trashedTeamsLoading,
     trashedTeamsForDisplay,

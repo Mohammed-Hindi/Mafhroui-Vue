@@ -30,8 +30,9 @@ export async function loadGroups() {
     project: g.project?.name || 'لم يُسجَّل مشروع',
     projectId: g.project?.id ?? null,
     projectStatus: g.project?.status || '',
-    // لا يوجد حقل "نوع المشروع" في الخادم — التخصص هو أقرب تصنيف
-    type: g.spec,
+    // نوع المشروع (projects.types) — قد يكون أكثر من نوع
+    types: g.project?.types || [],
+    type: (g.project?.types || []).join('، '),
     featured: !!g.project?.featured,
     done: g.tasksDone,
     tasksTotal: g.tasksTotal,
@@ -47,7 +48,7 @@ export async function loadSupervisors(groups = []) {
   const map = new Map()
   list(users.value?.data).forEach((u) => map.set(u.id, {
     id: u.id, name: u.name, email: u.email, whatsapp: u.whatsapp, employee_number: u.employee_number,
-    spec: specName[u.specialization_id] || ''
+    spec: specName[u.specialization_id] || '', lastActive: u.last_active_at || null
   }))
   groups.forEach((g) => {
     if (g.supId && !map.has(g.supId)) map.set(g.supId, { id: g.supId, name: g.supName, email: g.sup.email, whatsapp: g.sup.whatsapp, spec: g.spec })
@@ -73,6 +74,7 @@ export function normalizeTasks(raw = []) {
       assignees: (t.assignees || []).map((a) => a.id),
       assigneeNames: (t.assignees || []).map((a) => a.name),
       issued: day(t.created_at),
+      createdAt: t.created_at,
       due: day(t.due_date),
       status: t.status
     }
@@ -102,10 +104,10 @@ export async function loadDiscussions() {
 /** جنس المجموعة (المجموعات أحادية الجنس عادةً) — من أول عضو */
 export const groupGender = (g) => g.members[0]?.gender || 'male'
 
-/** المنطقة الغالبة لأعضاء المجموعة */
+/** المنطقة الغالبة لأعضاء المجموعة (غزة / وسط غزة / الجنوب) — غزة عند التعادل أو غياب البيانات */
 export const groupRegion = (g) => {
-  const south = g.members.filter((m) => m.region === 'south').length
-  return south > g.members.length / 2 ? 'south' : 'gaza'
+  const count = (r) => g.members.filter((m) => m.region === r).length
+  return ['gaza', 'middle', 'south'].reduce((best, r) => (count(r) > count(best) ? r : best), 'gaza')
 }
 
 /** اسم الفصل الدراسي النشط (من قائمة الفصول في الشريط العلوي) */

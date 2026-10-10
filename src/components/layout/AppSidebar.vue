@@ -47,7 +47,7 @@
           </span>
           <span class="min-w-0">
             <span :class="['block font-cairo font-bold text-h4 truncate', isUcasBrand ? 'sidebar-app-name' : 'text-text-900']">{{ appName }}</span>
-            <span class="block text-label text-text-400 truncate">{{ appDescription }}</span>
+            <span class="block text-label text-text-400 leading-snug">{{ appDescription }}</span>
           </span>
         </router-link>
 
@@ -159,7 +159,7 @@ import { X, LogOut, GraduationCap, ChevronDown } from 'lucide-vue-next'
 import { useUiStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
-import { SIDEBAR_BREAKPOINT, APP_NAME, APP_DESCRIPTION, ROLES } from '@/utils/constants'
+import { SIDEBAR_BREAKPOINT, APP_NAME, APP_DESCRIPTION, PORTAL_ROLES, ROLES } from '@/utils/constants'
 import { initials } from '@/utils/formatters'
 import { lockScroll, unlockScroll } from '@/utils/scrollLock'
 
@@ -195,7 +195,7 @@ export default {
     ...mapState(useAuthStore, ['userName', 'homeRoute', 'userRole']),
 
     isUcasBrand() {
-      return this.userRole === ROLES.SUPER_ADMIN
+      return PORTAL_ROLES.includes(this.userRole)
     },
 
     appName() {

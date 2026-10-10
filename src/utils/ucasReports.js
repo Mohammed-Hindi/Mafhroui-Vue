@@ -1,5 +1,6 @@
 // نماذج الكلية الرسمية بصيغة PDF — مطابقة لملفات "نمط التصميم": مجموعات الدبلوم/البكالوريوس (كشف شعبة) وجدول المناقشات
-import { escapeHtml as e, exportPagesPdf, UCAS_LOGO as LOGO } from '@/utils/exportReport'
+import { escapeHtml as e, exportPagesPdf } from '@/utils/exportReport'
+import HEADER from '@/assets/images/ucas-header.png'
 import { REGIONS } from '@/utils/progressData'
 import { COURSES, activeSemesterName } from '@/services/adminData'
 
@@ -11,56 +12,60 @@ const CELL = 'border:1px solid #000; padding:6px 8px; font-size:13px;'
 const today = () => new Date().toLocaleDateString('en-GB')
 const phone = (w) => String(w || '').replace(/^970/, '')
 
-const collegeHeader = (h = 76) => `
-  <div style="display:flex; align-items:center; gap:12px;">
-    <img src="${LOGO}" style="height:${h}px;">
-    <div>
-      <div style="font-size:20px; font-weight:700; color:#1660AB;">الكلية الجامعية للعلوم التطبيقية</div>
-      <div style="font-size:13.5px; color:#1660AB; direction:ltr; text-align:right; letter-spacing:.3px;">University College of Applied Sciences</div>
-      <div style="font-size:9px; color:#1660AB; border-top:1px solid #1660AB; margin-top:3px; padding-top:2px;">رائـــدة الإبـــداع &nbsp; <b dir="ltr">Leader of Innovation</b></div>
-    </div>
-  </div>`
+// ترويسة الكلية الرسمية (الشعار + الاسم بالعربي والإنجليزي + رائدة الإبداع) مستخرجة كما هي من نماذج الكلية
+const collegeHeader = (h = 76) => `<img src="${HEADER}" style="height:${h}px; display:block;">`
 
-/** كشف بأسماء الطلبة في شعبة — صفحة لكل مجموعة (نموذج "مجموعات الدبلوم/البكالوريوس") */
-function rosterPage(g, n, total) {
+// خط الكشف: Cairo (محمّل في التطبيق) مع بديل، وألوان صريحة بـ !important حتى لا تتسرّب أنماط البوابة (رأس الجدول الأبيض) إلى الطباعة
+const RFONT = "font-family:'Cairo',Arial,sans-serif; color:#111; direction:rtl; background:#fff; box-sizing:border-box; line-height:1.35;"
+const RTH = 'border:1px solid #000 !important; padding:6px 6px 10px; font-size:13.5px; font-weight:700; background:#D9D9D9 !important; color:#000 !important; text-align:center;'
+const RTD = 'border:1px solid #000; padding:5px 8px 9px; font-size:14px; color:#111; line-height:1.35;'
+const META_L = 'border:1px solid #000; padding:5px 10px 9px; font-size:13.5px; font-weight:700; background:#EFEFEF !important; color:#000 !important; width:118px; white-space:nowrap;'
+const META_V = 'border:1px solid #000; padding:5px 10px 9px; font-size:14.5px; font-weight:700; color:#000;'
+
+/** كشف بأسماء الطلبة في شعبة — صفحة لكل مجموعة (نموذج "مجموعات الدبلوم/البكالوريوس"); filterLabel = الفلترة المطبّقة */
+function rosterPage(g, n, total, filterLabel = '') {
   const course = COURSES[g.degree] || COURSES.diploma
-  const blanks = '<td style="border:1px solid #000; width:18px;"></td>'.repeat(10)
+  const blanks = (tag, style) => `<${tag} style="${style} width:22px; padding:0;"></${tag}>`.repeat(8)
   return `
-  <div style="${FONT} width:794px; height:1123px; position:relative; padding:36px 46px;">
-    ${collegeHeader()}
+  <div style="${RFONT} width:794px; height:1123px; position:relative; padding:34px 44px;">
+    ${collegeHeader(72)}
     <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:10px;">
       <b style="font-size:16px;">قسم القبول والتسجيل</b>
-      <span style="font-size:13px; color:#555;">التاريخ: <span dir="ltr">${today()}</span></span>
+      <span style="font-size:13px; color:#444;">التاريخ: <span dir="ltr">${today()}</span></span>
     </div>
-    <div style="border-top:2px solid #000; margin:6px -46px 0;"></div>
+    <div style="border-top:2px solid #000; margin:6px -44px 0;"></div>
 
-    <div style="text-align:center; font-weight:700; font-size:17px; line-height:1.6; margin:16px 0 18px;">
-      كشف بأسماء الطلبة في شعبة<br>${e(activeSemesterName())}
+    <div style="text-align:center; margin:18px 0 14px;">
+      <div style="font-size:19px; font-weight:800;">كشف بأسماء طلبة ${DEGREE_LABEL[g.degree] || ''} في شعبة</div>
+      <div style="font-size:15px; font-weight:700; margin-top:4px;">${e(activeSemesterName())}</div>
+      ${filterLabel ? `<div style="display:inline-block; margin-top:8px; padding:2px 14px 6px; border:1px solid #999; font-size:12.5px; line-height:1.6; color:#333;">${e(filterLabel)}</div>` : ''}
     </div>
 
-    <div style="display:flex; justify-content:space-between; font-size:14.5px; font-weight:700; margin-bottom:4px;">
-      <div>رقم المساق: <span dir="ltr">${e(course.code)}</span><br>الشعبة: ${e(g.section)}</div>
-      <div><span style="background:#C8C8C8; padding:0 4px;">اسم المساق: ${e(course.name)}</span><br><span style="background:#C8C8C8; padding:0 4px;">المدرس: ${e(g.supName)}</span></div>
-    </div>
+    <table style="width:100%; border-collapse:collapse; margin-bottom:14px;">
+      <tr><td style="${META_L}">رقم المساق</td><td style="${META_V}" dir="ltr">${e(course.code)}</td><td style="${META_L}">اسم المساق</td><td style="${META_V}">${e(course.name)}</td></tr>
+      <tr><td style="${META_L}">الشعبة</td><td style="${META_V}">${e(g.section)}</td><td style="${META_L}">المدرس</td><td style="${META_V}">${e(g.supName)}</td></tr>
+      <tr><td style="${META_L}">التخصص</td><td style="${META_V}">${e(g.spec || '')}</td><td style="${META_L}">عدد الطلبة</td><td style="${META_V}">${g.members.length}</td></tr>
+    </table>
 
     <table style="width:100%; border-collapse:collapse;">
-      <thead><tr style="background:#D9D9D9; font-weight:700;">
-        <th style="${CELL} width:30px;">م</th><th style="${CELL} width:105px;">رقم الطالب</th><th style="${CELL}">اسم الطالب</th>
-        <th style="${CELL} width:120px;">الجوال</th><th style="${CELL} width:120px;">المحافظة</th>${blanks}
+      <thead><tr>
+        <th style="${RTH} width:34px;">م</th><th style="${RTH} width:108px;">رقم الطالب</th><th style="${RTH}">اسم الطالب</th>
+        <th style="${RTH} width:112px;">الجوال</th><th style="${RTH} width:92px;">المحافظة</th>${blanks('th', RTH)}
       </tr></thead>
       <tbody>
-        ${g.members.map((m, i) => `<tr>
-          <td style="${CELL} text-align:center;">${i + 1}</td>
-          <td style="${CELL} text-align:center;">${e(m.uni)}</td>
-          <td style="${CELL}">${e(m.name)}</td>
-          <td style="${CELL} text-align:center;">${e(phone(m.whatsapp))}</td>
-          <td style="${CELL} text-align:center;">${e(REGIONS[m.region] || '')}</td>${blanks}
+        ${g.members.map((m, i) => `<tr style="${i % 2 ? 'background:#F5F5F5;' : ''}">
+          <td style="${RTD} text-align:center;">${i + 1}</td>
+          <td style="${RTD} text-align:center;" dir="ltr">${e(m.uni)}</td>
+          <td style="${RTD} font-weight:600;">${e(m.name)}</td>
+          <td style="${RTD} text-align:center;" dir="ltr">${e(phone(m.whatsapp))}</td>
+          <td style="${RTD} text-align:center;">${e(REGIONS[m.region] || '—')}</td>${blanks('td', RTD)}
         </tr>`).join('')}
       </tbody>
     </table>
 
-    <div style="position:absolute; bottom:60px; left:60px; display:flex; align-items:center; gap:10px; font-size:13px; font-weight:700;">
-      <span style="background:#000; color:#fff; padding:2px 14px;" dir="ltr">${n} / ${total}</span><span>صفحات</span>
+    <div style="position:absolute; bottom:56px; right:44px; left:44px; display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:700; border-top:1px solid #000; padding-top:10px; line-height:1.6;">
+      <span>توقيع المدرس: ..............................</span>
+      <span style="display:flex; align-items:center; gap:8px;"><span>صفحة</span><span style="background:#000; color:#fff !important; padding:2px 12px 6px; line-height:1.5;" dir="ltr">${n} / ${total}</span></span>
     </div>
   </div>`
 }
@@ -70,9 +75,9 @@ function rosterPage(g, n, total) {
  * rows: { n, section, sup, members: [{ name, online }], time, examiners: [], note } أو { isBreak: true }
  */
 function tablePages(titleHtml, rows) {
-  const head = `<thead><tr style="background:#D9D9D9; font-weight:700;">
-    <th style="${CELL} width:90px;">الرقم</th><th style="${CELL} width:60px;">الشعبة</th><th style="${CELL} width:130px;">اسم المشرف</th>
-    <th style="${CELL}">الطلاب</th><th style="${CELL} width:130px;">وقت المناقشة</th><th style="${CELL} width:130px;">المناقشين</th><th style="${CELL} width:200px;">ملاحظات</th>
+  const head = `<thead><tr>
+    <th style="${RTH} width:90px;">الرقم</th><th style="${RTH} width:60px;">الشعبة</th><th style="${RTH} width:130px;">اسم المشرف</th>
+    <th style="${RTH}">الطلاب</th><th style="${RTH} width:130px;">وقت المناقشة</th><th style="${RTH} width:130px;">المناقشين</th><th style="${RTH} width:200px;">ملاحظات</th>
   </tr></thead>`
   const row = (r, i) => r.isBreak
     ? `<tr><td colspan="7" style="${CELL} background:#DCE6F2; text-align:center; font-weight:700;">Break (30 min)</td></tr>`
@@ -113,13 +118,14 @@ const dayLabel = (iso) => {
 
 const byDegree = (groups) => ['diploma', 'bachelor'].map((d) => [d, groups.filter((g) => g.degree === d)]).filter(([, list]) => list.length)
 
-export function exportRosterPdf(groups) {
+/** كشف الشعب حسب الفلترة الحالية: المجموعات المفلترة فقط (بكالوريوس وحده، دبلوم وحده، أو كلاهما مرتّبين) */
+export function exportRosterPdf(groups, filterLabel = '') {
   const pages = []
   byDegree(groups).forEach(([, list]) => list.forEach((g) => pages.push(g)))
   const degrees = byDegree(groups).map(([d]) => DEGREE_LABEL[d]).join(' و')
   return exportPagesPdf({
-    fileName: `مجموعات ${degrees}.pdf`,
-    pages: pages.map((g, i) => rosterPage(g, i + 1, pages.length))
+    fileName: `كشف شعب ${degrees}${filterLabel ? ' - ' + filterLabel : ''}.pdf`.replace(/[/:*?"<>|]/g, '-'),
+    pages: pages.map((g, i) => rosterPage(g, i + 1, pages.length, filterLabel))
   })
 }
 
@@ -129,7 +135,7 @@ export function exportRosterPdf(groups) {
  */
 export function exportPlanPdf(plan) {
   const blocks = new Map()
-  ;[...plan].sort((a, b) => `${a.date}${a.degree}${a.time}${a.room}`.localeCompare(`${b.date}${b.degree}${b.time}${b.room}`)).forEach((p) => {
+  ;[...plan].sort((a, b) => `${a.date}${a.degree}${a.start || a.time}${a.room}`.localeCompare(`${b.date}${b.degree}${b.start || b.time}${b.room}`)).forEach((p) => {
     const key = `${p.date}|${p.degree}`
     if (!blocks.has(key)) blocks.set(key, [])
     blocks.get(key).push(p)
@@ -153,7 +159,7 @@ export function exportPlanPdf(plan) {
  */
 export function exportRoomsPdf(plan) {
   const blocks = new Map()
-  ;[...plan].sort((a, b) => `${a.date}${a.room}${a.time}`.localeCompare(`${b.date}${b.room}${b.time}`)).forEach((p) => {
+  ;[...plan].sort((a, b) => `${a.date}${a.room}${a.start || a.time}`.localeCompare(`${b.date}${b.room}${b.start || b.time}`)).forEach((p) => {
     const key = `${p.date}|${p.room}`
     if (!blocks.has(key)) blocks.set(key, [])
     blocks.get(key).push(p)
@@ -169,8 +175,45 @@ export function exportRoomsPdf(plan) {
   })
 }
 
-/** تقرير المشرفين: كل مشرف مع مجموعاته ونوع المشروع والدرجة وطلاب/طالبات ومكان التواجد — صفحة لكل مشرف */
-export function exportSupervisorsPdf(groups, supervisors = []) {
+/**
+ * تقرير جدولي عام بنمط نماذج الكلية: ترويسة الشعار في كل صفحة، العنوان والفصل والفلترة، جدول برأس رمادي يتكرر، ورقم الصفحة.
+ * head: [{ label, width? }] · rows: [[خلية HTML جاهزة (مُهرّبة)]] — perPage صف لكل صفحة
+ */
+export function exportTablePdf({ fileName, title, filterLabel = '', head, rows, perPage = 18, landscape = false }) {
+  const W = landscape ? 1123 : 794
+  const H = landscape ? 794 : 1123
+  const total = Math.max(1, Math.ceil(rows.length / perPage))
+  const pages = []
+  for (let n = 0; n < total; n++) {
+    const chunk = rows.slice(n * perPage, (n + 1) * perPage)
+    pages.push(`
+    <div style="${RFONT} width:${W}px; height:${H}px; position:relative; padding:34px 40px;">
+      ${collegeHeader(72)}
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:10px;">
+        <b style="font-size:16px;">لجنة مشاريع التخرج</b>
+        <span style="font-size:13px; color:#444;">التاريخ: <span dir="ltr">${today()}</span></span>
+      </div>
+      <div style="border-top:2px solid #000; margin:6px -40px 0;"></div>
+      <div style="text-align:center; margin:16px 0 12px;">
+        <div style="font-size:19px; font-weight:800;">${e(title)}</div>
+        <div style="font-size:15px; font-weight:700; margin-top:4px;">${e(activeSemesterName())}</div>
+        ${filterLabel ? `<div style="display:inline-block; margin-top:8px; padding:2px 14px 6px; border:1px solid #999; font-size:12.5px; line-height:1.6; color:#333;">${e(filterLabel)}</div>` : ''}
+      </div>
+      <table style="width:100%; border-collapse:collapse;">
+        <thead><tr><th style="${RTH} width:30px;">م</th>${head.map((h) => `<th style="${RTH}${h.width ? ` width:${h.width}px;` : ''}">${e(h.label)}</th>`).join('')}</tr></thead>
+        <tbody>${chunk.map((r, i) => `<tr style="${i % 2 ? 'background:#F5F5F5;' : ''}"><td style="${RTD} text-align:center;">${n * perPage + i + 1}</td>${r.map((c) => `<td style="${RTD} text-align:center;">${c}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>
+      <div style="position:absolute; bottom:56px; right:40px; left:40px; display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:700; border-top:1px solid #000; padding-top:10px; line-height:1.6;">
+        <span>توقيع رئيس اللجنة: ..............................</span>
+        <span style="display:flex; align-items:center; gap:8px;"><span>صفحة</span><span style="background:#000; color:#fff !important; padding:2px 12px 6px; line-height:1.5;" dir="ltr">${n + 1} / ${total}</span></span>
+      </div>
+    </div>`)
+  }
+  return exportPagesPdf({ fileName: fileName.replace(/[/:*?"<>|]/g, '-'), landscape, pages })
+}
+
+/** تقرير المشرفين: كل مشرف مع أسماء مجموعاته ونوع المشروع والدرجة وطلاب/طالبات ومكان التواجد — صفحة لكل مشرف؛ filterLabel = الفلترة المطبّقة */
+export function exportSupervisorsPdf(groups, supervisors = [], filterLabel = '') {
   // المشرفون من المجموعات نفسها؛ التخصص من قائمة المشرفين إن مُرّرت وإلا تخصص أول مجموعة
   const ids = [...new Set(groups.map((g) => g.supId))]
   const sups = ids.map((id) => {
@@ -178,42 +221,118 @@ export function exportSupervisorsPdf(groups, supervisors = []) {
     const known = supervisors.find((s) => s.id === id)
     return { s: { name: list[0].supName, spec: known?.spec || list[0].spec }, list }
   })
-  const GENDER = { male: 'طلاب', female: 'طالبات' }
-  const regions = (g) => [...new Set(g.members.map((m) => REGIONS[m.region]))].join('، ')
+  const uniq = (g, key, labels) => [...new Set(g.members.map((m) => m[key]).filter(Boolean))].map((v) => labels[v] || v)
+  const gender = (g) => { const v = uniq(g, 'gender', { male: 'طلاب', female: 'طالبات' }); return v.length > 1 ? 'مختلط' : v[0] || '—' }
+  const regions = (g) => uniq(g, 'region', REGIONS).join('، ') || '—'
+  const types = (g) => (g.types?.length ? g.types : [g.type].filter(Boolean)).map(e).join('<br>') || '—'
   const pages = sups.map(({ s, list }, i) => `
-    <div style="${FONT} width:794px; height:1123px; position:relative; padding:36px 46px;">
-      ${collegeHeader()}
+    <div style="${RFONT} width:794px; height:1123px; position:relative; padding:34px 40px;">
+      ${collegeHeader(72)}
       <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:10px;">
         <b style="font-size:16px;">لجنة مشاريع التخرج</b>
-        <span style="font-size:13px; color:#555;">التاريخ: <span dir="ltr">${today()}</span></span>
+        <span style="font-size:13px; color:#444;">التاريخ: <span dir="ltr">${today()}</span></span>
       </div>
-      <div style="border-top:2px solid #000; margin:6px -46px 0;"></div>
-      <div style="text-align:center; font-weight:700; font-size:17px; line-height:1.6; margin:16px 0 18px;">
-        تقرير المشرف ومجموعاته<br>${e(activeSemesterName())}
+      <div style="border-top:2px solid #000; margin:6px -40px 0;"></div>
+      <div style="text-align:center; margin:18px 0 14px;">
+        <div style="font-size:19px; font-weight:800;">تقرير المشرف ومجموعاته</div>
+        <div style="font-size:15px; font-weight:700; margin-top:4px;">${e(activeSemesterName())}</div>
+        ${filterLabel ? `<div style="display:inline-block; margin-top:8px; padding:2px 14px 6px; border:1px solid #999; font-size:12.5px; line-height:1.6; color:#333;">${e(filterLabel)}</div>` : ''}
       </div>
-      <div style="display:flex; justify-content:space-between; font-size:14.5px; font-weight:700; margin-bottom:6px;">
-        <div><span style="background:#C8C8C8; padding:0 4px;">المشرف: ${e(s.name)}</span><br>التخصص: ${e(s.spec)}</div>
-        <div>عدد المجموعات: ${list.length}<br>عدد الطلاب: ${list.reduce((n, g) => n + g.members.length, 0)}</div>
-      </div>
+      <table style="width:100%; border-collapse:collapse; margin-bottom:14px;">
+        <tr><td style="${META_L}">المشرف</td><td style="${META_V}">${e(s.name)}</td><td style="${META_L}">التخصص</td><td style="${META_V}">${e(s.spec || '')}</td></tr>
+        <tr><td style="${META_L}">عدد المجموعات</td><td style="${META_V}">${list.length}</td><td style="${META_L}">عدد الطلاب</td><td style="${META_V}">${list.reduce((n, g) => n + g.members.length, 0)}</td></tr>
+      </table>
       <table style="width:100%; border-collapse:collapse;">
-        <thead><tr style="background:#D9D9D9; font-weight:700;">
-          <th style="${CELL} width:30px;">م</th><th style="${CELL} width:62px;">الشعبة</th><th style="${CELL}">المشروع</th><th style="${CELL} width:96px;">نوع المشروع</th>
-          <th style="${CELL} width:74px;">الدرجة</th><th style="${CELL} width:62px;">الفئة</th><th style="${CELL} width:90px;">مكان التواجد</th><th style="${CELL} width:150px;">الطلاب</th>
+        <thead><tr>
+          <th style="${RTH} width:28px;">م</th><th style="${RTH} width:60px;">رقم المجموعة</th><th style="${RTH}">المجموعة والمشروع</th><th style="${RTH} width:100px;">نوع المشروع</th>
+          <th style="${RTH} width:70px;">الدرجة</th><th style="${RTH} width:58px;">الفئة</th><th style="${RTH} width:74px;">مكان التواجد</th><th style="${RTH} width:120px;">الطلاب</th>
         </tr></thead>
-        <tbody>${list.map((g, n) => `<tr>
-          <td style="${CELL} text-align:center;">${n + 1}</td>
-          <td style="${CELL} text-align:center;">${e(g.section)}</td>
-          <td style="${CELL}">${e(g.project)}</td>
-          <td style="${CELL} text-align:center;">${e(g.type || '')}</td>
-          <td style="${CELL} text-align:center;">${DEGREE_LABEL[g.degree]}</td>
-          <td style="${CELL} text-align:center;">${GENDER[g.members[0]?.gender] || ''}</td>
-          <td style="${CELL} text-align:center;">${e(regions(g))}</td>
-          <td style="${CELL} font-size:12px; line-height:1.5;">${g.members.map((m) => e(m.name)).join('<br>')}</td>
+        <tbody>${list.map((g, n) => `<tr style="${n % 2 ? 'background:#F5F5F5;' : ''}">
+          <td style="${RTD} text-align:center;">${n + 1}</td>
+          <td style="${RTD} text-align:center; font-weight:700;">${e(g.section)}</td>
+          <td style="${RTD}"><b>${e(g.teamName || '')}</b><br><span style="font-size:12px; color:#444;">${e(g.project)}</span></td>
+          <td style="${RTD} text-align:center; font-size:12.5px;">${types(g)}</td>
+          <td style="${RTD} text-align:center;">${DEGREE_LABEL[g.degree] || '—'}</td>
+          <td style="${RTD} text-align:center;">${gender(g)}</td>
+          <td style="${RTD} text-align:center; font-size:12.5px;">${e(regions(g))}</td>
+          <td style="${RTD} font-size:12.5px;">${g.members.map((m) => e(m.name)).join('<br>')}</td>
         </tr>`).join('')}</tbody>
       </table>
-      <div style="position:absolute; bottom:60px; left:60px; display:flex; align-items:center; gap:10px; font-size:13px; font-weight:700;">
-        <span style="background:#000; color:#fff; padding:2px 14px;" dir="ltr">${i + 1} / ${sups.length}</span><span>صفحات</span>
+      <div style="position:absolute; bottom:56px; right:40px; left:40px; display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:700; border-top:1px solid #000; padding-top:10px; line-height:1.6;">
+        <span>توقيع رئيس اللجنة: ..............................</span>
+        <span style="display:flex; align-items:center; gap:8px;"><span>صفحة</span><span style="background:#000; color:#fff !important; padding:2px 12px 6px; line-height:1.5;" dir="ltr">${i + 1} / ${sups.length}</span></span>
       </div>
     </div>`)
-  return exportPagesPdf({ fileName: 'تقرير المشرفين ومجموعاتهم.pdf', pages })
+  return exportPagesPdf({ fileName: `تقرير المشرفين ومجموعاتهم${filterLabel ? ' - ' + filterLabel : ''}.pdf`.replace(/[/:*?"<>|]/g, '-'), pages })
+}
+
+/** الترويسة كـ data URI حتى تُضمَّن داخل ملف Word نفسه */
+async function headerDataUri() {
+  const blob = await (await fetch(HEADER)).blob()
+  return new Promise((resolve) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.readAsDataURL(blob) })
+}
+
+/**
+ * جدول المناقشات بصيغة Word (.doc بصيغة HTML يفتحها Word مباشرة، أفقي) — نسخة طبق الأصل من PDF (tablePages):
+ * ترويسة الشعار + "لجنة مشاريع التخرج" والتاريخ ورقم الصفحة في كل صفحة، خط فاصل، العنوان أول كل كتلة، 6 صفوف لكل صفحة
+ * بنفس الأعمدة والحدود والتظليل. صفحة لكل (يوم × درجة)، أو لكل (يوم × قاعة) مع byRoom؛ والقاعة في عمود الملاحظات كالنموذج.
+ * ponytail: HTML-as-doc بلا مكتبة docx؛ يكفي للطباعة والتعديل في Word، ويُستبدل بمكتبة docx إن احتجنا أنماط Word أصلية
+ */
+export async function exportDiscussionsDoc(plan, { byRoom = false } = {}) {
+  const blocks = new Map()
+  const key = (p) => (byRoom ? `${p.date}|${p.room}` : `${p.date}|${p.degree}`)
+  ;[...plan].sort((a, b) => `${key(a)}|${a.start || a.time}`.localeCompare(`${key(b)}|${b.start || b.time}`)).forEach((p) => {
+    if (!blocks.has(key(p))) blocks.set(key(p), [])
+    blocks.get(key(p)).push(p)
+  })
+  const logo = await headerDataUri()
+  // نفس أنماط PDF (RTH/CELL) بوحدات Word
+  const th = 'border:1px solid #000; background:#D9D9D9; padding:4pt 4pt 7pt; font-size:10.5pt; font-weight:bold; text-align:center; color:#000;'
+  const td = 'border:1px solid #000; padding:4pt 6pt; font-size:10pt; vertical-align:middle;'
+  const head = `<tr><th style="${th} width:62pt;">الرقم</th><th style="${th} width:42pt;">الشعبة</th><th style="${th} width:90pt;">اسم المشرف</th>
+    <th style="${th}">الطلاب</th><th style="${th} width:90pt;">وقت المناقشة</th><th style="${th} width:90pt;">المناقشين</th><th style="${th} width:140pt;">ملاحظات</th></tr>`
+  const row = (r, n, i) => r.isBreak
+    ? `<tr><td colspan="7" style="${td} background:#DCE6F2; text-align:center; font-weight:bold;">Break (30 min)</td></tr>`
+    : `<tr style="height:57pt;${i % 2 ? '' : ' background:#F2F2F2;'}">
+      <td style="${td}">${String(n).padStart(2, '0')}</td>
+      <td style="${td} text-align:center;">${e(r.section)}</td>
+      <td style="${td} text-align:center;">${e(r.sup)}</td>
+      <td style="${td} text-align:center; line-height:1.5;">${r.members.map((m) => `${e(m.name)}${m.online ? ' <b style="color:#E00000;">(Online)</b>' : ''}`).join('<br>')}</td>
+      <td style="${td} text-align:center;" dir="ltr">${e(r.time)}</td>
+      <td style="${td} text-align:center; line-height:1.5;">${r.examiners.map(e).join('<br>')}</td>
+      <td style="${td}">${e([byRoom ? '' : r.room, r.note].filter(Boolean).join(' · '))}</td>
+    </tr>`
+  const pageHead = (n, total) => `<table style="width:100%; border-collapse:collapse;"><tr>
+      <td style="vertical-align:middle;"><img src="${logo}" style="height:44pt;"></td>
+      <td style="vertical-align:middle; text-align:left; font-size:10pt; color:#555; line-height:1.7;">
+        <b style="color:#000; font-size:11.5pt;">لجنة مشاريع التخرج</b><br>التاريخ: <span dir="ltr">${today()}</span> · صفحة <span dir="ltr">${n} / ${total}</span>
+      </td></tr></table>
+    <div style="border-top:1.5pt solid #000; margin:6pt 0 12pt;"></div>`
+
+  const pages = []
+  ;[...blocks.values()].forEach((list) => {
+    const p0 = list[0]
+    const specs = [...new Set(list.map((p) => p.spec))]
+    const cities = [...new Set(list.map((p) => p.city))].join(' و')
+    const title = byRoom
+      ? `جدول مناقشات مشاريع التخرج – قاعة <span dir="ltr">${e(p0.room)}</span> (${e(activeSemesterName())}) ${dayLabel(p0.date)} ${e(cities)}`
+      : `جدول مناقشات مشاريع التخرج – ${DEGREE_LABEL[p0.degree] || ''}${specs.length === 1 ? ' ' + e(specs[0]) : ''} (${e(activeSemesterName())}) ${dayLabel(p0.date)} ${e(cities)}`
+    const total = Math.ceil(list.length / 6)
+    for (let k = 0; k < list.length; k += 6) {
+      pages.push(`${pageHead(k / 6 + 1, total)}
+        ${k ? '' : `<p style="text-align:center; font-weight:bold; font-size:13.5pt; margin:0 0 12pt;">${title}</p>`}
+        <table style="width:100%; border-collapse:collapse;" dir="rtl"><thead>${head}</thead><tbody>${list.slice(k, k + 6).map((r, j) => row(r, k + j + 1, j)).join('')}</tbody></table>`)
+    }
+  })
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8"><title>جدول المناقشات</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>@page Section1 { size: 841.9pt 595.3pt; mso-page-orientation: landscape; margin: 20pt 45pt 22pt; } div.Section1 { page: Section1; }
+body { font-family: Arial, 'Cairo', sans-serif; direction: rtl; color: #000; } thead { display: table-header-group; } tr { page-break-inside: avoid; }</style></head>
+<body dir="rtl"><div class="Section1">${pages.join('<br clear="all" style="mso-special-character:line-break; page-break-before:always">')}</div></body></html>`
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob(['\ufeff', html], { type: 'application/msword' }))
+  a.download = byRoom ? 'جدول المناقشات حسب القاعات.doc' : 'جدول المناقشات.doc'
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000)
 }

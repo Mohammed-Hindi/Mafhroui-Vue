@@ -22,17 +22,17 @@
           aria-haspopup="menu"
           @click="menuOpen = !menuOpen"
         >
-          <span class="portal-avatar"><UcasLogo :size="26" /></span>
+          <span class="portal-avatar"><img v-if="avatarSrc" :src="avatarSrc" alt=""><UcasLogo v-else :size="26" /></span>
           <span class="hidden sm:inline truncate max-w-[200px]">{{ userName }}</span>
           <ChevronDown :size="15" :class="['shrink-0 transition-transform duration-fast', menuOpen && 'rotate-180']" />
         </button>
 
         <transition name="portal-drop">
           <div v-if="menuOpen" class="portal-menu end-0 w-56" role="menu">
-            <router-link :to="{ name: 'super-admin-profile' }" class="portal-menu-item" role="menuitem">
-              <Settings :size="17" /> بياناتي
+            <router-link :to="{ name: `${portalPrefix}-profile` }" class="portal-menu-item" role="menuitem">
+              <UserCircle :size="17" /> بياناتي
             </router-link>
-            <router-link :to="{ name: 'super-admin-change-password' }" class="portal-menu-item" role="menuitem">
+            <router-link :to="{ name: `${portalPrefix}-change-password` }" class="portal-menu-item" role="menuitem">
               <Lock :size="17" /> تغيير كلمة المرور
             </router-link>
             <hr class="portal-menu-sep">
@@ -58,19 +58,18 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { ChevronDown, Lock, LogOut, Sun, Settings } from 'lucide-vue-next'
+import { ChevronDown, Lock, LogOut, Sun, UserCircle } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
 import NotificationBell from '@/components/shared/NotificationBell.vue'
 import SemesterSelect from '@/components/shared/SemesterSelect.vue'
 import { useUiStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { NAV_ITEMS_BY_ROLE } from '@/utils/navConfig'
-import { ROLES } from '@/utils/constants'
 
 export default {
   name: 'PortalTopbar',
 
-  components: { ChevronDown, Lock, LogOut, Sun, Settings, UcasLogo, NotificationBell, SemesterSelect },
+  components: { ChevronDown, Lock, LogOut, Sun, UserCircle, UcasLogo, NotificationBell, SemesterSelect },
 
   data() {
     return { menuOpen: false }
@@ -78,11 +77,12 @@ export default {
 
   computed: {
     ...mapState(useUiStore, ['isDark']),
-    ...mapState(useAuthStore, ['userName']),
+    ...mapState(useAuthStore, ['userName', 'avatarSrc', 'userRole', 'portalPrefix']),
 
-    /** عنوان الصفحة = اسمها في السايد بار (الشريط العلوي خاص بالإدارة العامة)، وإلا عنوان المسار */
+    /** عنوان الصفحة = اسمها في السايد بار (الإدارة العامة / لجنة الإشراف)، وإلا عنوان المسار */
     pageTitle() {
-      const item = NAV_ITEMS_BY_ROLE[ROLES.SUPER_ADMIN].flatMap((g) => g.items).find((i) => i.to === this.$route.path)
+      const nav = NAV_ITEMS_BY_ROLE[this.userRole] || []
+      const item = nav.flatMap((g) => g.items || [g]).find((i) => i.to === this.$route.path)
       return item?.label || this.$route.meta?.title || ''
     }
   },

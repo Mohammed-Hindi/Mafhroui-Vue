@@ -84,11 +84,6 @@
                 />
               </div>
 
-              <p v-if="creatorName(task)" class="flex items-center gap-1.5 text-label text-text-400 mt-2.5 pt-2.5 border-t border-border-soft">
-                <span class="grid place-items-center w-4 h-4 rounded-pill bg-primary-50 text-primary-600 text-[9px] font-bold shrink-0">{{ creatorName(task).charAt(0) }}</span>
-                {{ creatorName(task) }}
-              </p>
-
               <div class="mt-2.5 pt-2.5 border-t border-border-soft" @click.stop>
                 <button
                   type="button"
@@ -260,10 +255,6 @@ export default {
   methods: {
     tasksByColumn(columnId) {
       return this.tasks.filter((t) => t.status === columnId)
-    },
-
-    creatorName(task) {
-      return typeof task.created_by === 'object' ? task.created_by?.name : null
     },
 
     openCreate() {

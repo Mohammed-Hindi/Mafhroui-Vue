@@ -4,7 +4,6 @@
     <header class="dash-head">
       <div>
         <h2 class="dash-title">الشكاوى والملاحظات</h2>
-        <p class="dash-sub">تذاكر الطلاب والمشرفين الموجّهة للإدارة العامة — الرد يصل لصاحب التذكرة على المنصة</p>
       </div>
       <button type="button" class="pbtn is-outline is-sm" :disabled="loading" @click="load">تحديث</button>
     </header>

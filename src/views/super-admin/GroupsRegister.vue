@@ -57,154 +57,154 @@
       <button v-if="hasFilters" type="button" class="gr-clear" @click="clearFilters">مسح الفلاتر</button>
     </div>
 
-    <Transition :name="slideDir" mode="out-in">
-      <div :key="page" class="gr-table-wrap">
-        <table class="gr-table">
-          <thead>
-            <tr>
-              <th class="w-12" aria-label="فتح" />
-              <th>رقم المجموعة (الشعبة)</th>
-              <th>المشروع</th>
-              <th>المشرف</th>
-              <th class="gr-hide-md">التخصص</th>
-              <th class="gr-hide-md">الطلاب</th>
-              <th>التقدّم</th>
-            </tr>
-          </thead>
-          <tbody v-if="!rows.length">
-            <tr><td colspan="7" class="gr-empty">{{ loading ? 'جارٍ تحميل المجموعات…' : 'لا توجد مجموعات مطابقة للفلاتر' }}</td></tr>
-          </tbody>
-          <template v-else>
-            <tbody v-for="g in pageRows" :key="g.id" :class="['gr-group', isOpen(g.id) && 'is-open']">
-              <tr class="gr-row" @click="toggle(g)">
-                <td>
-                  <button type="button" class="gr-toggle" :aria-expanded="isOpen(g.id)" :aria-label="`تفاصيل ${g.name}`" @click.stop="toggle(g)">
-                    <ChevronLeft :size="16" />
-                  </button>
-                </td>
-                <td><span class="gr-section">{{ g.section }}</span></td>
-                <td class="gr-name-cell">
-                  <span class="gr-name">{{ g.project }}</span>
-                  <span class="gr-project">{{ STATUS[g.projectStatus] }}</span>
-                </td>
-                <td>{{ g.supName }}</td>
-                <td class="gr-hide-md">
-                  <span class="gr-spec">{{ g.spec }}</span>
-                  <span class="gr-degree">{{ DEGREES[g.degree] }}</span>
-                </td>
-                <td class="gr-hide-md">
-                  <span class="gr-students" :title="g.shown.map((m) => m.name).join('، ')">{{ g.shown.map((m) => m.name.split(' ')[0]).join('، ') }}</span>
-                  <span class="gr-count">{{ g.members.length }}/4</span>
-                </td>
-                <td>
-                  <span class="gr-progress"><span :class="levelClass(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
-                  <span class="gr-pct">{{ g.percentage }}%</span>
-                </td>
+    <SlideTable :rows="rows" label="المجموعات">
+      <template #default="{ rows: pageRows }">
+        <div class="gr-table-wrap">
+          <table class="gr-table">
+            <thead>
+              <tr>
+                <th class="w-12" aria-label="فتح" />
+                <th>رقم المجموعة</th>
+                <th>المشروع</th>
+                <th>المشرف</th>
+                <th class="gr-hide-md">التخصص</th>
+                <th class="gr-hide-md">الطلاب</th>
+                <th>التقدّم</th>
               </tr>
-  
-              <tr v-if="isOpen(g.id)" class="gr-detail-row">
-                <td colspan="7">
-                  <div class="gr-detail">
-                    <aside class="gr-side">
-                      <h4>مهام المجموعة</h4>
-                      <div class="gr-stats">
-                        <div><b>{{ g.tasksTotal }}</b><span>موكلة</span></div>
-                        <div><b>{{ g.done }}</b><span>منجزة</span></div>
-                        <div><b>{{ g.tasksTotal - g.done }}</b><span>متبقية</span></div>
-                      </div>
-  
-                      <h4>تفاعل المشرف مع المجموعة</h4>
-                      <p class="gr-sup">
-                        <button type="button" class="gr-link" title="عرض بروفايل المشرف" @click="openPerson('supervisor', g.supId, g.supName)">{{ g.supName }}</button>
-                      </p>
-                      <template v-if="g.act">
-                        <div class="gr-activity">
-                          <span class="gr-progress"><span :class="levelClass(g.act.activity_score)" :style="{ width: g.act.activity_score + '%' }" /></span>
-                          <span class="gr-pct">{{ g.act.activity_score }}%</span>
-                        </div>
-                        <dl class="gr-kv">
-                          <div><dt>الاجتماعات</dt><dd>{{ g.act.meetings_count ?? 0 }}</dd></div>
-                          <div><dt>الملاحظات على المهام</dt><dd>{{ g.act.notes_count ?? 0 }}</dd></div>
-                          <div><dt>الملفات المرفوعة</dt><dd>{{ g.act.files_count ?? 0 }}</dd></div>
-                        </dl>
-                      </template>
-                      <p v-else class="gr-muted">{{ supLoading[g.supId] ? 'جارٍ تحميل نشاط المشرف…' : 'لا تتوفر بيانات نشاط' }}</p>
-  
-                      <h4>إضافة للمجموعة</h4>
-                      <div class="gr-add-row">
-                        <button v-for="(t, key) in ITEM_TYPES" :key="key" type="button" class="gr-tool" @click="openAdd(g, key)">
-                          <component :is="t.icon" :size="15" /> {{ t.label }}
-                        </button>
-                      </div>
-                    </aside>
-  
-                    <div class="gr-members">
-                      <table>
-                        <thead>
-                          <tr><th>الطالب</th><th>الرقم الجامعي</th><th>الجنس</th><th>مكان التواجد</th><th>المهام</th><th>التقدّم</th></tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="m in g.shown" :key="m.id">
-                            <td><button type="button" class="gr-member-name gr-link" title="عرض بروفايل الطالب" @click="openPerson('student', m.id, m.name)">{{ m.name }}</button></td>
-                            <td><span class="mono">{{ m.uni }}</span></td>
-                            <td>{{ GENDERS[m.gender] }}</td>
-                            <td>{{ REGIONS[m.region] }}</td>
-                            <td><span class="mono">{{ m.done }}/{{ m.total }}</span></td>
-                            <td>
-                              <span class="gr-progress is-sm"><span :class="levelClass(m.percentage)" :style="{ width: m.percentage + '%' }" /></span>
-                              <span class="gr-pct">{{ m.percentage }}%</span>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-  
-                      <table class="gr-items">
-                        <thead><tr><th>المهام والإعلانات والملفات</th><th>النوع</th><th>التاريخ</th><th>موعد التسليم</th></tr></thead>
-                        <tbody>
-                          <tr v-if="!timelines[g.id] || timelines[g.id].loading"><td colspan="4" class="gr-muted">جارٍ التحميل…</td></tr>
-                          <tr v-else-if="!g.timeline.length"><td colspan="4" class="gr-muted">لا توجد مهام أو إعلانات بعد</td></tr>
-                          <tr v-for="i in g.timeline" :key="i.key">
-                            <td>{{ i.title }}</td>
-                            <td><span :class="['rv-pill', i.pill]">{{ i.kind }}</span></td>
-                            <td><span class="mono">{{ i.date }}</span></td>
-                            <td><span class="mono">{{ i.due || '—' }}</span></td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </td>
-              </tr>
+            </thead>
+            <tbody v-if="!rows.length">
+              <tr><td colspan="7" class="gr-empty">{{ loading ? 'جارٍ تحميل المجموعات…' : 'لا توجد مجموعات مطابقة للفلاتر' }}</td></tr>
             </tbody>
-          </template>
-        </table>
-      </div>
-    </Transition>
+            <template v-else>
+              <tbody v-for="g in pageRows" :key="g.id" :class="['gr-group', isOpen(g.id) && 'is-open']">
+                <tr class="gr-row" @click="toggle(g)">
+                  <td>
+                    <button type="button" class="gr-toggle" :aria-expanded="isOpen(g.id)" :aria-label="`تفاصيل ${g.name}`" @click.stop="toggle(g)">
+                      <ChevronLeft :size="16" />
+                    </button>
+                  </td>
+                  <td><span class="gr-section">{{ g.section }}</span></td>
+                  <td class="gr-name-cell">
+                    <span class="gr-name">{{ g.project }}</span>
+                    <span class="gr-project">{{ STATUS[g.projectStatus] }}</span>
+                    <span v-if="g.types.length" class="gr-types">{{ g.types.join(' · ') }}</span>
+                  </td>
+                  <td>{{ g.supName }}</td>
+                  <td class="gr-hide-md">
+                    <span class="gr-spec">{{ g.spec }}</span>
+                    <span class="gr-degree">{{ DEGREES[g.degree] }}</span>
+                  </td>
+                  <td class="gr-hide-md">
+                    <span class="gr-students" :title="g.shown.map((m) => m.name).join('، ')">{{ g.shown.map((m) => m.name.split(' ')[0]).join('، ') }}</span>
+                    <span class="gr-count">{{ g.members.length }}/4</span>
+                  </td>
+                  <td>
+                    <span class="gr-progress"><span :class="levelClass(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
+                    <span class="gr-pct">{{ g.percentage }}%</span>
+                  </td>
+                </tr>
+  
+                <tr v-if="isOpen(g.id)" class="gr-detail-row">
+                  <td colspan="7">
+                    <div class="gr-detail">
+                      <aside class="gr-side">
+                        <h4>مهام المجموعة</h4>
+                        <div class="gr-stats">
+                          <div><b>{{ g.tasksTotal }}</b><span>موكلة</span></div>
+                          <div><b>{{ g.done }}</b><span>منجزة</span></div>
+                          <div><b>{{ g.tasksTotal - g.done }}</b><span>متبقية</span></div>
+                        </div>
+  
+                        <h4>نوع المشروع</h4>
+                        <!-- يحدده الطالب مع المقترح ويعدّله المشرف فقط -->
+                        <ProjectTypes class="gr-ptypes" :types="g.types" :editable="false" />
 
-    <!-- شريط الملخص الأخضر أسفل الجدول (نمط "المعدل الفصلي" في البوابة) -->
-    <div class="gr-sumbar">
-      <span>عدد المجموعات: {{ rows.length }}</span>
-      <span>عدد الطلاب: {{ studentsCount }}</span>
-      <span>متوسط التقدّم: {{ avgProgress }}%</span>
-    </div>
+                        <h4>تفاعل المشرف مع المجموعة</h4>
+                        <p class="gr-sup">
+                          <button type="button" class="gr-link" title="عرض بروفايل المشرف" @click="openPerson('supervisor', g.supId, g.supName)">{{ g.supName }}</button>
+                        </p>
+                        <template v-if="g.act">
+                          <div class="gr-activity">
+                            <span class="gr-progress"><span :class="levelClass(g.act.activity_score)" :style="{ width: g.act.activity_score + '%' }" /></span>
+                            <span class="gr-pct">{{ g.act.activity_score }}%</span>
+                          </div>
+                          <dl class="gr-kv">
+                            <div><dt>الاجتماعات</dt><dd>{{ g.act.meetings_count ?? 0 }}</dd></div>
+                            <div><dt>الملاحظات على المهام</dt><dd>{{ g.act.notes_count ?? 0 }}</dd></div>
+                            <div><dt>الملفات المرفوعة</dt><dd>{{ g.act.files_count ?? 0 }}</dd></div>
+                          </dl>
+                        </template>
+                        <p v-else class="gr-muted">{{ supLoading[g.supId] ? 'جارٍ تحميل نشاط المشرف…' : 'لا تتوفر بيانات نشاط' }}</p>
+  
+                        <h4>إضافة للمجموعة</h4>
+                        <div class="gr-add-row">
+                          <button v-for="(t, key) in ITEM_TYPES" :key="key" type="button" class="gr-tool" @click="openAdd(g, key)">
+                            <component :is="t.icon" :size="15" /> {{ t.label }}
+                          </button>
+                        </div>
+                      </aside>
+  
+                      <div class="gr-members">
+                        <table>
+                          <thead>
+                            <tr><th>الطالب</th><th>الرقم الجامعي</th><th>الجنس</th><th>مكان التواجد</th><th>المهام</th><th>التقدّم</th></tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="m in g.shown" :key="m.id">
+                              <td><button type="button" class="gr-member-name gr-link" title="عرض بروفايل الطالب" @click="openPerson('student', m.id, m.name)">{{ m.name }}</button></td>
+                              <td><span class="mono">{{ m.uni }}</span></td>
+                              <td>{{ GENDERS[m.gender] }}</td>
+                              <td>{{ REGIONS[m.region] }}</td>
+                              <td><span class="mono">{{ m.done }}/{{ m.total }}</span></td>
+                              <td>
+                                <span class="gr-progress is-sm"><span :class="levelClass(m.percentage)" :style="{ width: m.percentage + '%' }" /></span>
+                                <span class="gr-pct">{{ m.percentage }}%</span>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+  
+                        <!-- قائمة طويلة: تمرير داخل الصندوق نفسه برأس ثابت -->
+                        <div class="gr-items-scroll">
+                          <table class="gr-items">
+                            <thead><tr><th>المهام والإعلانات والملفات</th><th>النوع</th><th>التاريخ</th><th>موعد التسليم</th></tr></thead>
+                            <tbody>
+                              <tr v-if="!timelines[g.id] || timelines[g.id].loading"><td colspan="4" class="gr-muted">جارٍ التحميل…</td></tr>
+                              <tr v-else-if="!g.timeline.length"><td colspan="4" class="gr-muted">لا توجد مهام أو إعلانات بعد</td></tr>
+                              <tr v-for="i in g.timeline" :key="i.key">
+                                <td>{{ i.title }}</td>
+                                <td><span :class="['rv-pill', i.pill]">{{ i.kind }}</span></td>
+                                <td><span class="mono">{{ i.date }}</span></td>
+                                <td><span class="mono">{{ i.due || '—' }}</span></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </template>
+          </table>
+        </div>
+      </template>
 
-    <!-- شرائح: 7 مجموعات في كل شريحة -->
-    <nav v-if="lastPage > 1" class="gr-slider" aria-label="شرائح المجموعات">
-      <button type="button" class="gr-slide-btn" :disabled="page === 1" aria-label="الشريحة السابقة" @click="go(page - 1)"><ChevronRight :size="18" /></button>
-      <div class="gr-dots">
-        <button
-          v-for="p in lastPage" :key="p" type="button" :class="p === page && 'is-active'"
-          :aria-label="`الشريحة ${p}`" :aria-current="p === page ? 'true' : undefined" @click="go(p)"
-        />
-      </div>
-      <button type="button" class="gr-slide-btn" :disabled="page === lastPage" aria-label="الشريحة التالية" @click="go(page + 1)"><ChevronLeft :size="18" /></button>
-      <span class="gr-slide-info">المجموعات {{ (page - 1) * pageSize + 1 }}–{{ Math.min(page * pageSize, rows.length) }} من {{ rows.length }}</span>
-    </nav>
+      <!-- شريط الملخص الأخضر أسفل الجدول (نمط "المعدل الفصلي" في البوابة) -->
+      <template #after>
+        <div class="gr-sumbar">
+          <span>عدد المجموعات: {{ rows.length }}</span>
+          <span>عدد الطلاب: {{ studentsCount }}</span>
+          <span>متوسط التقدّم: {{ avgProgress }}%</span>
+        </div>
+      </template>
+    </SlideTable>
+
 
     <!-- أزرار الملفات أسفل البطاقة: الطباعة خضراء والتصدير سماوي (نمط "طباعة الجدول" / "للإطلاع على الخطة") -->
     <footer class="gr-card-foot">
-      <button type="button" class="pbtn is-green" :disabled="!rows.length || !!exporting" @click="exportRoster">
-        <Printer :size="17" /> {{ exporting === 'roster' ? 'جارٍ التجهيز…' : 'طباعة كشف الشعب' }}
+      <button type="button" class="pbtn is-green" :disabled="!rows.length || !!exporting" @click="exportSupReport">
+        <Printer :size="17" /> {{ exporting === 'sups' ? 'جارٍ التجهيز…' : 'طباعة تقرير المشرفين' }}
       </button>
       <button type="button" class="pbtn is-cyan" :disabled="!rows.length || !!exporting" @click="exportExcel">
         <FileSpreadsheet :size="17" /> {{ exporting === 'excel' ? 'جارٍ التجهيز…' : 'تصدير Excel' }}
@@ -250,11 +250,13 @@
 </template>
 
 <script>
-import { Search, ChevronLeft, ChevronRight, FileSpreadsheet, Printer, ListTodo, Megaphone, Paperclip } from 'lucide-vue-next'
+import SlideTable from '@/components/ui/SlideTable.vue'
+import ProjectTypes from '@/components/shared/ProjectTypes.vue'
+import { Search, ChevronLeft, FileSpreadsheet, Printer, ListTodo, Megaphone, Paperclip } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ProfileModal from '@/components/shared/ProfileModal.vue'
 import { DEGREES, GENDERS, REGIONS, PROJECT_STATUS as STATUS, level } from '@/utils/progressData'
-import { exportRosterPdf } from '@/utils/ucasReports'
+import { exportSupervisorsPdf } from '@/utils/ucasReports'
 import { exportStyledExcel } from '@/utils/exportReport'
 import api from '@/services/api'
 
@@ -271,7 +273,7 @@ const EMPTY_FILTERS = { degree: '', gender: '', region: '', spec: '', sup: '', s
 export default {
   name: 'GroupsRegister',
 
-  components: { Search, ChevronLeft, ChevronRight, FileSpreadsheet, Printer, BaseModal, ProfileModal },
+  components: { SlideTable, ProjectTypes, Search, ChevronLeft, FileSpreadsheet, Printer, BaseModal, ProfileModal },
 
   data() {
     return {
@@ -285,9 +287,6 @@ export default {
       q: '',
       f: { ...EMPTY_FILTERS },
       openIds: [],
-      page: 1,
-      pageSize: 7,
-      slideDir: 'gr-slide-next',
       exporting: '',
       add: { open: false, saving: false, group: null, type: 'task', title: '', body: '', due: '', assignees: [], file: null },
       profile: { open: false, kind: 'student', id: null, name: '' }
@@ -330,6 +329,15 @@ export default {
       ]
     },
 
+    /** وصف الفلترة الحالية لتقرير المشرفين (مثل: بكالوريوس · طالبات · غزة) */
+    filterLabel() {
+      const f = this.f
+      return [
+        DEGREES[f.degree], { male: 'طلاب', female: 'طالبات' }[f.gender], REGIONS[f.region], f.spec,
+        this.supList.find((s) => s.id === f.sup)?.name, f.size && `${f.size} طلاب`, this.q && `بحث: ${this.q}`
+      ].filter(Boolean).join(' · ')
+    },
+
     hasFilters() {
       return !!this.q || Object.values(this.f).some(Boolean)
     },
@@ -350,14 +358,6 @@ export default {
         .sort((a, b) => a.spec.localeCompare(b.spec, 'ar') || a.degree.localeCompare(b.degree) || a.section.localeCompare(b.section, 'en', { numeric: true }))
     },
 
-    lastPage() {
-      return Math.max(1, Math.ceil(this.rows.length / this.pageSize))
-    },
-
-    pageRows() {
-      const start = (this.page - 1) * this.pageSize
-      return this.rows.slice(start, start + this.pageSize)
-    },
 
     studentsCount() {
       return this.rows.reduce((n, g) => n + g.shown.length, 0)
@@ -378,12 +378,6 @@ export default {
       this.loading = false
     }
     this.supList = await loadSupervisors(this.list)
-  },
-
-  watch: {
-    rows() {
-      if (this.page > this.lastPage) this.page = 1
-    }
   },
 
   methods: {
@@ -464,11 +458,6 @@ export default {
       }
     },
 
-    go(p) {
-      this.slideDir = p > this.page ? 'gr-slide-next' : 'gr-slide-prev'
-      this.page = p
-    },
-
     async exportExcel() {
       this.exporting = 'excel'
       try {
@@ -498,10 +487,11 @@ export default {
       }
     },
 
-    async exportRoster() {
-      this.exporting = 'roster'
+    /** تقرير كل مشرف ومجموعاته (نوع المشروع، الدرجة، طلاب/طالبات، مكان التواجد) — بنفس الفلترة الحالية */
+    async exportSupReport() {
+      this.exporting = 'sups'
       try {
-        await exportRosterPdf(this.rows.map((g) => ({ ...g, members: g.shown })))
+        await exportSupervisorsPdf(this.rows.map((g) => ({ ...g, members: g.shown })), this.supList, this.filterLabel)
       } finally {
         this.exporting = ''
       }

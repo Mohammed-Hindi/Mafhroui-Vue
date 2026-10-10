@@ -50,75 +50,79 @@
         </button>
       </div>
 
-      <div class="hm-table-wrap">
-        <table v-if="tab === 'sup'" class="hm-table">
-          <thead><tr><th>المشرف</th><th>التخصص</th><th>المجموعات</th><th>الطلاب</th><th>التفاعل</th></tr></thead>
-          <tbody>
-            <tr v-for="s in supRows" :key="s.id" class="is-link" @click="openProfile('supervisor', s)">
-              <td class="hm-strong">{{ s.name }}</td>
-              <td class="hm-muted">{{ s.spec }}</td>
-              <td>{{ s.groups.length }}</td>
-              <td>{{ s.students }}</td>
-              <td>
-                <span class="gr-progress"><span :class="level(s.activity)" :style="{ width: s.activity + '%' }" /></span>
-                <span class="gr-pct">{{ s.activity }}%</span>
-              </td>
-            </tr>
-            <tr v-if="!supRows.length"><td colspan="5" class="gr-empty">لا يوجد مشرفون مطابقون</td></tr>
-          </tbody>
-        </table>
-
-        <table v-else class="hm-table">
-          <thead><tr><th>المجموعة / الطالب</th><th>المشرف</th><th>المهام</th><th>مستوى التقدّم</th></tr></thead>
-          <tbody>
-            <template v-for="g in grpRows" :key="g.id">
-              <tr class="is-link" :aria-expanded="openGroup === g.id" @click="openGroup = openGroup === g.id ? null : g.id">
-                <td class="hm-strong">
-                  <ChevronDown :size="14" :class="['hm-caret', openGroup === g.id && 'is-open']" />
-                  {{ g.name }} <span class="hm-muted">({{ g.shown.length }})</span>
-                </td>
-                <td class="hm-muted">{{ supName(g.supId) }}</td>
-                <td><span class="mono">{{ g.done }}/{{ g.tasksTotal }}</span></td>
+      <!-- كل الصفوف في صندوق بارتفاع ثابت يمرَّر داخليًا (رأس الجدول ثابت) بدل الشرائح -->
+      <div class="hm-table-wrap hm-scroll">
+          <table v-if="tab === 'sup'" class="hm-table">
+            <thead><tr><th>المشرف</th><th>التخصص</th><th>المجموعات</th><th>الطلاب</th><th>التفاعل</th><th>آخر تفاعل</th><th>نوع التفاعل</th></tr></thead>
+            <tbody>
+              <tr v-for="s in supRows" :key="s.id" class="is-link" @click="openProfile('supervisor', s)">
+                <td class="hm-strong">{{ s.name }}</td>
+                <td class="hm-muted">{{ s.spec }}</td>
+                <td>{{ s.groups.length }}</td>
+                <td>{{ s.students }}</td>
                 <td>
-                  <span class="gr-progress"><span :class="level(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
-                  <span class="gr-pct">{{ g.percentage }}%</span>
+                  <span class="gr-progress"><span :class="level(s.activity)" :style="{ width: s.activity + '%' }" /></span>
+                  <span class="gr-pct">{{ s.activity }}%</span>
                 </td>
+                <td><span class="mono">{{ formatDateTime(s.lastAt) }}</span></td>
+                <td class="hm-muted">{{ s.lastAction }}</td>
               </tr>
-              <tr v-if="openGroup === g.id" class="hm-drop-row">
-                <td colspan="4">
-                  <div class="hm-drop">
-                    <header class="hm-drop-head">
-                      <div>
-                        <b>{{ g.project }}</b>
-                        <span>{{ g.spec }} · {{ DEGREES[g.degree] }} · المشرف: {{ supName(g.supId) }}</span>
-                      </div>
-                      <span class="dash-chip">{{ g.shown.length }} من {{ g.members.length }} طلاب</span>
-                    </header>
-                    <ul class="hm-drop-list">
-                      <li v-for="m in g.shown" :key="m.id">
-                        <button type="button" class="hm-member" @click="openProfile('student', m, g)">
-                          <span class="hm-avatar" aria-hidden="true">{{ m.name.charAt(0) }}</span>
-                          <span class="hm-member-info">
-                            <b>{{ m.name }}</b>
-                            <span><span class="mono">{{ m.uni }}</span> · {{ m.gender === 'female' ? 'طالبة' : 'طالب' }} · {{ REGIONS[m.region] }}</span>
-                          </span>
-                          <span class="hm-member-tasks">المهام <b class="mono">{{ m.done }}/{{ m.total }}</b></span>
-                          <span class="hm-member-progress">
-                            <span class="gr-progress"><span :class="level(m.percentage)" :style="{ width: m.percentage + '%' }" /></span>
-                            <span class="gr-pct">{{ m.percentage }}%</span>
-                          </span>
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
-                </td>
-              </tr>
-            </template>
-            <tr v-if="!grpRows.length"><td colspan="4" class="gr-empty">لا توجد مجموعات مطابقة</td></tr>
-          </tbody>
-        </table>
+              <tr v-if="!supRows.length"><td colspan="7" class="gr-empty">لا يوجد مشرفون مطابقون</td></tr>
+            </tbody>
+          </table>
+  
+          <table v-else class="hm-table">
+            <thead><tr><th>المجموعة / الطالب</th><th>المشرف</th><th>المهام</th><th>مستوى التقدّم</th></tr></thead>
+            <tbody>
+              <template v-for="g in grpRows" :key="g.id">
+                <tr class="is-link" :aria-expanded="openGroup === g.id" @click="openGroup = openGroup === g.id ? null : g.id">
+                  <td class="hm-strong">
+                    <ChevronDown :size="14" :class="['hm-caret', openGroup === g.id && 'is-open']" />
+                    {{ g.name }} <span class="hm-muted">({{ g.shown.length }})</span>
+                  </td>
+                  <td class="hm-muted">{{ supName(g.supId) }}</td>
+                  <td><span class="mono">{{ g.done }}/{{ g.tasksTotal }}</span></td>
+                  <td>
+                    <span class="gr-progress"><span :class="level(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
+                    <span class="gr-pct">{{ g.percentage }}%</span>
+                  </td>
+                </tr>
+                <tr v-if="openGroup === g.id" class="hm-drop-row">
+                  <td colspan="4">
+                    <div class="hm-drop">
+                      <header class="hm-drop-head">
+                        <div>
+                          <b>{{ g.project }}</b>
+                          <span>{{ g.spec }} · {{ DEGREES[g.degree] }} · المشرف: {{ supName(g.supId) }}</span>
+                        </div>
+                        <span class="dash-chip">{{ g.shown.length }} من {{ g.members.length }} طلاب</span>
+                      </header>
+                      <ul class="hm-drop-list">
+                        <li v-for="m in g.shown" :key="m.id">
+                          <button type="button" class="hm-member" @click="openProfile('student', m, g)">
+                            <span class="hm-avatar" aria-hidden="true">{{ m.name.charAt(0) }}</span>
+                            <span class="hm-member-info">
+                              <b>{{ m.name }}</b>
+                              <span><span class="mono">{{ m.uni }}</span> · {{ m.gender === 'female' ? 'طالبة' : 'طالب' }} · {{ REGIONS[m.region] }}</span>
+                            </span>
+                            <span class="hm-member-tasks">المهام <b class="mono">{{ m.done }}/{{ m.total }}</b></span>
+                            <span class="hm-member-progress">
+                              <span class="gr-progress"><span :class="level(m.percentage)" :style="{ width: m.percentage + '%' }" /></span>
+                              <span class="gr-pct">{{ m.percentage }}%</span>
+                            </span>
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+              <tr v-if="!grpRows.length"><td colspan="4" class="gr-empty">لا توجد مجموعات مطابقة</td></tr>
+            </tbody>
+          </table>
       </div>
-      <p class="hm-hint">{{ tab === 'sup' ? 'اضغط على المشرف لعرض البروفايل.' : 'اضغط على المجموعة لعرض طلابها، وعلى الطالب لعرض البروفايل.' }}</p>
+      <p class="hm-count">{{ tab === 'sup' ? `${supRows.length} مشرف` : `${grpRows.length} مجموعة` }}</p>
+      <p v-if="tab === 'grp'" class="hm-hint">اضغط على المجموعة لعرض طلابها، وعلى الطالب لعرض البروفايل.</p>
     </section>
 
     <!-- المهام والتكليفات لكل مجموعة + الرسم البياني -->
@@ -139,23 +143,24 @@
             </select>
           </div>
         </div>
-        <div class="hm-table-wrap">
-          <table class="hm-table">
-            <thead><tr><th>المهمة / التكليف</th><th>المجموعة</th><th>المشرف</th><th>المكلّفون</th><th>تاريخ الإصدار</th><th>موعد التسليم</th><th>الحالة</th></tr></thead>
-            <tbody>
-              <tr v-for="t in taskRows" :key="t.id" class="is-link" @click="taskGroup = t.groupId">
-                <td class="hm-strong">{{ t.title }}</td>
-                <td class="hm-muted">{{ t.group }}</td>
-                <td class="hm-muted">{{ t.sup }}</td>
-                <td class="hm-muted">{{ t.assignees }}</td>
-                <td><span class="mono">{{ t.issued }}</span></td>
-                <td><span class="mono">{{ t.due }}</span></td>
-                <td><span :class="['rv-pill', STATE[t.state].pill]">{{ STATE[t.state].label }}</span></td>
-              </tr>
-              <tr v-if="!taskRows.length"><td colspan="7" class="gr-empty">لا توجد مهام</td></tr>
-            </tbody>
-          </table>
+        <div class="hm-table-wrap hm-scroll">
+            <table class="hm-table">
+              <thead><tr><th>المهمة / التكليف</th><th>المجموعة</th><th>المشرف</th><th>المكلّفون</th><th>تاريخ الإصدار</th><th>موعد التسليم</th><th>الحالة</th></tr></thead>
+              <tbody>
+                <tr v-for="t in taskRows" :key="t.id" class="is-link" @click="taskGroup = t.groupId">
+                  <td class="hm-strong">{{ t.title }}</td>
+                  <td class="hm-muted">{{ t.group }}</td>
+                  <td class="hm-muted">{{ t.sup }}</td>
+                  <td class="hm-muted">{{ t.assignees }}</td>
+                  <td><span class="mono">{{ t.issued }}</span></td>
+                  <td><span class="mono">{{ t.due }}</span></td>
+                  <td><span :class="['rv-pill', STATE[t.state].pill]">{{ STATE[t.state].label }}</span></td>
+                </tr>
+                <tr v-if="!taskRows.length"><td colspan="7" class="gr-empty">لا توجد مهام</td></tr>
+              </tbody>
+            </table>
         </div>
+        <p class="hm-count">{{ taskRows.length }} مهمة</p>
         <p class="hm-hint">اضغط على أي مهمة لعرض مهام مجموعتها وتحديث الرسم البياني.</p>
       </section>
 
@@ -186,6 +191,7 @@ import api from '@/services/api'
 import { exportSupervisorsPdf } from '@/utils/ucasReports'
 import ProfileModal from '@/components/shared/ProfileModal.vue'
 import { DEGREES, REGIONS } from '@/utils/progressData'
+import { formatDateTime } from '@/utils/formatters'
 import { loadGroups, loadSupervisors, loadDashboardStats, normalizeTasks } from '@/services/adminData'
 
 const STATE = {
@@ -237,7 +243,7 @@ export default {
         const students = groups.reduce((n, g) => n + g.members.length, 0)
         // التفاعل من /supervisors/{id}/profile، وإلى أن يصل: متوسط تقدّم مجموعاته
         const fallback = groups.length ? Math.round(groups.reduce((n, g) => n + g.percentage, 0) / groups.length) : 0
-        return { ...s, groups, students, activity: Math.round(this.supActivity[s.id] ?? fallback) }
+        return { ...s, groups, students, activity: Math.round(this.supActivity[s.id] ?? fallback), ...this.lastInteraction(s, groups) }
       })
     },
 
@@ -333,6 +339,24 @@ export default {
   },
 
   methods: {
+    formatDateTime,
+
+    /**
+     * آخر تفاعل للمشرف: last_active_at (آخر استخدام للمنصة) + آخر مهمة أضافها لمجموعاته من latest_tasks.
+     * ponytail: الخادم لا يوفّر سجل أفعال لكل مستخدم، فالنوع محصور في "إضافة مهمة" أو "دخول المنصة"؛
+     * يتوسّع عند إضافة endpoint لسجل AuditLog حسب المستخدم.
+     */
+    lastInteraction(s, groups) {
+      const ids = groups.map((g) => g.id)
+      const task = this.tasks.filter((t) => ids.includes(t.groupId) && t.createdAt).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]
+      const active = s.lastActive ? new Date(s.lastActive) : null
+      const taskAt = task ? new Date(task.createdAt) : null
+      // المهمة هي آخر تفاعل إن لم يُسجَّل استخدام بعدها بأكثر من ساعة
+      if (taskAt && (!active || active - taskAt < 3600000)) return { lastAt: task.createdAt, lastAction: `إضافة مهمة «${task.title}»` }
+      if (active) return { lastAt: s.lastActive, lastAction: 'دخول واستخدام المنصة' }
+      return { lastAt: null, lastAction: 'لا يوجد تفاعل بعد' }
+    },
+
     setTab(tab) {
       this.tab = tab
       this.q = ''
