@@ -108,7 +108,7 @@ import { mapState, mapActions } from 'pinia'
 import { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, X, Check } from 'lucide-vue-next'
 import ProposalsReview from '@/views/super-admin/ProposalsReview.vue'
 import { useAuthStore } from '@/stores/auth.store'
-import { ROLES } from '@/utils/constants'
+import { PORTAL_ROLES } from '@/utils/constants'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -155,8 +155,9 @@ export default {
     ...mapState(useTeamsStore, ['teams', 'specializationName']),
     ...mapState(useAuthStore, ['userRole']),
 
+    /** قوالب البوابة (هوية UCAS) للإدارة العامة ولجنة الإشراف */
     isSuperAdmin() {
-      return this.userRole === ROLES.SUPER_ADMIN
+      return PORTAL_ROLES.includes(this.userRole)
     },
 
     proposals() {

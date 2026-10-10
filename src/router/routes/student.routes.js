@@ -4,6 +4,7 @@ import ProfilePageStudent from '@/views/student/ProfilePage.vue'
 import ProposalPageStudent from '@/views/student/ProposalPage.vue'
 import TasksPageStudent from '@/views/student/TasksPage.vue'
 import MeetingsPageStudent from '@/views/student/MeetingsPage.vue'
+import AnnouncementsInboxPageStudent from '@/views/shared/AnnouncementsInboxPage.vue'
 import AssistantPageStudent from '@/views/student/AssistantPage.vue'
 
 // استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
@@ -43,6 +44,12 @@ export default [
         name: 'student-meetings',
         component: MeetingsPageStudent,
         meta: { title: 'الاجتماعات' }
+      },
+      {
+        path: 'announcements',
+        name: 'student-announcements',
+        component: AnnouncementsInboxPageStudent,
+        meta: { title: 'الإعلانات والملفات' }
       },
       {
         path: 'assistant',

@@ -12,56 +12,62 @@
         <component :is="t.icon" :size="34" />
         <span>{{ t.label }}</span>
       </button>
-      <router-link :to="{ name: 'super-admin-change-password' }" class="profile-tab">
+      <router-link :to="{ name: `${portalPrefix}-change-password` }" class="profile-tab">
         <Lock :size="34" />
         <span>تغيير كلمة المرور</span>
       </router-link>
     </nav>
 
     <!-- المعلومات الشخصية -->
-    <section v-if="tab === 'info'" class="profile-card">
-      <div class="pf-head">
-        <h3 class="portal-title">المعلومات الشخصية</h3>
-        <button v-if="!editing" type="button" class="pbtn is-cyan is-sm" @click="startEdit"><Pencil :size="15" /> تعديل البيانات</button>
-      </div>
-
-      <!-- الصورة الشخصية -->
-      <div class="pf-avatar">
-        <img v-if="user?.avatar_url" :src="user.avatar_url" alt="الصورة الشخصية">
+    <template v-if="tab === 'info'">
+      <!-- بطاقة الهوية: الصورة والاسم والصلاحية + إجراءات الملف -->
+      <section class="pf-avatar">
+        <img v-if="avatarSrc" :src="avatarSrc" alt="الصورة الشخصية">
         <span v-else aria-hidden="true">{{ (user?.name || '?').charAt(0) }}</span>
-        <label class="pbtn is-outline is-sm" :aria-disabled="uploading">
-          <Camera :size="15" /> {{ uploading ? 'جارٍ الرفع…' : user?.avatar_url ? 'تغيير الصورة' : 'إضافة صورة' }}
-          <input type="file" accept="image/png,image/jpeg,image/webp" hidden :disabled="uploading" @change="onAvatar">
-        </label>
-        <small class="pt-muted">PNG أو JPG أو WEBP حتى 2MB</small>
-      </div>
+        <div class="pf-id">
+          <strong>{{ user?.name || '—' }}</strong>
+          <span class="pf-role">{{ roleLabel }}</span>
+          <small class="mono">{{ user?.email }}</small>
+        </div>
+        <div class="pf-actions">
+          <label class="pbtn is-outline is-sm" :aria-disabled="uploading" title="PNG أو JPG أو WEBP حتى 2MB">
+            <Camera :size="15" /> {{ uploading ? 'جارٍ الرفع…' : user?.avatar_url ? 'تغيير الصورة' : 'إضافة صورة' }}
+            <input type="file" accept="image/png,image/jpeg,image/webp" hidden :disabled="uploading" @change="onAvatar">
+          </label>
+          <button v-if="!editing" type="button" class="pbtn is-cyan is-sm" @click="startEdit"><Pencil :size="15" /> تعديل البيانات</button>
+        </div>
+      </section>
 
-      <!-- تعديل البيانات -->
-      <form v-if="editing" class="pf-form" @submit.prevent="saveEdit">
-        <label class="pfield"><span>الاسم</span><input v-model.trim="form.name" required maxlength="150"></label>
-        <label class="pfield"><span>البريد الإلكتروني</span><input v-model.trim="form.email" type="email" required maxlength="150" dir="ltr"></label>
-        <label class="pfield"><span>رقم الواتساب</span><input v-model.trim="form.whatsapp" dir="ltr" placeholder="مثال: 970591234567"></label>
-        <label class="pfield"><span>الرقم الوظيفي</span><input v-model.trim="form.employee_number" maxlength="30" dir="ltr"></label>
-        <div class="pf-form-actions">
-          <button type="submit" class="pbtn is-green" :disabled="saving"><Check :size="16" /> {{ saving ? 'جارٍ الحفظ…' : 'حفظ التعديلات' }}</button>
+      <!-- الحقول بنمط "ملف الطالب" (201300): عنوان الصف يمينًا ثم أزواج تسمية/قيمة؛ التعديل في نفس المكان -->
+      <form class="profile-card" @submit.prevent="saveEdit">
+        <h3 class="portal-title pf-title">المعلومات الشخصية</h3>
+        <div v-for="sec in infoSections" :key="sec.title" class="pf-row">
+          <h4 class="pf-row-title">{{ sec.title }}</h4>
+          <div class="pf-row-fields">
+            <label v-for="f in sec.fields" :key="f.label" class="profile-field">
+              <span class="profile-field-label">{{ f.label }}</span>
+              <span v-if="editing && f.key" class="pf-input">
+                <b v-if="f.required" class="pf-req" aria-hidden="true">*</b>
+                <input v-model.trim="form[f.key]" :type="f.type || 'text'" :required="f.required" :maxlength="f.max || 150" :dir="f.mono ? 'ltr' : undefined" :placeholder="f.placeholder">
+              </span>
+              <span v-else :class="['profile-field-value', f.mono && 'mono']">{{ f.value || '—' }}</span>
+            </label>
+          </div>
+        </div>
+        <div v-if="editing" class="pf-form-actions">
+          <small class="pf-req-note"><b>*</b> تعني أن الحقل مطلوب</small>
           <button type="button" class="pbtn is-outline" :disabled="saving" @click="editing = false">إلغاء</button>
+          <button type="submit" class="pbtn is-green" :disabled="saving"><Check :size="16" /> {{ saving ? 'جارٍ الحفظ…' : 'حفظ التعديلات' }}</button>
         </div>
       </form>
+    </template>
 
-      <div v-else class="profile-fields">
-        <div v-for="info in accountInfo" :key="info.label" class="profile-field">
-          <span class="profile-field-label">{{ info.label }}</span>
-          <span :class="['profile-field-value', info.mono && 'mono']">{{ info.value || '—' }}</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- إحصائيات المنصة — صفوف "التسمية: القيمة" كبطاقة "بيانات أكاديمية" (200515) -->
+    <!-- إحصائيات المنصة — صفوف "التسمية : القيمة" كبطاقة "بيانات أكاديمية" (200515) بعمودين -->
     <section v-else-if="tab === 'stats'" class="profile-card">
       <h3 class="portal-title mb-4">إحصائيات المنصة <span class="profile-card-sub">{{ activeSemesterName }}</span></h3>
       <dl class="profile-stats">
         <div v-for="s in platformStats" :key="s.label">
-          <dt>{{ s.label }} :</dt>
+          <dt>{{ s.label }}</dt>
           <dd>{{ s.value ?? '—' }}<template v-if="s.value != null && s.suffix">{{ s.suffix }}</template></dd>
         </div>
       </dl>
@@ -87,7 +93,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 import { useLandingStore } from '@/stores/landing.store'
 import { NAV_ITEMS_BY_ROLE } from '@/utils/navConfig'
-import { ROLES, ROLE_LABELS } from '@/utils/constants'
+import { ROLE_LABELS } from '@/utils/constants'
 import { formatDate } from '@/utils/formatters'
 
 export default {
@@ -111,12 +117,12 @@ export default {
   },
 
   computed: {
-    ...mapState(useAuthStore, ['user']),
+    ...mapState(useAuthStore, ['user', 'avatarSrc', 'portalPrefix']),
     ...mapState(useUiStore, ['semesters', 'activeSemesterId']),
     ...mapState(useLandingStore, ['stats']),
 
     roleLabel() {
-      return ROLE_LABELS[ROLES.SUPER_ADMIN]
+      return ROLE_LABELS[this.user?.role] || ''
     },
 
     activeSemesterName() {
@@ -135,22 +141,28 @@ export default {
       ]
     },
 
-    accountInfo() {
+    /** صفوف الملف: key = حقل قابل للتعديل (PATCH /me)، والباقي للعرض فقط */
+    infoSections() {
       const u = this.user || {}
       return [
-        { label: 'الاسم', value: u.name },
-        { label: 'البريد الإلكتروني', value: u.email, mono: true },
-        { label: 'رقم الواتساب', value: u.whatsapp, mono: true },
-        { label: 'الرقم الوظيفي', value: u.employee_number, mono: true },
-        { label: 'الصلاحية', value: this.roleLabel },
-        { label: 'الفصل الدراسي الحالي', value: this.activeSemesterName },
-        { label: 'تاريخ إنشاء الحساب', value: u.created_at ? formatDate(u.created_at) : '' }
+        { title: 'بيانات الحساب', fields: [
+          { label: 'الاسم', value: u.name, key: 'name', required: true },
+          { label: 'الرقم الوظيفي', value: u.employee_number, key: 'employee_number', mono: true, max: 30 }
+        ] },
+        { title: 'بيانات التواصل', fields: [
+          { label: 'البريد الإلكتروني', value: u.email, key: 'email', type: 'email', required: true, mono: true },
+          { label: 'رقم الواتساب', value: u.whatsapp, key: 'whatsapp', mono: true, placeholder: 'مثال: 970591234567' }
+        ] },
+        { title: 'بيانات النظام', fields: [
+          { label: 'الفصل الحالي', value: this.activeSemesterName },
+          { label: 'تاريخ إنشاء الحساب', value: u.created_at ? formatDate(u.created_at) : '' }
+        ] }
       ]
     },
 
     tools() {
-      return NAV_ITEMS_BY_ROLE[ROLES.SUPER_ADMIN]
-        .flatMap((group) => group.items)
+      return (NAV_ITEMS_BY_ROLE[this.user?.role] || [])
+        .flatMap((group) => group.items || [group])
         .filter((item) => item.to !== this.$route.path)
     }
   },

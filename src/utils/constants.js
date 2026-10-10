@@ -10,6 +10,9 @@ export const ROLES = {
   STUDENT: 'student'
 }
 
+/** أدوار واجهة البوابة (هوية UCAS وقوالب أدوات لجنة الإشراف): الإدارة العامة ولجنة الإشراف */
+export const PORTAL_ROLES = [ROLES.SUPER_ADMIN, ROLES.COMMITTEE]
+
 /** التسمية العربية المعروضة لكل دور */
 export const ROLE_LABELS = {
   [ROLES.SUPER_ADMIN]: 'الإدارة العامة',
@@ -20,7 +23,7 @@ export const ROLE_LABELS = {
 
 /** الصفحة الرئيسية لكل دور — يُوجَّه إليها بعد تسجيل الدخول */
 export const ROLE_HOME_ROUTE = {
-  [ROLES.SUPER_ADMIN]: '/super-admin',
+  [ROLES.SUPER_ADMIN]: '/committee',
   [ROLES.COMMITTEE]: '/committee',
   [ROLES.SUPERVISOR]: '/supervisor',
   [ROLES.STUDENT]: '/student'
@@ -47,3 +50,9 @@ export const CONTACT = {
   PHONE_RAW: '+970597302452',
   ADDRESS: 'فلسطين - غزة'
 }
+
+/** أنواع المشاريع — قد يكون للمشروع أكثر من نوع (يُحفظ في projects.types) */
+export const PROJECT_TYPES = [
+  'تطوير ويب', 'تطبيقات موبايل', 'تصميم', 'واقع افتراضي VR', 'واقع معزز AR', 'ألعاب',
+  'ذكاء اصطناعي', 'أنظمة إدارة', 'إنترنت الأشياء', 'أمن معلومات', 'شبكات', 'وسائط متعددة'
+]

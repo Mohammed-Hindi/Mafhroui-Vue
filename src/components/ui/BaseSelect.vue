@@ -114,16 +114,14 @@ const updatePosition = () => {
 
   const rect = button.getBoundingClientRect()
   const gap = 8
-  const estimatedHeight = Math.min(fullOptions.value.length * 44 + 12, 288)
-  const spaceBelow = window.innerHeight - rect.bottom
-  const openAbove = spaceBelow < estimatedHeight && rect.top > spaceBelow
+  // القائمة تنسدل للأسفل دائمًا (قرار المستخدم): إن ضاقت المساحة تقصر القائمة وتُمرَّر بدل أن تنقلب للأعلى
+  const spaceBelow = window.innerHeight - rect.bottom - gap * 2
 
   listStyle.value = {
     left: `${rect.left}px`,
     width: `${rect.width}px`,
-    ...(openAbove
-      ? { bottom: `${window.innerHeight - rect.top + gap}px` }
-      : { top: `${rect.bottom + gap}px` })
+    top: `${rect.bottom + gap}px`,
+    maxHeight: `${Math.max(Math.min(spaceBelow, 288), 140)}px`
   }
 }
 
@@ -135,6 +133,9 @@ const handleOutsideClick = (event) => {
 }
 
 const openDropdown = () => {
+  // الحقل قرب أسفل الشاشة: يُرفع لمنتصف الشاشة أولًا حتى تنسدل القائمة للأسفل بمساحة كافية
+  const button = root.value?.querySelector('button')
+  if (button && window.innerHeight - button.getBoundingClientRect().bottom < 200) button.scrollIntoView({ block: 'center' })
   isOpen.value = true
   nextTick(updatePosition)
   document.addEventListener('mousedown', handleOutsideClick)

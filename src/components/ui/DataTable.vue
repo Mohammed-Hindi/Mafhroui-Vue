@@ -36,7 +36,7 @@
         </thead>
         <tbody class="divide-y divide-border-soft">
           <template v-for="(row, index) in rows" :key="rowKey ? row[rowKey] : index">
-            <tr class="row-interactive divide-x divide-border-soft">
+            <tr class="row-interactive divide-x divide-border-soft" @click="$emit('row-click', row)">
               <td
                 v-for="column in columns"
                 :key="column.key"
@@ -136,7 +136,7 @@ export default {
     fixed: { type: Boolean, default: false }
   },
 
-  emits: ['retry', 'page-change'],
+  emits: ['retry', 'page-change', 'row-click'],
 
   data() {
     return { openRowKeys: [] }

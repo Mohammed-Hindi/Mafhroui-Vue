@@ -2,7 +2,6 @@ import {
   LayoutDashboard,
   UserCircle,
   Users,
-  User,
   UserPlus,
   ClipboardList,
   ListTodo,
@@ -26,7 +25,6 @@ export const NAV_ITEMS_BY_ROLE = {
     {
       title: 'الإدارة العامة',
       items: [
-        { label: 'الملف التعريفي', to: '/super-admin/profile', icon: UserCircle, color: '#0E699C' },
         { label: 'إدارة الأعضاء', to: '/super-admin', icon: UserPlus, exact: true, color: '#3A9B4C' },
         { label: 'إرسال بيانات الدخول', to: '/super-admin/credentials', icon: KeyRound },
         { label: 'الأقسام والفصول الدراسية', to: '/super-admin/structure', icon: Building2, color: '#229791' }
@@ -49,15 +47,20 @@ export const NAV_ITEMS_BY_ROLE = {
     }
   ],
 
+  // لجنة الإشراف: قائمة واحدة بلا عناوين — أدوات اللجنة (كالإدارة العامة) ثم ما يصل العضو من مهام وإعلانات
   [ROLES.COMMITTEE]: [
-    { label: 'لوحة التحكم', to: '/committee', icon: LayoutDashboard, exact: true },
-    { label: 'المجموعات', to: '/committee/teams', icon: Users },
-    { label: 'إدارة الأعضاء', to: '/committee/members', icon: User },
-    { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList },
-    { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock },
-    { label: 'أرشيف المشاريع', to: '/committee/project-archive', icon: FileCheck },
-    { label: 'نسبة تقدّم المشاريع', to: '/committee/progress', icon: TrendingUp },
-    { label: 'المساعد الآلي', to: '/committee/assistant', icon: Bot }
+    { label: 'الرئيسية', to: '/committee', icon: LayoutDashboard, exact: true, color: '#005BAA' },
+    { label: 'المجموعات', to: '/committee/teams', icon: Users, color: '#A9375C' },
+    { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList, color: '#F89E32' },
+    { label: 'التكليفات والإعلانات', to: '/committee/assignments', icon: Megaphone },
+    { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock, color: '#009ADC' },
+    { label: 'التقييمات', to: '/committee/evaluations', icon: ClipboardCheck },
+    { label: 'أرشيف المشاريع', to: '/committee/project-archive', icon: FileCheck, color: '#805C55' },
+    { label: 'تقدّم المشاريع', to: '/committee/progress', icon: TrendingUp, color: '#62BB46' },
+    { label: 'الشكاوى والملاحظات', to: '/committee/tickets', icon: LifeBuoy },
+    { label: 'مهامي', to: '/committee/my-tasks', icon: ListTodo },
+    { label: 'الإعلانات والملفات', to: '/committee/announcements', icon: Megaphone },
+    { label: 'المساعد الآلي', to: '/committee/assistant', icon: Bot, color: '#233B77' }
   ],
 
   [ROLES.SUPERVISOR]: [
@@ -65,6 +68,9 @@ export const NAV_ITEMS_BY_ROLE = {
     { label: 'الفرق', to: '/supervisor/teams', icon: Users },
     { label: 'المقترح / التقرير النهائي', to: '/supervisor/proposals', icon: ClipboardList },
     { label: 'المهام (Kanban)', to: '/supervisor/tasks', icon: ListTodo },
+    { label: 'مهامي من الإدارة', to: '/supervisor/my-tasks', icon: ClipboardCheck },
+    { label: 'الإعلانات والملفات', to: '/supervisor/announcements', icon: Megaphone },
+    { label: 'تقييم الطلبة', to: '/supervisor/evaluations', icon: ClipboardCheck },
     { label: 'الاجتماعات', to: '/supervisor/meetings', icon: CalendarDays },
     { label: 'مواعيد المناقشات', to: '/supervisor/appointments', icon: CalendarClock },
     { label: 'أرشيف المشاريع', to: '/supervisor/project-archive', icon: FileCheck },
@@ -77,6 +83,7 @@ export const NAV_ITEMS_BY_ROLE = {
     { label: 'المقترح / التقرير النهائي', to: '/student/proposal', icon: ClipboardList },
     { label: 'المساعد الآلي', to: '/student/assistant', icon: Bot },
     { label: 'المهام (Kanban)', to: '/student/tasks', icon: ListTodo },
+    { label: 'الإعلانات والملفات', to: '/student/announcements', icon: Megaphone },
     { label: 'الاجتماعات', to: '/student/meetings', icon: CalendarDays }
   ]
 }

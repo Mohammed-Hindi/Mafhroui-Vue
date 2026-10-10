@@ -32,18 +32,19 @@
 
       <main class="flex-1 px-4 lg:px-6 py-6">
         <!-- بطاقة بيانات الحساب — تقابل بطاقة "بيانات المرشد" الثابتة أعلى صفحات بوابة الكلية -->
-        <section v-if="isSuperAdmin && $route.name !== 'super-admin-profile'" class="portal-identity mb-6">
+        <section v-if="isSuperAdmin && $route.name !== `${portalPrefix}-profile`" class="portal-identity mb-6">
           <div class="flex items-center gap-4 min-w-0">
-            <UcasLogo :size="60" class="portal-identity-logo shrink-0" />
+            <img v-if="avatarSrc" :src="avatarSrc" alt="الصورة الشخصية" class="portal-identity-photo portal-identity-logo shrink-0">
+            <UcasLogo v-else :size="60" class="portal-identity-logo shrink-0" />
             <div class="min-w-0">
               <h2 class="text-h3 font-bold text-text-900 truncate">{{ userName || '—' }}</h2>
-              <p class="text-body text-text-400">{{ roleLabel }}</p>
+              <span class="portal-identity-role">{{ roleLabel }}</span>
             </div>
           </div>
           <dl class="portal-identity-details">
-            <div><dt>البريد الإلكتروني :</dt><dd class="mono">{{ userEmail || '—' }}</dd></div>
-            <div><dt>الصلاحية :</dt><dd>{{ roleLabel }}</dd></div>
-            <div><dt>الفصل الدراسي الحالي :</dt><dd>{{ activeSemesterName }}</dd></div>
+            <div><dt><Mail :size="14" /> البريد الإلكتروني</dt><dd><button type="button" class="portal-identity-copy mono" dir="ltr" title="نسخ البريد" :disabled="!userEmail" @click="copyEmail">{{ userEmail || '—' }}</button></dd></div>
+            <div><dt><ShieldCheck :size="14" /> الصلاحية</dt><dd>{{ roleLabel }}</dd></div>
+            <div><dt><CalendarDays :size="14" /> الفصل الدراسي الحالي</dt><dd>{{ activeSemesterName }}</dd></div>
           </dl>
         </section>
 
@@ -62,6 +63,7 @@
       <footer v-if="isSuperAdmin" class="portal-footer">
         <div class="px-4 lg:px-6 py-5">
           {{ year }} © جميع الحقوق محفوظة لـ <router-link :to="homeRoute">{{ appName }}</router-link> — الكلية الجامعية للعلوم التطبيقية
+          <span class="portal-footer-devs">مطورو النظام: انس محمد الشنطي، محمد الغول</span>
         </div>
       </footer>
     </div>
@@ -77,7 +79,7 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { ChevronUp } from 'lucide-vue-next'
+import { CalendarDays, ChevronUp, Mail, ShieldCheck } from 'lucide-vue-next'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 import PortalTopbar from '@/components/layout/PortalTopbar.vue'
@@ -98,7 +100,7 @@ import { ROLE_LABELS, ROLES, APP_NAME } from '@/utils/constants'
 export default {
   name: 'DashboardLayout',
 
-  components: { AppSidebar, AppTopbar, PortalTopbar, WaterBackground, UcasLogo, ChevronUp },
+  components: { AppSidebar, AppTopbar, PortalTopbar, WaterBackground, UcasLogo, CalendarDays, ChevronUp, Mail, ShieldCheck },
 
   data() {
     return {
@@ -109,11 +111,12 @@ export default {
   },
 
   computed: {
-    ...mapState(useAuthStore, ['userRole', 'userName', 'userEmail', 'homeRoute']),
+    ...mapState(useAuthStore, ['userRole', 'userName', 'userEmail', 'avatarSrc', 'homeRoute', 'usesPortal', 'portalPrefix']),
     ...mapState(useUiStore, ['semesters', 'activeSemesterId', 'sidebarOpen']),
 
+    /** واجهة البوابة: الإدارة العامة ولجنة الإشراف */
     isSuperAdmin() {
-      return this.userRole === ROLES.SUPER_ADMIN
+      return this.usesPortal
     },
 
     navItems() {
@@ -149,6 +152,15 @@ export default {
 
   methods: {
     ...mapActions(useUiStore, ['toggleSidebar']),
+
+    async copyEmail() {
+      try {
+        await navigator.clipboard.writeText(this.userEmail)
+        this.$toast?.success('تم نسخ البريد الإلكتروني')
+      } catch {
+        this.$toast?.error('تعذّر نسخ البريد الإلكتروني')
+      }
+    },
 
     handleScroll() {
       this.showBackToTop = window.scrollY > 300

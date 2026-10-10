@@ -8,7 +8,10 @@ import AppointmentsPageCommittee from '@/views/committee/AppointmentsPage.vue'
 import ProjectArchivePageCommittee from '@/views/committee/ProjectArchivePage.vue'
 import ProjectDetailPageCommittee from '@/views/committee/ProjectDetailPage.vue'
 import ProgressPageCommittee from '@/views/committee/ProgressPage.vue'
+import AnnouncementsInboxPageCommittee from '@/views/shared/AnnouncementsInboxPage.vue'
+import EvaluationsPageCommittee from '@/views/super-admin/EvaluationsPage.vue'
 import AssistantPageCommittee from '@/views/committee/AssistantPage.vue'
+import MyTasksPageCommittee from '@/views/committee/MyTasksPage.vue'
 
 // استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
 import DashboardPage from '@/views/committee/DashboardPage.vue'
@@ -75,6 +78,54 @@ export default [
         name: 'committee-progress',
         component: ProgressPageCommittee,
         meta: { title: 'نسبة تقدّم المشاريع' }
+      },
+      {
+        path: 'my-tasks',
+        name: 'committee-my-tasks',
+        component: MyTasksPageCommittee,
+        meta: { title: 'مهامي', roles: [ROLES.COMMITTEE] }
+      },
+      {
+        path: 'announcements',
+        name: 'committee-announcements',
+        component: AnnouncementsInboxPageCommittee,
+        meta: { title: 'الإعلانات والملفات' }
+      },
+      {
+        path: 'evaluations',
+        name: 'committee-evaluations',
+        component: EvaluationsPageCommittee,
+        meta: { title: 'التقييمات' }
+      },
+      {
+        path: 'evaluations/:teamId(\\d+)',
+        name: 'committee-evaluation-sheet',
+        component: () => import('@/views/super-admin/EvaluationSheet.vue'),
+        meta: { title: 'ورقة التقييم' }
+      },
+      {
+        path: 'assignments',
+        name: 'committee-assignments',
+        component: () => import('@/views/super-admin/AssignmentsPage.vue'),
+        meta: { title: 'التكليفات والإعلانات' }
+      },
+      {
+        path: 'tickets',
+        name: 'committee-tickets',
+        component: () => import('@/views/super-admin/TicketsPage.vue'),
+        meta: { title: 'الشكاوى والملاحظات' }
+      },
+      {
+        path: 'profile',
+        name: 'committee-profile',
+        component: () => import('@/views/super-admin/ProfilePage.vue'),
+        meta: { title: 'بياناتي' }
+      },
+      {
+        path: 'change-password',
+        name: 'committee-change-password',
+        component: () => import('@/views/super-admin/ChangePasswordPage.vue'),
+        meta: { title: 'تغيير كلمة المرور' }
       },
       {
         path: 'assistant',

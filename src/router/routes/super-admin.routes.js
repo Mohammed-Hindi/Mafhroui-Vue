@@ -31,7 +31,7 @@ export default [
         path: 'profile',
         name: 'super-admin-profile',
         component: () => import('@/views/super-admin/ProfilePage.vue'),
-        meta: { title: 'الملف التعريفي' }
+        meta: { title: 'بياناتي' }
       },
       {
         path: 'assignments',
@@ -51,6 +51,12 @@ export default [
         name: 'super-admin-evaluations',
         component: () => import('@/views/super-admin/EvaluationsPage.vue'),
         meta: { title: 'التقييمات' }
+      },
+      {
+        path: 'evaluations/:teamId(\\d+)',
+        name: 'super-admin-evaluation-sheet',
+        component: () => import('@/views/super-admin/EvaluationSheet.vue'),
+        meta: { title: 'ورقة التقييم' }
       },
       {
         path: 'tickets',

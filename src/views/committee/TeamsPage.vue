@@ -64,17 +64,18 @@
             </button>
 
             <div class="w-10 h-10 rounded-md shrink-0 grid place-items-center font-cairo font-extrabold text-body-sm text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
-              {{ group.id }}
+              {{ group.section || group.id }}
             </div>
 
             <div class="flex-1 min-w-0 flex items-center gap-3 sm:gap-6 flex-wrap">
               <div>
                 <div class="text-body-sm font-extrabold text-text-900">{{ group.name }}</div>
-                <div class="text-label text-text-400">رقم المجموعة {{ group.id }}<template v-if="group.section"> — {{ group.section }}</template></div>
+                <div class="text-label text-text-400">رقم المجموعة {{ group.section || '—' }}</div>
               </div>
               <div class="text-caption"><span class="text-text-400">المشرف </span><span class="font-bold text-text-900">{{ group.sup }}</span></div>
               <BaseBadge variant="info">{{ group.spec }}</BaseBadge>
               <BaseBadge>{{ group.members.length }} {{ group.members.length === 1 ? 'طالب' : 'طلاب' }}</BaseBadge>
+              <ProjectTypes v-if="group.projectId" :types="group.types" :editable="false" />
             </div>
 
             <div class="flex gap-1.5 shrink-0">
@@ -111,7 +112,7 @@
         </div>
         <template v-if="addStudentForm.createTeam">
           <BaseInput v-model="addStudentForm.team_name" label="اسم الفريق" placeholder="مثال: فريق نوفا" />
-          <BaseInput v-model="addStudentForm.section" label="الشعبة" placeholder="مثال: شعبة 1" />
+          <BaseInput v-model="addStudentForm.section" label="الشعبة" placeholder="مثال: 100" />
           <BaseSelect v-model="addStudentForm.supervisor_id" label="المشرف" placeholder="اختاري المشرف" :options="supervisorOptions" class="sm:col-span-2" />
         </template>
       </div>
@@ -190,7 +191,7 @@
     <BaseModal v-model="editGroupModal" title="تعديل بيانات الفريق">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <BaseInput v-model="editGroupForm.name" label="اسم الفريق" class="sm:col-span-2" />
-        <BaseInput v-model="editGroupForm.section" label="الشعبة" placeholder="مثال: شعبة 1" />
+        <BaseInput v-model="editGroupForm.section" label="الشعبة" placeholder="مثال: 100" />
         <BaseSelect v-model="editGroupForm.supervisor_id" label="المشرف" :options="supervisorOptions" />
         <BaseSelect v-model="editGroupForm.specialization_id" label="التخصص" :options="specializationSelectOptions" />
       </div>
@@ -268,11 +269,12 @@ import Pagination from '@/components/ui/Pagination.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useUsersStore } from '@/stores/users.store'
 import { exportStyledExcel, exportGroupsPdf } from '@/utils/exportReport'
-import { APP_NAME, ROLES } from '@/utils/constants'
+import { APP_NAME, PORTAL_ROLES } from '@/utils/constants'
 import { sendEmail } from '@/services/api'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
 import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
 import TeamMembersPanel from '@/components/shared/TeamMembersPanel.vue'
+import ProjectTypes from '@/components/shared/ProjectTypes.vue'
 import GroupsRegister from '@/views/super-admin/GroupsRegister.vue'
 import { useAuthStore } from '@/stores/auth.store'
 
@@ -288,7 +290,7 @@ const emptySupervisorForm = () => ({ name: '', employee_number: '', email: '', w
 export default {
   name: 'CommitteeTeamsPage',
 
-  components: { Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, FileDropzone, EmailComposeModal, TeamMembersPanel, GroupsRegister },
+  components: { Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, FileDropzone, EmailComposeModal, TeamMembersPanel, GroupsRegister, ProjectTypes },
 
   data() {
     return {
@@ -367,6 +369,8 @@ export default {
         supId: team.supervisor?.id ?? null,
         project: team.project?.name || '',
         projectStatus: team.project?.status || '',
+        projectId: team.project?.id ?? null,
+        types: team.project?.types || [],
         members: (team.members || []).map((m) => ({
           memberId: m.id,
           studentId: m.student?.id,
@@ -415,8 +419,9 @@ export default {
       })
     },
 
+    /** قوالب البوابة (هوية UCAS) للإدارة العامة ولجنة الإشراف */
     isSuperAdmin() {
-      return this.userRole === ROLES.SUPER_ADMIN
+      return PORTAL_ROLES.includes(this.userRole)
     },
 
     totalPages() {
@@ -742,14 +747,13 @@ export default {
       this.exportingExcel = true
       try {
         const rowGroups = this.groups.map((g) => g.members.map((m) => ({
-          num: g.id, section: g.section || '', spec: g.spec, name: m.name, uid: m.uid || '', sup: g.sup, whats: m.whats || '', mail: m.mail
+          num: g.section || '', spec: g.spec, name: m.name, uid: m.uid || '', sup: g.sup, whats: m.whats || '', mail: m.mail
         })))
         await exportStyledExcel({
           fileName: 'مجموعات-مشاريع-التخرج.xlsx',
           sheetTitle: 'المجموعات',
           columns: [
             { key: 'num', label: 'رقم المجموعة', width: 14 },
-            { key: 'section', label: 'الشعبة', width: 12 },
             { key: 'spec', label: 'التخصص', width: 18 },
             { key: 'name', label: 'اسم العضو', width: 22 },
             { key: 'uid', label: 'الرقم الجامعي', width: 16 },
@@ -758,7 +762,7 @@ export default {
             { key: 'mail', label: 'البريد', width: 28 }
           ],
           rowGroups,
-          mergeKeys: ['num', 'section', 'sup', 'spec']
+          mergeKeys: ['num', 'sup', 'spec']
         })
       } finally {
         this.exportingExcel = false
@@ -775,8 +779,7 @@ export default {
           sections: this.groups.map((g) => ({
             heading: `${g.name}`,
             meta: [
-              { label: 'رقم المجموعة', value: String(g.id) },
-              { label: 'الشعبة', value: g.section || '—' },
+              { label: 'رقم المجموعة', value: g.section || '—' },
               { label: 'التخصص', value: g.spec },
               { label: 'المشرف', value: g.sup },
               { label: 'عدد الأعضاء', value: String(g.members.length) }

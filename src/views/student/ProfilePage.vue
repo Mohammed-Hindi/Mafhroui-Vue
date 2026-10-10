@@ -62,6 +62,10 @@
                 <span class="text-caption text-text-400 shrink-0">اسم المشروع</span>
                 <span class="text-body-sm font-bold text-text-900 text-end">{{ myTeam.project.name || '—' }}</span>
               </div>
+              <div class="py-3 border-b border-border-soft">
+                <div class="text-caption text-text-400 mb-1.5">نوع المشروع</div>
+                <ProjectTypes :types="myTeam.project.types || []" :editable="false" />
+              </div>
               <div v-if="myTeam.project.description" class="py-3 border-b border-border-soft">
                 <div class="text-caption text-text-400 mb-1.5">وصف المشروع</div>
                 <p class="text-body-sm text-text-700 leading-relaxed">{{ myTeam.project.description }}</p>
@@ -121,6 +125,7 @@ import { mapState, mapActions } from 'pinia'
 import { User, Users, BarChart3, Kanban, ChevronLeft } from 'lucide-vue-next'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import ChangePasswordModal from '@/components/shared/ChangePasswordModal.vue'
+import ProjectTypes from '@/components/shared/ProjectTypes.vue'
 import { initials } from '@/utils/formatters'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
@@ -128,7 +133,7 @@ import { useAuthStore } from '@/stores/auth.store'
 export default {
   name: 'StudentProfilePage',
 
-  components: { User, Users, BarChart3, Kanban, ChevronLeft, EmptyState, ChangePasswordModal },
+  components: { User, Users, BarChart3, Kanban, ChevronLeft, EmptyState, ChangePasswordModal, ProjectTypes },
 
   data() {
     return { changePasswordOpen: false }

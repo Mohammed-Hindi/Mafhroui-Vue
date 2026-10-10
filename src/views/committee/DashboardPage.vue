@@ -115,7 +115,7 @@ import CountUp from '@/components/ui/CountUp.vue'
 import PortalDashboard from '@/views/super-admin/PortalDashboard.vue'
 import { mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
-import { ROLES } from '@/utils/constants'
+import { PORTAL_ROLES } from '@/utils/constants'
 import ChangePasswordModal from '@/components/shared/ChangePasswordModal.vue'
 import { useCommitteeStore } from '@/stores/committee.store'
 
@@ -141,8 +141,9 @@ export default {
 
   computed: {
     ...mapState(useAuthStore, ['userRole']),
+    /** قوالب البوابة (هوية UCAS) للإدارة العامة ولجنة الإشراف */
     isSuperAdmin() {
-      return this.userRole === ROLES.SUPER_ADMIN
+      return PORTAL_ROLES.includes(this.userRole)
     },
     circumference() {
       return 2 * Math.PI * 63

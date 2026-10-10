@@ -3,7 +3,7 @@ import api from '@/services/api'
 /** تسميات موحّدة لصفحات الإدارة العامة */
 export const DEGREES = { diploma: 'دبلوم', bachelor: 'بكالوريوس' }
 export const GENDERS = { male: 'طالب', female: 'طالبة' }
-export const REGIONS = { gaza: 'غزة', south: 'الجنوب' }
+export const REGIONS = { gaza: 'غزة', middle: 'وسط غزة', south: 'الجنوب' }
 export const PROJECT_STATUS = { proposed: 'مقترح', in_progress: 'قيد التنفيذ', completed: 'مكتمل' }
 export const TASK_STATUS = { todo: 'لم تبدأ', pending: 'لم تبدأ', in_progress: 'قيد التنفيذ', review: 'قيد المراجعة', done: 'مكتملة' }
 
@@ -27,7 +27,7 @@ export async function fetchGroups() {
       specId: team.specialization_id,
       degree: team.specialization?.degree || '',
       dept: team.specialization?.department?.name || '',
-      project: team.project ? { id: team.project.id, name: team.project.name, status: team.project.status, featured: !!team.project.is_featured } : null,
+      project: team.project ? { id: team.project.id, name: team.project.name, status: team.project.status, featured: !!team.project.is_featured, types: team.project.types || [] } : null,
       tasksTotal: progress?.total ?? 0,
       tasksDone: progress?.done ?? 0,
       percentage: Math.round(progress?.percentage ?? 0),

@@ -253,7 +253,7 @@ import DiscussionMembersPanel from '@/components/shared/DiscussionMembersPanel.v
 import DiscussionsTools from '@/views/super-admin/DiscussionsTools.vue'
 import DataTable from '@/components/ui/DataTable.vue'
 import { useAuthStore } from '@/stores/auth.store'
-import { ROLES } from '@/utils/constants'
+import { PORTAL_ROLES } from '@/utils/constants'
 
 const APPTS_PAGE_SIZE = 5
 
@@ -335,8 +335,9 @@ export default {
     ...mapState(useAuthStore, ['userRole']),
     ...mapState(useDiscussionsStore, ['discussions', 'discussionsLoading']),
 
+    /** قوالب البوابة (هوية UCAS) للإدارة العامة ولجنة الإشراف */
     isSuperAdmin() {
-      return this.userRole === ROLES.SUPER_ADMIN
+      return PORTAL_ROLES.includes(this.userRole)
     },
     ...mapState(useTeamsStore, ['teams', 'teamsForDisplay', 'departments', 'specializations']),
 

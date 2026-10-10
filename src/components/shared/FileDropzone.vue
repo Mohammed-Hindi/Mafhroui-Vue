@@ -1,111 +1,88 @@
 <template>
-  <div>
-    <label v-if="label" class="block mb-2 text-label font-semibold text-text-700">{{ label }}</label>
-
-    <div
-      :class="[
-        'flex flex-col items-center justify-center gap-2 px-6 py-8 rounded-md border-2 border-dashed text-center cursor-pointer transition-colors duration-fast',
-        isDragging ? 'border-primary-600 bg-primary-50' : 'border-border hover:border-primary-100 hover:bg-border-soft/50',
-        error && 'border-error'
-      ]"
-      role="button"
-      tabindex="0"
-      @click="$refs.fileInput.click()"
-      @keydown.enter="$refs.fileInput.click()"
-      @dragover.prevent="isDragging = true"
-      @dragleave.prevent="isDragging = false"
-      @drop.prevent="handleDrop"
+  <!-- رفع ملفات بالسحب والإفلات أو الاختيار — v-model = مصفوفة File، مع التحقق من النوع والحجم قبل القبول -->
+  <div class="fz">
+    <label
+      v-if="multiple || !modelValue.length"
+      :class="['fz-drop', over && 'is-over']"
+      @dragover.prevent="over = true" @dragleave="over = false" @drop.prevent="onDrop"
     >
-      <UploadCloud :size="28" class="text-text-400" />
-      <p class="text-body-sm text-text-700 font-medium">اسحبي الملف هنا أو اضغطي للاختيار</p>
-      <p class="text-label text-text-400">{{ hint }}</p>
+      <UploadCloud :size="28" :stroke-width="1.5" />
+      <b>اسحب الملفات وأفلتها هنا أو <u>تصفّح</u></b>
+      <span>PDF، Word، PowerPoint، Excel، صور، ZIP أو RAR — حتى {{ maxMb }}MB للملف<template v-if="multiple"> · بحد أقصى {{ max }} ملفات</template></span>
+      <input type="file" :accept="accept" :multiple="multiple" hidden @change="onPick">
+    </label>
 
-      <input
-        ref="fileInput"
-        type="file"
-        class="hidden"
-        :accept="accept"
-        :multiple="multiple"
-        @change="handleSelect"
-      >
-    </div>
-
-    <ul v-if="files.length" class="mt-3 space-y-2">
-      <li
-        v-for="(file, index) in files"
-        :key="index"
-        class="flex items-center gap-3 px-3 py-2 rounded-sm border border-border bg-surface"
-      >
-        <FileText :size="18" class="text-primary-600 shrink-0" />
-        <span class="flex-1 min-w-0 text-body-sm text-text-700 truncate">{{ file.name }}</span>
-        <span class="text-label text-text-400 shrink-0">{{ formatFileSize(file.size) }}</span>
-        <button type="button" class="text-text-400 hover:text-error transition-colors duration-fast" aria-label="إزالة الملف" @click="removeFile(index)">
-          <X :size="16" />
-        </button>
+    <ul v-if="modelValue.length" class="fz-list">
+      <li v-for="(f, i) in modelValue" :key="f.name + f.size">
+        <span :class="['fz-ext', `is-${kind(f.name)}`]">{{ ext(f.name) }}</span>
+        <span class="fz-meta"><b :title="f.name">{{ f.name }}</b><small>{{ formatFileSize(f.size) }}</small></span>
+        <button type="button" class="as-file-x" :aria-label="`إزالة ${f.name}`" @click="remove(i)"><X :size="16" /></button>
       </li>
     </ul>
 
-    <p v-if="error" class="mt-1.5 text-label text-error">{{ error }}</p>
+    <p v-for="e in errors" :key="e" class="fz-error">{{ e }}</p>
   </div>
 </template>
 
 <script>
-import { UploadCloud, FileText, X } from 'lucide-vue-next'
+import { UploadCloud, X } from 'lucide-vue-next'
 import { formatFileSize } from '@/utils/formatters'
+
+// نفس قائمة الخادم (AllowedDocumentTypes::MIMES)
+const EXTS = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'zip', 'rar', 'png', 'jpg', 'jpeg']
+const KINDS = { pdf: 'pdf', doc: 'doc', docx: 'doc', ppt: 'ppt', pptx: 'ppt', xls: 'xls', xlsx: 'xls', png: 'img', jpg: 'img', jpeg: 'img' }
 
 export default {
   name: 'FileDropzone',
 
-  components: { UploadCloud, FileText, X },
+  components: { UploadCloud, X },
 
   props: {
-    label: { type: String, default: '' },
-    accept: { type: String, default: '' },
+    modelValue: { type: Array, default: () => [] },
     multiple: { type: Boolean, default: false },
-    maxSizeMb: { type: Number, default: 10 },
-    hint: { type: String, default: 'PDF, DOCX — بحد أقصى 10 ميجابايت' },
-    error: { type: String, default: '' }
+    max: { type: Number, default: 5 },
+    maxMb: { type: Number, default: 10 }
   },
 
-  emits: ['change'],
+  emits: ['update:modelValue'],
 
   data() {
-    return { isDragging: false, files: [] }
+    return { over: false, errors: [], accept: EXTS.map((e) => `.${e}`).join(',') }
   },
 
   methods: {
     formatFileSize,
-
-    handleSelect(event) {
-      this.addFiles(Array.from(event.target.files || []))
+    ext: (name) => name.split('.').pop().toLowerCase(),
+    kind(name) {
+      return KINDS[this.ext(name)] || 'zip'
     },
 
-    handleDrop(event) {
-      this.isDragging = false
-      this.addFiles(Array.from(event.dataTransfer.files || []))
+    onPick(e) {
+      this.add([...e.target.files])
+      e.target.value = ''
     },
 
-    addFiles(incoming) {
-      const maxBytes = this.maxSizeMb * 1024 * 1024
-      const valid = incoming.filter((file) => {
-        if (file.size > maxBytes) {
-          this.$toast?.error(`حجم الملف ${file.name} يتجاوز ${this.maxSizeMb} ميجابايت`)
-          return false
-        }
-        return true
+    onDrop(e) {
+      this.over = false
+      this.add([...e.dataTransfer.files])
+    },
+
+    add(files) {
+      this.errors = []
+      const ok = files.filter((f) => {
+        if (!EXTS.includes(this.ext(f.name))) return this.errors.push(`«${f.name}»: نوع غير مدعوم`) && false
+        if (f.size > this.maxMb * 1024 * 1024) return this.errors.push(`«${f.name}»: أكبر من ${this.maxMb}MB`) && false
+        return !this.modelValue.some((x) => x.name === f.name && x.size === f.size)
       })
-      this.files = this.multiple ? [...this.files, ...valid] : valid.slice(0, 1)
-      this.$emit('change', this.multiple ? this.files : this.files[0] || null)
+      if (!this.multiple) return ok.length && this.$emit('update:modelValue', [ok[0]])
+      const room = this.max - this.modelValue.length
+      if (ok.length > room) this.errors.push(`الحد الأقصى ${this.max} ملفات`)
+      this.$emit('update:modelValue', [...this.modelValue, ...ok.slice(0, Math.max(room, 0))])
     },
 
-    removeFile(index) {
-      this.files.splice(index, 1)
-      this.$emit('change', this.multiple ? this.files : null)
-    },
-
-    reset() {
-      this.files = []
-      if (this.$refs.fileInput) this.$refs.fileInput.value = ''
+    remove(i) {
+      this.errors = []
+      this.$emit('update:modelValue', this.modelValue.filter((_, k) => k !== i))
     }
   }
 }

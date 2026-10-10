@@ -11,7 +11,7 @@
 <script>
 import { mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
-import { ROLES } from '@/utils/constants'
+import { PORTAL_ROLES } from '@/utils/constants'
 
 export default {
   name: 'PortalPageHead',
@@ -27,7 +27,7 @@ export default {
   computed: {
     ...mapState(useAuthStore, ['userRole']),
     isSuperAdmin() {
-      return this.userRole === ROLES.SUPER_ADMIN
+      return PORTAL_ROLES.includes(this.userRole)
     }
   }
 }
