@@ -28,6 +28,7 @@ export async function loadGroups() {
     supName: g.sup.name,
     sup: g.sup,
     project: g.project?.name || 'لم يُسجَّل مشروع',
+    description: g.project?.description || '',
     projectId: g.project?.id ?? null,
     projectStatus: g.project?.status || '',
     // نوع المشروع (projects.types) — قد يكون أكثر من نوع

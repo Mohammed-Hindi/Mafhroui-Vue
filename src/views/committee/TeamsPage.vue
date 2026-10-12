@@ -35,9 +35,10 @@
       <BaseSelect v-model="specFilter" class="min-w-[170px]" placeholder="جميع التخصصات" include-placeholder-option :options="specializationOptions" />
     </div>
 
-    <!-- الإدارة العامة: سجل مجموعات ببيانات تجريبية (placeholder) — اللجنة تبقى على البطاقات -->
+    <!-- سجل المجموعات للإدارة العامة ولجنة الإشراف (البوابة) -->
     <GroupsRegister v-if="isSuperAdmin">
-      <template #actions>
+      <!-- أدوات الإدارة للإدارة العامة فقط؛ لجنة الإشراف ترى المجموعات (مجموعات تخصصها من الخادم) -->
+      <template v-if="userRole === 'super_admin'" #actions>
         <button type="button" class="pbtn is-green" @click="openAddStudent"><component :is="UserPlus" :size="17" /> إضافة طالب</button>
         <button type="button" class="pbtn is-cyan" @click="openAddSupervisor"><component :is="UserPlus" :size="17" /> إضافة مشرف</button>
         <button type="button" class="pbtn is-outline" @click="openImport"><component :is="Upload" :size="17" /> استيراد من Excel</button>

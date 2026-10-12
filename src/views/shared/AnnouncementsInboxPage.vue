@@ -18,7 +18,7 @@
     </div>
 
     <LoadingSpinner v-if="loading" />
-    <EmptyState v-else-if="!shown.length" :title="tab === 'file' ? 'لا توجد ملفات' : 'لا توجد إعلانات'" description="ما يرسله لك المشرف أو الإدارة العامة يظهر هنا." />
+    <EmptyState v-else-if="!shown.length" :title="tab === 'file' ? 'لا توجد ملفات' : 'لا توجد إعلانات'" description="ما ترسله لك الإدارة العامة أو لجنة الإشراف أو مشرفك يظهر هنا." />
     <ul v-else class="flex flex-col gap-3">
       <li v-for="a in shown" :key="a.id" class="bg-surface rounded-lg border border-border shadow-card p-4 flex gap-3">
         <span :class="['grid place-items-center w-10 h-10 rounded-pill shrink-0', a.type === 'file' ? 'bg-success-bg text-success' : a.type === 'rating' ? 'bg-warning-bg text-warning' : 'bg-primary-50 text-primary-600']">

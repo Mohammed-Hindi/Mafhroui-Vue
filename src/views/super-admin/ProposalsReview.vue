@@ -28,22 +28,22 @@
         <input :value="f.search" type="search" placeholder="بحث بالمشروع أو الفريق أو الشعبة أو المشرف…" @input="onSearch($event.target.value)">
       </label>
       <label class="gr-pick">
-        <span>حدد الدرجة</span>
+        <span>الدرجة</span>
         <select :value="f.degree" class="gr-select" @change="setFilter('degree', $event.target.value)">
           <option value="">دبلوم وبكالوريوس</option>
           <option v-for="(l, k) in DEGREES" :key="k" :value="k">{{ l }}</option>
         </select>
       </label>
       <label class="gr-pick">
-        <span>حدد الفئة</span>
+        <span>الفئة</span>
         <select :value="f.gender" class="gr-select" @change="setFilter('gender', $event.target.value)">
           <option value="">طلاب وطالبات</option>
           <option value="male">طلاب</option>
           <option value="female">طالبات</option>
         </select>
       </label>
-      <label class="gr-pick">
-        <span>حدد المشرف</span>
+      <label v-if="!isSupervisor" class="gr-pick">
+        <span>المشرف</span>
         <select :value="f.supervisor_id" class="gr-select" @change="setFilter('supervisor_id', $event.target.value)">
           <option value="">كل المشرفين</option>
           <option v-for="s in supervisors" :key="s.id" :value="s.id">{{ s.name }}</option>
@@ -161,6 +161,19 @@
                   <div>
                     <b>{{ i === 0 ? 'أحدث تقرير' : `نسخة ${view.p.final_reports.length - i}` }}</b>
                     <span class="pt-muted">{{ day(r.created_at) }} · رفعه {{ r.uploaded_by || '—' }}</span>
+                    <!-- مسار الاعتماد: من اعتمد التقرير في المرة الأولى (المشرف) والثانية (لجنة الإشراف) — GET /projects/{id}/final-reports -->
+                    <span v-if="reportInfo(r)" class="pr-review">
+                      <span :class="['rv-pill', REVIEW[reportInfo(r).review_status || 'pending_supervisor']?.tone]">{{ REVIEW[reportInfo(r).review_status || 'pending_supervisor']?.label }}</span>
+                      <span v-if="reportInfo(r).supervisor_reviewer" class="pt-muted">اعتماد المشرف: {{ reportInfo(r).supervisor_reviewer.name }}</span>
+                      <span v-if="reportInfo(r).committee_reviewer" class="pt-muted">اعتماد اللجنة: {{ reportInfo(r).committee_reviewer.name }}</span>
+                      <span v-if="reportInfo(r).review_note" class="pt-muted">الملاحظة: {{ reportInfo(r).review_note }}</span>
+                    </span>
+                    <!-- المشرف: موافقته ترفع التقرير للجنة الإشراف (POST /final-reports/{id}/review) -->
+                    <span v-if="isSupervisor && i === 0 && reportInfo(r)?.review_status === 'pending_supervisor'" class="pr-review-act">
+                      <input v-model.trim="reportNote" type="text" class="ev-input" placeholder="سبب الرفض (مطلوب عند الرفض)">
+                      <button type="button" class="pbtn is-red is-sm" :disabled="reviewing || !reportNote" @click="reviewLatest(r, false)">رفض</button>
+                      <button type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click="reviewLatest(r, true)">موافقة ورفع للجنة</button>
+                    </span>
                   </div>
                   <button type="button" class="pbtn is-outline is-sm" @click="openFile(`/final-reports/${r.id}/download`)"><FileText :size="15" /> التقرير</button>
                   <a v-if="r.video_url" :href="r.video_url" target="_blank" rel="noopener" class="pbtn is-outline is-sm"><PlayCircle :size="15" /> فيديو العرض</a>
@@ -207,12 +220,16 @@
 </template>
 
 <script>
-import { Search, X, Check, Eye, FileText, PlayCircle, PencilLine, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { markRaw } from 'vue'
+import { Search, X, Check, Eye, FileText, PlayCircle, PencilLine, ChevronLeft, ChevronRight, Layers, Hourglass, CheckCircle2, XCircle } from 'lucide-vue-next'
 import SlideTable from '@/components/ui/SlideTable.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import api from '@/services/api'
 import { useTeamsStore } from '@/stores/teams.store'
 import { DEGREES } from '@/utils/progressData'
+import { REVIEW, reviewReport } from '@/utils/finalReport'
+import { mapState } from 'pinia'
+import { useAuthStore } from '@/stores/auth.store'
 
 const STATUS = {
   pending: { label: 'قيد المراجعة', pill: 'is-pending' },
@@ -241,17 +258,26 @@ export default {
       deciding: false,
       view: { tab: 'proposal', p: null, loading: false, history: [], raw: [] },
       draft: { projectNote: '' },
+      REVIEW,
+      reports: [],
+      reportNote: '',
+      reviewing: false,
       tabs: [
-        { value: '', label: 'الكل' },
-        { value: 'pending', label: 'بانتظار المراجعة' },
-        { value: 'changes', label: 'يحتاج تعديل' },
-        { value: 'approved', label: 'المعتمدة' },
-        { value: 'rejected', label: 'المرفوضة' }
+        { value: '', label: 'الكل', icon: markRaw(Layers) },
+        { value: 'pending', label: 'بانتظار المراجعة', icon: markRaw(Hourglass) },
+        { value: 'changes', label: 'يحتاج تعديل', icon: markRaw(PencilLine) },
+        { value: 'approved', label: 'المعتمدة', icon: markRaw(CheckCircle2) },
+        { value: 'rejected', label: 'المرفوضة', icon: markRaw(XCircle) }
       ]
     }
   },
 
   computed: {
+    ...mapState(useAuthStore, ['userRole']),
+    /** المشرف: نفس الصفحة بصلاحياته — مقترحات مجموعاته (الخادم يقيّدها) + موافقته على التقرير النهائي */
+    isSupervisor() {
+      return this.userRole === 'supervisor'
+    },
     /** موقع المقترح المفتوح ضمن القائمة الحالية (للتنقّل السابق/التالي) */
     viewIndex() {
       return this.view.p ? this.rows.findIndex((r) => r.id === this.view.p.id) : -1
@@ -335,8 +361,39 @@ export default {
       this.searchTimer = setTimeout(() => this.setFilter('search', value.trim()), 350)
     },
 
+    /** تفاصيل التقرير (الحالة والمعتمدون) من GET /projects/{id}/final-reports */
+    reportInfo(r) {
+      return this.reports.find((x) => x.id === r.id) || null
+    },
+
+    async loadReports(p) {
+      this.reports = []
+      if (!p.project_id || !p.final_reports?.length) return
+      try {
+        const { data } = await api.get(`/projects/${p.project_id}/final-reports`)
+        if (this.view.p?.id === p.id) this.reports = data.data || data
+      } catch {
+        // يبقى العرض المختصر
+      }
+    },
+
+    async reviewLatest(r, approve) {
+      this.reviewing = true
+      try {
+        await reviewReport(r.id, approve, approve ? null : this.reportNote)
+        this.reportNote = ''
+        this.$toast?.success(approve ? 'تمت الموافقة ورُفع التقرير للجنة الإشراف' : 'تم رفض التقرير')
+        await this.loadReports(this.view.p)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر حفظ القرار')
+      } finally {
+        this.reviewing = false
+      }
+    },
+
     async open(p) {
       this.view = { tab: 'proposal', p, loading: true, history: [], raw: [] }
+      this.loadReports(p)
       this.draft = { projectNote: '' }
       // من القائمة: push (زر الرجوع في المتصفح يعيد للقائمة) · بين المقترحات: replace
       if (String(this.$route.query.proposal) !== String(p.id)) this.$router[this.$route.query.proposal ? 'replace' : 'push']({ query: { ...this.$route.query, proposal: p.id } })

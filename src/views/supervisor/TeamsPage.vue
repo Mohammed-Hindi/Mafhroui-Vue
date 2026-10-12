@@ -38,18 +38,17 @@
           </button>
 
           <div class="w-10 h-10 rounded-md shrink-0 grid place-items-center font-cairo font-extrabold text-body-sm text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
-            {{ group.section || group.id }}
+            {{ group.id }}
           </div>
 
           <div class="flex-1 min-w-0 flex items-center gap-3 sm:gap-6 flex-wrap">
             <div>
               <div class="text-body-sm font-extrabold text-text-900">{{ group.name }}</div>
-              <div class="text-label text-text-400">رقم المجموعة {{ group.section || '—' }}</div>
+              <div class="text-label text-text-400">رقم المجموعة {{ group.id }}<template v-if="group.section"> — {{ group.section }}</template></div>
             </div>
             <BaseBadge variant="info">{{ group.spec }}</BaseBadge>
             <BaseBadge>{{ group.members.length }} {{ group.members.length === 1 ? 'طالب' : 'طلاب' }}</BaseBadge>
             <BaseBadge v-if="group.projectName" variant="info">{{ group.projectName }}</BaseBadge>
-            <ProjectTypes v-if="group.projectId" :project-id="group.projectId" :types="group.types" @saved="setProjectTypes(group.id, $event)" />
           </div>
 
           <div class="flex gap-1.5 shrink-0">
@@ -67,6 +66,7 @@
                 <span class="text-start text-label font-extrabold text-text-700">الرقم الجامعي</span>
                 <span class="text-start text-label font-extrabold text-text-700">الواتس</span>
                 <span class="text-start text-label font-extrabold text-text-700">البريد</span>
+                <span class="text-center text-label font-extrabold text-text-700">قائد الفريق</span>
                 <span class="text-center text-label font-extrabold text-text-700">تواصل</span>
               </div>
               <div class="divide-y divide-border-soft">
@@ -75,6 +75,17 @@
                   <span class="mono truncate">{{ member.uid }}</span>
                   <span class="mono truncate">{{ member.whats || '—' }}</span>
                   <span class="mono truncate" :title="member.mail">{{ member.mail || '—' }}</span>
+                  <span class="text-center">
+                    <button
+                      type="button"
+                      class="grid place-items-center w-8 h-8 rounded-pill transition-colors duration-fast"
+                      :class="member.leader ? 'bg-warning-bg text-warning-text' : 'border border-border text-text-400 hover:bg-warning-bg hover:text-warning-text'"
+                      :title="member.leader ? 'قائد الفريق الحالي' : 'تعيين قائدًا للفريق'"
+                      @click="requestLeaderChange(group, member)"
+                    >
+                      <Crown :size="14" :fill="member.leader ? 'currentColor' : 'none'" />
+                    </button>
+                  </span>
                   <span class="flex items-center justify-center gap-2">
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(member)"><Pencil :size="14" /></button>
                     <button v-if="member.whats" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member)"><MessageCircle :size="14" /></button>
@@ -91,6 +102,7 @@
             <div v-for="(member, idx) in group.members" :key="idx" class="p-4 space-y-2">
               <div class="flex items-center justify-between gap-3">
                 <span class="font-bold text-text-900">{{ member.name }}</span>
+                <Crown v-if="member.leader" :size="14" class="text-warning-text" fill="currentColor" />
               </div>
 
               <button
@@ -112,6 +124,15 @@
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(member)"><Pencil :size="14" /></button>
                     <button v-if="member.whats" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member)"><MessageCircle :size="14" /></button>
                     <button v-if="member.mail" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member)"><Mail :size="14" /></button>
+                    <button
+                      type="button"
+                      class="grid place-items-center w-8 h-8 rounded-pill transition-colors duration-fast"
+                      :class="member.leader ? 'bg-warning-bg text-warning-text' : 'border border-border text-text-400'"
+                      :title="member.leader ? 'قائد الفريق الحالي' : 'تعيين قائدًا للفريق'"
+                      @click="requestLeaderChange(group, member)"
+                    >
+                      <Crown :size="14" :fill="member.leader ? 'currentColor' : 'none'" />
+                    </button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تقييد على المهام" @click="openRestrict(member)"><Lock :size="14" /></button>
                   </div>
                 </div>
@@ -143,7 +164,7 @@
       </template>
     </BaseModal>
 
-    <!-- تقييد الطالب على وحدة المهام -->
+    <!-- تقييد قائد الفريق على وحدة المهام -->
     <BaseModal v-model="restrictModalOpen" title="تقييد الوصول للمهام" :description="restrictTarget ? `صلاحية ${restrictTarget.name} على وحدة المهام` : ''" size="sm">
       <div class="flex flex-col gap-4">
         <BaseSelect
@@ -159,6 +180,15 @@
       <template #footer>
         <BaseButton variant="ghost" :disabled="restrictSaving" @click="restrictModalOpen = false">إلغاء</BaseButton>
         <BaseButton :icon="Check" :loading="restrictSaving" @click="saveRestrict">حفظ</BaseButton>
+      </template>
+    </BaseModal>
+
+    <!-- تعيين قائد الفريق -->
+    <BaseModal v-model="leaderModal" title="تعيين قائد الفريق" :description="leaderTarget ? `سيصبح ‏${leaderTarget.member.name} قائدًا لـ${leaderTarget.group.name}` : ''" size="sm">
+      <p class="text-body-sm text-text-600">سيفقد القائد الحالي صلاحية القيادة. هل تريدين المتابعة؟</p>
+      <template #footer>
+        <BaseButton variant="ghost" @click="leaderModal = false">إلغاء</BaseButton>
+        <BaseButton :icon="Crown" :loading="submittingLeader" @click="confirmLeaderChange">تأكيد</BaseButton>
       </template>
     </BaseModal>
 
@@ -197,12 +227,11 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Lock, Archive, RotateCcw } from 'lucide-vue-next'
+import { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Crown, Lock, Archive, RotateCcw } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
-import ProjectTypes from '@/components/shared/ProjectTypes.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
@@ -211,7 +240,6 @@ import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUsersStore } from '@/stores/users.store'
 import { sendEmail } from '@/services/api'
-import { APP_NAME } from '@/utils/constants'
 
 const GROUPS_PAGE_SIZE = 5
 
@@ -228,7 +256,7 @@ function digitsOnly(value) {
 export default {
   name: 'SupervisorTeamsPage',
 
-  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Lock, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, ProjectTypes },
+  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, Lock, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination },
 
   data() {
     return {
@@ -261,6 +289,9 @@ export default {
       trashedModal: false,
       restoringId: null,
 
+      leaderModal: false,
+      leaderTarget: null,
+      submittingLeader: false,
 
       editMemberModal: false,
       editMemberTargetId: null,
@@ -284,7 +315,7 @@ export default {
     },
 
     memberGridCols() {
-      return { gridTemplateColumns: '24% 17% 17% 26% 16%' }
+      return { gridTemplateColumns: '22% 16% 16% 22% 12% 12%' }
     },
 
     groups() {
@@ -324,7 +355,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'updateTeam', 'deleteTeam', 'fetchTrashedTeams', 'restoreTeam', 'setProjectTypes']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'updateTeam', 'deleteTeam', 'fetchTrashedTeams', 'restoreTeam', 'updateTeamLeader']),
     ...mapActions(useUsersStore, ['fetchRestrictions', 'setRestriction', 'removeRestriction', 'updateUser', 'setUserPassword']),
 
     isGroupOpen(id) {
@@ -411,6 +442,25 @@ export default {
         this.$toast?.error(err.normalized?.message || 'تعذّر استرجاع الفريق')
       } finally {
         this.restoringId = null
+      }
+    },
+
+    requestLeaderChange(group, member) {
+      if (member.leader) return
+      this.leaderTarget = { group, member }
+      this.leaderModal = true
+    },
+    async confirmLeaderChange() {
+      this.submittingLeader = true
+      try {
+        await this.updateTeamLeader(this.leaderTarget.group.id, this.leaderTarget.member.id)
+        this.leaderModal = false
+        this.$toast?.success('تم تعيين قائد الفريق')
+        await this.fetchTeams()
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تعيين القائد')
+      } finally {
+        this.submittingLeader = false
       }
     },
 

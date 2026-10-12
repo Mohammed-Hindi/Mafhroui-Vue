@@ -106,7 +106,7 @@
         <div class="gr-filters" aria-label="تصفية المشاريع">
           <label class="gr-search"><Search :size="16" /><input v-model.trim="q" type="search" placeholder="بحث بالمشروع أو الشعبة أو المشرف أو الطالب…"></label>
           <label class="gr-pick">
-            <span>حدد التخصص</span>
+            <span>التخصص</span>
             <select v-model="f.spec" class="gr-select">
               <option value="">كل التخصصات</option>
               <option v-for="sp in specs" :key="sp" :value="sp">{{ sp }} ({{ inView.filter((x) => x.spec === sp).length }})</option>

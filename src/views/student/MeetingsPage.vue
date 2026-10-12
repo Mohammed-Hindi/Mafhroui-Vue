@@ -1,53 +1,46 @@
 <template>
-  <div>
-    <EmptyState v-if="!myTeam" title="لسا ما إلك فريق" />
-    <template v-else>
-      <section class="mb-10">
-        <h3 class="font-cairo font-bold text-h4 text-text-900 mb-4 flex items-center gap-2.5">
-          الاجتماعات القادمة
-          <span class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600"><Clock :size="16" /></span>
-        </h3>
-        <EmptyState v-if="!upcoming.length" title="لا توجد اجتماعات قادمة حاليًا" />
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <MeetingCard v-for="meeting in upcomingPage" :key="meeting.id" :meeting="meeting" />
-        </div>
-        <Pagination v-if="upcoming.length" class="mt-4" :current-page="upcomingPage_" :last-page="upcomingLastPage" :total="upcoming.length" @change="upcomingPage_ = $event" />
-      </section>
+  <!-- الاجتماعات للطالب بهوية البوابة: رأس صفحة + بطاقتان (القادمة / المنتهية) بعنوان ≡ — بيانات تجريبية حين لا توجد اجتماعات -->
+  <div class="dash hd-page">
+    <header class="dash-head"><h2 class="dash-title">الاجتماعات</h2></header>
 
-      <section>
-        <h3 class="font-cairo font-bold text-h4 text-text-900 mb-4 flex items-center gap-2.5">
-          الاجتماعات المنتهية
-          <span class="grid place-items-center w-8 h-8 rounded-pill bg-success-bg text-success"><CheckCircle2 :size="16" /></span>
-        </h3>
-        <EmptyState v-if="!completed.length" title="لا توجد اجتماعات منتهية بعد" />
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <MeetingCard v-for="meeting in completedPage" :key="meeting.id" :meeting="meeting" done />
-        </div>
-        <Pagination v-if="completed.length" class="mt-4" :current-page="completedPage_" :last-page="completedLastPage" :total="completed.length" @change="completedPage_ = $event" />
-      </section>
-    </template>
+    <section class="dash-card">
+      <div class="dash-card-head"><h3 class="portal-title">الاجتماعات القادمة</h3><span class="hd-card-sub">{{ upcoming.length }}</span></div>
+      <p v-if="!upcoming.length" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لا توجد اجتماعات قادمة حاليًا</p>
+      <div v-else class="st-meetings">
+        <MeetingCard v-for="meeting in upcomingPage" :key="meeting.id" :meeting="meeting" />
+      </div>
+      <Pagination v-if="upcoming.length > PAGE_SIZE" class="mt-4" :current-page="upcomingPage_" :last-page="upcomingLastPage" :total="upcoming.length" @change="upcomingPage_ = $event" />
+    </section>
+
+    <section class="dash-card">
+      <div class="dash-card-head"><h3 class="portal-title">الاجتماعات المنتهية</h3><span class="hd-card-sub">{{ completed.length }}</span></div>
+      <p v-if="!completed.length" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لا توجد اجتماعات منتهية بعد</p>
+      <div v-else class="st-meetings">
+        <MeetingCard v-for="meeting in completedPage" :key="meeting.id" :meeting="meeting" done />
+      </div>
+      <Pagination v-if="completed.length > PAGE_SIZE" class="mt-4" :current-page="completedPage_" :last-page="completedLastPage" :total="completed.length" @change="completedPage_ = $event" />
+    </section>
   </div>
 </template>
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Clock, CheckCircle2 } from 'lucide-vue-next'
 import Pagination from '@/components/ui/Pagination.vue'
-import EmptyState from '@/components/ui/EmptyState.vue'
+import { placeholderMeetings } from '@/utils/studentPlaceholders'
 import MeetingCard from '@/components/shared/MeetingCard.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
 
-const PAGE_SIZE = 2
+const PAGE_SIZE = 4
 
 export default {
   name: 'StudentMeetingsPage',
 
-  components: { Pagination, EmptyState, MeetingCard },
+  components: { Pagination, MeetingCard },
 
   data() {
     return {
-      Clock, CheckCircle2,
+      PAGE_SIZE,
       upcomingPage_: 1,
       completedPage_: 1
     }
@@ -62,7 +55,9 @@ export default {
     },
 
     mappedMeetings() {
-      return this.meetings.map((m) => ({
+      // بلا فريق أو بلا اجتماعات: اجتماعات تجريبية (placeholder)
+      const list = this.myTeam && this.meetings.length ? this.meetings : placeholderMeetings()
+      return list.map((m) => ({
         id: m.id,
         title: m.title,
         num: this.myTeam?.id,

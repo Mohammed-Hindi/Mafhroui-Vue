@@ -1,7 +1,7 @@
 <template>
-  <div class="bg-surface rounded-lg border border-border shadow-card flex flex-col h-[calc(100vh-160px)] min-h-[480px] overflow-hidden">
+  <div class="ac-wrap bg-surface rounded-lg border border-border shadow-card flex flex-col h-[calc(100vh-160px)] min-h-[480px] overflow-hidden">
     <header class="flex items-center gap-3 px-5 py-4 border-b border-border-soft shrink-0">
-      <span class="grid place-items-center w-9 h-9 rounded-md bg-gradient-to-bl from-primary-600 to-accent-500 text-white shrink-0">
+      <span class="ac-head-icon grid place-items-center w-9 h-9 rounded-md bg-gradient-to-bl from-primary-600 to-accent-500 text-white shrink-0">
         <Bot :size="18" />
       </span>
       <h3 class="portal-title font-cairo font-bold text-h4 text-text-900">{{ title }}</h3>
@@ -9,7 +9,7 @@
 
     <div ref="body" class="flex-1 overflow-y-auto scrollbar-thin px-5 py-6 flex flex-col gap-4">
       <div v-if="!messages.length" class="m-auto text-center max-w-sm">
-        <span class="grid place-items-center w-14 h-14 rounded-md bg-primary-50 text-primary-600 mx-auto mb-4">
+        <span class="ac-empty-icon grid place-items-center w-14 h-14 rounded-md bg-primary-50 text-primary-600 mx-auto mb-4">
           <Sparkles :size="24" />
         </span>
         <p class="text-body-sm text-text-600 mb-5">{{ emptyHint }}</p>
@@ -18,7 +18,7 @@
             v-for="suggestion in suggestions"
             :key="suggestion"
             type="button"
-            class="text-caption font-semibold text-text-700 bg-bg border border-border px-4 py-2 rounded-pill hover:bg-primary-50 hover:border-primary-200 hover:text-primary-700 transition-colors duration-fast"
+            class="ac-chip text-caption font-semibold text-text-700 bg-bg border border-border px-4 py-2 rounded-pill hover:bg-primary-50 hover:border-primary-200 hover:text-primary-700 transition-colors duration-fast"
             @click="sendSuggested(suggestion)"
           >
             {{ suggestion }}
@@ -30,10 +30,10 @@
         v-for="message in messages"
         :key="message.id"
         :class="[
-          'max-w-[75%] px-4 py-3 rounded-lg text-body-sm leading-relaxed',
+          'ac-msg max-w-[75%] px-4 py-3 rounded-lg text-body-sm leading-relaxed',
           message.who === 'user'
-            ? 'self-end bg-gradient-to-bl from-primary-600 to-primary-700 text-white rounded-bl-sm'
-            : 'self-start bg-bg border border-border-soft text-text-900 rounded-br-sm'
+            ? 'is-user self-end bg-gradient-to-bl from-primary-600 to-primary-700 text-white rounded-bl-sm'
+            : 'is-ai self-start bg-bg border border-border-soft text-text-900 rounded-br-sm'
         ]"
       >
         {{ message.text }}
@@ -49,11 +49,11 @@
         v-model.trim="draft"
         type="text"
         :placeholder="placeholder"
-        class="flex-1 h-11 px-4 rounded-md border border-border bg-bg text-body-sm text-text-900 focus:border-primary-600 focus:bg-surface transition-colors duration-fast outline-none"
+        class="ac-input flex-1 h-11 px-4 rounded-md border border-border bg-bg text-body-sm text-text-900 focus:border-primary-600 focus:bg-surface transition-colors duration-fast outline-none"
       >
       <button
         type="submit"
-        class="grid place-items-center w-11 h-11 rounded-md bg-gradient-to-bl from-primary-600 to-primary-700 text-white shrink-0 disabled:opacity-50"
+        class="ac-send grid place-items-center w-11 h-11 rounded-md bg-gradient-to-bl from-primary-600 to-primary-700 text-white shrink-0 disabled:opacity-50"
         :disabled="!draft || typing"
         aria-label="إرسال"
       >

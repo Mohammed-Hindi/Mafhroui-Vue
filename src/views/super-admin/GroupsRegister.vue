@@ -34,14 +34,15 @@
         <input v-model.trim="q" type="search" placeholder="بحث برقم الشعبة، المشروع، المشرف أو الطالب…">
       </label>
       <label class="gr-pick">
-        <span>حدد التخصص</span>
+        <span>التخصص</span>
         <select v-model="f.spec" class="gr-select">
           <option value="">كل التخصصات</option>
           <option v-for="s in specOptions" :key="s" :value="s">{{ s }}</option>
         </select>
       </label>
-      <label class="gr-pick">
-        <span>حدد المشرف</span>
+      <!-- المشرف يرى مجموعاته فقط: فلتر المشرف بلا معنى له -->
+      <label v-if="userRole !== 'supervisor'" class="gr-pick">
+        <span>المشرف</span>
         <select v-model="f.sup" class="gr-select">
           <option value="">كل المشرفين</option>
           <option v-for="s in supList" :key="s.id" :value="s.id">{{ s.name }}</option>
@@ -108,6 +109,13 @@
                   <td colspan="7">
                     <div class="gr-detail">
                       <aside class="gr-side">
+                        <!-- المشرف: الشعبة ووصف المشروع (المطلوب في صفحة المجموعات) -->
+                        <template v-if="isSupervisor">
+                          <h4>الشعبة</h4>
+                          <p class="gr-sup">{{ g.section }}</p>
+                          <h4>وصف المشروع</h4>
+                          <p class="gr-desc">{{ g.description || 'لا يوجد وصف' }}</p>
+                        </template>
                         <h4>مهام المجموعة</h4>
                         <div class="gr-stats">
                           <div><b>{{ g.tasksTotal }}</b><span>موكلة</span></div>
@@ -116,9 +124,13 @@
                         </div>
   
                         <h4>نوع المشروع</h4>
-                        <!-- يحدده الطالب مع المقترح ويعدّله المشرف فقط -->
-                        <ProjectTypes class="gr-ptypes" :types="g.types" :editable="false" />
+                        <!-- يحدده الطالب مع المقترح ويعدّله المشرف فقط (الخادم يقصر تعديل النوع عليه) -->
+                        <ProjectTypes
+                          class="gr-ptypes" :project-id="g.projectId" :types="g.types" :editable="userRole === 'supervisor' && !!g.projectId"
+                          @saved="(types) => { g.types = types; g.type = types.join('، ') }"
+                        />
 
+                        <template v-if="!isSupervisor">
                         <h4>تفاعل المشرف مع المجموعة</h4>
                         <p class="gr-sup">
                           <button type="button" class="gr-link" title="عرض بروفايل المشرف" @click="openPerson('supervisor', g.supId, g.supName)">{{ g.supName }}</button>
@@ -142,12 +154,13 @@
                             <component :is="t.icon" :size="15" /> {{ t.label }}
                           </button>
                         </div>
+                        </template>
                       </aside>
   
                       <div class="gr-members">
                         <table>
                           <thead>
-                            <tr><th>الطالب</th><th>الرقم الجامعي</th><th>الجنس</th><th>مكان التواجد</th><th>المهام</th><th>التقدّم</th></tr>
+                            <tr><th>الطالب</th><th>الرقم الجامعي</th><th>الجنس</th><th>مكان التواجد</th><th v-if="isSupervisor">واتساب</th><th v-if="isSupervisor">البريد</th><th>المهام</th><th>التقدّم</th></tr>
                           </thead>
                           <tbody>
                             <tr v-for="m in g.shown" :key="m.id">
@@ -155,6 +168,8 @@
                               <td><span class="mono">{{ m.uni }}</span></td>
                               <td>{{ GENDERS[m.gender] }}</td>
                               <td>{{ REGIONS[m.region] }}</td>
+                              <td v-if="isSupervisor"><span class="mono">{{ m.whatsapp || '—' }}</span></td>
+                              <td v-if="isSupervisor"><span class="mono">{{ m.email || '—' }}</span></td>
                               <td><span class="mono">{{ m.done }}/{{ m.total }}</span></td>
                               <td>
                                 <span class="gr-progress is-sm"><span :class="levelClass(m.percentage)" :style="{ width: m.percentage + '%' }" /></span>
@@ -165,7 +180,7 @@
                         </table>
   
                         <!-- قائمة طويلة: تمرير داخل الصندوق نفسه برأس ثابت -->
-                        <div class="gr-items-scroll">
+                        <div v-if="!isSupervisor" class="gr-items-scroll">
                           <table class="gr-items">
                             <thead><tr><th>المهام والإعلانات والملفات</th><th>النوع</th><th>التاريخ</th><th>موعد التسليم</th></tr></thead>
                             <tbody>
@@ -204,9 +219,9 @@
     <!-- أزرار الملفات أسفل البطاقة: الطباعة خضراء والتصدير سماوي (نمط "طباعة الجدول" / "للإطلاع على الخطة") -->
     <footer class="gr-card-foot">
       <button type="button" class="pbtn is-green" :disabled="!rows.length || !!exporting" @click="exportSupReport">
-        <Printer :size="17" /> {{ exporting === 'sups' ? 'جارٍ التجهيز…' : 'طباعة تقرير المشرفين' }}
+        <Printer :size="17" /> {{ exporting === 'sups' ? 'جارٍ التجهيز…' : isSupervisor ? 'طباعة تقرير المجموعات' : 'طباعة تقرير المشرفين' }}
       </button>
-      <button type="button" class="pbtn is-cyan" :disabled="!rows.length || !!exporting" @click="exportExcel">
+      <button v-if="!isSupervisor" type="button" class="pbtn is-cyan" :disabled="!rows.length || !!exporting" @click="exportExcel">
         <FileSpreadsheet :size="17" /> {{ exporting === 'excel' ? 'جارٍ التجهيز…' : 'تصدير Excel' }}
       </button>
     </footer>
@@ -259,6 +274,8 @@ import { DEGREES, GENDERS, REGIONS, PROJECT_STATUS as STATUS, level } from '@/ut
 import { exportSupervisorsPdf } from '@/utils/ucasReports'
 import { exportStyledExcel } from '@/utils/exportReport'
 import api from '@/services/api'
+import { mapState } from 'pinia'
+import { useAuthStore } from '@/stores/auth.store'
 
 import { loadGroups, loadSupervisors, loadGroupTimeline, activeSemesterName } from '@/services/adminData'
 
@@ -294,6 +311,11 @@ export default {
   },
 
   computed: {
+    ...mapState(useAuthStore, ['userRole']),
+    /** المشرف: مجموعاته فقط (من الخادم) وبصلاحياته — بيانات الطلاب كاملة وأماكنهم، المشروع ووصفه ونوعه، الشعبة، طباعة تقرير */
+    isSupervisor() {
+      return this.userRole === 'supervisor'
+    },
     semesterName() {
       return activeSemesterName()
     },

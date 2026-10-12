@@ -17,8 +17,17 @@
 
       <section v-if="data.project" class="pf-block">
         <h4>المشروع</h4>
-        <p class="pf-strong">{{ data.project.name }}</p>
-        <p class="pf-muted">{{ data.project.specialization || '—' }} · {{ DEGREES[data.project.degree] || '—' }} · {{ STATUS[data.project.status] || '—' }}</p>
+        <!-- تعديل تفاصيل المشروع (المشرف): الاسم والوصف PATCH /projects/{id}، والنوع عبر ProjectTypes -->
+        <form v-if="editProject && project" class="pf-project-form" @submit.prevent="saveProject">
+          <label class="pfield"><span>اسم المشروع</span><input v-model.trim="project.name" type="text" maxlength="200" required></label>
+          <label class="pfield"><span>وصف المشروع</span><textarea v-model.trim="project.description" rows="3" required /></label>
+          <ProjectTypes :project-id="project.id" :types="project.types || []" />
+          <button type="submit" class="pbtn is-green is-sm" :disabled="saving || !project.name || !project.description">{{ saving ? 'جارٍ الحفظ…' : 'حفظ تفاصيل المشروع' }}</button>
+        </form>
+        <template v-else>
+          <p class="pf-strong">{{ data.project.name }}</p>
+          <p class="pf-muted">{{ data.project.specialization || '—' }} · {{ DEGREES[data.project.degree] || '—' }} · {{ STATUS[data.project.status] || '—' }}</p>
+        </template>
       </section>
 
       <section class="pf-block">
@@ -79,6 +88,7 @@
 <script>
 import BaseModal from '@/components/ui/BaseModal.vue'
 import api from '@/services/api'
+import ProjectTypes from '@/components/shared/ProjectTypes.vue'
 import { REGIONS } from '@/utils/progressData'
 
 const DEGREES = { diploma: 'دبلوم', bachelor: 'بكالوريوس' }
@@ -88,7 +98,7 @@ const STATUS = { proposed: 'مقترح', in_progress: 'قيد التنفيذ', c
 export default {
   name: 'ProfileModal',
 
-  components: { BaseModal },
+  components: { BaseModal, ProjectTypes },
 
   props: {
     modelValue: { type: Boolean, default: false },
@@ -96,13 +106,15 @@ export default {
     kind: { type: String, default: 'student' },
     personId: { type: [Number, String], default: null },
     /** الاسم المعروض في العنوان قبل وصول البيانات */
-    name: { type: String, default: '' }
+    name: { type: String, default: '' },
+    /** إتاحة تعديل تفاصيل مشروع الطالب (للمشرف) */
+    editProject: { type: Boolean, default: false }
   },
 
   emits: ['update:modelValue'],
 
   data() {
-    return { DEGREES, GENDERS, REGIONS, STATUS, data: null, loading: false }
+    return { DEGREES, GENDERS, REGIONS, STATUS, data: null, loading: false, project: null, saving: false }
   },
 
   computed: {
@@ -127,10 +139,34 @@ export default {
         const path = this.kind === 'student' ? 'students' : 'supervisors'
         const { data } = await api.get(`/${path}/${this.personId}/profile`)
         this.data = data
+        // تفاصيل المشروع الكاملة للتعديل (الوصف والنوع غير موجودة في بروفايل الطالب)
+        this.project = null
+        if (this.editProject && data.project) {
+          try {
+            const { data: p } = await api.get(`/projects/${data.project.id}`)
+            const proj = p.data || p
+            this.project = { id: proj.id, name: proj.name || '', description: proj.description || '', types: proj.types || [] }
+          } catch {
+            // بلا صلاحية تعديل: يبقى العرض فقط
+          }
+        }
       } catch {
         this.data = null
       } finally {
         this.loading = false
+      }
+    },
+
+    async saveProject() {
+      this.saving = true
+      try {
+        await api.patch(`/projects/${this.project.id}`, { name: this.project.name, description: this.project.description })
+        this.data.project.name = this.project.name
+        this.$toast?.success('تم حفظ تفاصيل المشروع')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر حفظ المشروع')
+      } finally {
+        this.saving = false
       }
     },
 

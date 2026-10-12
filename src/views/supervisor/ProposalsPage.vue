@@ -85,48 +85,7 @@
       </DataTable>
     </div>
 
-    <!-- التقارير النهائية: موافقة المشرف أولًا ثم اعتماد لجنة الإشراف لأرشفة المشروع -->
-    <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden mt-6">
-      <div class="flex flex-wrap items-center justify-between gap-4 p-5 pb-4">
-        <div>
-          <h3 class="font-cairo font-bold text-h4 text-text-900">التقارير النهائية لفرقي</h3>
-          <p class="text-caption text-text-600 mt-0.5">وافق على التقرير ليُرفع للجنة الإشراف لاعتماده وأرشفة المشروع</p>
-        </div>
-        <BaseBadge v-if="reportsAwaiting" variant="warning" dot>{{ reportsAwaiting }} بانتظار موافقتك</BaseBadge>
-      </div>
-
-      <DataTable :columns="reportColumns" :rows="finalReports" row-key="id" :primary-keys="['proj', 'state']" empty-title="لم يرفع أي فريق تقريره النهائي بعد">
-        <template #cell-proj="{ row }">
-          <div class="font-bold text-text-900">{{ row.proj }}</div>
-          <div class="text-label text-text-400 mt-0.5">{{ row.team }} · رُفع {{ row.date }}</div>
-        </template>
-        <template #cell-files="{ row }">
-          <div class="flex flex-wrap gap-2">
-            <button type="button" class="inline-flex items-center gap-2 text-caption font-semibold text-primary-700 bg-primary-50 px-3 py-1.5 rounded-sm hover:bg-primary-100 transition-colors duration-fast" @click="openProtectedFile(`/final-reports/${row.id}/download`, `تقرير-${row.proj}.pdf`)">
-              <FileText :size="14" /> التقرير
-            </button>
-            <a v-if="row.video" :href="row.video" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-caption font-semibold text-success bg-success-bg px-3 py-1.5 rounded-sm hover:brightness-95 transition-all duration-fast">
-              <PlayCircle :size="14" /> الفيديو
-            </a>
-          </div>
-        </template>
-        <template #cell-state="{ row }"><BaseBadge :variant="reportVariant(row.state)" dot>{{ REVIEW[row.state].label }}</BaseBadge></template>
-        <template #cell-actions="{ row }">
-          <div class="flex gap-2">
-            <button type="button" class="grid place-items-center w-9 h-9 rounded-pill bg-error-bg text-error hover:brightness-95 transition-all duration-fast disabled:opacity-40" :disabled="row.state !== 'pending_supervisor'" title="رفض" @click="openReject(row, 'report')"><X :size="15" /></button>
-            <button type="button" class="grid place-items-center w-9 h-9 rounded-pill bg-success-bg text-success hover:brightness-95 transition-all duration-fast disabled:opacity-40" :disabled="row.state !== 'pending_supervisor'" title="موافقة ورفعه للجنة" @click="approveReport(row)"><Check :size="15" /></button>
-          </div>
-        </template>
-        <template #row-extra="{ row }">
-          <div v-if="row.state === 'rejected' && row.note" class="flex items-start gap-2 p-3 rounded-sm bg-error-bg md:rounded-none md:px-5 md:py-3 md:border-t md:border-error-border/50">
-            <XCircle :size="14" class="text-error shrink-0 mt-0.5" />
-            <p class="text-caption text-error leading-relaxed"><span class="font-bold">سبب الرفض: </span>{{ row.note }}</p>
-          </div>
-        </template>
-      </DataTable>
-    </div>
-
-    <BaseModal v-model="rejectModal" title="سبب الرفض" :description="rejectTarget ? `سبب رفض ${rejectKind === 'report' ? 'التقرير النهائي' : 'مقترح'} ${rejectTarget.team}` : ''" size="sm">
+    <BaseModal v-model="rejectModal" title="سبب الرفض" :description="rejectTarget ? `سبب رفض مقترح ${rejectTarget.team}` : ''" size="sm">
       <div class="flex flex-col gap-2">
         <label class="text-label font-semibold text-text-600">سبب الرفض</label>
         <textarea v-model.trim="rejectReason" rows="4" placeholder="اكتبي سبب الرفض ليتم إرساله للفريق..." class="w-full rounded-sm border border-border bg-bg text-body text-text-900 px-3 py-2.5 focus:border-primary-600 transition-colors duration-fast resize-y" />
@@ -141,7 +100,7 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, X, Check, PlayCircle } from 'lucide-vue-next'
+import { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, X, Check } from 'lucide-vue-next'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -149,8 +108,6 @@ import DataTable from '@/components/ui/DataTable.vue'
 import CountUp from '@/components/ui/CountUp.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
-import { REVIEW, latestReport, reviewReport } from '@/utils/finalReport'
-import { formatDate } from '@/utils/formatters'
 
 const PAGE_SIZE = 5
 const STATUS_LABELS = { pending: 'قيد المراجعة', approved: 'معتمد', rejected: 'مرفوض' }
@@ -158,19 +115,11 @@ const STATUS_LABELS = { pending: 'قيد المراجعة', approved: 'معتم�
 export default {
   name: 'SupervisorProposalsPage',
 
-  components: { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, X, Check, PlayCircle, BaseBadge, BaseButton, BaseModal, DataTable, CountUp },
+  components: { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, X, Check, BaseBadge, BaseButton, BaseModal, DataTable, CountUp },
 
   data() {
     return {
       X,
-      REVIEW,
-      rejectKind: 'proposal',
-      reportColumns: [
-        { key: 'proj', label: 'المشروع والفريق' },
-        { key: 'files', label: 'الملفات' },
-        { key: 'state', label: 'مرحلة الاعتماد' },
-        { key: 'actions', label: 'الإجراءات' }
-      ],
       search: '',
       activeTab: 'all',
       page: 1,
@@ -213,20 +162,6 @@ export default {
             ext: p.pdf_path?.split('.').pop() || 'pdf'
           }
         })
-    },
-
-    /** آخر تقرير نهائي لكل فريق أشرف عليه */
-    finalReports() {
-      return this.teams
-        .filter((t) => t.supervisor?.id === this.user?.id && latestReport(t.project))
-        .map((t) => {
-          const r = latestReport(t.project)
-          return { id: r.id, proj: t.project.name || t.name, team: t.name, date: formatDate(r.created_at), video: r.video_url, state: r.review_status || 'pending_supervisor', note: r.review_note }
-        })
-    },
-
-    reportsAwaiting() {
-      return this.finalReports.filter((r) => r.state === 'pending_supervisor').length
     },
 
     stats() {
@@ -276,23 +211,7 @@ export default {
       }
     },
 
-    reportVariant(state) {
-      return { approved: 'success', rejected: 'error', pending_committee: 'info', pending_supervisor: 'warning' }[state] || 'neutral'
-    },
-
-    // POST /final-reports/{id}/review — موافقة المشرف ترفع التقرير للجنة الإشراف
-    async approveReport(row) {
-      try {
-        await reviewReport(row.id, true)
-        await this.fetchTeams()
-        this.$toast?.success(`وافقت على تقرير ${row.team} — أُرسل للجنة الإشراف للاعتماد`)
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّرت الموافقة')
-      }
-    },
-
-    openReject(row, kind = 'proposal') {
-      this.rejectKind = kind
+    openReject(row) {
       this.rejectTarget = row
       this.rejectReason = ''
       this.rejectModal = true
@@ -305,11 +224,10 @@ export default {
       }
       this.rejecting = true
       try {
-        if (this.rejectKind === 'report') await reviewReport(this.rejectTarget.id, false, this.rejectReason)
-        else await this.rejectProposal(this.rejectTarget.id, this.rejectReason)
+        await this.rejectProposal(this.rejectTarget.id, this.rejectReason)
         await this.fetchTeams()
         this.rejectModal = false
-        this.$toast?.success(`تم رفض ${this.rejectKind === 'report' ? 'تقرير' : 'مقترح'} ${this.rejectTarget.team} — السبب: ${this.rejectReason}`)
+        this.$toast?.success(`تم رفض مقترح ${this.rejectTarget.team} — السبب: ${this.rejectReason}`)
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر الرفض')
       } finally {

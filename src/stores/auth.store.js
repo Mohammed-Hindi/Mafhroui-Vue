@@ -15,7 +15,7 @@ export const useAuthStore = defineStore('auth', () => {
   const userEmail = computed(() => user.value?.email || '')
   // واجهة البوابة (هوية UCAS) للإدارة العامة ولجنة الإشراف، وبادئة مسارات صفحاتها الخاصة (الملف التعريفي، كلمة المرور)
   const usesPortal = computed(() => PORTAL_ROLES.includes(user.value?.role))
-  const portalPrefix = computed(() => (user.value?.role === 'super_admin' ? 'super-admin' : 'committee'))
+  const portalPrefix = computed(() => ({ super_admin: 'super-admin', committee: 'committee', supervisor: 'supervisor', student: 'student' })[user.value?.role] || 'committee')
   // الخادم يبني الرابط من APP_URL وقد يختلف عن عنوان الـ API — نربط مسار /storage بأصل الـ API
   const avatarSrc = computed(() => {
     const url = user.value?.avatar_url

@@ -30,7 +30,7 @@
         <transition name="portal-drop">
           <div v-if="menuOpen" class="portal-menu end-0 w-56" role="menu">
             <router-link :to="{ name: `${portalPrefix}-profile` }" class="portal-menu-item" role="menuitem">
-              <UserCircle :size="17" /> بياناتي
+              <UserCircle :size="17" /> الملف التعريفي
             </router-link>
             <router-link :to="{ name: `${portalPrefix}-change-password` }" class="portal-menu-item" role="menuitem">
               <Lock :size="17" /> تغيير كلمة المرور

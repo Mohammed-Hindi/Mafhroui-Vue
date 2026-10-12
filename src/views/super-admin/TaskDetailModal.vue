@@ -73,6 +73,10 @@
           <span>الحالة</span>
           <span :class="['tk-status', `is-${task.status}`]">{{ statuses.find((s) => s.value === task.status)?.label || task.status }}</span>
         </div>
+        <div v-if="task.status === 'done'" class="pfield">
+          <span>أنجزها</span>
+          <b>{{ completedBy(log) || '—' }}</b>
+        </div>
         <label class="pfield">
           <span>موعد التسليم</span>
           <input :value="task.due" type="date" @change="saveField({ due_date: $event.target.value || null })">
@@ -103,11 +107,10 @@
 import { FileText, Paperclip, Pencil, Trash2 } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import api from '@/services/api'
-import { TASK_STATUS } from '@/utils/progressData'
+import { completedBy, describeTaskEvent } from '@/utils/progressData'
 import { formatDate, formatDateTime, initials } from '@/utils/formatters'
 
 export const ACCEPT = '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.png,.jpg,.jpeg'
-const ACTIONS = { create: 'أنشأ المهمة', delete: 'حذف المهمة', restore: 'استرجع المهمة', force_delete: 'حذف المهمة نهائيًا', update: 'عدّل المهمة' }
 
 export default {
   name: 'TaskDetailModal',
@@ -160,10 +163,8 @@ export default {
 
     fileName: (path = '') => path.split('/').pop(),
 
-    describe(e) {
-      if (e.action === 'status_change') return `نقل المهمة من «${TASK_STATUS[e.meta?.from] || e.meta?.from}» إلى «${TASK_STATUS[e.meta?.to] || e.meta?.to}»`
-      return ACTIONS[e.action] || e.action
-    },
+    describe: describeTaskEvent,
+    completedBy,
 
     startEdit() {
       this.edit = { title: this.task.title, description: this.task.description || '' }

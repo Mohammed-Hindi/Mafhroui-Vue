@@ -1,9 +1,12 @@
 <template>
-  <AssistantChat
-    title="المساعد الآلي للطالب"
-    empty-hint="اسأل عن صياغة وصف المشروع، تجهيز التقرير النهائي، أو مهامك ضمن الفريق."
-    :suggestions="suggestions"
-  />
+  <div class="dash hd-page">
+    <header class="dash-head"><h2 class="dash-title">المساعد الآلي</h2></header>
+    <AssistantChat
+      title="المساعد الآلي للطالب"
+      empty-hint="اسأل عن صياغة وصف المشروع، تجهيز التقرير النهائي، أو مهامك ضمن الفريق."
+      :suggestions="suggestions"
+    />
+  </div>
 </template>
 
 <script>
