@@ -61,9 +61,8 @@
 
       <!-- فوتر بوابة الكلية (201014): شريط رمادي فاتح بسطر الحقوق فقط — فوتر صفحة الهبوط لا يدخل لوحات التحكم -->
       <footer v-if="isSuperAdmin" class="portal-footer">
-        <div class="px-4 lg:px-6 py-5">
+        <div class="px-4 lg:px-6 py-5 text-center">
           {{ year }} © جميع الحقوق محفوظة لـ <router-link :to="homeRoute">{{ appName }}</router-link> — الكلية الجامعية للعلوم التطبيقية
-          <span class="portal-footer-devs">مطورو النظام: انس محمد الشنطي، محمد الغول</span>
         </div>
       </footer>
     </div>
