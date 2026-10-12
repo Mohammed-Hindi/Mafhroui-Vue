@@ -57,7 +57,6 @@
             <div class="text-caption text-text-600">{{ d.section ? `الشعبة ${d.section}` : 'بيانات المجموعة' }} · {{ d.project }}</div>
             <div class="flex gap-4">
               <router-link :to="{ name: 'supervisor-evaluations', query: { team: d.teamId } }" class="text-caption font-bold text-primary-700 hover:underline">إدخال النتائج</router-link>
-              <router-link :to="{ name: 'supervisor-evaluation-sheet', params: { teamId: d.teamId } }" class="text-caption font-bold text-primary-700 hover:underline">معايير التقييم</router-link>
             </div>
           </div>
           <div class="flex flex-wrap gap-x-8 gap-y-2 px-5 py-3.5 bg-bg border-b border-border-soft text-caption">

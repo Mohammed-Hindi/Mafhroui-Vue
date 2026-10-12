@@ -13,7 +13,6 @@ import ProgressPage from '@/views/supervisor/ProgressPage.vue'
 import AssistantPage from '@/views/supervisor/AssistantPage.vue'
 import AssignmentsPage from '@/views/supervisor/AssignmentsPage.vue'
 import EvaluationsPage from '@/views/supervisor/EvaluationsPage.vue'
-import EvaluationSheet from '@/views/super-admin/EvaluationSheet.vue'
 import ReportsPage from '@/views/supervisor/ReportsPage.vue'
 
 /** مسارات لوحة المشرف */
@@ -34,6 +33,12 @@ export default [
         name: 'supervisor-profile',
         component: ProfilePage,
         meta: { title: 'الملف الشخصي' }
+      },
+      {
+        path: 'change-password',
+        name: 'supervisor-change-password',
+        component: () => import('@/views/super-admin/ChangePasswordPage.vue'),
+        meta: { title: 'تغيير كلمة المرور' }
       },
       {
         path: 'teams',
@@ -64,12 +69,6 @@ export default [
         name: 'supervisor-evaluations',
         component: EvaluationsPage,
         meta: { title: 'التقييمات' }
-      },
-      {
-        path: 'evaluations/:teamId(\\d+)',
-        name: 'supervisor-evaluation-sheet',
-        component: EvaluationSheet,
-        meta: { title: 'معايير تقييم المجموعة' }
       },
       {
         path: 'reports',
