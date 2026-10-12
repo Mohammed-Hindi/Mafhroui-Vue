@@ -3369,7 +3369,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .tp-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
 .tp-title { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: var(--color-text-900); }
 .tp-title svg { color: var(--portal-cyan); }
-.tp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; max-height: 300px; overflow-y: auto; }
+.tp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; max-height: 420px; overflow-y: auto; }
 .tp-card { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; background: var(--color-surface); border: 1px solid var(--color-border); border-inline-start: 3px solid var(--portal-cyan); border-radius: 4px; transition: border-color var(--ucas-color-speed) var(--ease-standard); }
 .tp-card:hover { border-color: var(--portal-cyan); }
 .tp-card.is-new { border-color: #10C469; border-inline-start-color: #10C469; }

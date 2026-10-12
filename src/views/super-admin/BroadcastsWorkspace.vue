@@ -111,11 +111,18 @@
         </li>
       </ol>
 
-      <!-- 1. التفاصيل -->
-      <section v-show="step === 0" class="tk-sec">
-        <header class="tk-sec-head"><h4>{{ steps[0] }}</h4></header>
+      <!-- 0. القوالب الدائمة (للإدارة العامة ولجنة الإشراف) — اختيار قالب يعبّئ التفاصيل وينتقل إليها -->
+      <section v-if="!isSupervisor" v-show="step === 0" class="tk-sec">
+        <header class="tk-sec-head"><h4>القوالب</h4></header>
         <div class="tk-sec-body">
-          <TemplatePicker v-if="!isSupervisor" :kind="type" :title="form.title" :body="form.body" @apply="(t) => Object.assign(form, { title: t.title || '', body: t.body || '' })" />
+          <TemplatePicker :kind="type" :title="form.title" :body="form.body" @apply="(t) => { Object.assign(form, { title: t.title || '', body: t.body || '' }); step = off }" />
+        </div>
+      </section>
+
+      <!-- 1. التفاصيل -->
+      <section v-show="step === off" class="tk-sec">
+        <header class="tk-sec-head"><h4>{{ steps[off] }}</h4></header>
+        <div class="tk-sec-body">
           <label class="pfield">
             <span>{{ isFile ? 'عنوان الملف / المرحلة' : 'العنوان' }} <b v-if="isFile" class="as-req">*</b></span>
             <input v-model.trim="form.title" type="text" maxlength="200" :placeholder="isFile ? 'مثال: نموذج التقرير النهائي' : 'مثال: تنبيه بخصوص موعد المناقشات'">
@@ -134,7 +141,7 @@
       </section>
 
       <!-- 2. المستلمون -->
-      <section v-show="step === 1" class="tk-sec">
+      <section v-show="step === off + 1" class="tk-sec">
         <header class="tk-sec-head">
           <h4>المستلمون</h4>
           <span class="dash-chip">{{ targets.length }} {{ targetNoun }}</span>
@@ -182,7 +189,7 @@
       </section>
 
       <!-- 3. المراجعة والإرسال -->
-      <section v-show="step === 2" class="tk-sec">
+      <section v-show="step === off + 2" class="tk-sec">
         <header class="tk-sec-head"><h4>المراجعة والإرسال</h4></header>
         <div class="tk-sec-body">
           <dl class="tk-review">
@@ -314,8 +321,12 @@ export default {
     staffList() {
       return this.audience === 'supervisors' ? this.supervisors : this.committee
     },
+    /** خطوة القوالب أولًا للإدارة العامة ولجنة الإشراف (المشرف بلا قوالب) */
+    off() {
+      return this.isSupervisor ? 0 : 1
+    },
     steps() {
-      return [this.isFile ? 'تفاصيل الملف' : 'تفاصيل الإعلان', 'المستلمون', 'المراجعة والإرسال']
+      return [...(this.off ? ['القوالب'] : []), this.isFile ? 'تفاصيل الملف' : 'تفاصيل الإعلان', 'المستلمون', 'المراجعة والإرسال']
     },
     /** قائمة اللجنة/المشرفين بعد البحث بالاسم أو البريد */
     staffVisible() {

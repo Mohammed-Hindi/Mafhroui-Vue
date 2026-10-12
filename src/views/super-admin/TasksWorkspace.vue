@@ -137,10 +137,17 @@
       </ol>
 
       <!-- 1. تفاصيل المهمة -->
-      <section v-show="step === 0" class="tk-sec">
+      <!-- 0. القوالب الدائمة (للإدارة العامة ولجنة الإشراف) — اختيار قالب يعبّئ التفاصيل وينتقل إليها -->
+      <section v-if="!isSupervisor" v-show="step === 0" class="tk-sec">
+        <header class="tk-sec-head"><h4>القوالب</h4></header>
+        <div class="tk-sec-body">
+          <TemplatePicker kind="task" :title="form.title" :body="form.description" @apply="(t) => { Object.assign(form, { title: t.title || '', description: t.body || '' }); step = off }" />
+        </div>
+      </section>
+
+      <section v-show="step === off" class="tk-sec">
         <header class="tk-sec-head"><h4>تفاصيل المهمة</h4></header>
         <div class="tk-sec-body">
-          <TemplatePicker v-if="!isSupervisor" kind="task" :title="form.title" :body="form.description" @apply="(t) => Object.assign(form, { title: t.title || '', description: t.body || '' })" />
           <label class="pfield">
             <span>عنوان المهمة <b class="as-req">*</b></span>
             <input v-model.trim="form.title" type="text" maxlength="200" placeholder="مثال: تسليم الفصل الثاني من التقرير">
@@ -165,7 +172,7 @@
       </section>
 
       <!-- 2. المستلمون -->
-      <section v-show="step === 1" class="tk-sec">
+      <section v-show="step === off + 1" class="tk-sec">
         <header class="tk-sec-head">
           <h4>المستلمون</h4>
           <span class="dash-chip">{{ targets.length }} {{ targetNoun }}</span>
@@ -230,7 +237,7 @@
       </section>
 
       <!-- 3. المراجعة والإرسال — ponytail: ملخص مبدئي (placeholder)، يُوسَّع لمعاينة كاملة عند الحاجة -->
-      <section v-show="step === 2" class="tk-sec">
+      <section v-show="step === off + 2" class="tk-sec">
         <header class="tk-sec-head"><h4>المراجعة والإرسال</h4></header>
         <div class="tk-sec-body">
           <dl class="tk-review">
@@ -325,7 +332,6 @@ export default {
       supervisors: [],
       detail: null,
       composer: false,
-      steps: ['تفاصيل المهمة', 'المستلمون', 'المراجعة والإرسال'],
       step: 0,
       audience: 'groups',
       selected: [],
@@ -347,6 +353,13 @@ export default {
     },
     isAdmin() {
       return this.userRole === 'super_admin'
+    },
+    /** خطوة القوالب أولًا للإدارة العامة ولجنة الإشراف (المشرف بلا قوالب) */
+    off() {
+      return this.isSupervisor ? 0 : 1
+    },
+    steps() {
+      return [...(this.off ? ['القوالب'] : []), 'تفاصيل المهمة', 'المستلمون', 'المراجعة والإرسال']
     },
     /** عرض مهام لجنة الإشراف (منفصلة)، وإلا مهام المجموعات ومعها مهام المشرفين أنفسهم */
     isStaff() {
