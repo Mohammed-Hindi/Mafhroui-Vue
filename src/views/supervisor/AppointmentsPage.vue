@@ -53,6 +53,13 @@
         </div>
 
         <div v-show="isDiscussionOpen(d.id)" class="border-t border-border-soft">
+          <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-3 bg-surface border-b border-border-soft">
+            <div class="text-caption text-text-600">{{ d.section ? `الشعبة ${d.section}` : 'بيانات المجموعة' }} · {{ d.project }}</div>
+            <div class="flex gap-4">
+              <router-link :to="{ name: 'supervisor-evaluations', query: { team: d.teamId } }" class="text-caption font-bold text-primary-700 hover:underline">إدخال النتائج</router-link>
+              <router-link :to="{ name: 'supervisor-evaluation-sheet', params: { teamId: d.teamId } }" class="text-caption font-bold text-primary-700 hover:underline">معايير التقييم</router-link>
+            </div>
+          </div>
           <div class="flex flex-wrap gap-x-8 gap-y-2 px-5 py-3.5 bg-bg border-b border-border-soft text-caption">
             <div class="flex items-center gap-2 text-text-700"><MapPin :size="14" class="text-text-400 shrink-0" /><span class="text-text-400">المكان:</span> {{ d.place }}</div>
             <div class="flex items-center gap-2 text-text-700"><span class="text-text-400">الوقت:</span> {{ d.time }}</div>
@@ -64,6 +71,7 @@
               <thead>
                 <tr class="bg-bg border-b-2 border-border divide-x divide-border-soft">
                   <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">اسم الطالب</th>
+                  <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">مكان التواجد</th>
                   <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">الواتس</th>
                   <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">البريد</th>
                   <th class="px-5 py-3 text-start text-label font-extrabold text-text-700">إجراءات</th>
@@ -72,6 +80,7 @@
               <tbody class="divide-y divide-border-soft">
                 <tr v-for="m in membersFor(d.teamId)" :key="m.id" class="divide-x divide-border-soft">
                   <td class="px-5 py-3 font-bold text-text-900">{{ m.name }}</td>
+                  <td class="px-5 py-3">{{ REGIONS[m.region] || '—' }}</td>
                   <td class="px-5 py-3 mono">{{ m.whats || '—' }}</td>
                   <td class="px-5 py-3 mono whitespace-nowrap">{{ m.mail || '—' }}</td>
                   <td class="px-5 py-3">
@@ -100,6 +109,7 @@
               </button>
               <div v-if="isStudentOpen(d.id, m.id)" class="space-y-2 pt-2 border-t border-dashed border-border">
                 <div class="flex items-start justify-between gap-3"><span class="text-label font-semibold text-text-400 shrink-0">رقم الواتس</span><span class="mono text-body-sm text-text-700">{{ m.whats || '—' }}</span></div>
+                <div class="flex items-start justify-between gap-3"><span class="text-label font-semibold text-text-400 shrink-0">مكان التواجد</span><span class="text-body-sm text-text-700">{{ REGIONS[m.region] || '—' }}</span></div>
                 <div class="flex items-start justify-between gap-3"><span class="text-label font-semibold text-text-400 shrink-0">البريد الإلكتروني</span><span class="mono text-body-sm text-text-700 whitespace-nowrap">{{ m.mail || '—' }}</span></div>
                 <div class="flex items-start justify-between gap-3">
                   <span class="text-label font-semibold text-text-400 shrink-0">إجراءات</span>
@@ -134,6 +144,7 @@ import EmptyState from '@/components/ui/EmptyState.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { formatDate } from '@/utils/formatters'
+import { REGIONS } from '@/utils/progressData'
 import { useDiscussionsStore } from '@/stores/discussions.store'
 import { useTeamsStore } from '@/stores/teams.store'
 import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
@@ -151,6 +162,7 @@ export default {
 
   data() {
     return {
+      REGIONS,
       search: '',
       openDiscussionIds: [],
       openStudentKeys: [],
@@ -175,6 +187,7 @@ export default {
           team: d.project?.team?.name || '—',
           place: d.place,
           date: d.discussion_date,
+          section: d.project?.team?.section || '',
           time: (d.discussion_time || '').slice(0, 5),
           committee: d.committee,
           whatsapp: d.whatsapp,
@@ -243,7 +256,8 @@ export default {
         id: m.id,
         name: m.student?.name || '',
         whats: m.student?.whatsapp,
-        mail: m.student?.email
+        mail: m.student?.email,
+        region: m.student?.region
       }))
     },
 
