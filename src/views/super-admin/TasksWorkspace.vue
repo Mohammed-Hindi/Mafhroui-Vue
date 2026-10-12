@@ -26,11 +26,11 @@
           <input v-model.trim="q" type="search" placeholder="بحث بعنوان المهمة أو المكلّف…">
         </label>
         <!-- لجنة الإشراف: الافتراضي مهام المجموعات، واختيار اللجنة أو أحد أعضائها يعرض مهام اللجنة وحدها (منفصلة عن المشرفين) -->
-        <select v-model="fCommittee" class="gr-select" aria-label="لجنة الإشراف">
+        <select v-if="isAdmin" v-model="fCommittee" class="gr-select" aria-label="لجنة الإشراف">
           <option value="">لجنة الإشراف</option>
           <option v-for="m in committee" :key="m.id" :value="m.id">{{ m.name }}</option>
         </select>
-        <select v-if="!isStaff" v-model="fSup" class="gr-select" aria-label="المشرف">
+        <select v-if="!isStaff && !isSupervisor" v-model="fSup" class="gr-select" aria-label="المشرف">
           <option value="">كل المشرفين</option>
           <option v-for="s in supervisors" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
@@ -38,6 +38,15 @@
           <option value="">كل المجموعات</option>
           <option v-for="g in groupOptions" :key="g.id" :value="g.id">{{ g.label }}</option>
         </select>
+        <select v-if="!isStaff" v-model="fDegree" class="gr-select" aria-label="الدرجة">
+          <option value="">كل الدرجات</option>
+          <option v-for="(l, k) in DEGREES" :key="k" :value="k">{{ l }}</option>
+        </select>
+        <select v-if="!isStaff" v-model="fSpec" class="gr-select" aria-label="التخصص">
+          <option value="">كل التخصصات</option>
+          <option v-for="s in specOptions" :key="s.id" :value="s.id">{{ s.name }}</option>
+        </select>
+        <button v-if="hasFilters" type="button" class="pbtn is-outline is-sm" @click="clearFilters">مسح الفلاتر</button>
       </div>
 
       <p v-if="!loaded" class="pt-muted tk-loading">جارٍ تحميل المهام…</p>
@@ -87,10 +96,26 @@
               <article v-for="t in col.items" :key="t.id" class="tk-card" tabindex="0" @click="detail = t" @keydown.enter="detail = t">
                 <b>{{ t.title }}</b>
                 <span class="pt-muted">{{ isStaff ? t.sup : `${t.group} · ${t.sup}` }}</span>
+                <span class="tk-card-who"><Users :size="13" /> {{ names(t) }}</span>
                 <footer>
                   <span :class="['tk-due', dueTone(t)]"><CalendarDays :size="13" /> {{ t.due ? dueLabel(t) : 'بلا موعد' }}</span>
-                  <span class="tk-people"><span v-for="a in t.assignees.slice(0, 3)" :key="a.id" class="tk-avatar">{{ initials(a.name) }}</span></span>
+                  <span :class="['tk-status', `is-${state(t)}`]">{{ stateLabel(t) }}</span>
                 </footer>
+                <!-- للمسؤول: المرفقات ومن أنجزها وسجل الحركة — يُجلب عند الفتح (GET /tasks/{id} + /activity) -->
+                <button type="button" class="tk-card-more" :aria-expanded="!!info[t.id]" @click.stop="toggleInfo(t)">
+                  <History :size="13" /> المرفقات والسجل <ChevronDown :size="13" :class="info[t.id] && 'is-open'" />
+                </button>
+                <div v-if="info[t.id]" class="tk-card-info" @click.stop>
+                  <p v-if="info[t.id] === 'loading'" class="pt-muted">جارٍ التحميل…</p>
+                  <template v-else>
+                    <p v-if="t.status === 'done'"><b>أنجزها:</b> {{ completedBy(info[t.id].log) || '—' }}</p>
+                    <p><b>المرفقات ({{ info[t.id].files.length }}):</b> {{ info[t.id].files.map((f) => fileName(f.file_path)).join('، ') || 'لا يوجد' }}</p>
+                    <ol v-if="info[t.id].log.length" class="tk-card-log">
+                      <li v-for="(e, i) in info[t.id].log" :key="i"><b>{{ e.user?.name || 'النظام' }}</b> {{ describeTaskEvent(e) }} <span class="pt-muted">{{ formatDate(e.created_at) }}</span></li>
+                    </ol>
+                    <p v-else class="pt-muted">لا توجد حركات مسجّلة بعد.</p>
+                  </template>
+                </div>
               </article>
               <p v-if="!col.items.length" class="tk-col-empty">لا توجد مهام</p>
             </div>
@@ -115,6 +140,7 @@
       <section v-show="step === 0" class="tk-sec">
         <header class="tk-sec-head"><h4>تفاصيل المهمة</h4></header>
         <div class="tk-sec-body">
+          <TemplatePicker v-if="!isSupervisor" kind="task" :title="form.title" :body="form.description" @apply="(t) => Object.assign(form, { title: t.title || '', description: t.body || '' })" />
           <label class="pfield">
             <span>عنوان المهمة <b class="as-req">*</b></span>
             <input v-model.trim="form.title" type="text" maxlength="200" placeholder="مثال: تسليم الفصل الثاني من التقرير">
@@ -145,11 +171,11 @@
           <span class="dash-chip">{{ targets.length }} {{ targetNoun }}</span>
         </header>
         <div class="tk-sec-body">
-          <nav class="tk-aud" aria-label="نوع المستلمين">
+          <nav :class="['tk-aud', isSupervisor ? 'is-2' : !isAdmin && 'is-3']" aria-label="نوع المستلمين">
             <button type="button" :class="audience === 'groups' && 'is-active'" @click="audience = 'groups'">مجموعات محددة</button>
             <button type="button" :class="audience === 'all' && 'is-active'" @click="audience = 'all'">كل المجموعات</button>
-            <button type="button" :class="audience === 'committee' && 'is-active'" @click="setAudience('committee')">لجنة الإشراف</button>
-            <button type="button" :class="audience === 'supervisors' && 'is-active'" @click="setAudience('supervisors')">المشرفون</button>
+            <button v-if="isAdmin" type="button" :class="audience === 'committee' && 'is-active'" @click="setAudience('committee')">لجنة الإشراف</button>
+            <button v-if="!isSupervisor" type="button" :class="audience === 'supervisors' && 'is-active'" @click="setAudience('supervisors')">المشرفون</button>
           </nav>
           <GroupPicker v-if="audience === 'groups'" v-model="selected" :groups="groups" />
           <div v-else-if="audience === 'all'" class="palert is-info">ستُنشأ المهمة لكل مجموعات الفصل ({{ groups.length }} مجموعة).</div>
@@ -184,14 +210,21 @@
               <button type="button" :aria-label="`إزالة ${t.name}`" @click="unpick(t.id)"><X :size="14" /></button>
             </span>
           </div>
-          <div v-if="audience === 'groups' && selected.length === 1" class="pfield">
-            <span>المكلّفون من {{ singleGroup.name }}</span>
-            <div class="as-assignees">
-              <label v-for="m in singleGroup.members" :key="m.id" class="gp-check">
-                <input v-model="form.assignees" type="checkbox" :value="m.id"> {{ m.name }}
-              </label>
+          <!-- المنتسبون للمهمة: طلاب كل مجموعة محددة؛ مجموعة بلا تحديد = المهمة لكل أعضائها -->
+          <div v-if="audience === 'groups' && targets.length" class="pfield">
+            <span>المنتسبون للمهمة</span>
+            <div class="as-groups">
+              <div v-for="g in targets" :key="g.id" class="as-group">
+                <b>{{ g.section ? `شعبة ${g.section} — ` : '' }}{{ g.name }}</b>
+                <div class="as-assignees">
+                  <label v-for="m in g.members" :key="m.id" class="gp-check">
+                    <input v-model="form.assignees" type="checkbox" :value="m.id"> {{ m.name }}
+                  </label>
+                  <span v-if="!g.members.length" class="pt-muted">لا يوجد طلاب</span>
+                </div>
+              </div>
             </div>
-            <small>بدون تحديد = المهمة لكل أعضاء المجموعة.</small>
+            <small>بدون تحديد في مجموعة = المهمة لكل أعضائها.</small>
           </div>
         </div>
       </section>
@@ -203,10 +236,11 @@
           <dl class="tk-review">
             <dt>العنوان</dt><dd>{{ form.title || '—' }}</dd>
             <dt>موعد التسليم</dt><dd>{{ form.due || 'بلا موعد' }}</dd>
-            <dt>المرفقات</dt><dd>{{ form.files.length || 'لا يوجد' }}</dd>
+            <dt>المرفقات</dt><dd>{{ form.files.length ? form.files.map((x) => x.name).join('، ') : 'لا يوجد' }}</dd>
+            <dt v-if="audience === 'groups'">المنتسبون</dt><dd v-if="audience === 'groups'">{{ pickedAssignees.length ? `${pickedAssignees.length} طالبًا محددًا` : 'كل أعضاء المجموعات' }}</dd>
             <dt>المستلمون</dt><dd>{{ targets.length }} {{ targetNoun }}</dd>
           </dl>
-          <ChannelPicker v-model="form.channels" :restricted="!isStaffAudience" />
+          <ChannelPicker v-if="!isSupervisor" v-model="form.channels" :restricted="!isStaffAudience" />
         </div>
       </section>
 
@@ -233,16 +267,20 @@
 </template>
 
 <script>
-import { CalendarDays, Columns3, List, Plus, Search, Send, X } from 'lucide-vue-next'
+import { CalendarDays, ChevronDown, Columns3, History, List, Plus, Search, Send, Users, X } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ChannelPicker from '@/components/shared/ChannelPicker.vue'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
 import GroupPicker from '@/components/shared/GroupPicker.vue'
+import TemplatePicker from '@/components/shared/TemplatePicker.vue'
 import SlideTable from '@/components/ui/SlideTable.vue'
 import TaskDetailModal from './TaskDetailModal.vue'
 import api from '@/services/api'
+import { mapState } from 'pinia'
+import { useAuthStore } from '@/stores/auth.store'
 import { notifyExternal } from '@/services/announcements'
 import { formatDate, initials } from '@/utils/formatters'
+import { DEGREES, completedBy, describeTaskEvent } from '@/utils/progressData'
 
 const STATUSES = [
   { value: 'pending', label: 'لم تبدأ' },
@@ -257,7 +295,7 @@ const emptyForm = () => ({ title: '', description: '', due: '', files: [], assig
 export default {
   name: 'TasksWorkspace',
 
-  components: { BaseModal, ChannelPicker, FileDropzone, GroupPicker, SlideTable, TaskDetailModal, CalendarDays, Columns3, List, Plus, Search, Send, X },
+  components: { BaseModal, ChannelPicker, FileDropzone, GroupPicker, SlideTable, TaskDetailModal, TemplatePicker, CalendarDays, ChevronDown, Columns3, History, List, Plus, Search, Send, Users, X },
 
   props: {
     groups: { type: Array, default: () => [] }
@@ -278,6 +316,10 @@ export default {
       fCommittee: '',
       fGroup: '',
       fSup: '',
+      info: {},
+      fDegree: '',
+      fSpec: '',
+      DEGREES,
       fStatus: '',
       committee: [],
       supervisors: [],
@@ -297,6 +339,15 @@ export default {
   },
 
   computed: {
+    ...mapState(useAuthStore, ['userRole']),
+    /** الإرسال للجنة الإشراف للإدارة العامة وحدها؛ اللجنة ترسل للمشرفين والمجموعات */
+    /** المشرف: نفس الصفحة بصلاحياته — مجموعاته فقط عبر /teams/{id}/tasks */
+    isSupervisor() {
+      return this.userRole === 'supervisor'
+    },
+    isAdmin() {
+      return this.userRole === 'super_admin'
+    },
     /** عرض مهام لجنة الإشراف (منفصلة)، وإلا مهام المجموعات ومعها مهام المشرفين أنفسهم */
     isStaff() {
       return this.fCommittee !== ''
@@ -328,12 +379,12 @@ export default {
       ]
     },
     hasFilters() {
-      return !!(this.q || this.fCommittee || this.fGroup || this.fSup || this.fStatus)
+      return !!(this.q || this.fCommittee || this.fGroup || this.fSup || this.fStatus || this.fDegree || this.fSpec)
     },
     /** معاملات GET /tasks — كل فلتر يُرسل مستقلًا ويُطبّق في الخادم */
     params() {
       const person = this.fCommittee
-      const p = { audience: this.isStaff ? 'committee' : 'groups', assignee_id: person, team_id: this.fGroup, supervisor_id: this.fSup, status: this.fStatus, q: this.q }
+      const p = { audience: this.isStaff ? 'committee' : 'groups', assignee_id: person, team_id: this.fGroup, supervisor_id: this.fSup, degree: this.fDegree, specialization_id: this.fSpec, status: this.fStatus, q: this.q }
       return Object.fromEntries(Object.entries(p).filter(([, v]) => v !== ''))
     },
     /** شريط الملخص الأخضر — من نتائج الخادم بالفلاتر الحالية */
@@ -368,8 +419,13 @@ export default {
       if (this.isStaffAudience) return this.staffList.filter((m) => this.memberSel.includes(m.id))
       return this.audience === 'all' ? this.groups : this.groups.filter((g) => this.selected.includes(g.id))
     },
-    singleGroup() {
-      return this.groupById[this.selected[0]] || { members: [] }
+    /** المكلّفون المحددون من طلاب المجموعات المحددة حاليًا فقط (إلغاء تحديد مجموعة يُسقط طلابها) */
+    pickedAssignees() {
+      const ids = new Set(this.targets.flatMap((g) => g.members.map((m) => m.id)))
+      return this.form.assignees.filter((id) => ids.has(id))
+    },
+    specOptions() {
+      return [...new Map(this.groups.filter((g) => g.specId).map((g) => [g.specId, { id: g.specId, name: g.spec }])).values()]
     },
     canCreate() {
       return !!this.form.title && this.targets.length > 0
@@ -385,6 +441,10 @@ export default {
   },
 
   watch: {
+    // المشرف يجلب مهام مجموعاته بعد وصول قائمة المجموعات
+    groups() {
+      if (this.isSupervisor) this.load()
+    },
     // البحث بتأخير قصير حتى لا يُرسل طلب مع كل حرف، وباقي الفلاتر فورًا
     q() {
       clearTimeout(this.qTimer)
@@ -392,11 +452,13 @@ export default {
     },
     // لجنة الإشراف منفصلة: اختيار عضو يمسح فلتري المجموعة والمشرف
     fCommittee(v) {
-      if (v) Object.assign(this, { fGroup: '', fSup: '' })
+      if (v) Object.assign(this, { fGroup: '', fSup: '', fDegree: '', fSpec: '' })
       this.load()
     },
     fGroup: 'load',
     fSup: 'load',
+    fDegree: 'load',
+    fSpec: 'load',
     fStatus: 'load'
   },
 
@@ -416,6 +478,21 @@ export default {
   methods: {
     formatDate,
     initials,
+    completedBy,
+    describeTaskEvent,
+    fileName: (path = '') => path.split('/').pop(),
+
+    /** فتح/طي تفاصيل البطاقة: المرفقات وسجل الحركة يُجلبان مرة واحدة لكل فتح */
+    async toggleInfo(t) {
+      if (this.info[t.id]) {
+        this.info = { ...this.info, [t.id]: undefined }
+        return
+      }
+      this.info = { ...this.info, [t.id]: 'loading' }
+      const [detail, log] = await Promise.allSettled([api.get(`/tasks/${t.id}`), api.get(`/tasks/${t.id}/activity`)])
+      const d = detail.value?.data?.data || detail.value?.data || {}
+      if (this.info[t.id]) this.info = { ...this.info, [t.id]: { files: d.files || [], log: log.value?.data || [] } }
+    },
 
     addDays(n) {
       const d = new Date()
@@ -444,6 +521,7 @@ export default {
 
     /** GET /tasks بالفلاتر الحالية؛ تُهمل الاستجابات القديمة إذا تغيّر فلتر قبل وصولها */
     async load() {
+      if (this.isSupervisor) return this.loadOwnGroups()
       const id = ++this.reqId
       this.loadingTasks = true
       try {
@@ -459,6 +537,28 @@ export default {
           this.loaded = true
         }
       }
+    },
+
+    /** المشرف: مهام مجموعاته (GET /teams/{id}/tasks لكل مجموعة) والفلاتر والأعداد محليًا */
+    async loadOwnGroups() {
+      const id = ++this.reqId
+      this.loadingTasks = true
+      const lists = await Promise.allSettled(this.groups.map((g) => api.get(`/teams/${g.id}/tasks`)))
+      if (id !== this.reqId) return
+      const all = lists.flatMap((r, i) => (r.value?.data?.data || r.value?.data || []).map((t) => ({ ...t, team_id: t.team_id ?? this.groups[i].id })))
+      const g = (t) => this.groupById[t.team_id] || {}
+      const q = this.q
+      const base = all.filter((t) => (!this.fGroup || t.team_id === this.fGroup) && (!this.fDegree || g(t).degree === this.fDegree) &&
+        (!this.fSpec || g(t).specId === this.fSpec) && (!q || `${t.title} ${(t.assignees || []).map((a) => a.name).join(' ')}`.includes(q)))
+      const late = (t) => t.status !== 'done' && t.due_date && t.due_date < this.today
+      this.counts = { all: base.length, late: base.filter(late).length }
+      STATUSES.forEach((st) => { this.counts[st.value] = base.filter((t) => t.status === st.value).length })
+      this.tasks = base
+        .filter((t) => !this.fStatus || (this.fStatus === 'late' ? late(t) : t.status === this.fStatus))
+        .sort((a, b) => (late(b) - late(a)) || String(a.due_date || '9').localeCompare(String(b.due_date || '9')))
+        .map(this.normalize)
+      this.loadingTasks = false
+      this.loaded = true
     },
 
     state(t) {
@@ -500,6 +600,10 @@ export default {
     removeTask() {
       this.detail = null
       this.load()
+    },
+
+    clearFilters() {
+      Object.assign(this, { q: '', fCommittee: '', fGroup: '', fSup: '', fStatus: '', fDegree: '', fSpec: '' })
     },
 
     openComposer() {
@@ -572,9 +676,23 @@ export default {
           const warnings = await notifyExternal(reached, f.channels, `مهمة جديدة: ${f.title}`, text)
           if (warnings.length) this.$toast?.warning(warnings.join(' · '))
         }
+      } else if (this.isSupervisor) {
+        // المشرف: POST /teams/{id}/tasks لكل مجموعة، والمكلّفون المحددون من طلابها فقط
+        for (const g of targets) {
+          const ids = new Set(g.members.map((m) => m.id))
+          const assignee_ids = this.pickedAssignees.filter((x) => ids.has(x))
+          try {
+            const { data } = await api.post(`/teams/${g.id}/tasks`, { ...payload, ...(assignee_ids.length ? { assignee_ids } : {}) })
+            created += 1
+            await attach(data.data || data, g.name)
+          } catch (err) {
+            this.failed.push({ label: g.name, error: err.normalized?.message || 'خطأ' })
+          }
+          this.done += 1
+        }
       } else {
         // POST /tasks/batch — كل المجموعات في طلب واحد، والخادم يُشعر كل مشرف مرة واحدة مهما تعدّدت مجموعاته
-        const assignees = this.audience === 'groups' && targets.length === 1 ? f.assignees : []
+        const assignees = this.audience === 'groups' ? this.pickedAssignees : []
         try {
           const { data } = await api.post('/tasks/batch', { ...payload, team_ids: targets.map((g) => g.id), ...(assignees.length ? { assignee_ids: assignees } : {}) })
           const tasks = data.data || data

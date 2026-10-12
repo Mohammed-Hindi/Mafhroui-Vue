@@ -4,7 +4,7 @@ import ProfilePageStudent from '@/views/student/ProfilePage.vue'
 import ProposalPageStudent from '@/views/student/ProposalPage.vue'
 import TasksPageStudent from '@/views/student/TasksPage.vue'
 import MeetingsPageStudent from '@/views/student/MeetingsPage.vue'
-import AnnouncementsInboxPageStudent from '@/views/shared/AnnouncementsInboxPage.vue'
+import AnnouncementsInboxPageStudent from '@/views/super-admin/AnnouncementsDesk.vue'
 import AssistantPageStudent from '@/views/student/AssistantPage.vue'
 
 // استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
@@ -25,19 +25,36 @@ export default [
         path: '',
         name: 'student-dashboard',
         component: ProfilePageStudent,
-        meta: { title: 'الملف الشخصي' }
+        meta: { title: 'الملف التعريفي' }
+      },
+      {
+        path: 'profile',
+        name: 'student-profile',
+        redirect: { name: 'student-dashboard' }
+      },
+      {
+        path: 'tickets',
+        name: 'student-tickets',
+        component: () => import('@/views/student/TicketsPage.vue'),
+        meta: { title: 'الشكاوى والملاحظات' }
+      },
+      {
+        path: 'change-password',
+        name: 'student-change-password',
+        component: () => import('@/views/super-admin/ChangePasswordPage.vue'),
+        meta: { title: 'تغيير كلمة المرور' }
       },
       {
         path: 'proposal',
         name: 'student-proposal',
         component: ProposalPageStudent,
-        meta: { title: 'المقترح / التقرير النهائي' }
+        meta: { title: 'المقترحات' }
       },
       {
         path: 'tasks',
         name: 'student-tasks',
         component: TasksPageStudent,
-        meta: { title: 'المهام (Kanban)' }
+        meta: { title: 'المهام' }
       },
       {
         path: 'meetings',

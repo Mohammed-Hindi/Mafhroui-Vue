@@ -1,5 +1,5 @@
 <template>
-  <div class="text-center">
+  <div class="au-card text-center max-w-[440px] mx-auto">
     <template v-if="!failed">
       <LoadingSpinner :size="30" class="mx-auto mb-5 text-primary-600" />
       <h2 class="font-cairo font-extrabold text-[18px] text-text-900 mb-2">جارٍ تسجيل الدخول...</h2>

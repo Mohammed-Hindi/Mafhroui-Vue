@@ -120,37 +120,6 @@
       <Pagination :current-page="page" :last-page="totalPages" :total="filteredDiscussions.length" @change="page = $event" />
     </div>
 
-    <!-- جدولي كمناقش: مناقشات منشورة لمجموعات مشرفين آخرين أنا ضمن لجنتها (من جدول الإدارة بعد النشر أو إعادة رفعه) -->
-    <div class="flex items-center justify-between gap-4 mt-10 mb-4">
-      <h3 class="font-cairo font-bold text-h4 text-text-900">مناقشات أشارك فيها كمناقش</h3>
-      <span class="text-caption text-text-600">{{ examining.length }} مناقشة</span>
-    </div>
-    <EmptyState v-if="!discussionsLoading && !examining.length" title="لا توجد مناقشات مكلّف بها كمناقش" description="تظهر هنا بعد نشر جدول المناقشات من الإدارة العامة." />
-    <div v-else-if="!discussionsLoading" class="bg-surface border border-border rounded-lg shadow-card overflow-x-auto scrollbar-thin">
-      <table class="w-full border-collapse min-w-[640px]">
-        <thead>
-          <tr class="bg-bg border-b-2 border-border">
-            <th class="px-4 py-3 text-start text-label font-extrabold text-text-700">التاريخ</th>
-            <th class="px-4 py-3 text-start text-label font-extrabold text-text-700">الوقت</th>
-            <th class="px-4 py-3 text-start text-label font-extrabold text-text-700">القاعة</th>
-            <th class="px-4 py-3 text-start text-label font-extrabold text-text-700">المجموعة والمشروع</th>
-            <th class="px-4 py-3 text-start text-label font-extrabold text-text-700">مشرف المجموعة</th>
-            <th class="px-4 py-3 text-start text-label font-extrabold text-text-700">المناقش الآخر</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-border-soft">
-          <tr v-for="d in examining" :key="d.id">
-            <td class="px-4 py-3 whitespace-nowrap"><span class="mono">{{ formatDate(d.date) }}</span></td>
-            <td class="px-4 py-3"><span class="mono">{{ d.time }}</span></td>
-            <td class="px-4 py-3 font-bold" dir="ltr">{{ d.place }}</td>
-            <td class="px-4 py-3"><div class="font-bold text-text-900">{{ d.section ? `المجموعة ${d.section}` : d.team }}</div><div class="text-label text-text-400">{{ d.proj }}</div></td>
-            <td class="px-4 py-3">{{ d.sup }}</td>
-            <td class="px-4 py-3">{{ d.partner || '—' }}<div v-if="d.note" class="text-label text-text-400">{{ d.note }}</div></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
     <EmailComposeModal v-model="emailComposeOpen" :to="emailComposeTarget" />
   </div>
 </template>
@@ -211,29 +180,6 @@ export default {
           whatsapp: d.whatsapp,
           status: d.status
         }))
-    },
-
-    /** المنشورة التي يرد اسمي في لجنتها لمجموعات غيري، مرتبة بالموعد */
-    examining() {
-      const me = this.user?.name
-      if (!me) return []
-      return this.discussions
-        .filter((d) => d.status === 'confirmed' && d.supervisor_id !== this.user.id)
-        .map((d) => ({ d, names: String(d.committee || '').split(' | ')[0].split(/[،,]/).map((n) => n.trim()).filter(Boolean), note: String(d.committee || '').split(' | ').slice(1).join(' ') }))
-        .filter(({ names }) => names.includes(me))
-        .map(({ d, names, note }) => ({
-          id: d.id,
-          date: d.discussion_date,
-          time: (d.discussion_time || '').slice(0, 5),
-          place: d.place,
-          section: d.project?.team?.section || '',
-          team: d.project?.team?.name || '—',
-          proj: d.project?.name || '—',
-          sup: d.supervisor?.name || '—',
-          partner: names.filter((n) => n !== me).join('، '),
-          note
-        }))
-        .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))
     },
 
     filteredDiscussions() {

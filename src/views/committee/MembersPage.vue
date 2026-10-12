@@ -48,14 +48,14 @@
         </label>
         <template v-if="memberKind === 'student'">
           <label class="gr-pick">
-            <span>حدد الفئة</span>
+            <span>الفئة</span>
             <select v-model="genderFilter" class="gr-select">
               <option value="">طلاب وطالبات</option>
               <option v-for="o in genderOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
             </select>
           </label>
           <label class="gr-pick">
-            <span>حدد مكان التواجد</span>
+            <span>مكان التواجد</span>
             <select v-model="regionFilter" class="gr-select">
               <option value="">كل المناطق</option>
               <option v-for="o in regionOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
@@ -318,6 +318,8 @@
         <BaseInput v-else v-model="addForm.employee_number" label="الرقم الوظيفي" placeholder="اختياري" />
         <BaseInput v-model="addForm.email" type="email" label="البريد الإلكتروني" placeholder="name@mashroui.local" class="sm:col-span-2" />
         <BaseInput v-model="addForm.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" class="sm:col-span-2" />
+        <!-- عضو لجنة الإشراف يُربط بتخصصه ويرى بيانات هذا التخصص فقط -->
+        <BaseSelect v-if="addForm.role === 'committee'" v-model="addForm.specialization_id" label="التخصص الذي ينتمي له *" placeholder="اختر التخصص" :options="specializationOptions" class="sm:col-span-2" />
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="addModalOpen = false">إلغاء</BaseButton>
@@ -346,7 +348,7 @@
       </template>
     </BaseModal>
 
-    <BaseModal v-model="editModalOpen" :title="editKind === 'student' ? 'تعديل بيانات الطالب' : 'تعديل بيانات المشرف'">
+    <BaseModal v-model="editModalOpen" :title="editKind === 'student' ? 'تعديل بيانات الطالب' : editKind === 'committee' ? 'تعديل بيانات عضو اللجنة' : 'تعديل بيانات المشرف'">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <template v-if="editKind === 'student'">
           <BaseInput v-model="editForm.name" label="اسم الطالب" class="sm:col-span-2" />
@@ -357,6 +359,7 @@
           <BaseInput v-model="editForm.name" label="اسم الموظف" class="sm:col-span-2" />
           <BaseInput v-model="editForm.empId" label="الرقم الوظيفي" />
           <BaseInput v-model="editForm.whats" label="رقم الواتس" />
+          <BaseSelect v-if="editKind === 'committee'" v-model="editForm.spec" label="التخصص الذي ينتمي له" placeholder="كل التخصصات" include-placeholder-option :options="specializationOptions" class="sm:col-span-2" />
         </template>
       </div>
       <template #footer>
@@ -464,7 +467,7 @@ function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
 }
 
-const emptyAddForm = () => ({ role: 'student', name: '', employee_number: '', university_number: '', email: '', whatsapp: '' })
+const emptyAddForm = () => ({ role: 'student', name: '', employee_number: '', university_number: '', email: '', whatsapp: '', specialization_id: '' })
 
 const MODULES = [
   { value: 'projects', label: 'المشاريع' },
@@ -675,6 +678,7 @@ export default {
         empId: u.employee_number,
         mail: u.email,
         whats: u.whatsapp,
+        spec: u.specialization_id,
         restricted: u.status === 'restricted',
         restrictedReason: u.restricted_reason
       }))
@@ -866,6 +870,10 @@ export default {
       this.addModalOpen = true
     },
     async submitAdd() {
+      if (this.addForm.role === 'committee' && !this.addForm.specialization_id) {
+        this.$toast?.error('اختر التخصص الذي ينتمي له عضو اللجنة')
+        return
+      }
       if (!this.addForm.name || !this.addForm.email) {
         this.$toast?.error('يرجى تعبئة الاسم والبريد الإلكتروني على الأقل')
         return
@@ -948,7 +956,7 @@ export default {
       this.editTargetId = row.id
       this.editForm = this.editKind === 'student'
         ? { name: row.name, uid: row.uid || '', whats: row.whats || '' }
-        : { name: row.name, empId: row.empId || '', whats: row.whats || '' }
+        : { name: row.name, empId: row.empId || '', whats: row.whats || '', spec: row.spec || '' }
       this.editModalOpen = true
     },
     async saveEdit() {
@@ -960,7 +968,7 @@ export default {
       try {
         const payload = this.editKind === 'student'
           ? { name: this.editForm.name, university_number: this.editForm.uid, whatsapp: this.editForm.whats }
-          : { name: this.editForm.name, employee_number: this.editForm.empId, whatsapp: this.editForm.whats }
+          : { name: this.editForm.name, employee_number: this.editForm.empId, whatsapp: this.editForm.whats, ...(this.editKind === 'committee' ? { specialization_id: this.editForm.spec || null } : {}) }
         await this.updateUser(this.editTargetId, payload)
         this.editModalOpen = false
         this.$toast?.success('تم حفظ التعديلات')

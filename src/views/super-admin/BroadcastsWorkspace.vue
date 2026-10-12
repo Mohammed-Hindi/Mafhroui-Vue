@@ -20,11 +20,11 @@
           <Search :size="16" />
           <input v-model.trim="q" type="search" :placeholder="isFile ? 'بحث بعنوان الملف أو وصفه…' : 'بحث بعنوان الإعلان أو نصه…'">
         </label>
-        <select v-model="fMember" class="gr-select" aria-label="لجنة الإشراف">
+        <select v-if="isAdmin" v-model="fMember" class="gr-select" aria-label="لجنة الإشراف">
           <option value="">لجنة الإشراف</option>
           <option v-for="m in committee" :key="m.id" :value="m.id">{{ m.name }}</option>
         </select>
-        <select v-model="fSup" class="gr-select" aria-label="المشرف">
+        <select v-if="!isSupervisor" v-model="fSup" class="gr-select" aria-label="المشرف">
           <option value="">كل المشرفين</option>
           <option v-for="s in supervisors" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
@@ -88,7 +88,7 @@
               <FileText :size="16" />
               <span class="tk-file-name">{{ f.name }}</span>
               <span class="pt-muted">{{ formatFileSize(f.size) }}</span>
-              <button type="button" class="pbtn is-outline is-sm" @click="download(f)"><Download :size="14" /> تنزيل</button>
+              <button v-if="!isSupervisor" type="button" class="pbtn is-outline is-sm" @click="download(f)"><Download :size="14" /> تنزيل</button>
             </li>
           </ul>
         </section>
@@ -98,7 +98,7 @@
         </section>
       </div>
       <template #footer>
-        <button type="button" class="pbtn is-red" :disabled="removing" @click="remove"><Trash2 :size="15" /> {{ removing ? 'جارٍ السحب…' : 'سحب الإرسال' }}</button>
+        <button v-if="!isSupervisor" type="button" class="pbtn is-red" :disabled="removing" @click="remove"><Trash2 :size="15" /> {{ removing ? 'جارٍ السحب…' : 'سحب الإرسال' }}</button>
       </template>
     </BaseModal>
 
@@ -115,6 +115,7 @@
       <section v-show="step === 0" class="tk-sec">
         <header class="tk-sec-head"><h4>{{ steps[0] }}</h4></header>
         <div class="tk-sec-body">
+          <TemplatePicker v-if="!isSupervisor" :kind="type" :title="form.title" :body="form.body" @apply="(t) => Object.assign(form, { title: t.title || '', body: t.body || '' })" />
           <label class="pfield">
             <span>{{ isFile ? 'عنوان الملف / المرحلة' : 'العنوان' }} <b v-if="isFile" class="as-req">*</b></span>
             <input v-model.trim="form.title" type="text" maxlength="200" :placeholder="isFile ? 'مثال: نموذج التقرير النهائي' : 'مثال: تنبيه بخصوص موعد المناقشات'">
@@ -124,7 +125,8 @@
             <textarea v-model.trim="form.body" rows="5" maxlength="2000" :placeholder="isFile ? 'تعليمات استخدام الملف' : 'نص الإعلان كما سيصل للمستلمين'" />
             <small class="as-count">{{ form.body.length }} / 2000</small>
           </label>
-          <div class="pfield">
+          <!-- المشرف: إعلان المجموعة نصّي فقط (POST /teams/{id}/announcements بلا مرفقات) -->
+          <div v-if="isFile || !isSupervisor" class="pfield">
             <span>{{ isFile ? 'الملفات' : 'مرفقات (اختياري)' }} <b v-if="isFile" class="as-req">*</b></span>
             <FileDropzone v-model="form.files" multiple />
           </div>
@@ -138,11 +140,11 @@
           <span class="dash-chip">{{ targets.length }} {{ targetNoun }}</span>
         </header>
         <div class="tk-sec-body">
-          <nav class="tk-aud" aria-label="نوع المستلمين">
+          <nav :class="['tk-aud', isSupervisor ? 'is-2' : !isAdmin && 'is-3']" aria-label="نوع المستلمين">
             <button type="button" :class="audience === 'groups' && 'is-active'" @click="setAudience('groups')">مجموعات محددة</button>
             <button type="button" :class="audience === 'all' && 'is-active'" @click="setAudience('all')">كل المجموعات</button>
-            <button type="button" :class="audience === 'committee' && 'is-active'" @click="setAudience('committee')">لجنة الإشراف</button>
-            <button type="button" :class="audience === 'supervisors' && 'is-active'" @click="setAudience('supervisors')">المشرفون</button>
+            <button v-if="isAdmin" type="button" :class="audience === 'committee' && 'is-active'" @click="setAudience('committee')">لجنة الإشراف</button>
+            <button v-if="!isSupervisor" type="button" :class="audience === 'supervisors' && 'is-active'" @click="setAudience('supervisors')">المشرفون</button>
           </nav>
           <GroupPicker v-if="audience === 'groups'" v-model="selected" :groups="groups" />
           <div v-else-if="audience === 'all'" class="palert is-info">سيصل لكل مجموعات الفصل ({{ groups.length }} مجموعة) وطلابها ومشرفيها.</div>
@@ -189,7 +191,7 @@
             <dt>{{ isFile ? 'الملفات' : 'المرفقات' }}</dt><dd>{{ form.files.length || 'لا يوجد' }}</dd>
             <dt>المستلمون</dt><dd>{{ targets.length }} {{ targetNoun }}</dd>
           </dl>
-          <ChannelPicker v-model="form.channels" :restricted="!isStaffAudience" />
+          <ChannelPicker v-if="!isSupervisor" v-model="form.channels" :restricted="!isStaffAudience" />
         </div>
       </section>
 
@@ -214,7 +216,10 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 import SlideTable from '@/components/ui/SlideTable.vue'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
 import GroupPicker from '@/components/shared/GroupPicker.vue'
+import TemplatePicker from '@/components/shared/TemplatePicker.vue'
 import api from '@/services/api'
+import { mapState } from 'pinia'
+import { useAuthStore } from '@/stores/auth.store'
 import { CHANNELS, downloadAttachment, notifyExternal } from '@/services/announcements'
 import ChannelPicker from '@/components/shared/ChannelPicker.vue'
 import { formatDateTime, formatFileSize } from '@/utils/formatters'
@@ -225,7 +230,7 @@ const emptyForm = () => ({ title: '', body: '', files: [], channels: ['platform'
 export default {
   name: 'BroadcastsWorkspace',
 
-  components: { BaseModal, SlideTable, ChannelPicker, FileDropzone, GroupPicker, Download, FileText, Paperclip, Plus, Search, Send, Trash2, X },
+  components: { BaseModal, SlideTable, ChannelPicker, FileDropzone, GroupPicker, TemplatePicker, Download, FileText, Paperclip, Plus, Search, Send, Trash2, X },
 
   props: {
     /** announcement | file */
@@ -264,6 +269,15 @@ export default {
   },
 
   computed: {
+    ...mapState(useAuthStore, ['userRole', 'user']),
+    /** الإرسال للجنة الإشراف للإدارة العامة وحدها؛ اللجنة ترسل للمشرفين والمجموعات */
+    /** المشرف: نفس الصفحة بصلاحياته — إعلانات مجموعاته وملفات مشاريعها */
+    isSupervisor() {
+      return this.userRole === 'supervisor'
+    },
+    isAdmin() {
+      return this.userRole === 'super_admin'
+    },
     isFile() {
       return this.type === 'file'
     },
@@ -278,8 +292,9 @@ export default {
       return [
         { value: '', dot: 'all', label: this.isFile ? 'كل الملفات' : 'كل الإعلانات', count: this.counts.all ?? 0 },
         { value: 'groups', dot: 'in_progress', label: 'للمجموعات', count: this.counts.groups ?? 0 },
-        { value: 'committee', dot: 'review', label: 'للجنة الإشراف', count: this.counts.committee ?? 0 },
-        { value: 'supervisors', dot: 'done', label: 'للمشرفين', count: this.counts.supervisors ?? 0 }
+        // الإرسال للجنة الإشراف للإدارة العامة وحدها
+        ...(this.isAdmin ? [{ value: 'committee', dot: 'review', label: 'للجنة الإشراف', count: this.counts.committee ?? 0 }] : []),
+        ...(this.isSupervisor ? [] : [{ value: 'supervisors', dot: 'done', label: 'للمشرفين', count: this.counts.supervisors ?? 0 }])
       ]
     },
     hasFilters() {
@@ -327,6 +342,10 @@ export default {
   },
 
   watch: {
+    // المشرف يجلب ما أرسله بعد وصول قائمة مجموعاته
+    groups() {
+      if (this.isSupervisor) this.load()
+    },
     q() {
       clearTimeout(this.qTimer)
       this.qTimer = setTimeout(this.load, 350)
@@ -354,6 +373,7 @@ export default {
     formatFileSize,
 
     async load() {
+      if (this.isSupervisor) return this.loadOwnGroups()
       const id = ++this.reqId
       this.loading = true
       try {
@@ -369,6 +389,39 @@ export default {
           this.loaded = true
         }
       }
+    },
+
+    /** المشرف: ما أرسله لمجموعاته — الإعلانات (GET /teams/{id}/announcements) أو ملفات المشاريع (GET /projects/{id}/files)،
+        مجمّعة كإرسال واحد حسب العنوان والنص ودقيقة الإرسال */
+    async loadOwnGroups() {
+      const id = ++this.reqId
+      this.loading = true
+      const me = this.user?.id
+      const groups = this.isFile ? this.groups.filter((g) => g.project?.id) : this.groups
+      const res = await Promise.allSettled(groups.map((g) => api.get(this.isFile ? `/projects/${g.project.id}/files` : `/teams/${g.id}/announcements`)))
+      if (id !== this.reqId) return
+      const batches = new Map()
+      res.forEach((r, i) => {
+        const g = groups[i]
+        ;(r.value?.data?.data || r.value?.data || []).forEach((a) => {
+          const author = this.isFile ? a.uploaded_by : a.author
+          if (author?.id !== me) return
+          const at = this.isFile ? a.uploaded_at : a.created_at
+          const title = this.isFile ? a.stage : a.title
+          const key = `${title}|${a.body || ''}|${String(at).slice(0, 16)}`
+          const b = batches.get(key) || { batch: key, title, body: a.body || '', author, created_at: at, audience: 'groups', channels: ['platform'], recipients: [], attachments: [], groupIds: [] }
+          b.recipients.push({ id: g.id, name: g.section ? `شعبة ${g.section}` : g.name })
+          b.groupIds.push(g.id)
+          if (this.isFile) b.attachments.push({ id: a.id, name: String(a.file_path).split('/').pop(), size: 0 })
+          batches.set(key, b)
+        })
+      })
+      const q = this.q
+      const all = [...batches.values()].sort((x, y) => String(y.created_at).localeCompare(String(x.created_at)))
+      this.items = all.filter((b) => (!this.fGroup || b.groupIds.includes(this.fGroup)) && (!q || `${b.title || ''} ${b.body}`.includes(q)))
+      this.counts = { all: all.length, groups: all.length }
+      this.loading = false
+      this.loaded = true
     },
 
     recipientsLine(b) {
@@ -431,6 +484,7 @@ export default {
 
     /** POST /announcements/send (المنصة) ثم واتساب/البريد إن اختيرتا (للمشرفين ولجنة الإشراف فقط) */
     async send() {
+      if (this.isSupervisor) return this.sendOwnGroups()
       const f = this.form
       const fd = new FormData()
       fd.append('type', this.type)
@@ -463,6 +517,38 @@ export default {
       this.$toast?.success(this.isFile ? 'تم إرسال الملف' : 'تم نشر الإعلان')
       if (this.warnings.length) this.$toast?.warning(this.warnings.join(' · '))
       this.load()
+    },
+
+    /** المشرف: إعلان لكل مجموعة (POST /teams/{id}/announcements) أو ملف لمشروع كل مجموعة (POST /projects/{id}/files) */
+    async sendOwnGroups() {
+      const f = this.form
+      this.sending = true
+      this.warnings = []
+      let ok = 0
+      for (const g of this.targets) {
+        try {
+          if (this.isFile) {
+            if (!g.project?.id) throw new Error('لا يوجد مشروع مسجّل')
+            for (const file of f.files) {
+              const fd = new FormData()
+              fd.append('file', file)
+              if (f.title) fd.append('stage', f.title)
+              await api.post(`/projects/${g.project.id}/files`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+            }
+          } else {
+            await api.post(`/teams/${g.id}/announcements`, { title: f.title || null, body: f.body })
+          }
+          ok += 1
+        } catch (err) {
+          this.warnings.push(`${g.section ? 'شعبة ' + g.section : g.name}: ${err.normalized?.message || err.message || 'خطأ'}`)
+        }
+      }
+      this.sending = false
+      if (ok) {
+        this.$toast?.success(this.isFile ? `تم إرسال الملف لـ ${ok} مجموعة` : `تم نشر الإعلان لـ ${ok} مجموعة`)
+        if (!this.warnings.length) this.composer = false
+        this.load()
+      }
     }
   }
 }

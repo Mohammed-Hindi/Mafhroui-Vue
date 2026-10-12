@@ -6,6 +6,15 @@ export const GENDERS = { male: 'طالب', female: 'طالبة' }
 export const REGIONS = { gaza: 'غزة', middle: 'وسط غزة', south: 'الجنوب' }
 export const PROJECT_STATUS = { proposed: 'مقترح', in_progress: 'قيد التنفيذ', completed: 'مكتمل' }
 export const TASK_STATUS = { todo: 'لم تبدأ', pending: 'لم تبدأ', in_progress: 'قيد التنفيذ', review: 'قيد المراجعة', done: 'مكتملة' }
+const TASK_ACTIONS = { create: 'أنشأ المهمة', delete: 'حذف المهمة', restore: 'استرجع المهمة', force_delete: 'حذف المهمة نهائيًا', update: 'عدّل المهمة' }
+
+/** وصف حركة من سجل المهمة (GET /tasks/{id}/activity) */
+export const describeTaskEvent = (e) => e.action === 'status_change'
+  ? `نقل المهمة من «${TASK_STATUS[e.meta?.from] || e.meta?.from}» إلى «${TASK_STATUS[e.meta?.to] || e.meta?.to}»`
+  : TASK_ACTIONS[e.action] || e.action
+
+/** آخر من نقل المهمة إلى «مكتملة» */
+export const completedBy = (log = []) => [...log].reverse().find((e) => e.action === 'status_change' && e.meta?.to === 'done')?.user?.name || ''
 
 /** مستوى شريط التقدّم (لون) */
 export const level = (pct) => (pct >= 70 ? 'is-high' : pct >= 35 ? 'is-mid' : 'is-low')
@@ -27,7 +36,7 @@ export async function fetchGroups() {
       specId: team.specialization_id,
       degree: team.specialization?.degree || '',
       dept: team.specialization?.department?.name || '',
-      project: team.project ? { id: team.project.id, name: team.project.name, status: team.project.status, featured: !!team.project.is_featured, types: team.project.types || [] } : null,
+      project: team.project ? { id: team.project.id, name: team.project.name, description: team.project.description || '', status: team.project.status, featured: !!team.project.is_featured, types: team.project.types || [] } : null,
       tasksTotal: progress?.total ?? 0,
       tasksDone: progress?.done ?? 0,
       percentage: Math.round(progress?.percentage ?? 0),

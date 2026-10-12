@@ -48,7 +48,7 @@
       <div class="gr-filters" aria-label="تصفية المجموعات">
         <label class="gr-search"><Search :size="16" /><input v-model.trim="gq" type="search" placeholder="بحث برقم الشعبة، المشروع أو الطالب…"></label>
         <label v-if="isStaff" class="gr-pick">
-          <span>حدد المشرف</span>
+          <span>المشرف</span>
           <select v-model="gSup" class="gr-select">
             <option value="">كل المشرفين</option>
             <option v-for="s in supOptions" :key="s.id" :value="s.id">{{ s.name }}</option>
@@ -135,7 +135,7 @@
       <div class="gr-filters" aria-label="تصفية النتائج">
         <label class="gr-search"><Search :size="16" /><input v-model.trim="q" type="search" placeholder="بحث بالطالب أو الرقم الجامعي أو الشعبة أو المشروع…"></label>
         <label class="gr-pick">
-          <span>حدد المكان</span>
+          <span>المكان</span>
           <select v-model="f.region" class="gr-select"><option value="">كل المناطق</option><option v-for="(l, k) in REGIONS" :key="k" :value="k">{{ l }}</option></select>
         </label>
         <label class="gr-pick">

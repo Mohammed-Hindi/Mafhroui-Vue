@@ -1,96 +1,68 @@
 <template>
+  <!-- تسجيل الدخول بنمط بوابة الكلية (200336): بطاقة الدخول يمينًا وبطاقة "تعليمات هامة" يسارًا -->
   <div>
-    <h2 class="font-cairo font-extrabold text-[24px] text-text-900 mb-8">تسجيل الدخول</h2>
+    <div v-if="authError" class="palert is-error au-alert"><AlertCircle :size="20" class="shrink-0" /> {{ authError }}</div>
 
-    <form novalidate @submit.prevent="handleSubmit">
-      <div class="mb-[18px]">
-        <AuthTextField
-          v-model="form.email"
-          type="email"
-          label="البريد الإلكتروني"
-          placeholder="name@academy.edu.sa"
-          autocomplete="username"
-          :icon="Mail"
-          :error="errors.email"
-          @blur="validateEmail"
-        />
-      </div>
+    <div class="au-grid">
+      <section class="au-card au-login">
+        <h1 class="au-login-title">تسجيل الدخول</h1>
 
-      <div class="mb-[18px]">
-        <AuthPasswordField
-          v-model="form.password"
-          label="كلمة المرور"
-          autocomplete="current-password"
-          :error="errors.password"
-          @blur="validatePassword"
-        />
-      </div>
+        <form novalidate @submit.prevent="handleSubmit">
+          <label class="au-field">
+            <span>البريد الإلكتروني</span>
+            <input
+              v-model.trim="form.email" type="email" autocomplete="username" placeholder="name@ucas.edu.ps"
+              :class="['portal-input', errors.email && 'is-invalid']" @blur="validateEmail"
+            >
+            <small v-if="errors.email" class="portal-field-error">{{ errors.email }}</small>
+          </label>
 
-      <div class="flex items-center justify-between mb-[26px]">
-        <BaseCheckbox v-model="form.remember" label="تذكرني" />
-        <router-link
-          :to="{ name: 'forgot-password' }"
-          class="text-[12.5px] font-bold text-primary-600 hover:text-primary-700 hover:underline transition-colors duration-fast"
-        >
-          نسيت كلمة المرور؟
-        </router-link>
-      </div>
+          <label class="au-field">
+            <span>كلمة المرور</span>
+            <input
+              v-model="form.password" type="password" autocomplete="current-password" placeholder="••••••••"
+              :class="['portal-input', errors.password && 'is-invalid']" @blur="validatePassword"
+            >
+            <small v-if="errors.password" class="portal-field-error">{{ errors.password }}</small>
+          </label>
 
-      <p v-if="authError" class="mb-4 flex items-center gap-2 text-[12.5px] font-semibold text-error">
-        <AppIcon name="alertCircle" :size="15" />
-        {{ authError }}
-      </p>
+          <button type="submit" class="pbtn is-sky au-submit" :disabled="isLoading">
+            {{ isLoading ? 'جارٍ الدخول…' : 'تسجيل دخول' }}
+          </button>
+        </form>
 
-      <button
-        type="submit"
-        :disabled="isLoading"
-        class="w-full h-[50px] rounded-sm bg-gradient-to-bl from-primary-600 to-primary-700 text-white font-cairo font-extrabold text-[14px] shadow-[0_10px_22px_-8px_rgba(37,99,235,.55)] hover:-translate-y-px transition-transform duration-fast disabled:opacity-60 disabled:pointer-events-none flex items-center justify-center gap-2.5"
-      >
-        <LoadingSpinner v-if="isLoading" :size="17" inline class="text-white" />
-        <template v-else>
-          تسجيل الدخول
-          <AppIcon name="chevronStart" :size="16" :stroke-width="2.4" />
-        </template>
-      </button>
-    </form>
+        <div class="au-links">
+          <router-link :to="{ name: 'forgot-password' }"><KeyRound :size="16" /> فقدت كلمة المرور</router-link>
+          <router-link :to="{ name: 'landing' }"><Home :size="16" /> الصفحة الرئيسية</router-link>
+        </div>
+      </section>
 
-    <div class="flex items-center gap-3 my-6">
-      <span class="flex-1 h-px bg-border" />
-      <span class="text-[11px] text-text-400">أو</span>
-      <span class="flex-1 h-px bg-border" />
+      <section class="au-card">
+        <h2 class="au-card-title">تعليمات هامة</h2>
+        <ul class="portal-bullets">
+          <li>تأكد من إدخال بريدك الإلكتروني المسجّل بشكل صحيح</li>
+          <li>تأكد من كلمة المرور وحالة الأحرف</li>
+          <li>انتبه لزر الحروف الكبيرة</li>
+          <li>المنصة لأعضاء لجنة الإشراف والمشرفين الأكاديميين والطلاب</li>
+        </ul>
+      </section>
     </div>
-
-    <router-link
-      :to="{ name: 'landing' }"
-      class="flex items-center justify-center gap-2 h-icon-btn rounded-sm border border-border bg-surface text-[13px] font-bold text-text-700 hover:-translate-y-px hover:border-primary-200 hover:text-primary-700 hover:bg-primary-50 transition-all duration-fast"
-    >
-      <AppIcon name="home" :size="16" />
-      العودة إلى الصفحة الرئيسية
-    </router-link>
-
-    <p class="mt-7 text-center text-[12.5px] text-text-400">لأعضاء لجنة الإشراف والمشرفين الأكاديميين والطلاب</p>
   </div>
 </template>
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Mail } from 'lucide-vue-next'
+import { AlertCircle, Home, KeyRound } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth.store'
 import { required, email as emailRule } from '@/utils/validators'
-import AuthTextField from '@/components/auth/AuthTextField.vue'
-import AuthPasswordField from '@/components/auth/AuthPasswordField.vue'
-import BaseCheckbox from '@/components/ui/BaseCheckbox.vue'
-import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
-import AppIcon from '@/components/icons/AppIcon.vue'
 
 export default {
   name: 'LoginPage',
 
-  components: { AuthTextField, AuthPasswordField, BaseCheckbox, LoadingSpinner, AppIcon },
+  components: { AlertCircle, Home, KeyRound },
 
   data() {
     return {
-      Mail,
       form: {
         email: '',
         password: '',
@@ -126,7 +98,7 @@ export default {
       return emailOk && passwordOk
     },
 
-    // POST /login | body: { email, password } — remember محلي فقط (الباك إند لا يفرّق بينهما)
+    // POST /login | body: { email, password }
     async handleSubmit() {
       if (!this.validate()) return
 

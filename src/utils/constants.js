@@ -11,7 +11,8 @@ export const ROLES = {
 }
 
 /** أدوار واجهة البوابة (هوية UCAS وقوالب أدوات لجنة الإشراف): الإدارة العامة ولجنة الإشراف */
-export const PORTAL_ROLES = [ROLES.SUPER_ADMIN, ROLES.COMMITTEE]
+// هوية البوابة (UCAS) لكل الأدوار: الإدارة العامة واللجنة ثم المشرف والطالب (2026-10-11)
+export const PORTAL_ROLES = [ROLES.SUPER_ADMIN, ROLES.COMMITTEE, ROLES.STUDENT] // المشرف مُرجع مؤقتًا لنسخة 31/8
 
 /** التسمية العربية المعروضة لكل دور */
 export const ROLE_LABELS = {

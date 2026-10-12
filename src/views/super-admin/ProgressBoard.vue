@@ -172,6 +172,7 @@
 <script>
 import SlideTable from '@/components/ui/SlideTable.vue'
 import { FileDown, Search } from 'lucide-vue-next'
+
 import { escapeHtml } from '@/utils/exportReport'
 import { exportTablePdf } from '@/utils/ucasReports'
 import api from '@/services/api'

@@ -1,186 +1,144 @@
 <template>
-  <div>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-      <!-- بيانات الطالب -->
-      <div class="reveal bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col transition-all duration-base hover:shadow-card-hover">
-        <div class="flex items-center gap-3 mb-6">
-          <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><User :size="18" /></span>
-          <h3 class="text-h3 font-bold text-text-900">بيانات الطالب</h3>
-        </div>
+  <!-- الملف التعريفي للطالب — بنمط "ملف الطالب" في بوابة الكلية (201300) كملف الإدارة العامة:
+       شريط تبويبات أزرق ← بطاقة الهوية ← صفوف (تسمية + قيمة). المطلوب: اسم المشرف (الضغط ← بروفايله: الاسم، الواتساب،
+       مكان التواجد، الشعبة) وبيانات المجموعة كنافذة منبثقة مع أماكن تواجد الطلاب. البيانات من GET /students/{me}/profile -->
+  <div class="flex flex-col gap-6">
+    <nav class="profile-tabs" aria-label="أقسام الملف التعريفي">
+      <button
+        v-for="t in tabs" :key="t.key" type="button"
+        :class="['profile-tab', tab === t.key && 'is-active']" :aria-current="tab === t.key ? 'page' : undefined"
+        @click="tab = t.key"
+      >
+        <component :is="t.icon" :size="34" />
+        <span>{{ t.label }}</span>
+      </button>
+      <router-link :to="{ name: 'student-change-password' }" class="profile-tab">
+        <Lock :size="34" />
+        <span>تغيير كلمة المرور</span>
+      </router-link>
+    </nav>
 
-        <div class="flex items-center gap-4 mb-6 flex-wrap">
-          <span class="grid place-items-center w-16 h-16 rounded-pill shrink-0 text-white font-cairo font-black text-h2" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
-            {{ initials }}
-          </span>
-          <div class="min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-h3 font-bold text-text-900 truncate">{{ user?.name }}</span>
-              <span class="shrink-0 text-label font-bold px-2.5 py-1 rounded-pill text-text-600 bg-border-soft">عضو</span>
-            </div>
-            <div class="text-caption text-text-400 mt-0.5">طالب</div>
+    <section class="pf-avatar">
+      <img v-if="avatarSrc" :src="avatarSrc" alt="الصورة الشخصية">
+      <span v-else aria-hidden="true">{{ (user?.name || '?').charAt(0) }}</span>
+      <div class="pf-id">
+        <strong>{{ user?.name || '—' }}</strong>
+        <span class="pf-role">طالب</span>
+        <small class="mono">{{ user?.email }}</small>
+      </div>
+    </section>
+
+    <section class="profile-card">
+      <h3 class="portal-title pf-title">{{ tab === 'info' ? 'المعلومات الشخصية' : 'مجموعتي' }}</h3>
+      <p v-if="tab === 'team' && !myTeam" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لم تُنسب لمجموعة بعد</p>
+      <div v-for="sec in sections" v-else :key="sec.title" class="pf-row">
+        <h4 class="pf-row-title">{{ sec.title }}</h4>
+        <div class="pf-row-fields">
+          <div v-for="f in sec.fields" :key="f.label" class="profile-field">
+            <span class="profile-field-label">{{ f.label }}</span>
+            <button v-if="f.action" type="button" class="profile-field-value sp-field-link" :disabled="!f.value" @click="f.action">{{ f.value || '—' }}</button>
+            <span v-else :class="['profile-field-value', f.mono && 'mono']">{{ f.value || '—' }}</span>
           </div>
         </div>
-
-        <div class="flex flex-col">
-          <div v-for="row in infoRows" :key="row.k" class="flex items-center justify-between gap-4 py-3 border-b border-border-soft">
-            <span class="text-caption text-text-400 shrink-0">{{ row.k }}</span>
-            <span class="text-body-sm font-bold text-text-900 text-end break-words">{{ row.v }}</span>
-          </div>
-          <button
-            type="button"
-            class="group flex items-center justify-between gap-4 py-3 text-start transition-colors duration-fast hover:text-primary-700"
-            @click="changePasswordOpen = true"
-          >
-            <span class="text-caption text-text-400 shrink-0 group-hover:text-primary-700">تغيير كلمة السر</span>
-            <span class="flex items-center gap-1.5 text-body-sm font-bold text-primary-600">
-              انقر للتغيير <ChevronLeft :size="15" />
-            </span>
-          </button>
-        </div>
       </div>
+    </section>
 
-      <!-- فريقي -->
-      <div class="reveal reveal-delay-1 bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col transition-all duration-base hover:shadow-card-hover">
-        <div class="flex items-center gap-3 mb-6">
-          <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><Users :size="18" /></span>
-          <h3 class="text-h3 font-bold text-text-900">فريقي</h3>
-        </div>
+    <!-- بروفايل المشرف -->
+    <BaseModal v-model="supOpen" :title="`المشرف: ${supervisor?.name || ''}`" size="md">
+      <dl class="sv-info st-modal-info">
+        <div><dt>الاسم :</dt><dd>{{ supervisor?.name || '—' }}</dd></div>
+        <div><dt>رقم الواتساب :</dt><dd dir="ltr"><a v-if="supervisor?.whatsapp" :href="`https://wa.me/${supervisor.whatsapp}`" target="_blank" rel="noopener">{{ supervisor.whatsapp }}</a><template v-else>—</template></dd></div>
+        <!-- ponytail: مكان تواجد المشرف placeholder — الخادم لا يعيد region للمشرف في بروفايل الطالب -->
+        <div><dt>مكان التواجد :</dt><dd>{{ REGIONS[supervisor?.region] || '—' }}</dd></div>
+        <div><dt>رقم الشعبة :</dt><dd>{{ section || '—' }}</dd></div>
+      </dl>
+    </BaseModal>
 
-        <EmptyState v-if="!myTeam" title="لسا ما إلك فريق" />
-        <template v-else>
-          <div class="flex flex-col">
-            <div class="flex items-center justify-between gap-4 py-3 border-b border-border-soft">
-              <span class="text-caption text-text-400 shrink-0">اسم الفريق</span>
-              <span class="text-body-sm font-bold text-text-900 text-end">{{ myTeam.name }}</span>
-            </div>
-            <div class="flex items-center justify-between gap-4 py-3 border-b border-border-soft">
-              <span class="text-caption text-text-400 shrink-0">المشرف</span>
-              <span class="text-body-sm font-bold text-text-900 text-end">{{ myTeam.supervisor?.name || 'غير محدد' }}</span>
-            </div>
-            <template v-if="myTeam.project">
-              <div class="flex items-center justify-between gap-4 py-3 border-b border-border-soft">
-                <span class="text-caption text-text-400 shrink-0">اسم المشروع</span>
-                <span class="text-body-sm font-bold text-text-900 text-end">{{ myTeam.project.name || '—' }}</span>
-              </div>
-              <div class="py-3 border-b border-border-soft">
-                <div class="text-caption text-text-400 mb-1.5">نوع المشروع</div>
-                <ProjectTypes :types="myTeam.project.types || []" :editable="false" />
-              </div>
-              <div v-if="myTeam.project.description" class="py-3 border-b border-border-soft">
-                <div class="text-caption text-text-400 mb-1.5">وصف المشروع</div>
-                <p class="text-body-sm text-text-700 leading-relaxed">{{ myTeam.project.description }}</p>
-              </div>
-            </template>
-          </div>
-
-          <div class="mt-4 flex-1">
-            <div class="text-caption text-text-400 mb-2.5">أعضاء الفريق</div>
-            <div class="flex flex-wrap gap-2">
-              <span
-                v-for="m in myTeam.members" :key="m.id"
-                class="inline-flex items-center gap-1.5 text-caption font-semibold px-3 py-1.5 rounded-pill bg-border-soft text-text-700"
-              >
-                {{ m.student?.name }}
-              </span>
-            </div>
-          </div>
-        </template>
-      </div>
-    </div>
-
-    <!-- مخطط تقدم المشروع -->
-    <div v-if="myTeam" class="bg-surface rounded-lg border border-border shadow-card p-6">
-      <div class="flex items-center justify-between gap-4 mb-5 flex-wrap">
-        <div class="flex items-center gap-3">
-          <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><BarChart3 :size="18" /></span>
-          <h3 class="text-h3 font-bold text-text-900">مخطط تقدم المشروع</h3>
-        </div>
-        <router-link :to="{ name: 'student-tasks' }" class="inline-flex items-center gap-1.5 text-caption font-bold text-text-600 bg-border-soft px-3 py-1.5 rounded-pill hover:text-primary-700 transition-colors duration-fast">
-          <Kanban :size="13" /> انتقل إلى لوحة Kanban
-        </router-link>
-      </div>
-
-      <div class="flex items-center justify-between text-caption text-text-600 mb-1.5 flex-wrap gap-1">
-        <span>{{ kanban.done }} / {{ kanban.total }} مهمة منجزة</span>
-        <span class="font-cairo font-extrabold text-h4 text-text-900">{{ kanbanPercent }}%</span>
-      </div>
-      <div class="h-2.5 rounded-pill bg-border-soft overflow-hidden mb-6">
-        <div class="h-full rounded-pill bg-primary-600" :style="{ width: kanbanPercent + '%' }" />
-      </div>
-
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div v-for="stat in kanbanStats" :key="stat.key" class="group bg-bg rounded-md border border-border-soft p-4 text-center transition-all duration-fast hover:-translate-y-0.5 hover:bg-surface hover:shadow-card hover:border-primary-200">
-          <div class="font-cairo font-extrabold text-h3 transition-transform duration-fast group-hover:scale-110" :class="stat.colorClass">{{ stat.value }}</div>
-          <div class="text-label text-text-600 mt-1">{{ stat.label }}</div>
-        </div>
-      </div>
-    </div>
-
-    <ChangePasswordModal v-model="changePasswordOpen" />
+    <!-- بيانات المجموعة -->
+    <BaseModal v-model="groupOpen" :title="`مجموعتي: ${myTeam?.name || ''}`" size="md">
+      <table class="pt st-mates">
+        <thead><tr><th>الطالب</th><th>مكان التواجد</th></tr></thead>
+        <tbody>
+          <tr><td class="pt-strong">{{ user?.name }} <span class="pt-muted">(أنت)</span></td><td>{{ REGIONS[profile?.region] || '—' }}</td></tr>
+          <tr v-for="m in profile?.teammates || myTeam?.teammates || []" :key="m.id"><td>{{ m.name }}</td><td>{{ REGIONS[m.region] || '—' }}</td></tr>
+        </tbody>
+      </table>
+    </BaseModal>
   </div>
 </template>
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { User, Users, BarChart3, Kanban, ChevronLeft } from 'lucide-vue-next'
-import EmptyState from '@/components/ui/EmptyState.vue'
-import ChangePasswordModal from '@/components/shared/ChangePasswordModal.vue'
-import ProjectTypes from '@/components/shared/ProjectTypes.vue'
-import { initials } from '@/utils/formatters'
+import { IdCard, Lock, Users } from 'lucide-vue-next'
+import BaseModal from '@/components/ui/BaseModal.vue'
+import api from '@/services/api'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
+import { REGIONS } from '@/utils/progressData'
+import { placeholderGroup } from '@/utils/studentPlaceholders'
 
 export default {
   name: 'StudentProfilePage',
 
-  components: { User, Users, BarChart3, Kanban, ChevronLeft, EmptyState, ChangePasswordModal, ProjectTypes },
+  components: { Lock, BaseModal },
 
   data() {
-    return { changePasswordOpen: false }
+    return {
+      REGIONS,
+      tab: 'info',
+      profile: null,
+      supOpen: false,
+      groupOpen: false,
+      loaded: false,
+      tabs: [
+        { key: 'info', label: 'المعلومات الشخصية', icon: IdCard },
+        { key: 'team', label: 'مجموعتي', icon: Users }
+      ]
+    }
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['teams', 'tasks']),
-    ...mapState(useAuthStore, ['user']),
-
-    initials() {
-      return initials(this.user?.name || '')
-    },
+    ...mapState(useTeamsStore, ['teams']),
+    ...mapState(useAuthStore, ['user', 'avatarSrc']),
 
     myTeam() {
-      return this.teams.find((t) => t.members?.some((m) => m.student?.id === this.user?.id))
+      // بلا مجموعة: مجموعة تجريبية (placeholder) حتى يظهر شكل الصفحة
+      return this.teams.find((t) => t.members?.some((m) => m.student?.id === this.user?.id)) || (this.loaded ? placeholderGroup() : null)
     },
 
-    infoRows() {
-      return [
-        { k: 'البريد الإلكتروني', v: this.user?.email || '—' },
-        { k: 'الرقم الجامعي', v: this.user?.university_number || '—' },
-        { k: 'التخصص', v: this.user?.specialization?.name || '—' },
-        { k: 'الفصل الدراسي', v: this.user?.academicTerm?.name || '—' }
-      ]
+    supervisor() {
+      return this.profile?.supervisor || this.myTeam?.supervisor || null
     },
 
-    kanban() {
-      return {
-        total: this.tasks.length,
-        done: this.tasks.filter((t) => t.status === 'done').length,
-        review: this.tasks.filter((t) => t.status === 'review').length,
-        progress: this.tasks.filter((t) => t.status === 'in_progress').length,
-        pending: this.tasks.filter((t) => t.status === 'pending').length
+    section() {
+      return this.profile?.section || this.myTeam?.section || ''
+    },
+
+    sections() {
+      const u = this.user || {}
+      if (this.tab === 'info') {
+        return [
+          { title: 'بيانات الطالب', fields: [
+            { label: 'الاسم', value: u.name },
+            { label: 'الرقم الجامعي', value: u.university_number, mono: true },
+            { label: 'التخصص', value: u.specialization?.name },
+            { label: 'الفصل الدراسي', value: u.academicTerm?.name }
+          ] },
+          { title: 'بيانات التواصل', fields: [
+            { label: 'البريد الإلكتروني', value: u.email, mono: true },
+            { label: 'مكان التواجد', value: REGIONS[this.profile?.region] }
+          ] }
+        ]
       }
-    },
-
-    kanbanPercent() {
-      if (!this.kanban.total) return 0
-      return Math.round((this.kanban.done / this.kanban.total) * 100)
-    },
-
-    kanbanStats() {
       return [
-        { key: 'done', label: 'منجزة', value: this.kanban.done, colorClass: 'text-success' },
-        { key: 'review', label: 'مراجعة', value: this.kanban.review, colorClass: 'text-warning-text' },
-        { key: 'progress', label: 'قيد التنفيذ', value: this.kanban.progress, colorClass: 'text-primary-600' },
-        { key: 'pending', label: 'قيد الانتظار', value: this.kanban.pending, colorClass: 'text-secondary-600' }
+        { title: 'المجموعة', fields: [
+          { label: 'رقم الشعبة', value: this.section },
+          { label: 'اسم المجموعة', value: this.myTeam?.name },
+          { label: 'بيانات المجموعة', value: this.myTeam ? `${this.myTeam.members?.length || 0} طلاب — عرض` : '', action: () => { this.groupOpen = true } }
+        ] },
+        { title: 'المشرف', fields: [
+          { label: 'اسم المشرف', value: this.supervisor?.name, action: () => { this.supOpen = true } }
+        ] }
       ]
     }
   },
@@ -188,11 +146,17 @@ export default {
   async created() {
     await this.fetchCurrentUser()
     await this.fetchTeams()
-    if (this.myTeam) await this.fetchTasks(this.myTeam.id)
+    this.loaded = true
+    try {
+      const { data } = await api.get(`/students/${this.user?.id}/profile`)
+      this.profile = data
+    } catch {
+      // بيانات الفريق الأساسية تكفي
+    }
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchTasks']),
+    ...mapActions(useTeamsStore, ['fetchTeams']),
     ...mapActions(useAuthStore, ['fetchCurrentUser'])
   }
 }

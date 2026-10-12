@@ -1,116 +1,132 @@
 <template>
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-    <!-- المقترح -->
-    <div class="bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col">
-      <div class="flex items-center gap-3 mb-6">
-        <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><FileText :size="18" /></span>
-        <h3 class="text-h3 font-bold text-text-900">المقترح (Proposal)</h3>
-      </div>
+  <div class="dash hd-page">
+    <header class="dash-head"><h2 class="dash-title">المقترحات</h2></header>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+      <!-- المقترح -->
+      <section class="dash-card flex flex-col">
+        <div class="dash-card-head"><h3 class="portal-title">المقترح (Proposal)</h3></div>
 
-      <!-- نموذج تقديم المقترح (أو إعادة تقديمه بعد الرفض) — نوع المشروع إجباري عند أول تقديم ويُقفل بعدها (يعدّله المشرف) -->
-      <form v-if="showForm" class="flex flex-col gap-4" @submit.prevent="submit">
-        <BaseInput v-model.trim="form.name" label="اسم المشروع" placeholder="مثال: نظام حجز القاعات الجامعية" required />
-        <div>
-          <div class="text-label font-bold text-text-700 mb-2">نوع المشروع <b v-if="!typesLocked" class="text-error">*</b></div>
-          <div v-if="typesLocked">
-            <div class="flex flex-wrap gap-2">
-              <span v-for="t in projectTypes" :key="t" class="text-caption font-bold px-3 py-1.5 rounded-sm bg-primary-50 text-primary-700">{{ t }}</span>
+        <!-- نموذج تقديم المقترح (أو إعادة تقديمه بعد الرفض) — نوع المشروع إجباري عند أول تقديم ويُقفل بعدها (يعدّله المشرف) -->
+        <form v-if="showForm" class="flex flex-col gap-4" @submit.prevent="submit">
+          <BaseInput v-model.trim="form.name" label="اسم المشروع" placeholder="مثال: نظام حجز القاعات الجامعية" required />
+          <div>
+            <div class="text-label font-bold text-text-700 mb-2">نوع المشروع <b v-if="!typesLocked" class="text-error">*</b></div>
+            <div v-if="typesLocked">
+              <div class="flex flex-wrap gap-2">
+                <span v-for="t in projectTypes" :key="t" class="text-caption font-bold px-3 py-1.5 rounded-sm bg-primary-50 text-primary-700">{{ t }}</span>
+              </div>
+              <p class="text-caption text-text-400 mt-1.5">تم تحديد نوع المشروع، ويعدّله المشرف فقط.</p>
             </div>
-            <p class="text-caption text-text-400 mt-1.5">تم تحديد نوع المشروع، ويعدّله المشرف فقط.</p>
+            <template v-else>
+              <div class="flex flex-wrap gap-2" role="group" aria-label="نوع المشروع">
+                <button
+                  v-for="t in PROJECT_TYPES" :key="t" type="button" :aria-pressed="form.types.includes(t)"
+                  :disabled="!form.types.includes(t) && form.types.length >= 6"
+                  :class="['text-caption font-bold px-3 py-1.5 rounded-sm border transition-colors disabled:opacity-40', form.types.includes(t) ? 'bg-primary-600 border-primary-600 text-white' : 'border-border text-text-700 hover:border-primary-600']"
+                  @click="toggleType(t)"
+                >
+                  {{ t }}
+                </button>
+              </div>
+              <p class="text-caption text-text-400 mt-1.5">اختر نوعًا واحدًا على الأقل (حتى 6). لا يمكن تعديله بعد الإرسال إلا من المشرف.</p>
+            </template>
           </div>
-          <template v-else>
-            <div class="flex flex-wrap gap-2" role="group" aria-label="نوع المشروع">
-              <button
-                v-for="t in PROJECT_TYPES" :key="t" type="button" :aria-pressed="form.types.includes(t)"
-                :disabled="!form.types.includes(t) && form.types.length >= 6"
-                :class="['text-caption font-bold px-3 py-1.5 rounded-sm border transition-colors disabled:opacity-40', form.types.includes(t) ? 'bg-primary-600 border-primary-600 text-white' : 'border-border text-text-700 hover:border-primary-600']"
-                @click="toggleType(t)"
-              >
-                {{ t }}
-              </button>
+          <BaseTextarea v-model.trim="form.description" label="وصف المشروع" :rows="3" placeholder="فكرة المشروع باختصار" />
+          <BaseTextarea v-model.trim="form.problems" label="المشكلة" :rows="2" placeholder="ما المشكلة التي يحلها المشروع؟" />
+          <BaseTextarea v-model.trim="form.solutions" label="الحل المقترح" :rows="2" />
+          <BaseTextarea v-model.trim="form.features_value" label="المميزات والقيمة" :rows="2" />
+          <div>
+            <div class="text-label font-bold text-text-700 mb-2">ملف المقترح <b v-if="!proposal" class="text-error">*</b><span v-else class="text-text-400 font-normal"> (اختياري — يبقى الملف السابق إن لم ترفع جديدًا)</span></div>
+            <FileDropzone v-model="form.files" :max-mb="100" />
+          </div>
+          <p v-if="missing" class="text-caption text-error">{{ missing }}</p>
+          <div class="flex gap-2">
+            <BaseButton type="submit" :loading="sending" :disabled="!!missing">{{ proposal ? 'إعادة إرسال المقترح' : 'إرسال المقترح' }}</BaseButton>
+            <BaseButton v-if="proposal" variant="outline" @click="editing = false">إلغاء</BaseButton>
+          </div>
+        </form>
+
+        <div v-else-if="!proposal" class="flex-1 flex items-center justify-center p-6">
+          <div class="flex flex-col items-center gap-2.5 bg-bg border border-border rounded-lg px-7 py-6 max-w-[260px] text-center">
+            <span class="grid place-items-center w-12 h-12 rounded-pill bg-surface border border-border text-text-400"><Lock :size="20" /></span>
+            <p class="text-body-sm font-bold text-text-900">بانتظار إرسال المقترح من فريقك</p>
+            <p class="text-caption text-text-600">لتعبئة المقترح وإرساله</p>
+          </div>
+        </div>
+
+        <SubmittedState
+          v-else class="flex-1 flex flex-col justify-center"
+          :rejected="proposal.status === 'rejected'"
+          :title="proposal.status === 'approved' ? 'تم اعتماد المقترح' : proposal.status === 'rejected' ? 'تم رفض المقترح' : 'تم تسليم الملف، بانتظار الموافقة'"
+          :description="proposal.status === 'approved' ? 'المشروع الآن قيد التنفيذ.' : proposal.status === 'rejected' ? 'يجب على الفريق تعديل المقترح وإعادة إرساله.' : 'بانتظار اعتماد المشرف للمقترح المُرسل.'"
+          :reject-reason="proposal.rejection_reason"
+          :items="proposalItems"
+        />
+        <BaseButton v-if="canResubmit && !editing" variant="outline" class="mt-4 self-start" @click="startEdit">تعديل المقترح وإعادة إرساله</BaseButton>
+      </section>
+
+      <!-- التقرير النهائي -->
+      <section class="dash-card flex flex-col">
+        <div class="dash-card-head"><h3 class="portal-title">التقرير النهائي للمشروع</h3></div>
+
+        <!-- سبب الرفض ومن رفض (المشرف أو لجنة الإشراف) فوق نموذج إعادة الرفع -->
+        <div v-if="reportRejected" class="flex items-start gap-2 p-3 mb-4 rounded-sm bg-error-bg">
+          <XCircle :size="16" class="text-error shrink-0 mt-0.5" />
+          <p class="text-caption text-error leading-relaxed">
+            <span class="font-bold">رُفض التقرير من {{ rejectedBy(finalReport) }}: </span>{{ finalReport.review_note || '—' }}
+            <span class="block mt-1">عدّل التقرير وأعد رفعه — يبدأ الاعتماد من جديد (المشرف ثم لجنة الإشراف).</span>
+          </p>
+        </div>
+
+        <!-- رفع التقرير النهائي (أو إعادة رفعه بعد الرفض) — بعد اعتماد المقترح، من حساب الفريق الأساسي -->
+        <form v-if="showReportForm" class="flex flex-col gap-4" @submit.prevent="submitReport">
+          <!-- 3 خانات: الفيديو · التقرير · الملفات المضغوطة -->
+          <div class="st-slots">
+            <div :class="['st-slot', (reportForm.video_url || reportForm.video.length) && 'is-filled']">
+              <h4><Video :size="16" /> فيديو العرض <b class="text-error">*</b></h4>
+              <BaseInput v-model.trim="reportForm.video_url" label="رابط يوتيوب" placeholder="https://www.youtube.com/watch?v=…" dir="ltr" />
+              <!-- ponytail: رفع فيديو صغير placeholder — الخادم يقبل الرابط فقط (video_url)؛ الملف لا يُرسل -->
+              <FileDropzone v-model="reportForm.video" :max-mb="50" />
+              <span class="pt-muted">رابط يوتيوب، أو فيديو قصير حتى 50MB.</span>
             </div>
-            <p class="text-caption text-text-400 mt-1.5">اختر نوعًا واحدًا على الأقل (حتى 6). لا يمكن تعديله بعد الإرسال إلا من المشرف.</p>
-          </template>
-        </div>
-        <BaseTextarea v-model.trim="form.description" label="وصف المشروع" :rows="3" placeholder="فكرة المشروع باختصار" />
-        <BaseTextarea v-model.trim="form.problems" label="المشكلة" :rows="2" placeholder="ما المشكلة التي يحلها المشروع؟" />
-        <BaseTextarea v-model.trim="form.solutions" label="الحل المقترح" :rows="2" />
-        <BaseTextarea v-model.trim="form.features_value" label="المميزات والقيمة" :rows="2" />
-        <div>
-          <div class="text-label font-bold text-text-700 mb-2">ملف المقترح <b v-if="!proposal" class="text-error">*</b><span v-else class="text-text-400 font-normal"> (اختياري — يبقى الملف السابق إن لم ترفع جديدًا)</span></div>
-          <FileDropzone v-model="form.files" :max-mb="100" />
-        </div>
-        <p v-if="missing" class="text-caption text-error">{{ missing }}</p>
-        <div class="flex gap-2">
-          <BaseButton type="submit" :loading="sending" :disabled="!!missing">{{ proposal ? 'إعادة إرسال المقترح' : 'إرسال المقترح' }}</BaseButton>
-          <BaseButton v-if="proposal" variant="outline" @click="editing = false">إلغاء</BaseButton>
-        </div>
-      </form>
+            <div :class="['st-slot', reportForm.files.length && 'is-filled']">
+              <h4><FileCheck :size="16" /> التقرير النهائي (PDF) <b class="text-error">*</b></h4>
+              <FileDropzone v-model="reportForm.files" :max-mb="100" />
+            </div>
+            <div :class="['st-slot', reportForm.zip.length && 'is-filled']">
+              <h4><FileText :size="16" /> الملفات المضغوطة</h4>
+              <!-- ponytail: الملفات المضغوطة placeholder — لا تُرسل حتى يوفّر الخادم حقلها -->
+              <FileDropzone v-model="reportForm.zip" :max-mb="100" />
+              <span class="pt-muted">الكود المصدري والمخرجات (ZIP / RAR).</span>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <BaseButton type="submit" :loading="uploading" :disabled="!reportForm.files.length || !reportForm.video_url">{{ reportRejected ? 'إعادة رفع التقرير' : 'رفع التقرير النهائي' }}</BaseButton>
+            <BaseButton v-if="reportRejected" variant="outline" @click="reportEditing = false">إلغاء</BaseButton>
+          </div>
+        </form>
 
-      <div v-else-if="!proposal" class="flex-1 flex items-center justify-center p-6">
-        <div class="flex flex-col items-center gap-2.5 bg-bg border border-border rounded-lg px-7 py-6 max-w-[260px] text-center">
-          <span class="grid place-items-center w-12 h-12 rounded-pill bg-surface border border-border text-text-400"><Lock :size="20" /></span>
-          <p class="text-body-sm font-bold text-text-900">بانتظار إرسال المقترح من فريقك</p>
-          <p class="text-caption text-text-600">لتعبئة المقترح وإرساله</p>
+        <div v-else-if="!finalReport" class="flex-1 flex items-center justify-center p-6">
+          <div class="flex flex-col items-center gap-2.5 bg-bg border border-border rounded-lg px-7 py-6 max-w-[260px] text-center">
+            <span class="grid place-items-center w-12 h-12 rounded-pill bg-surface border border-border text-text-400"><Lock :size="20" /></span>
+            <p class="text-body-sm font-bold text-text-900">{{ proposal?.status === 'approved' ? 'بانتظار رفع التقرير من فريقك' : 'يُتاح بعد اعتماد المقترح' }}</p>
+            <p class="text-caption text-text-600">لرفع التقرير النهائي والمخرج</p>
+          </div>
         </div>
-      </div>
 
-      <SubmittedState
-        v-else class="flex-1 flex flex-col justify-center"
-        :rejected="proposal.status === 'rejected'"
-        :title="proposal.status === 'approved' ? 'تم اعتماد المقترح' : proposal.status === 'rejected' ? 'تم رفض المقترح' : 'تم تسليم الملف، بانتظار الموافقة'"
-        :description="proposal.status === 'approved' ? 'المشروع الآن قيد التنفيذ.' : proposal.status === 'rejected' ? 'يجب على الفريق تعديل المقترح وإعادة إرساله.' : 'بانتظار اعتماد المشرف للمقترح المُرسل.'"
-        :reject-reason="proposal.rejection_reason"
-        :items="proposalItems"
-      />
-      <BaseButton v-if="canResubmit && !editing" variant="outline" class="mt-4 self-start" @click="startEdit">تعديل المقترح وإعادة إرساله</BaseButton>
-    </div>
-
-    <!-- التقرير النهائي -->
-    <div class="bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col">
-      <div class="flex items-center gap-3 mb-6">
-        <span class="grid place-items-center w-9 h-9 rounded-md shrink-0 text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))"><FileCheck :size="18" /></span>
-        <h3 class="text-h3 font-bold text-text-900">التقرير النهائي للمشروع</h3>
-      </div>
-
-      <!-- سبب الرفض ومن رفض (المشرف أو لجنة الإشراف) فوق نموذج إعادة الرفع -->
-      <div v-if="reportRejected" class="flex items-start gap-2 p-3 mb-4 rounded-sm bg-error-bg">
-        <XCircle :size="16" class="text-error shrink-0 mt-0.5" />
-        <p class="text-caption text-error leading-relaxed">
-          <span class="font-bold">رُفض التقرير من {{ rejectedBy(finalReport) }}: </span>{{ finalReport.review_note || '—' }}
-          <span class="block mt-1">عدّل التقرير وأعد رفعه — يبدأ الاعتماد من جديد (المشرف ثم لجنة الإشراف).</span>
-        </p>
-      </div>
-
-      <!-- رفع التقرير النهائي (أو إعادة رفعه بعد الرفض) — بعد اعتماد المقترح، من حساب الفريق الأساسي -->
-      <form v-if="showReportForm" class="flex flex-col gap-4" @submit.prevent="submitReport">
-        <div>
-          <div class="text-label font-bold text-text-700 mb-2">ملف التقرير النهائي (PDF) <b class="text-error">*</b></div>
-          <FileDropzone v-model="reportForm.files" :max-mb="100" />
-        </div>
-        <BaseInput v-model.trim="reportForm.video_url" label="رابط فيديو البرومو" placeholder="https://www.youtube.com/watch?v=…" dir="ltr" required />
-        <div class="flex gap-2">
-          <BaseButton type="submit" :loading="uploading" :disabled="!reportForm.files.length || !reportForm.video_url">{{ reportRejected ? 'إعادة رفع التقرير' : 'رفع التقرير النهائي' }}</BaseButton>
-          <BaseButton v-if="reportRejected" variant="outline" @click="reportEditing = false">إلغاء</BaseButton>
-        </div>
-      </form>
-
-      <div v-else-if="!finalReport" class="flex-1 flex items-center justify-center p-6">
-        <div class="flex flex-col items-center gap-2.5 bg-bg border border-border rounded-lg px-7 py-6 max-w-[260px] text-center">
-          <span class="grid place-items-center w-12 h-12 rounded-pill bg-surface border border-border text-text-400"><Lock :size="20" /></span>
-          <p class="text-body-sm font-bold text-text-900">{{ proposal?.status === 'approved' ? 'بانتظار رفع التقرير من فريقك' : 'يُتاح بعد اعتماد المقترح' }}</p>
-          <p class="text-caption text-text-600">لرفع التقرير النهائي والمخرج</p>
-        </div>
-      </div>
-
-      <SubmittedState
-        v-else class="flex-1 flex flex-col justify-center"
-        :rejected="reportRejected"
-        :title="REVIEW[finalReport.review_status || 'pending_supervisor'].label"
-        :description="reportDescription"
-        :items="reportItems"
-      />
-      <BaseButton v-if="reportRejected && canSubmit && proposal?.status === 'approved' && !reportEditing" variant="outline" class="mt-4 self-start" @click="reportEditing = true">تعديل التقرير وإعادة رفعه</BaseButton>
+        <SubmittedState
+          v-else class="flex-1 flex flex-col justify-center"
+          :rejected="reportRejected"
+          :title="REVIEW[finalReport.review_status || 'pending_supervisor'].label"
+          :description="reportDescription"
+          :items="reportItems"
+        />
+        <BaseButton v-if="reportRejected && canSubmit && proposal?.status === 'approved' && !reportEditing" variant="outline" class="mt-4 self-start" @click="reportEditing = true">تعديل التقرير وإعادة رفعه</BaseButton>
+        <!-- ponytail: زر الأرشفة placeholder — الخادم يؤرشف المشروع تلقائيًا بعد اعتماد اللجنة -->
+        <button v-if="finalReport" type="button" class="pbtn is-cyan is-sm mt-3 self-start" :disabled="finalReport.review_status !== 'approved'" @click="$toast?.info('يُؤرشف المشروع تلقائيًا بعد اعتماد لجنة الإشراف')">
+          أرشفة المشروع
+        </button>
+      </section>
     </div>
   </div>
 </template>
@@ -141,7 +157,7 @@ export default {
       sending: false,
       reportEditing: false,
       uploading: false,
-      reportForm: { files: [], video_url: '' },
+      reportForm: { files: [], video_url: '', video: [], zip: [] },
       form: { name: '', description: '', problems: '', solutions: '', features_value: '', types: [], files: [] }
     }
   },
@@ -241,7 +257,7 @@ export default {
       try {
         await this.submitFinalReport(this.myTeam.project.id, { file: this.reportForm.files[0], video_url: this.reportForm.video_url })
         this.$toast?.success('تم رفع التقرير — بانتظار موافقة المشرف')
-        this.reportForm = { files: [], video_url: '' }
+        this.reportForm = { files: [], video_url: '', video: [], zip: [] }
         this.reportEditing = false
         await this.fetchTeams()
       } catch (err) {

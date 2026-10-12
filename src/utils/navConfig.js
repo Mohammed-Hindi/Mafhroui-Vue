@@ -63,14 +63,12 @@ export const NAV_ITEMS_BY_ROLE = {
     { label: 'المساعد الآلي', to: '/committee/assistant', icon: Bot, color: '#233B77' }
   ],
 
+  // لوحة المشرف مُرجعة مؤقتًا لنسخة 31/8 (النسخة الجديدة محفوظة خارج المشروع)
   [ROLES.SUPERVISOR]: [
     { label: 'الملف الشخصي', to: '/supervisor', icon: UserCircle, exact: true },
     { label: 'الفرق', to: '/supervisor/teams', icon: Users },
     { label: 'المقترح / التقرير النهائي', to: '/supervisor/proposals', icon: ClipboardList },
     { label: 'المهام (Kanban)', to: '/supervisor/tasks', icon: ListTodo },
-    { label: 'مهامي من الإدارة', to: '/supervisor/my-tasks', icon: ClipboardCheck },
-    { label: 'الإعلانات والملفات', to: '/supervisor/announcements', icon: Megaphone },
-    { label: 'تقييم الطلبة', to: '/supervisor/evaluations', icon: ClipboardCheck },
     { label: 'الاجتماعات', to: '/supervisor/meetings', icon: CalendarDays },
     { label: 'مواعيد المناقشات', to: '/supervisor/appointments', icon: CalendarClock },
     { label: 'أرشيف المشاريع', to: '/supervisor/project-archive', icon: FileCheck },
@@ -79,11 +77,12 @@ export const NAV_ITEMS_BY_ROLE = {
   ],
 
   [ROLES.STUDENT]: [
-    { label: 'الملف الشخصي', to: '/student', icon: UserCircle, exact: true },
-    { label: 'المقترح / التقرير النهائي', to: '/student/proposal', icon: ClipboardList },
+    { label: 'الملف التعريفي', to: '/student', icon: UserCircle, exact: true },
+    { label: 'المقترحات', to: '/student/proposal', icon: ClipboardList },
     { label: 'المساعد الآلي', to: '/student/assistant', icon: Bot },
-    { label: 'المهام (Kanban)', to: '/student/tasks', icon: ListTodo },
+    { label: 'المهام', to: '/student/tasks', icon: ListTodo },
     { label: 'الإعلانات والملفات', to: '/student/announcements', icon: Megaphone },
-    { label: 'الاجتماعات', to: '/student/meetings', icon: CalendarDays }
+    { label: 'الاجتماعات', to: '/student/meetings', icon: CalendarDays },
+    { label: 'الشكاوى والملاحظات', to: '/student/tickets', icon: LifeBuoy }
   ]
 }

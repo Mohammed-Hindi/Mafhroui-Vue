@@ -1,12 +1,18 @@
 <template>
   <!-- مهامي — مهام الإدارة العامة المسندة لعضو لجنة الإشراف أو للمشرف: لوحة حالات يحرّكها صاحبها بنفسه + ملاحظات -->
-  <div>
+  <div :class="usesPortal && 'dash hd-page'">
+    <!-- الإدارة العامة واللجنة: رأس صفحة بطاقة بوابة كباقي الصفحات -->
+    <header v-if="usesPortal" class="dash-head">
+      <h2 class="dash-title">مهامي</h2>
+      <!-- إرسال مهمة للمجموعات أو مجموعات محددة أو المشرفين (نفس أداة الإدارة العامة) -->
+      <router-link :to="`/${portalPrefix}/assignments`" class="pbtn is-green"><Plus :size="16" /> مهمة جديدة</router-link>
+    </header>
     <LoadingSpinner v-if="loading" />
     <EmptyState v-else-if="!tasks.length" title="لا توجد مهام مسندة لك" description="عندما ترسل لك الإدارة العامة مهمة ستظهر هنا." />
     <TaskBoard
       v-else
       :tasks="tasks"
-      :can-create="false" :can-drag="true" :can-delete="false"
+      :can-create="false" :can-drag="true" :can-delete="false" uploads
       :notes-by-task="taskNotes"
       :notes-loading-by-task="taskNotesLoading"
       @move="onMove"
@@ -18,6 +24,7 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
+import { Plus } from 'lucide-vue-next'
 import TaskBoard from '@/components/shared/TaskBoard.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
@@ -28,7 +35,7 @@ import { useAuthStore } from '@/stores/auth.store'
 export default {
   name: 'CommitteeMyTasksPage',
 
-  components: { TaskBoard, EmptyState, LoadingSpinner },
+  components: { Plus, TaskBoard, EmptyState, LoadingSpinner },
 
   data() {
     return { tasks: [], loading: true }
@@ -36,7 +43,7 @@ export default {
 
   computed: {
     ...mapState(useTeamsStore, ['taskNotes', 'taskNotesLoading']),
-    ...mapState(useAuthStore, ['user'])
+    ...mapState(useAuthStore, ['user', 'usesPortal', 'portalPrefix'])
   },
 
   // GET /tasks?audience=committee|supervisors&assignee_id=me (الخادم يفرض للمشرف مهامه هو فقط)
