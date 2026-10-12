@@ -13,7 +13,7 @@
             <span class="text-caption text-text-500">{{ row.saved ? `آخر درجة محفوظة: ${row.savedScore}` : 'لم تُدخل درجة بعد' }}</span>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-[150px_1fr_auto] gap-3 items-end">
-            <label class="flex flex-col gap-1 text-label font-bold text-text-600">الدرجة من 100<input v-model.number="row.score" type="number" min="0" max="100" class="h-10 px-3 border border-border bg-bg text-body text-text-900" /></label>
+            <label class="flex flex-col gap-1 text-label font-bold text-text-600">الدرجة من 100<input v-model.number="row.score" type="number" min="0" max="100" class="h-10 px-3 border border-border bg-bg text-body text-text-900"></label>
             <label class="flex flex-col gap-1 text-label font-bold text-text-600">ملاحظات<textarea v-model.trim="row.notes" rows="1" maxlength="2000" class="min-h-10 px-3 py-2 border border-border bg-bg text-body text-text-900" /></label>
             <button type="button" class="h-10 px-4 bg-primary-600 text-white text-caption font-bold disabled:opacity-50" :disabled="row.saving || row.score === '' || row.score === null || Number(row.score) < 0 || Number(row.score) > 100" @click="save(row)">{{ row.saving ? 'جارٍ الحفظ…' : 'حفظ الدرجة' }}</button>
           </div>

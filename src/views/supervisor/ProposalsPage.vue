@@ -87,19 +87,14 @@
 
     <section class="bg-surface rounded-lg border border-border shadow-card overflow-hidden mt-6">
       <header class="flex flex-wrap items-center justify-between gap-3 p-5 border-b border-border-soft">
-        <div><h3 class="font-cairo font-bold text-h4 text-text-900">التقارير النهائية المرفوعة</h3><p class="text-caption text-text-600 mt-1">راجع الملف ووافق عليه لإرساله إلى لجنة الإشراف.</p></div>
-        <BaseBadge variant="warning" dot>{{ pendingReports.length }} بانتظار المراجعة</BaseBadge>
+        <div><h3 class="font-cairo font-bold text-h4 text-text-900">التقارير النهائية المرفوعة</h3><p class="text-caption text-text-600 mt-1">ملفات التقارير التي رفعتها مجموعاتك وحالة رفعها.</p></div>
       </header>
       <p v-if="reportsLoading" class="p-5 text-caption text-text-400">جارٍ تحميل التقارير…</p>
       <div v-else-if="reportRows.length" class="divide-y divide-border-soft">
         <article v-for="row in reportRows" :key="row.report.id" class="flex flex-wrap items-center gap-4 p-5">
           <div class="min-w-[180px] flex-1"><p class="font-bold text-body-sm text-text-900">{{ row.projectName }}</p><p class="text-caption text-text-600 mt-1">{{ row.teamName }}<span v-if="row.section"> · شعبة {{ row.section }}</span> · {{ formatDate(row.report.created_at) }}</p></div>
-          <BaseBadge :variant="row.status === 'approved' ? 'success' : row.status === 'rejected' ? 'error' : 'warning'" dot>{{ reviewLabel(row.status) }}</BaseBadge>
+          <BaseBadge variant="info" dot>مرفوع</BaseBadge>
           <button type="button" class="h-9 px-3 border border-primary-200 text-primary-700 text-caption font-bold" @click="openProtectedFile(`/final-reports/${row.report.id}/download`, `تقرير-${row.projectName}.pdf`)"><FileText :size="14" class="inline me-1" />عرض التقرير</button>
-          <template v-if="row.status === 'pending_supervisor'">
-            <button type="button" class="h-9 px-3 bg-success text-white text-caption font-bold disabled:opacity-50" :disabled="reviewingReportId === row.report.id" @click="reviewFinalReport(row, true)"><Check :size="14" class="inline me-1" />موافقة</button>
-            <button type="button" class="h-9 px-3 border border-error-border text-error text-caption font-bold disabled:opacity-50" :disabled="reviewingReportId === row.report.id" @click="reviewFinalReport(row, false)"><X :size="14" class="inline me-1" />إعادة للطلاب</button>
-          </template>
         </article>
       </div>
       <EmptyState v-else title="لا توجد تقارير نهائية مرفوعة" description="ستظهر هنا تقارير مجموعاتك بعد رفعها من الطلاب." />
@@ -129,8 +124,9 @@ import CountUp from '@/components/ui/CountUp.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
 import EmptyState from '@/components/ui/EmptyState.vue'
-import { REVIEW, latestReport, reviewReport } from '@/utils/finalReport'
+import { latestReport } from '@/utils/finalReport'
 import { formatDate } from '@/utils/formatters'
+import api from '@/services/api'
 
 const PAGE_SIZE = 5
 const STATUS_LABELS = { pending: 'قيد المراجعة', approved: 'معتمد', rejected: 'مرفوض' }
@@ -163,7 +159,7 @@ export default {
       rejectTarget: null,
       rejectReason: '',
       rejecting: false,
-      reportRows: [], reportsLoading: true, reviewingReportId: null
+      reportRows: [], reportsLoading: true
     }
   },
 
@@ -187,8 +183,6 @@ export default {
           }
         })
     },
-
-    pendingReports() { return this.reportRows.filter((row) => row.status === 'pending_supervisor') },
 
     stats() {
       const rejected = this.proposals.filter((p) => p.status === 'مرفوض').length
@@ -222,33 +216,20 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'approveProposal', 'rejectProposal', 'openProtectedFile', 'fetchProject']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'approveProposal', 'rejectProposal', 'openProtectedFile']),
 
     formatDate,
-    reviewLabel(status) { return REVIEW[status]?.label || 'بانتظار موافقة المشرف' },
     async loadFinalReports() {
       this.reportsLoading = true
       const teams = this.teams.filter((team) => team.supervisor?.id === this.user?.id && team.project?.id)
       const results = await Promise.allSettled(teams.map(async (team) => {
-        const response = await this.fetchProject(team.project.id)
-        const project = response.data || response
-        const report = latestReport(project)
-        return report ? { teamName: team.name, section: team.section, projectName: project.name || team.project.name, report, status: report.review_status || 'pending_supervisor' } : null
+        const { data } = await api.get(`/projects/${team.project.id}/final-reports`)
+        const reports = data.data || data
+        const report = latestReport({ final_reports: reports })
+        return report ? { teamName: team.name, section: team.section, projectName: team.project.name, report } : null
       }))
       this.reportRows = results.filter((result) => result.status === 'fulfilled' && result.value).map((result) => result.value)
       this.reportsLoading = false
-    },
-    async reviewFinalReport(row, approve) {
-      const note = approve ? null : window.prompt('اكتب ملاحظات إعادة التقرير للطلاب:')
-      if (!approve && !note?.trim()) return
-      this.reviewingReportId = row.report.id
-      try {
-        row.report = { ...row.report, ...(await reviewReport(row.report.id, approve, note?.trim() || null)) }
-        row.status = row.report.review_status || (approve ? 'pending_committee' : 'rejected')
-        this.$toast?.success(approve ? 'تمت الموافقة وإحالة التقرير للجنة الإشراف' : 'أُعيد التقرير للطلاب مع الملاحظات')
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّرت مراجعة التقرير')
-      } finally { this.reviewingReportId = null }
     },
 
     statusVariant(status) {

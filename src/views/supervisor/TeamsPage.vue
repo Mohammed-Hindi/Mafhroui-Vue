@@ -87,7 +87,6 @@
                     </button>
                   </span>
                   <span class="flex items-center justify-center gap-2">
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(member)"><Pencil :size="14" /></button>
                     <button v-if="member.whats" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member)"><MessageCircle :size="14" /></button>
                     <button v-if="member.mail" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member)"><Mail :size="14" /></button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تقييد على المهام" @click="openRestrict(member)"><Lock :size="14" /></button>
@@ -121,7 +120,6 @@
                 <div class="flex items-start justify-between gap-3">
                   <span class="text-label font-semibold text-text-400 shrink-0">تواصل</span>
                   <div class="flex gap-1.5">
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(member)"><Pencil :size="14" /></button>
                     <button v-if="member.whats" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member)"><MessageCircle :size="14" /></button>
                     <button v-if="member.mail" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member)"><Mail :size="14" /></button>
                     <button
@@ -192,20 +190,6 @@
       </template>
     </BaseModal>
 
-    <!-- تعديل بيانات عضو -->
-    <BaseModal v-model="editMemberModal" title="تعديل بيانات العضو">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <BaseInput v-model="editMemberForm.name" label="اسم الطالب" class="sm:col-span-2" />
-        <BaseInput v-model="editMemberForm.university_number" label="الرقم الجامعي" />
-        <BaseInput v-model="editMemberForm.whatsapp" label="رقم الواتس" />
-        <BaseSelect v-model="editMemberForm.region" label="مكان التواجد" :options="regionOptions" />
-      </div>
-      <template #footer>
-        <BaseButton variant="ghost" @click="editMemberModal = false">إلغاء</BaseButton>
-        <BaseButton :icon="Check" :loading="submitting" @click="saveEditMember">حفظ التعديلات</BaseButton>
-      </template>
-    </BaseModal>
-
     <!-- الفرق المحذوفة -->
     <BaseModal v-model="trashedModal" title="الفرق المحذوفة" description="استرجعي أي فريق حُذف بالخطأ" size="lg">
       <SkeletonLoader v-if="trashedTeamsLoading" :rows="3" height="60px" />
@@ -224,7 +208,7 @@
       </template>
     </BaseModal>
 
-    <ProfileModal v-model="studentProfileOpen" kind="student" :person-id="studentProfileTarget?.id" :name="studentProfileTarget?.name" edit-project edit-region />
+    <ProfileModal v-model="studentProfileOpen" kind="student" :person-id="studentProfileTarget?.id" :name="studentProfileTarget?.name" edit-project />
   </div>
 </template>
 
@@ -244,7 +228,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { useUsersStore } from '@/stores/users.store'
 import { sendEmail } from '@/services/api'
 import ProfileModal from '@/components/shared/ProfileModal.vue'
-import { REGIONS } from '@/utils/progressData'
+import { APP_NAME } from '@/utils/constants'
 
 const GROUPS_PAGE_SIZE = 5
 
@@ -298,13 +282,8 @@ export default {
       leaderTarget: null,
       submittingLeader: false,
 
-      editMemberModal: false,
-      editMemberTargetId: null,
-      editMemberForm: {},
-      submitting: false,
       studentProfileOpen: false,
       studentProfileTarget: null,
-      regionOptions: [{ value: '', label: 'غير محدد' }, ...Object.entries(REGIONS).map(([value, label]) => ({ value, label }))],
 
       page: 1
     }
@@ -364,7 +343,7 @@ export default {
 
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'updateTeam', 'deleteTeam', 'fetchTrashedTeams', 'restoreTeam', 'updateTeamLeader']),
-    ...mapActions(useUsersStore, ['fetchRestrictions', 'setRestriction', 'removeRestriction', 'updateUser', 'setUserPassword']),
+    ...mapActions(useUsersStore, ['fetchRestrictions', 'setRestriction', 'removeRestriction', 'setUserPassword']),
 
     isGroupOpen(id) {
       return this.openGroupIds.includes(id)
@@ -514,34 +493,11 @@ export default {
       }
     },
 
-    openEditMember(member) {
-      this.editMemberTargetId = member.id
-      this.editMemberForm = { name: member.name, university_number: member.uid || '', whatsapp: member.whats || '', region: member.region || '' }
-      this.editMemberModal = true
-    },
     openStudentProfile(member) {
       if (!member.id) return
       this.studentProfileTarget = member
       this.studentProfileOpen = true
     },
-    async saveEditMember() {
-      if (!this.editMemberForm.name) {
-        this.$toast?.error('يرجى إدخال الاسم')
-        return
-      }
-      this.submitting = true
-      try {
-        await this.updateUser(this.editMemberTargetId, this.editMemberForm)
-        this.editMemberModal = false
-        this.$toast?.success('تم حفظ التعديلات')
-        await this.fetchTeams()
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر حفظ التعديلات')
-      } finally {
-        this.submitting = false
-      }
-    },
-
     credentialsMessage(member, password) {
       return [
         `مرحبًا ${member.name}،`,
