@@ -14,6 +14,13 @@
         <div><dt>البريد</dt><dd class="mono">{{ data.email || '—' }}</dd></div>
         <div><dt>الواتساب</dt><dd class="mono">{{ data.whatsapp || '—' }}</dd></div>
       </dl>
+      <section v-if="editRegion" class="pf-block">
+        <h4>تحديث مكان التواجد</h4>
+        <div class="flex flex-wrap items-end gap-3">
+          <label class="pfield min-w-[220px] flex-1"><span>مكان التواجد</span><select v-model="regionDraft"><option value="">غير محدد</option><option v-for="(label, value) in REGIONS" :key="value" :value="value">{{ label }}</option></select></label>
+          <button type="button" class="pbtn is-green is-sm" :disabled="savingRegion" @click="saveRegion">{{ savingRegion ? 'جارٍ الحفظ…' : 'حفظ الموقع' }}</button>
+        </div>
+      </section>
 
       <section v-if="data.project" class="pf-block">
         <h4>المشروع</h4>
@@ -108,13 +115,14 @@ export default {
     /** الاسم المعروض في العنوان قبل وصول البيانات */
     name: { type: String, default: '' },
     /** إتاحة تعديل تفاصيل مشروع الطالب (للمشرف) */
-    editProject: { type: Boolean, default: false }
+    editProject: { type: Boolean, default: false },
+    editRegion: { type: Boolean, default: false }
   },
 
   emits: ['update:modelValue'],
 
   data() {
-    return { DEGREES, GENDERS, REGIONS, STATUS, data: null, loading: false, project: null, saving: false }
+    return { DEGREES, GENDERS, REGIONS, STATUS, data: null, loading: false, project: null, saving: false, regionDraft: '', savingRegion: false }
   },
 
   computed: {
@@ -139,6 +147,7 @@ export default {
         const path = this.kind === 'student' ? 'students' : 'supervisors'
         const { data } = await api.get(`/${path}/${this.personId}/profile`)
         this.data = data
+        this.regionDraft = data.region || ''
         // تفاصيل المشروع الكاملة للتعديل (الوصف والنوع غير موجودة في بروفايل الطالب)
         this.project = null
         if (this.editProject && data.project) {
@@ -167,6 +176,19 @@ export default {
         this.$toast?.error(err.normalized?.message || 'تعذّر حفظ المشروع')
       } finally {
         this.saving = false
+      }
+    },
+
+    async saveRegion() {
+      this.savingRegion = true
+      try {
+        const { data } = await api.patch(`/users/${this.personId}`, { region: this.regionDraft || null })
+        this.data.region = data.region || this.regionDraft
+        this.$toast?.success('تم تحديث مكان التواجد')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث مكان التواجد')
+      } finally {
+        this.savingRegion = false
       }
     },
 

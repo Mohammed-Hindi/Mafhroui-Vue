@@ -63,14 +63,18 @@ export const NAV_ITEMS_BY_ROLE = {
     { label: 'المساعد الآلي', to: '/committee/assistant', icon: Bot, color: '#233B77' }
   ],
 
-  // لوحة المشرف مُرجعة مؤقتًا لنسخة 31/8 (النسخة الجديدة محفوظة خارج المشروع)
+  // لوحة المشرف
   [ROLES.SUPERVISOR]: [
-    { label: 'الملف الشخصي', to: '/supervisor', icon: UserCircle, exact: true },
+    { label: 'الرئيسية', to: '/supervisor', icon: LayoutDashboard, exact: true, color: '#005BAA' },
+    { label: 'الملف الشخصي', to: '/supervisor/profile', icon: UserCircle },
     { label: 'الفرق', to: '/supervisor/teams', icon: Users },
     { label: 'المقترح / التقرير النهائي', to: '/supervisor/proposals', icon: ClipboardList },
     { label: 'المهام (Kanban)', to: '/supervisor/tasks', icon: ListTodo },
+    { label: 'الإعلانات والملفات', to: '/supervisor/assignments', icon: Megaphone },
     { label: 'الاجتماعات', to: '/supervisor/meetings', icon: CalendarDays },
     { label: 'مواعيد المناقشات', to: '/supervisor/appointments', icon: CalendarClock },
+    { label: 'التقييمات', to: '/supervisor/evaluations', icon: ClipboardCheck },
+    { label: 'تقرير المجموعات', to: '/supervisor/reports', icon: FileCheck },
     { label: 'أرشيف المشاريع', to: '/supervisor/project-archive', icon: FileCheck },
     { label: 'نسبة تقدّم الفرق', to: '/supervisor/progress', icon: TrendingUp },
     { label: 'المساعد الآلي', to: '/supervisor/assistant', icon: Bot }

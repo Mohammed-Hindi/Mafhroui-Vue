@@ -40,6 +40,7 @@ export const useTeamsStore = defineStore('teams', () => {
       uid: m.student?.university_number || '—',
       whats: m.student?.whatsapp || '',
       mail: m.student?.email || '',
+      region: m.student?.region || '',
       leader: !!m.is_leader
     }))
   })

@@ -10,7 +10,7 @@
           <div class="min-w-0">
             <span class="inline-block text-label font-bold text-primary-700 bg-primary-50 px-3 py-1 rounded-pill mb-1.5">مشرف مشاريع تخرج</span>
             <div class="text-h3 font-bold text-text-900 truncate">{{ user?.name }}</div>
-            <div class="text-caption text-text-400 truncate">{{ user?.specialization?.name }}</div>
+            <div class="text-caption text-text-400 truncate">{{ user?.specialization?.name || user?.academicTerm?.name }}</div>
           </div>
         </div>
 
@@ -35,7 +35,7 @@
       <!-- فريقي -->
       <div class="reveal reveal-delay-1 bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col transition-all duration-base hover:shadow-card-hover">
         <div class="flex items-center justify-between mb-5">
-          <h3 class="text-h3 font-bold text-text-900">فريقي</h3>
+          <h3 class="text-h3 font-bold text-text-900">مجموعاتي</h3>
           <router-link v-if="myTeams.length" :to="{ name: 'supervisor-teams' }" class="text-caption font-bold text-primary-600 hover:underline shrink-0">عرض المزيد</router-link>
         </div>
 
@@ -48,7 +48,13 @@
               <span class="font-bold text-body-sm text-text-900 transition-colors duration-fast group-hover:text-primary-700">{{ team.name }}</span>
               <BaseBadge :variant="team.projectStatus === 'completed' ? 'success' : team.projectStatus === 'proposed' ? 'warning' : 'info'" dot>{{ statusLabel(team.projectStatus) }}</BaseBadge>
             </div>
-            <p class="text-caption text-text-600 mb-3">{{ team.projectName || 'بدون مشروع بعد' }}</p>
+            <p class="text-caption text-text-600 mb-3">{{ team.projectName || 'بدون مشروع بعد' }}<span v-if="interactionFor(team.id)"> · {{ interactionFor(team.id).activity_score }}% تفاعل</span></p>
+            <div v-if="interactionFor(team.id)" class="flex flex-wrap gap-x-4 gap-y-1 text-label text-text-400 mb-3">
+              <span>{{ interactionFor(team.id).tasks_done }}/{{ interactionFor(team.id).tasks_total }} مهمة</span>
+              <span>{{ interactionFor(team.id).files_count }} ملف</span>
+              <span>{{ interactionFor(team.id).meetings_count }} اجتماع</span>
+              <span>{{ interactionFor(team.id).notes_count }} ملاحظة</span>
+            </div>
             <div class="flex flex-wrap gap-1.5">
               <span v-for="m in team.members" :key="m.name" class="inline-flex items-center text-label font-semibold text-text-700 bg-border-soft px-2.5 py-1 rounded-pill">{{ shortName(m.name) }}</span>
             </div>
@@ -62,7 +68,7 @@
     <!-- إحصائيات -->
     <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,320px)_1fr] gap-6">
       <div class="bg-surface rounded-lg border border-border shadow-card p-6 flex flex-col items-center">
-        <p class="text-body-sm font-bold text-text-700 mb-5">متوسط نسبة الإنجاز</p>
+        <p class="text-body-sm font-bold text-text-700 mb-5">متوسط التفاعل</p>
         <div class="relative w-[150px] h-[150px]">
           <svg width="150" height="150" viewBox="0 0 150 150" style="transform: rotate(-90deg)">
             <circle cx="75" cy="75" r="63" fill="none" stroke="var(--color-border-soft)" stroke-width="12" />
@@ -70,7 +76,7 @@
           </svg>
           <div class="absolute inset-0 flex flex-col items-center justify-center">
             <span class="font-cairo font-black text-h1 text-text-900">{{ averagePercent }}%</span>
-            <span class="text-label text-text-400">متوسط الإنجاز</span>
+            <span class="text-label text-text-400">متوسط التفاعل</span>
           </div>
         </div>
       </div>
@@ -99,6 +105,7 @@ import { mapState, mapActions } from 'pinia'
 import { ChevronLeft } from 'lucide-vue-next'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import { initials } from '@/utils/formatters'
+import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth.store'
 import { useTeamsStore } from '@/stores/teams.store'
 import ChangePasswordModal from '@/components/shared/ChangePasswordModal.vue'
@@ -113,7 +120,7 @@ export default {
   data() {
     return {
       changePasswordOpen: false,
-      progressByTeam: {}
+      interaction: null
     }
   },
 
@@ -133,13 +140,15 @@ export default {
       return [
         { k: 'الرقم الوظيفي', v: this.user?.employee_number || '—' },
         { k: 'البريد الإلكتروني', v: this.user?.email || '—' },
-        { k: 'عدد الفرق المُشرَف عليها', v: `${this.myTeams.length} فرق` },
+        { k: 'عدد الفرق المُشرَف عليها', v: `${this.interaction?.teams_count ?? this.myTeams.length} فرق` },
+        { k: 'إجمالي الطلاب', v: this.interaction?.students_count ?? this.myTeams.reduce((n, team) => n + team.members.length, 0) },
+        { k: 'متوسط التفاعل', v: `${this.interaction?.average_activity ?? 0}%` },
         { k: 'الفصل الدراسي', v: this.user?.academicTerm?.name || '—' }
       ]
     },
 
     averagePercent() {
-      const values = this.myTeams.map((t) => this.progressByTeam[t.id]?.percentage).filter((v) => v !== undefined)
+      const values = (this.interaction?.teams || []).map((t) => Number(t.interaction?.activity_score)).filter(Number.isFinite)
       if (!values.length) return 0
       return Math.round(values.reduce((sum, v) => sum + v, 0) / values.length)
     },
@@ -165,13 +174,23 @@ export default {
 
   async created() {
     await Promise.all([this.fetchCurrentUser(), this.fetchTeams()])
-    const results = await Promise.all(this.myTeams.map((t) => this.fetchTeamProgress(t.id).then((p) => [t.id, p])))
-    this.progressByTeam = Object.fromEntries(results)
+    if (this.user?.id) {
+      try {
+        const { data } = await api.get(`/supervisors/${this.user.id}/profile`)
+        this.interaction = data.interaction || null
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحميل تفاصيل التفاعل')
+      }
+    }
   },
 
   methods: {
     ...mapActions(useAuthStore, ['fetchCurrentUser']),
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchTeamProgress']),
+    ...mapActions(useTeamsStore, ['fetchTeams']),
+
+    interactionFor(teamId) {
+      return this.interaction?.teams?.find((row) => row.team.id === teamId)?.interaction || null
+    },
 
     statusLabel(status) {
       return STATUS_LABELS[status] || status

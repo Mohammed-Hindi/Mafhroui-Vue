@@ -71,7 +71,7 @@
               </div>
               <div class="divide-y divide-border-soft">
                 <div v-for="(member, idx) in group.members" :key="idx" class="row-interactive grid gap-2 px-5 py-3 items-center" :style="memberGridCols">
-                  <span class="font-bold text-text-900 truncate" :title="member.name">{{ member.name }}</span>
+                  <button type="button" class="font-bold text-primary-700 truncate text-start hover:underline" :title="`عرض ملف ${member.name}`" @click="openStudentProfile(member)">{{ member.name }}</button>
                   <span class="mono truncate">{{ member.uid }}</span>
                   <span class="mono truncate">{{ member.whats || '—' }}</span>
                   <span class="mono truncate" :title="member.mail">{{ member.mail || '—' }}</span>
@@ -101,7 +101,7 @@
           <div class="md:hidden divide-y divide-border-soft">
             <div v-for="(member, idx) in group.members" :key="idx" class="p-4 space-y-2">
               <div class="flex items-center justify-between gap-3">
-                <span class="font-bold text-text-900">{{ member.name }}</span>
+                <button type="button" class="font-bold text-primary-700 text-start hover:underline" @click="openStudentProfile(member)">{{ member.name }}</button>
                 <Crown v-if="member.leader" :size="14" class="text-warning-text" fill="currentColor" />
               </div>
 
@@ -198,6 +198,7 @@
         <BaseInput v-model="editMemberForm.name" label="اسم الطالب" class="sm:col-span-2" />
         <BaseInput v-model="editMemberForm.university_number" label="الرقم الجامعي" />
         <BaseInput v-model="editMemberForm.whatsapp" label="رقم الواتس" />
+        <BaseSelect v-model="editMemberForm.region" label="مكان التواجد" :options="regionOptions" />
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="editMemberModal = false">إلغاء</BaseButton>
@@ -222,6 +223,8 @@
         <BaseButton variant="ghost" @click="trashedModal = false">إغلاق</BaseButton>
       </template>
     </BaseModal>
+
+    <ProfileModal v-model="studentProfileOpen" kind="student" :person-id="studentProfileTarget?.id" :name="studentProfileTarget?.name" edit-project edit-region />
   </div>
 </template>
 
@@ -240,6 +243,8 @@ import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUsersStore } from '@/stores/users.store'
 import { sendEmail } from '@/services/api'
+import ProfileModal from '@/components/shared/ProfileModal.vue'
+import { REGIONS } from '@/utils/progressData'
 
 const GROUPS_PAGE_SIZE = 5
 
@@ -256,7 +261,7 @@ function digitsOnly(value) {
 export default {
   name: 'SupervisorTeamsPage',
 
-  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, Lock, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination },
+  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, Lock, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, ProfileModal },
 
   data() {
     return {
@@ -297,6 +302,9 @@ export default {
       editMemberTargetId: null,
       editMemberForm: {},
       submitting: false,
+      studentProfileOpen: false,
+      studentProfileTarget: null,
+      regionOptions: [{ value: '', label: 'غير محدد' }, ...Object.entries(REGIONS).map(([value, label]) => ({ value, label }))],
 
       page: 1
     }
@@ -508,8 +516,13 @@ export default {
 
     openEditMember(member) {
       this.editMemberTargetId = member.id
-      this.editMemberForm = { name: member.name, university_number: member.uid || '', whatsapp: member.whats || '' }
+      this.editMemberForm = { name: member.name, university_number: member.uid || '', whatsapp: member.whats || '', region: member.region || '' }
       this.editMemberModal = true
+    },
+    openStudentProfile(member) {
+      if (!member.id) return
+      this.studentProfileTarget = member
+      this.studentProfileOpen = true
     },
     async saveEditMember() {
       if (!this.editMemberForm.name) {
