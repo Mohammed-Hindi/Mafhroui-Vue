@@ -467,7 +467,7 @@ export default {
     openComposer() {
       this.form = emptyForm()
       this.warnings = []
-      this.step = 0
+      this.step = this.off
       this.staffQ = ''
       this.selected = this.fGroup ? [this.fGroup] : []
       this.memberSel = this.fMember ? [this.fMember] : this.fSup ? [this.fSup] : []

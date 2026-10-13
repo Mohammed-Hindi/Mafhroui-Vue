@@ -18,7 +18,48 @@
 
     <div class="flex items-center justify-between gap-4 mb-4">
       <h3 class="font-cairo font-bold text-h4 text-text-900">مواعيد مناقشات فرقي</h3>
-      <span class="text-caption text-text-600">{{ filteredDiscussions.length }} مجموعة — {{ filteredStudentsCount }} طالبًا</span>
+      <div class="flex items-center gap-3">
+        <button type="button" class="text-caption font-bold text-primary-700 hover:underline" @click="showCriteria = !showCriteria">
+          {{ showCriteria ? 'إخفاء' : 'عرض' }} معايير التقييم
+        </button>
+        <span class="text-caption text-text-600">{{ filteredDiscussions.length }} مجموعة — {{ filteredStudentsCount }} طالبًا</span>
+      </div>
+    </div>
+
+    <!-- معايير التقييم السريعة -->
+    <div v-if="showCriteria" class="mb-6 p-5 rounded-lg bg-primary-50 border border-primary-200">
+      <h4 class="font-bold text-body-sm text-primary-900 mb-3">معايير التقييم السريعة</h4>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-caption">
+        <div class="flex items-start gap-2">
+          <span class="text-primary-600 font-bold">•</span>
+          <span><strong>جودة المحتوى:</strong> 30%</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="text-primary-600 font-bold">•</span>
+          <span><strong>العرض التقديمي:</strong> 20%</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="text-primary-600 font-bold">•</span>
+          <span><strong>الإجابة على الأسئلة:</strong> 25%</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="text-primary-600 font-bold">•</span>
+          <span><strong>الالتزام بالوقت:</strong> 10%</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="text-primary-600 font-bold">•</span>
+          <span><strong>التنظيم والترتيب:</strong> 15%</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="text-primary-600 font-bold">•</span>
+          <span><strong>الدرجة النهائية:</strong> من 100</span>
+        </div>
+      </div>
+      <div class="mt-3 pt-3 border-t border-primary-200">
+        <router-link :to="{ name: 'supervisor-evaluations' }" class="text-caption font-bold text-primary-700 hover:underline">
+          الانتقال لصفحة إدخال التقييمات الكاملة ←
+        </router-link>
+      </div>
     </div>
 
     <SkeletonLoader v-if="discussionsLoading" :rows="4" height="80px" />
@@ -167,7 +208,8 @@ export default {
       openStudentKeys: [],
       page: 1,
       emailComposeOpen: false,
-      emailComposeTarget: ''
+      emailComposeTarget: '',
+      showCriteria: false
     }
   },
 
