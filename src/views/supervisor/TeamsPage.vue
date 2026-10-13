@@ -2,10 +2,10 @@
   <div>
     <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
       <div class="flex flex-wrap gap-3">
-        <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-success-bg text-success text-caption font-bold hover:brightness-95 transition-all duration-fast disabled:opacity-40 disabled:pointer-events-none" :disabled="sendingWhatsAll || !allMembers.some((m) => m.whats)" @click="sendWhatsAll">
+        <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-success-bg text-success text-caption font-bold hover:brightness-95 transition-all duration-fast disabled:opacity-40 disabled:pointer-events-none" :disabled="!allMembers.some((m) => m.whats)" @click="whatsAllModal = true">
           <MessageCircle :size="15" /> واتساب للجميع ({{ allMembers.filter((m) => m.whats).length }})
         </button>
-        <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-primary-50 text-primary-700 text-caption font-bold hover:bg-primary-100 transition-colors duration-fast disabled:opacity-40 disabled:pointer-events-none" :disabled="sendingMailAll || !allMembers.some((m) => m.mail)" @click="sendMailAll">
+        <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-primary-50 text-primary-700 text-caption font-bold hover:bg-primary-100 transition-colors duration-fast disabled:opacity-40 disabled:pointer-events-none" :disabled="!allMembers.some((m) => m.mail)" @click="sendMailAll">
           <Mail :size="15" /> بريد للجميع (Gmail)
         </button>
       </div>
@@ -190,6 +190,22 @@
       </template>
     </BaseModal>
 
+    <BaseModal v-model="whatsAllModal" title="التواصل مع الطلاب عبر واتساب" description="اختَر الطالب لفتح محادثته. لن يتم تغيير كلمة مرور أي طالب." size="lg">
+      <div class="flex flex-col gap-2 max-h-96 overflow-y-auto scrollbar-thin">
+        <div v-for="member in allMembers.filter((m) => m.whats)" :key="member.id" class="flex items-center justify-between gap-3 p-3 rounded-sm border border-border bg-bg">
+          <span class="font-semibold text-text-800 truncate">{{ member.name }}</span>
+          <a :href="whatsUrl(member.whats)" target="_blank" rel="noopener noreferrer" class="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-sm bg-whatsapp-bg text-whatsapp text-caption font-bold hover:brightness-95">
+            <MessageCircle :size="14" /> فتح المحادثة
+          </a>
+        </div>
+      </div>
+      <template #footer>
+        <BaseButton variant="ghost" @click="whatsAllModal = false">إغلاق</BaseButton>
+      </template>
+    </BaseModal>
+
+    <EmailComposeModal v-model="emailComposeOpen" :to="emailComposeTarget" default-subject="بخصوص مشروع التخرج" />
+
     <!-- الفرق المحذوفة -->
     <BaseModal v-model="trashedModal" title="الفرق المحذوفة" description="استرجعي أي فريق حُذف بالخطأ" size="lg">
       <SkeletonLoader v-if="trashedTeamsLoading" :rows="3" height="60px" />
@@ -226,9 +242,8 @@ import Pagination from '@/components/ui/Pagination.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUsersStore } from '@/stores/users.store'
-import { sendEmail } from '@/services/api'
 import ProfileModal from '@/components/shared/ProfileModal.vue'
-import { APP_NAME } from '@/utils/constants'
+import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
 
 const GROUPS_PAGE_SIZE = 5
 
@@ -245,7 +260,7 @@ function digitsOnly(value) {
 export default {
   name: 'SupervisorTeamsPage',
 
-  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, Lock, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, ProfileModal },
+  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, Lock, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, ProfileModal, EmailComposeModal },
 
   data() {
     return {
@@ -254,8 +269,9 @@ export default {
       openGroupIds: [],
       openMemberKeys: [],
       highlightId: null,
-      sendingWhatsAll: false,
-      sendingMailAll: false,
+      whatsAllModal: false,
+      emailComposeOpen: false,
+      emailComposeTarget: '',
 
       editGroupModal: false,
       editGroupTargetId: null,
@@ -343,7 +359,7 @@ export default {
 
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'updateTeam', 'deleteTeam', 'fetchTrashedTeams', 'restoreTeam', 'updateTeamLeader']),
-    ...mapActions(useUsersStore, ['fetchRestrictions', 'setRestriction', 'removeRestriction', 'setUserPassword']),
+    ...mapActions(useUsersStore, ['fetchRestrictions', 'setRestriction', 'removeRestriction']),
 
     isGroupOpen(id) {
       return this.openGroupIds.includes(id)
@@ -498,85 +514,26 @@ export default {
       this.studentProfileTarget = member
       this.studentProfileOpen = true
     },
-    credentialsMessage(member, password) {
-      return [
-        `مرحبًا ${member.name}،`,
-        `بيانات تسجيل الدخول لمنصة ${APP_NAME}:`,
-        `اسم المنصة: ${APP_NAME}`,
-        `رابط المنصة: ${window.location.origin}`,
-        `الاسم: ${member.name}`,
-        `الرقم الجامعي: ${member.uid}`,
-        `البريد الإلكتروني: ${member.mail}`,
-        `كلمة السر: ${password}`
-      ].join('\n')
+    whatsUrl(whats) {
+      const num = digitsOnly(whats)
+      const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
+      return `https://wa.me/${full}`
     },
-
-    async sendWhats(member) {
-      if (!member.whats || !member.id) return
-      try {
-        const password = await this.setUserPassword(member.id)
-        const num = digitsOnly(member.whats)
-        const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
-        window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.credentialsMessage(member, password))}`, '_blank')
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر توليد كلمة سر جديدة')
-      }
+    sendWhats(member) {
+      if (!member.whats) return
+      window.open(this.whatsUrl(member.whats), '_blank', 'noopener,noreferrer')
     },
-    async sendMail(member) {
-      if (!member.mail || !member.id) return
-      try {
-        const password = await this.setUserPassword(member.id)
-        await sendEmail({
-          to: member.mail,
-          subject: `بيانات تسجيل الدخول لمنصة ${APP_NAME}`,
-          message: this.credentialsMessage(member, password)
-        })
-        this.$toast?.success('تم إرسال البريد')
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال البريد')
-      }
+    sendMail(member) {
+      if (!member.mail) return
+      this.emailComposeTarget = member.mail
+      this.emailComposeOpen = true
     },
-
-    async sendWhatsAll() {
-      const targets = this.allMembers.filter((m) => m.whats && m.id)
+    sendMailAll() {
+      const targets = this.allMembers.filter((m) => m.mail)
       if (!targets.length) return
-      if (!window.confirm(`سيتم توليد كلمة سر جديدة لكل عضو وفتح ${targets.length} محادثة واتساب. متابعة؟`)) return
-      this.sendingWhatsAll = true
-      try {
-        for (const [i, member] of targets.entries()) {
-          const password = await this.setUserPassword(member.id)
-          setTimeout(() => {
-            const num = digitsOnly(member.whats)
-            const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
-            window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.credentialsMessage(member, password))}`, '_blank')
-          }, i * 300)
-        }
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال البيانات للجميع')
-      } finally {
-        this.sendingWhatsAll = false
-      }
-    },
-    async sendMailAll() {
-      const targets = this.allMembers.filter((m) => m.mail && m.id)
-      if (!targets.length) return
-      if (!window.confirm(`سيتم توليد كلمة سر جديدة لكل عضو وإرسال ${targets.length} رسالة بريد عبر ${APP_NAME}. متابعة؟`)) return
-      this.sendingMailAll = true
-      try {
-        for (const member of targets) {
-          const password = await this.setUserPassword(member.id)
-          await sendEmail({
-            to: member.mail,
-            subject: `بيانات تسجيل الدخول لمنصة ${APP_NAME}`,
-            message: this.credentialsMessage(member, password)
-          })
-        }
-        this.$toast?.success('تم إرسال البريد للجميع')
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال البيانات للجميع')
-      } finally {
-        this.sendingMailAll = false
-      }
+      const bcc = targets.map((m) => m.mail).join(',')
+      const url = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${encodeURIComponent(bcc)}&su=${encodeURIComponent('بخصوص مشاريع التخرج')}`
+      window.open(url, '_blank', 'noopener,noreferrer')
     }
   }
 }
