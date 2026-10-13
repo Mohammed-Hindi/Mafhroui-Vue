@@ -43,7 +43,7 @@
           <input type="checkbox" :checked="modelValue.includes(g.id)" @change="toggle(g.id)">
           <span class="gp-item-main">
             <b>{{ g.name }}</b>
-            <span class="pt-muted">{{ g.section ? 'شعبة ' + g.section + ' · ' : '' }}{{ g.sup.name }} · {{ g.spec }}</span>
+            <span class="pt-muted">{{ g.section ? 'شعبة ' + g.section + ' · ' : '' }}{{ g.sup?.name || '' }} · {{ g.spec }}</span>
           </span>
           <span class="pt-muted">{{ g.members.length }} طلاب</span>
         </label>
@@ -78,15 +78,15 @@ export default {
       return [...new Set(this.groups.map((g) => g.spec).filter(Boolean))]
     },
     sups() {
-      return [...new Set(this.groups.map((g) => g.sup.name).filter(Boolean))]
+      return [...new Set(this.groups.map((g) => g.sup?.name).filter(Boolean))]
     },
     visible() {
       const { q, f } = this
       return this.groups.filter((g) =>
-        (!q || `${g.name} ${g.section} ${g.sup.name}`.includes(q)) &&
+        (!q || `${g.name} ${g.section} ${g.sup?.name || ''}`.includes(q)) &&
         (!f.spec || g.spec === f.spec) &&
         (!f.degree || g.degree === f.degree) &&
-        (!f.sup || g.sup.name === f.sup) &&
+        (!f.sup || g.sup?.name === f.sup) &&
         (!f.gender || g.members.some((m) => m.gender === f.gender)) &&
         (!f.region || g.members.some((m) => m.region === f.region))
       )

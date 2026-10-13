@@ -64,6 +64,21 @@
         </tbody>
       </table>
     </BaseModal>
+
+    <!-- تعديل مكان التواجد -->
+    <BaseModal v-model="regionEditOpen" title="تعديل مكان التواجد" size="sm">
+      <div class="flex flex-col gap-4">
+        <label class="text-label font-semibold text-text-600">اختر مكان تواجدك الجديد</label>
+        <select v-model="selectedRegion" class="w-full h-10 px-3 border border-border bg-bg text-body text-text-900 focus:border-primary-600 transition-colors duration-fast">
+          <option value="">-- اختر المنطقة --</option>
+          <option v-for="(label, key) in REGIONS" :key="key" :value="key">{{ label }}</option>
+        </select>
+      </div>
+      <template #footer>
+        <BaseButton variant="ghost" @click="regionEditOpen = false">إلغاء</BaseButton>
+        <BaseButton variant="primary" :loading="savingRegion" @click="saveRegion">حفظ التغيير</BaseButton>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
@@ -71,6 +86,7 @@
 import { mapState, mapActions } from 'pinia'
 import { IdCard, Lock, Users } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
 import api from '@/services/api'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
@@ -80,7 +96,7 @@ import { placeholderGroup } from '@/utils/studentPlaceholders'
 export default {
   name: 'StudentProfilePage',
 
-  components: { Lock, BaseModal },
+  components: { Lock, BaseModal, BaseButton },
 
   data() {
     return {
@@ -90,6 +106,9 @@ export default {
       supOpen: false,
       groupOpen: false,
       loaded: false,
+      regionEditOpen: false,
+      selectedRegion: '',
+      savingRegion: false,
       tabs: [
         { key: 'info', label: 'المعلومات الشخصية', icon: IdCard },
         { key: 'team', label: 'مجموعتي', icon: Users }
@@ -126,7 +145,7 @@ export default {
           ] },
           { title: 'بيانات التواصل', fields: [
             { label: 'البريد الإلكتروني', value: u.email, mono: true },
-            { label: 'مكان التواجد', value: REGIONS[this.profile?.region] }
+            { label: 'مكان التواجد', value: REGIONS[this.profile?.region] || '—', action: () => { this.openRegionEdit() } }
           ] }
         ]
       }
@@ -157,7 +176,36 @@ export default {
 
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams']),
-    ...mapActions(useAuthStore, ['fetchCurrentUser'])
+    ...mapActions(useAuthStore, ['fetchCurrentUser']),
+
+    openRegionEdit() {
+      this.selectedRegion = this.profile?.region || ''
+      this.regionEditOpen = true
+    },
+
+    async saveRegion() {
+      if (!this.selectedRegion) {
+        this.$toast?.error('يرجى اختيار مكان التواجد')
+        return
+      }
+
+      this.savingRegion = true
+      try {
+        await api.patch(`/students/${this.user?.id}`, { region: this.selectedRegion })
+        if (this.profile) {
+          this.profile.region = this.selectedRegion
+        }
+        if (this.user) {
+          this.user.region = this.selectedRegion
+        }
+        this.regionEditOpen = false
+        this.$toast?.success('تم تحديث مكان التواجد بنجاح')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث مكان التواجد')
+      } finally {
+        this.savingRegion = false
+      }
+    }
   }
 }
 </script>
