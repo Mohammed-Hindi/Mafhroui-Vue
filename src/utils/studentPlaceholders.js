@@ -17,7 +17,15 @@ export const placeholderTasks = () => [
   { id: -2, title: 'تصميم قاعدة البيانات', description: 'مخطط ERD للجداول الأساسية والعلاقات بينها.', status: 'review', due_date: day(-1), assignees: [] },
   { id: -3, title: 'بناء واجهة تسجيل الدخول', description: 'صفحة الدخول واستعادة كلمة المرور مع التحقق من الحقول.', status: 'in_progress', due_date: day(3), assignees: [] },
   { id: -4, title: 'ربط الواجهة بالـ API', description: 'استدعاء خدمات المستخدمين والمهام وعرض النتائج.', status: 'in_progress', due_date: day(6), assignees: [] },
-  { id: -5, title: 'إعداد عرض المناقشة', description: 'شرائح العرض وفيديو تجريبي قصير للنظام.', status: 'pending', due_date: day(14), assignees: [] }
+  { id: -5, title: 'تجهيز النظام للمناقشة', description: 'نسخة مستقرة من النظام ببيانات تجريبية جاهزة للمناقشة.', status: 'pending', due_date: day(14), assignees: [] }
+]
+
+/** مهام المشرف من الإدارة العامة أو لجنة الإشراف (صفحة "مهامي" حين لا توجد مهام بعد) */
+export const placeholderStaffTasks = () => [
+  { id: -101, title: 'رفع تقييمات المجموعات', description: 'إدخال درجات المشرف لكل طالب في نموذج التقييم قبل موعد المناقشات.', status: 'in_progress', due_date: day(5), created_by: { name: 'لجنة الإشراف', role: 'committee' } },
+  { id: -102, title: 'اعتماد مقترحات المجموعات', description: 'مراجعة مقترحات المشاريع المعلّقة واعتمادها أو طلب تعديلها.', status: 'pending', due_date: day(3), created_by: { name: 'الإدارة العامة', role: 'super_admin' } },
+  { id: -103, title: 'متابعة المجموعات المتأخرة', description: 'التواصل مع المجموعات ذات الإنجاز المنخفض ووضع خطة استدراك.', status: 'review', due_date: day(1), created_by: { name: 'لجنة الإشراف', role: 'committee' } },
+  { id: -104, title: 'تحديث بيانات المشاريع', description: 'التأكد من أسماء المشاريع وأنواعها لكل مجموعة.', status: 'done', due_date: day(-4), created_by: { name: 'الإدارة العامة', role: 'super_admin' } }
 ]
 
 /** اجتماعات الفريق مع المشرف */

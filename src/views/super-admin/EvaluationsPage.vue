@@ -54,7 +54,7 @@
             <option v-for="s in supOptions" :key="s.id" :value="s.id">{{ s.name }}</option>
           </select>
         </label>
-        <button v-if="gq || gSup || gDegree || gStatus" type="button" class="gr-clear" @click="gq = gSup = gDegree = gStatus = ''">مسح الفلاتر</button>
+        <button v-if="gq || gSup || gDegree || gStatus || gGender || gSpec" type="button" class="gr-clear" @click="gq = gSup = gDegree = gStatus = gGender = gSpec = ''">مسح الفلاتر</button>
       </div>
 
       <p v-if="loading" class="pt-muted tk-loading">جارٍ التحميل…</p>
@@ -134,11 +134,11 @@
 
       <div class="gr-filters" aria-label="تصفية النتائج">
         <label class="gr-search"><Search :size="16" /><input v-model.trim="q" type="search" placeholder="بحث بالطالب أو الرقم الجامعي أو الشعبة أو المشروع…"></label>
-        <label class="gr-pick">
+        <label v-if="isStaff" class="gr-pick">
           <span>المكان</span>
           <select v-model="f.region" class="gr-select"><option value="">كل المناطق</option><option v-for="(l, k) in REGIONS" :key="k" :value="k">{{ l }}</option></select>
         </label>
-        <label class="gr-pick">
+        <label v-if="isStaff" class="gr-pick">
           <span>التمييز</span>
           <select v-model="f.featured" class="gr-select"><option value="">الكل</option><option value="yes">مشروع مميّز</option><option value="no">غير مميّز</option></select>
         </label>
@@ -202,6 +202,7 @@ import EvaluationFormEditor from './EvaluationFormEditor.vue'
 import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth.store'
 import { DEGREES, REGIONS, fetchGroups } from '@/utils/progressData'
+import { groupGender } from '@/services/adminData'
 import { grade, gradeTone } from '@/utils/evaluation'
 
 const STATUS = {
@@ -223,10 +224,10 @@ export default {
       examining: [],
       results: [],
       loading: true,
-      gq: '', gSup: '', gDegree: '', gStatus: '',
+      gq: '', gSup: '', gDegree: '', gStatus: '', gGender: '', gSpec: '',
       q: '',
       GRADE_NAMES: ['ممتاز', 'جيد جدًا', 'جيد', 'مقبول', 'راسب', 'غير مكتمل'],
-      f: { degree: '', gender: '', grade: '', featured: '', region: '' }
+      f: { degree: '', gender: '', grade: '', featured: '', region: '', spec: '' }
     }
   },
 
@@ -284,8 +285,16 @@ export default {
       const q = this.gq
       return this.groupsWithStatus.filter((g) =>
         (!q || `${g.section} ${g.name} ${g.project?.name || ''} ${g.members.map((m) => m.name).join(' ')}`.includes(q)) &&
-        (!this.gSup || g.sup.id === this.gSup) && (!this.gDegree || g.degree === this.gDegree) && (!this.gStatus || g.ev.status === this.gStatus)
+        (!this.gSup || g.sup.id === this.gSup) && (!this.gDegree || g.degree === this.gDegree) && (!this.gStatus || g.ev.status === this.gStatus) &&
+        (!this.gGender || groupGender(g) === this.gGender) && (!this.gSpec || g.spec === this.gSpec)
       )
+    },
+    specs() {
+      return [...new Set(this.groups.map((g) => g.spec).filter(Boolean))]
+    },
+    /** تخصص مجموعة النتيجة (لفلتر المشرف) */
+    specByTeam() {
+      return Object.fromEntries(this.groups.map((g) => [g.id, g.spec]))
     },
     /** ترتيب الطالب بين كل النتائج (الخادم يرتّبها تنازليًا بالدرجة؛ المتساوون بنفس الترتيب) */
     rank() {
@@ -296,9 +305,10 @@ export default {
     rClasses() {
       const all = this.results
       const opt = (value, label, n) => ({ value, label, count: n })
+      const gender = { key: 'gender', label: 'الفئة', options: [opt('', 'الكل', all.length), opt('male', 'طلاب', all.filter((r) => r.student?.gender !== 'female').length), opt('female', 'طالبات', all.filter((r) => r.student?.gender === 'female').length)] }
       return [
         { key: 'degree', label: 'الدرجة', options: [opt('', 'الكل', all.length), ...Object.entries(DEGREES).map(([k, l]) => opt(k, l, all.filter((r) => r.degree === k).length))] },
-        { key: 'gender', label: 'الفئة', options: [opt('', 'الكل', all.length), opt('male', 'طلاب', all.filter((r) => r.student?.gender !== 'female').length), opt('female', 'طالبات', all.filter((r) => r.student?.gender === 'female').length)] },
+        ...(this.isStaff ? [gender] : []),
         { key: 'grade', label: 'التقدير', options: [opt('', 'الكل', all.length), ...this.GRADE_NAMES.map((g) => opt(g, g, all.filter((r) => this.gradeOf(r) === g).length))] }
       ]
     },
@@ -307,7 +317,8 @@ export default {
       return this.results.filter((r) =>
         (!this.q || `${r.student?.name} ${r.student?.university_number} ${r.team?.section} ${r.team?.name} ${r.project?.name}`.includes(this.q)) &&
         (!degree || r.degree === degree) && (!gender || (gender === 'female') === (r.student?.gender === 'female')) && (!this.f.grade || this.gradeOf(r) === this.f.grade) &&
-        (!featured || (featured === 'yes') === !!r.project?.is_featured) && (!region || r.student?.region === region)
+        (!featured || (featured === 'yes') === !!r.project?.is_featured) && (!region || r.student?.region === region) &&
+        (!this.f.spec || this.specByTeam[r.team?.id] === this.f.spec)
       )
     },
     avg() {

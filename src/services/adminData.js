@@ -2,6 +2,7 @@
 import api from '@/services/api'
 import { fetchGroups } from '@/utils/progressData'
 import { useUiStore } from '@/stores/ui.store'
+import { useAuthStore } from '@/stores/auth.store'
 
 const list = (data) => data?.data || data || []
 const day = (v) => (v ? String(v).slice(0, 10) : '')
@@ -13,7 +14,9 @@ const day = (v) => (v ? String(v).slice(0, 10) : '')
  *   done, tasksTotal, percentage }
  */
 export async function loadGroups() {
-  const groups = await fetchGroups()
+  // المشرف يرى مجموعاته فقط (لا يُعتمد على تقييد الخادم وحده)
+  const { user } = useAuthStore()
+  const groups = (await fetchGroups()).filter((g) => user?.role !== 'supervisor' || g.sup.id === user.id)
   return groups.map((g) => ({
     id: g.id,
     name: g.section ? `شعبة ${g.section}` : g.name,
@@ -103,7 +106,7 @@ export async function loadDiscussions() {
 }
 
 /** جنس المجموعة (المجموعات أحادية الجنس عادةً) — من أول عضو */
-export const groupGender = (g) => g.members[0]?.gender || 'male'
+export const groupGender = (g) => g.members?.[0]?.gender || 'male'
 
 /** المنطقة الغالبة لأعضاء المجموعة (غزة / وسط غزة / الجنوب) — غزة عند التعادل أو غياب البيانات */
 export const groupRegion = (g) => {

@@ -1,70 +1,60 @@
 <template>
-  <footer class="bg-primary-900 dark:bg-[#070C17] text-white/70 pt-14">
-    <div class="max-w-content mx-auto px-6 grid lg:grid-cols-[1.3fr_1fr_1fr] gap-10 pb-10 border-b border-white/10">
+  <!-- فوتر موقع الكلية (200153): كحلي بأربعة أعمدة، عناوين بيضاء تحتها خط تدرج قصير، وخط تدرج فوق الحقوق -->
+  <footer class="us-footer">
+    <div class="us-wrap us-footer-cols">
       <div>
-        <router-link to="/" class="flex items-center gap-2.5 mb-3.5">
-          <span class="grid place-items-center w-[34px] h-[34px] rounded-sm bg-gradient-to-bl from-primary-500 to-accent-500 text-white">
-            <AppIcon name="graduation" :size="17" :stroke-width="2.2" />
+        <div class="us-footer-brand">
+          <UcasLogo :size="58" />
+          <span>
+            <strong>الكلية الجامعية للعلوم التطبيقية</strong>
+            <small>{{ APP_NAME }} — {{ APP_DESCRIPTION }}</small>
           </span>
-          <span class="font-cairo font-extrabold text-[14.5px] text-white">{{ APP_NAME }}</span>
-        </router-link>
-        <p class="max-w-[300px] text-[12.5px] leading-[1.9]">
-          {{ APP_DESCRIPTION }}
-        </p>
+        </div>
+        <p>منصة موحّدة لإدارة مشاريع التخرج من المقترح حتى المناقشة والأرشفة.</p>
       </div>
 
       <div>
-        <h2 class="font-cairo text-white text-[13.5px] font-bold mb-4">روابط سريعة</h2>
-        <ul class="flex flex-col gap-[11px] text-[12.5px]">
-          <li>
-            <router-link :to="{ name: 'login' }" class="hover:text-white transition-colors duration-fast">تسجيل الدخول</router-link>
-          </li>
-          <li>
-            <router-link :to="{ name: 'projects-archive' }" class="hover:text-white transition-colors duration-fast">المشاريع</router-link>
-          </li>
-          <li>
-            <router-link :to="{ name: 'landing', hash: '#features' }" class="hover:text-white transition-colors duration-fast">الميزات</router-link>
-          </li>
-          <li>
-            <router-link :to="{ name: 'landing', hash: '#departments' }" class="hover:text-white transition-colors duration-fast">الأقسام</router-link>
-          </li>
+        <h2>روابط سريعة</h2>
+        <ul>
+          <li><router-link :to="{ name: 'login' }">تسجيل الدخول</router-link></li>
+          <li><router-link :to="{ name: 'landing', hash: '#projects' }">أفضل المشاريع</router-link></li>
+          <li><router-link :to="{ name: 'projects-archive' }">أرشيف المشاريع</router-link></li>
+          <li><router-link :to="{ name: 'landing', hash: '#how' }">كيف تعمل المنصة</router-link></li>
         </ul>
       </div>
 
       <div>
-        <h2 class="font-cairo text-white text-[13.5px] font-bold mb-4">تواصل معنا</h2>
-        <ul class="flex flex-col gap-[11px] text-[12.5px]">
-          <li>
-            <a :href="`mailto:${contact.EMAIL}`" class="flex items-center gap-2 hover:text-white transition-colors duration-fast">
-              <AppIcon name="mail" :size="14" class="shrink-0" />
-              {{ contact.EMAIL }}
-            </a>
-          </li>
-          <li>
-            <a :href="`tel:${contact.PHONE_RAW}`" class="flex items-center gap-2 hover:text-white transition-colors duration-fast">
-              <AppIcon name="phone" :size="14" class="shrink-0" />
-              <span dir="ltr">{{ contact.PHONE }}</span>
-            </a>
-          </li>
-          <li class="flex items-center gap-2">
-            <AppIcon name="mapPin" :size="14" class="shrink-0" />
-            {{ contact.ADDRESS }}
-          </li>
+        <h2>الأقسام</h2>
+        <ul>
+          <li v-for="d in departments" :key="d.id"><router-link :to="{ name: 'landing', hash: '#departments' }">{{ d.name }}</router-link></li>
+          <li v-if="!departments.length">—</li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>اتصل بنا</h2>
+        <ul class="us-footer-contact">
+          <li><Phone :size="17" /><a :href="`tel:${CONTACT.PHONE_RAW}`" dir="ltr">{{ CONTACT.PHONE }}</a></li>
+          <li><Mail :size="17" /><a :href="`mailto:${CONTACT.EMAIL}`">{{ CONTACT.EMAIL }}</a></li>
+          <li><MapPin :size="17" />{{ CONTACT.ADDRESS }}</li>
         </ul>
       </div>
     </div>
 
-    <p class="text-center py-5 text-label text-white/50">
-      © {{ year }} {{ APP_NAME }} — جميع الحقوق محفوظة
-    </p>
+    <p class="us-wrap us-footer-copy">جميع الحقوق محفوظة © {{ year }}</p>
   </footer>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import AppIcon from '@/components/icons/AppIcon.vue'
+import { storeToRefs } from 'pinia'
+import { Mail, MapPin, Phone } from 'lucide-vue-next'
+import UcasLogo from '@/components/icons/UcasLogo.vue'
+import { useLandingStore } from '@/stores/landing.store'
 import { CONTACT, APP_NAME, APP_DESCRIPTION } from '@/utils/constants'
 
-const contact = CONTACT
-const year = computed(() => new Date().getFullYear())
+const landingStore = useLandingStore()
+const { departments } = storeToRefs(landingStore)
+// الأقسام لعمود الفوتر (تُجلب مرة واحدة حتى خارج الصفحة الرئيسية)
+if (!departments.value.length) landingStore.fetchDepartments().catch(() => {})
+const year = new Date().getFullYear()
 </script>

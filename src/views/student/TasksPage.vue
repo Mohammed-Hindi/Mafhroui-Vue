@@ -1,9 +1,10 @@
 <template>
+  <!-- مهام الطالب: ملاحظات على كل مهام الفريق (مهامه ومهام زملائه)، ورفع الملفات وتغيير الحالة للمهام المنتسب لها فقط (نفس قيود الخادم) -->
   <div class="dash hd-page">
     <header class="dash-head"><h2 class="dash-title">المهام</h2></header>
     <TaskBoard
       :tasks="boardTasks"
-      :can-create="false" :can-drag="true" :can-delete="false" uploads uploads-live :show-log="false"
+      :can-create="false" :can-drag="true" :can-delete="false" uploads uploads-live :show-log="false" :can-act="isMine" show-source
       :notes-by-task="taskNotes"
       :notes-loading-by-task="taskNotesLoading"
       @move="onMove"
@@ -70,13 +71,11 @@ export default {
       }
     },
 
-    async onLoadNotes(id) {
-      if (isPlaceholder({ id })) return
-      try {
-        await this.fetchTaskNotes(id)
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر تحميل الملاحظات')
-      }
+    /** المنتسب للمهمة: من مكلّفيها، أو كل الفريق إن لم يُحدَّد مكلّفون (والمهام التجريبية مفتوحة) */
+    isMine(task) {
+      if (isPlaceholder(task)) return true
+      const ids = (task.assignees || []).map((a) => a.id)
+      return !ids.length || ids.includes(this.user?.id)
     },
 
     async onAddNote({ id, note }) {
@@ -89,6 +88,15 @@ export default {
         await this.addTaskNote(id, note)
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إضافة الملاحظة')
+      }
+    },
+
+    async onLoadNotes(id) {
+      if (isPlaceholder({ id })) return
+      try {
+        await this.fetchTaskNotes(id)
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحميل الملاحظات')
       }
     }
   }

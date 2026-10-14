@@ -249,6 +249,9 @@
 }
 .portal-footer a { color: var(--portal-nav-active); }
 .portal-footer a:hover { text-decoration: underline; }
+.portal-footer { border-top: 1px solid var(--color-border); }
+.portal-footer-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; min-height: 60px; padding-block: 14px; }
+@media (max-width: 639.98px) { .portal-footer-in { justify-content: center; text-align: center; font-size: 13px; } }
 
 .portal-back-top {
   position: fixed;
@@ -675,18 +678,40 @@
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 
-/* جرس الإشعارات: أيقونة بيضاء مسطّحة بلا إطار + شارة حمراء */
-.portal-bell > div > button {
-  border-color: transparent;
+/* جرس التنبيهات بنمط بوابة الكلية (200613): خانة بارتفاع الشريط تغمق عند الفتح، والقائمة ملتصقة تحتها مباشرة
+   بزوايا حادة — عنوان "التنبيهات" ثم بنود على خلفية رمادية فاتحة (عنوان غامق + سطر رمادي) */
+.portal-bell { align-self: stretch; }
+.portal-bell > div { height: 100%; }
+.portal-bell .nb-btn {
+  width: 60px;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
   color: #FFFFFF;
   background: transparent;
 }
-.portal-bell > div > button:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #FFFFFF;
-  border-color: transparent;
+.portal-bell .nb-btn:hover { background: rgba(255, 255, 255, 0.07); color: #FFFFFF; }
+.portal-bell .nb-btn.is-open { background: rgba(0, 0, 0, 0.16); }
+.portal-bell .nb-btn > span { top: 18px; left: 12px; background: #FF5B5B; }
+.portal-bell .nb-panel {
+  top: 100%;
+  margin-top: 0;
+  width: 380px;
+  border-radius: 0;
+  border-top: 0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 }
-.portal-bell > div > button > span { background: #FF5B5B; }
+.portal-bell .nb-head { padding: 16px 22px; border-bottom: 0; }
+.portal-bell .nb-head h2 { font-size: 17px; }
+.portal-bell .nb-list { display: flex; flex-direction: column; gap: 2px; padding: 0 0 8px; border: 0; }
+.portal-bell .nb-list > * + * { border-top: 0; }
+.portal-bell .nb-item { padding: 12px 22px; background: var(--color-bg); }
+.portal-bell .nb-item:hover { background: var(--portal-menu-hover); }
+.portal-bell .nb-item.is-unread { background: #EEF8FC; box-shadow: inset -3px 0 0 var(--portal-cyan); }
+.portal-bell .nb-item p:first-child { font-size: 15px; font-weight: 700; color: var(--color-text-900); }
+.portal-bell .nb-item p + p { color: var(--color-text-400); }
+:root[data-theme="dark"] .portal-bell .nb-item.is-unread { background: rgba(53, 184, 224, 0.1); }
+@media (max-width: 639.98px) { .portal-bell .nb-btn { width: 48px; } .portal-bell .nb-panel { position: fixed; top: 72px; inset-inline: 0; width: auto; max-width: none; } }
 
 /* محدد الفصل داخل الشريط الداكن */
 .portal-semester button[aria-haspopup="listbox"] {
@@ -2120,7 +2145,7 @@
 .tk-card-info b { color: var(--color-text-900); }
 .tk-card-log { display: flex; flex-direction: column; gap: 4px; margin: 0; padding-inline-start: 14px; border-inline-start: 2px solid var(--color-border); list-style: none; }
 /* مهامي (TaskBoard) للإدارة العامة واللجنة: ارتفاع ثابت للعمود والسكرول داخله بدل ما تطول الصفحة */
-.ucas-portal .task-col { height: calc(100vh - 300px); min-height: 440px; }
+.ucas-portal .task-col { height: calc(100vh - 320px); min-height: 440px; }
 /* لوحة "مهامي" بهوية البوابة (الإدارة العامة واللجنة فقط): بطاقة بيضاء مسطّحة، أعمدة رمادية كلوحة التكليفات (tk-col)، زوايا 4px، بلا رفع عند التحويم */
 .ucas-portal .portal-page .task-board { padding: 16px; border-radius: 4px; background: var(--color-surface); background-image: none; box-shadow: var(--shadow-card); }
 .ucas-portal .portal-page .task-col { border: 0; border-radius: 4px; background: var(--color-bg); box-shadow: none; backdrop-filter: none; }
@@ -2130,7 +2155,7 @@
 .ucas-portal .portal-page .task-card:hover { transform: none; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); border-color: color-mix(in srgb, var(--portal-cyan) 50%, var(--color-border)); }
 .ucas-portal .portal-page .task-card p.font-bold { font-size: 14px; }
 /* رفع ملفات على بطاقات مهامي (placeholder) */
-.tb-upload-drop { display: flex; align-items: center; justify-content: center; gap: 6px; height: 34px; border: 1px dashed var(--portal-cyan, var(--color-primary-600)); border-radius: 4px; font-size: 12px; font-weight: 700; color: var(--portal-cyan, var(--color-primary-600)); cursor: pointer; transition: background-color .3s ease; }
+.tb-upload-drop { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; height: 34px; border: 1px dashed var(--portal-cyan, var(--color-primary-600)); border-radius: 4px; font-size: 12px; font-weight: 700; color: var(--portal-cyan, var(--color-primary-600)); cursor: pointer; transition: background-color .3s ease; }
 .tb-upload-drop:hover { background: color-mix(in srgb, var(--portal-cyan, var(--color-primary-600)) 8%, transparent); }
 .tb-upload-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
 .tb-upload-list li { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 4px; background: var(--color-bg); font-size: 12px; color: var(--color-text-700); }
@@ -2267,6 +2292,23 @@
 .hd-refresh:hover:not(:disabled) { background: color-mix(in srgb, var(--portal-cyan) 10%, transparent); }
 .hd-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* بطاقة واحدة للتبويبات والفلاتر (الإعلانات والملفات) + قوائم الفلاتر بأيقونة داخل الحقل كحقل البحث */
+.hd-toolbar { display: flex; flex-direction: column; background: var(--color-surface); border-radius: 4px; box-shadow: var(--shadow-card); overflow: hidden; }
+.hd-toolbar > .rv-tabs { border-radius: 0; }
+.hd-toolbar > .gr-filters { border-radius: 0; box-shadow: none; padding: 14px 16px; }
+.hd-field { flex: 0 1 200px; display: flex; align-items: center; gap: 6px; min-width: 160px; height: 40px; padding-inline-start: 12px; border: 1px solid #CED4DA; border-radius: 4px; background: var(--color-surface); color: var(--color-text-400); transition: border-color var(--ucas-color-speed) var(--ease-standard); }
+.hd-field:focus-within { border-color: var(--portal-cyan); box-shadow: 0 0 0 3px rgba(53, 184, 224, 0.15); }
+.hd-field select { flex: 1; min-width: 0; height: 100%; padding-inline: 2px 28px; border: 0; outline: 0; background-color: transparent; color: var(--color-text-700); font-size: 13.5px; cursor: pointer; box-shadow: none !important; }
+:root[data-theme="dark"] .hd-field { border-color: var(--color-border); }
+.hd-clear { display: inline-flex; align-items: center; gap: 4px; height: 40px; font-size: 13.5px; }
+@media (max-width: 639.98px) {
+  /* المرسل والترتيب والتحديث في صف واحد تحت البحث (يتجاوز قاعدة الفلاتر بعرض كامل) */
+  .hd-filters > .rv-search { flex-basis: 100%; }
+  .hd-filters > .hd-field { flex: 1 1 0; min-width: 0; padding-inline-start: 8px; }
+  .hd-field > svg { display: none; }
+  .hd-filters > .hd-refresh { flex: 0 0 40px; }
+}
+
 .hd-layout { grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 16px; }
 
 /* بطاقة القائمة */
@@ -2356,7 +2398,7 @@
 .an-icon { display: inline-grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; }
 .an-icon.is-announcement { background: #E1F5FC; color: #1A8DB5; }
 .an-icon.is-file { background: #E2F8ED; color: #0A8A4A; }
-.an-icon.is-rating { background: #FEF8EA; color: #D08A00; }
+.an-icon:is(.is-rating, .is-task) { background: #FEF8EA; color: #D08A00; }
 :root[data-theme="dark"] .an-icon { background: var(--color-bg); }
 .an-rating { display: flex; align-items: center; gap: 2px; margin-bottom: 14px; color: #F9C851; }
 .an-rating .is-off { color: var(--color-border); }
@@ -2436,6 +2478,105 @@
 .st-slot h4 { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--color-text-900); }
 .st-slot .pt-muted { font-size: 12px; }
 .st-slot.is-filled { border-style: solid; border-color: #10C469; }
+
+/* المقترحات للطالب: مسار التسليم (مراحل مقروءة فقط) + نموذج بحقول البوابة */
+.sp-card { display: flex; flex-direction: column; gap: 18px; }
+.sp-card > .dash-card-head { margin-bottom: 0; }
+.sp-card > .dash-card-head .rv-pill { align-self: flex-start; width: fit-content; }
+.sp-track { display: flex; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.sp-track li { flex: 1; display: flex; align-items: center; gap: 8px; padding: 8px 6px 10px; border-radius: 4px 4px 0 0; border-bottom: 3px solid var(--color-border); font-size: 13.5px; font-weight: 700; color: var(--color-text-400); }
+.sp-track b { display: inline-grid; place-items: center; flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--color-border); color: var(--color-text-600); font-size: 13px; }
+.sp-track .is-done { border-color: #10C469; color: var(--color-text-700); }
+.sp-track .is-done b { background: #10C469; color: #FFFFFF; }
+.sp-track .is-active { border-color: var(--portal-cyan); color: var(--color-text-900); }
+.sp-track .is-active b { background: var(--portal-cyan); color: #FFFFFF; }
+.sp-track .is-rejected { border-color: #FF5B5B; color: #FF5B5B; }
+.sp-track .is-rejected b { background: #FF5B5B; color: #FFFFFF; }
+.sp-track li > button { display: flex; align-items: center; gap: 8px; width: 100%; font: inherit; color: inherit; }
+.sp-track li.is-open { background: color-mix(in srgb, var(--portal-cyan) 8%, transparent); }
+.sp-track li > button:focus-visible { outline: 2px solid var(--portal-cyan); outline-offset: 2px; }
+/* نموذج المقترح المضغوط: حقول أقصر، و"فكرة المشروع" شبكة 2×2 */
+.sp-split .tk-sec-body { gap: 14px; padding: 14px 16px; }
+.sp-card .tk-review dd.mono { text-align: right; }
+.sp-split .pfield input { height: 40px; }
+.sp-split .pfield textarea { min-height: 72px; }
+.sp-idea { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 639.98px) { .sp-idea { grid-template-columns: minmax(0, 1fr); } }
+.sp-card .palert { align-items: flex-start; margin: 0; }
+.sp-card .palert svg { flex-shrink: 0; margin-top: 4px; }
+.sp-form { display: flex; flex-direction: column; gap: 18px; }
+.sp-split { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+.sp-main, .sp-side { display: flex; flex-direction: column; gap: 16px; }
+.sp-side { position: sticky; top: 88px; }
+.sp-side .pbtn { justify-content: center; width: 100%; }
+.sp-retry { align-self: flex-start; }
+.sp-hint { grid-column: 1 / -1; }
+.mt-meet-next { align-items: flex-start; margin: 0 0 14px; }
+.mt-meet-next svg { flex-shrink: 0; margin-top: 4px; }
+/* جدول الاجتماعات: كل قيمة في وسط عمودها تحت عنوانها */
+:root[data-brand="ucas"] .mt-table :is(thead th, td) { text-align: center; }
+.dp-students { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.mt-acts { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+
+
+/* وسم مصدر المهمة على بطاقة لوحة المهام (من المشرف / لجنة الإشراف / الإدارة العامة) */
+.tb-source { display: inline-block; margin-bottom: 6px; padding: 2px 8px; border-radius: 4px; background: #E1F5FC; color: #1A8DB5; font-size: 11.5px; font-weight: 700; }
+
+/* الشكاوى والملاحظات بنمط البريد: صندوق رسائل (موضوع + تاريخ + "إلى")، رسالة جديدة بحقول إلى/الموضوع، وقراءة كرسائل متتالية */
+.em-item { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 14px 16px; border-bottom: 1px solid var(--color-border); text-align: start; font: inherit; transition: background-color var(--ucas-color-speed) var(--ease-standard); }
+.em-item:hover { background: var(--portal-menu-hover); }
+.em-item.is-selected { background: #EEF8FC; box-shadow: inset -3px 0 0 var(--portal-cyan); }
+.em-item-top { display: flex; align-items: baseline; gap: 10px; }
+.em-subject { flex: 1; min-width: 0; overflow: hidden; font-size: 14.5px; color: var(--color-text-900); white-space: nowrap; text-overflow: ellipsis; }
+.em-date { flex-shrink: 0; font-size: 12px; color: var(--color-text-400); }
+.em-item-meta { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--color-text-400); }
+.em-count { display: inline-flex; align-items: center; gap: 4px; }
+.em-closed { padding: 1px 8px; border-radius: 4px; background: var(--color-bg); font-weight: 700; }
+.em-compose, .em-read { display: flex; flex-direction: column; gap: 14px; }
+.em-field { display: flex; align-items: center; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--color-border); font-size: 14px; }
+.em-field > span { width: 64px; flex-shrink: 0; color: var(--color-text-400); }
+.em-field input { flex: 1; min-width: 0; height: 34px; border: 0; outline: 0; background: transparent; color: var(--color-text-900); font: inherit; box-shadow: none !important; }
+.em-text { width: 100%; padding: 12px 14px; border: 1px solid #CED4DA; border-radius: 4px; background: var(--color-surface); color: var(--color-text-900); font: inherit; font-size: 14.5px; line-height: 1.9; resize: vertical; }
+.em-text:focus { outline: 0; border-color: var(--portal-cyan); box-shadow: 0 0 0 3px rgba(53, 184, 224, 0.15); }
+.em-mail { padding: 16px 18px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); }
+.em-mail-head { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--color-border); }
+.em-avatar { display: grid; place-items: center; flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%; background: var(--color-bg); font-size: 12px; font-weight: 800; color: var(--portal-cyan); }
+.em-avatar.is-me { background: var(--portal-cyan); color: #FFFFFF; }
+.em-mail-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.em-mail-body { margin: 0; font-size: 14.5px; line-height: 1.9; color: var(--color-text-700); white-space: pre-line; }
+.em-reply-btn { align-self: flex-start; }
+.em-reply { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; border: 1px solid var(--portal-cyan); border-radius: 4px; }
+:root[data-theme="dark"] .em-item.is-selected { background: rgba(53, 184, 224, 0.1); }
+:root[data-theme="dark"] .em-text { border-color: var(--color-border); }
+
+/* تسليم التقرير النهائي بخطوات: دوائر مرقّمة يصل بينها خط، الحالية سماوية والمكتملة خضراء بعلامة ✓ */
+.sp-wizard { display: flex; flex-direction: column; gap: 18px; }
+.sp-steps { display: flex; margin: 0; padding: 4px 0 0; list-style: none; counter-reset: none; }
+.sp-steps li { position: relative; flex: 1; }
+.sp-steps li + li::before { content: ''; position: absolute; top: 19px; inset-inline-end: 50%; width: 100%; height: 3px; background: var(--color-border); transition: background-color .35s var(--ease-standard, ease); }
+.sp-steps li.is-done + li::before, .sp-steps li.is-done + li.is-current::before { background: #10C469; }
+.sp-steps button { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; font: inherit; }
+.sp-steps b { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--color-border); background: var(--color-surface); color: var(--color-text-400); font-size: 15px; transition: background-color .35s var(--ease-standard, ease), border-color .35s var(--ease-standard, ease), color .35s var(--ease-standard, ease); }
+.sp-steps span { font-size: 13.5px; font-weight: 700; color: var(--color-text-400); text-align: center; }
+.sp-steps .is-done b { border-color: #10C469; background: #10C469; color: #FFFFFF; }
+.sp-steps .is-done span { color: var(--color-text-700); }
+.sp-steps .is-current b { border-color: var(--portal-cyan); background: var(--portal-cyan); color: #FFFFFF; box-shadow: 0 0 0 5px rgba(53, 184, 224, 0.18); }
+.sp-steps .is-current span { color: var(--color-text-900); }
+.sp-steps button:focus-visible b { outline: 2px solid var(--portal-cyan); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .sp-steps li::before, .sp-steps b { transition: none; } }
+.sp-step-body .tk-sec-head .pt-muted { font-size: 12.5px; font-weight: 600; }
+.sp-link { overflow-wrap: anywhere; }
+.sp-files { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.sp-files li { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 4px; color: var(--portal-cyan); }
+.sp-files li > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; color: var(--color-text-900); font-size: 14px; }
+.sp-files li small { font-size: 12px; }
+@media (max-width: 639.98px) { .sp-steps span { font-size: 11.5px; } .sp-steps b { width: 34px; height: 34px; } .sp-steps li + li::before { top: 16px; } }
+.sp-review { padding: 14px 16px; border: 1px solid var(--color-border); border-radius: 4px; }
+.sp-text .pr-h { margin: 0 0 4px; }
+.sp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-top: 16px; border-top: 1px solid var(--color-border); }
+.sp-form .tk-chip:disabled { opacity: 0.4; cursor: not-allowed; }
+@media (max-width: 1023.98px) { .sp-split, .st-slots { grid-template-columns: minmax(0, 1fr); } .sp-side { position: static; } }
+@media (max-width: 639.98px) { .sp-track { flex-wrap: wrap; } .sp-track li { flex: 1 1 45%; } }
 .st-flow { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .st-flow li { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 4px; background: var(--color-bg); font-size: 12.5px; font-weight: 700; color: var(--color-text-600); }
 .st-flow li.is-done { background: #E2F8ED; color: #0A8A4A; }
@@ -2821,8 +2962,6 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 @media (max-width: 639.98px) { .dp-wide { grid-column: auto; } }
 
 /* أرشيف المشاريع والمعرض */
-.ar-star { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--color-border); border-radius: 4px; color: var(--color-text-400); transition: color var(--ucas-color-speed) var(--ease-standard), border-color var(--ucas-color-speed) var(--ease-standard); }
-.ar-star:hover, .ar-star.is-on { color: #F9C851; border-color: #F9C851; }
 /* أرشيف المشاريع بنمط متصفح الملفات (photo_2026-10-10_22-39-58) بهوية البوابة: سماوي/أخضر/أحمر/أزرق الشعار، زوايا 4px */
 .ad-prev.is-video { --c: #10C469; }
 .ad-prev.is-pdf { --c: #FF5B5B; }
@@ -3381,3 +3520,35 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .tp-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 6px; border-top: 1px solid var(--color-border); font-size: 12px; }
 .tp-empty { display: grid; grid-template-columns: minmax(220px, 280px) 1fr; gap: 16px; align-items: center; font-size: 13px; line-height: 1.8; }
 @media (max-width: 640px) { .tp-empty { grid-template-columns: 1fr; } }
+
+/* مهام المشرف: شريط فلتر الفرق + تعريف الفرقة المختارة */
+.tk-teambar { display: flex; flex-direction: column; gap: 14px; }
+.tk-teambar .gr-class { padding: 0; border: 0; background: none; }
+.tk-teammeta { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 24px; margin: 0; padding-top: 14px; border-top: 1px solid var(--color-border); }
+.tk-teammeta div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.tk-teammeta dt { font-size: 12.5px; font-weight: 600; color: var(--portal-cyan); }
+.tk-teammeta dd { margin: 0; font-size: 14px; font-weight: 700; color: var(--color-text-900); }
+.ar-feature { white-space: nowrap; }
+
+/* استرجاع كلمة المرور: الحقل يملأ عرض البطاقة، والزر تحته مباشرة بمحاذاته */
+.au-fp { gap: 24px; padding-top: 8px; }
+.au-fp .portal-input { text-align: start; }
+@media (min-width: 768px) {
+  .au-fp .portal-form-row { grid-template-columns: 150px minmax(0, 1fr); gap: 20px; }
+  .au-fp .au-actions { justify-content: flex-start; padding-top: 0; padding-inline-start: 170px; }
+}
+
+/* بطاقة المعلومات الشخصية بالصورة (المشرف والطالب): صورة دائرية + عنوان + إجراءات الملف، بلا خلفية زرقاء */
+.pf-photo { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding-bottom: 20px; margin-bottom: 8px; border-bottom: 1px solid var(--color-border); }
+.pf-photo-img { display: grid; place-items: center; width: 76px; height: 76px; flex: none; overflow: hidden; border-radius: 50%; border: 2px solid var(--portal-cyan); background: var(--color-bg); font-size: 28px; font-weight: 800; color: var(--portal-cyan); }
+.pf-photo-img img { width: 100%; height: 100%; object-fit: cover; }
+.pf-photo-text { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 4px; }
+.pf-photo-text .portal-title { margin: 0; }
+.pf-photo-text small { font-size: 12.5px; color: var(--color-text-400); }
+/* زر داخل الشريط الأخضر (تصدير PDF للمشرف في تقدّم المشاريع) */
+.gr-sumbar { align-items: center; }
+.gr-sumbar-btn { background: #FFFFFF; color: #0A8A4A; }
+.gr-sumbar-btn:hover:not(:disabled) { background: #E2F8ED; }
+/* استرجاع كلمة المرور: النموذج و"عزيزي المستخدم" عمود واحد في وسط الصفحة */
+.au-narrow { width: 100%; max-width: 760px; margin-inline: auto; }
+.au-grid.au-center { grid-template-columns: minmax(0, 1fr); }

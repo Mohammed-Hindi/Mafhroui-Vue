@@ -220,8 +220,9 @@ export async function exportGroupsPdf({ fileName, title, subtitle, sections }) {
 /**
  * PDF من صفحات HTML جاهزة بمقاس A4 كامل (794×1123 عمودي أو 1123×794 أفقي) — كل عنصر صفحة مستقلة.
  * تُستخدم لنماذج الكلية الرسمية (كشف الشعبة، جدول المناقشات) حيث تصميم الصفحة ثابت.
+ * asBlob: يعيد الملف (Blob) بدل تنزيله — لإرفاقه بطلب (مثل مقترح يُنشأ من النموذج).
  */
-export async function exportPagesPdf({ fileName, pages, landscape = false }) {
+export async function exportPagesPdf({ fileName, pages, landscape = false, asBlob = false }) {
   const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([import('jspdf'), import('html2canvas')])
   const pdf = new jsPDF({ unit: 'pt', format: 'a4', orientation: landscape ? 'landscape' : 'portrait' })
   const w = pdf.internal.pageSize.getWidth()
@@ -231,6 +232,7 @@ export async function exportPagesPdf({ fileName, pages, landscape = false }) {
     if (i) pdf.addPage()
     pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, w, h)
   }
+  if (asBlob) return pdf.output('blob')
   pdf.save(fileName)
 }
 

@@ -1,6 +1,8 @@
 <template>
   <!-- مساحة المهام: ملخص الحالات + قائمة/لوحة لكل مهام المجموعات + إنشاء مهمة لمجموعات محددة + تفاصيل المهمة -->
   <div class="tk">
+    <!-- composeOnly: نافذة الإنشاء وحدها (زر "مهمة جديدة" في صفحات أخرى) بلا قائمة المهام -->
+    <template v-if="!composeOnly">
     <section class="hm-stats tk-stats" aria-label="ملخص المهام">
       <button v-for="s in stats" :key="s.value" type="button" :class="['hm-stat', fStatus === s.value && 'is-active']" @click="fStatus = fStatus === s.value ? '' : s.value">
         <span class="hm-stat-label"><i :class="['tk-dot', `is-${s.value || 'all'}`]" />{{ s.label }}</span>
@@ -34,17 +36,23 @@
           <option value="">كل المشرفين</option>
           <option v-for="s in supervisors" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
-        <select v-if="!isStaff" v-model="fGroup" class="gr-select" aria-label="المجموعة">
+        <select v-if="!isStaff && !isSupervisor" v-model="fGroup" class="gr-select" aria-label="المجموعة">
           <option value="">كل المجموعات</option>
           <option v-for="g in groupOptions" :key="g.id" :value="g.id">{{ g.label }}</option>
         </select>
-        <select v-if="!isStaff" v-model="fDegree" class="gr-select" aria-label="الدرجة">
+        <select v-if="!isStaff && !isSupervisor" v-model="fDegree" class="gr-select" aria-label="الدرجة">
           <option value="">كل الدرجات</option>
           <option v-for="(l, k) in DEGREES" :key="k" :value="k">{{ l }}</option>
         </select>
         <select v-if="!isStaff" v-model="fSpec" class="gr-select" aria-label="التخصص">
           <option value="">كل التخصصات</option>
           <option v-for="s in specOptions" :key="s.id" :value="s.id">{{ s.name }}</option>
+        </select>
+        <!-- المشرف: فلترا التخصص والفئة فقط -->
+        <select v-if="isSupervisor" v-model="fGender" class="gr-select" aria-label="الفئة">
+          <option value="">طلاب وطالبات</option>
+          <option value="male">طلاب</option>
+          <option value="female">طالبات</option>
         </select>
         <button v-if="hasFilters" type="button" class="pbtn is-outline is-sm" @click="clearFilters">مسح الفلاتر</button>
       </div>
@@ -126,6 +134,7 @@
         </div>
       </template>
     </section>
+    </template>
 
     <!-- إنشاء مهمة -->
     <BaseModal v-model="composer" title="مهمة جديدة" size="xl">
@@ -267,6 +276,7 @@
     </BaseModal>
 
     <TaskDetailModal
+      v-if="!composeOnly"
       :task="detail" :members="detailMembers" :statuses="STATUSES"
       @close="detail = null" @updated="replace" @removed="removeTask"
     />
@@ -283,6 +293,7 @@ import TemplatePicker from '@/components/shared/TemplatePicker.vue'
 import SlideTable from '@/components/ui/SlideTable.vue'
 import TaskDetailModal from './TaskDetailModal.vue'
 import api from '@/services/api'
+import { groupGender } from '@/services/adminData'
 import { mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
 import { notifyExternal } from '@/services/announcements'
@@ -305,7 +316,8 @@ export default {
   components: { BaseModal, ChannelPicker, FileDropzone, GroupPicker, SlideTable, TaskDetailModal, TemplatePicker, CalendarDays, ChevronDown, Columns3, History, List, Plus, Search, Send, Users, X },
 
   props: {
-    groups: { type: Array, default: () => [] }
+    groups: { type: Array, default: () => [] },
+    composeOnly: { type: Boolean, default: false }
   },
 
   data() {
@@ -326,6 +338,7 @@ export default {
       info: {},
       fDegree: '',
       fSpec: '',
+      fGender: '',
       DEGREES,
       fStatus: '',
       committee: [],
@@ -392,7 +405,7 @@ export default {
       ]
     },
     hasFilters() {
-      return !!(this.q || this.fCommittee || this.fGroup || this.fSup || this.fStatus || this.fDegree || this.fSpec)
+      return !!(this.q || this.fCommittee || this.fGroup || this.fSup || this.fStatus || this.fDegree || this.fSpec || this.fGender)
     },
     /** معاملات GET /tasks — كل فلتر يُرسل مستقلًا ويُطبّق في الخادم */
     params() {
@@ -472,6 +485,7 @@ export default {
     fSup: 'load',
     fDegree: 'load',
     fSpec: 'load',
+    fGender: 'load',
     fStatus: 'load'
   },
 
@@ -481,7 +495,8 @@ export default {
     const people = (role) => api.get('/users', { params: { role } })
       .then(({ data }) => (data.data || data).map((u) => ({ id: u.id, name: u.name, email: u.email || '', whatsapp: u.whatsapp || '' })))
       .catch(() => [])
-    ;[this.committee, this.supervisors] = await Promise.all([people('committee'), people('supervisor')])
+    // المشرف يرسل لمجموعاته فقط فلا يحتاج قوائم اللجنة والمشرفين
+    if (!this.isSupervisor) [this.committee, this.supervisors] = await Promise.all([people('committee'), people('supervisor')])
   },
 
   beforeUnmount() {
@@ -534,6 +549,7 @@ export default {
 
     /** GET /tasks بالفلاتر الحالية؛ تُهمل الاستجابات القديمة إذا تغيّر فلتر قبل وصولها */
     async load() {
+      if (this.composeOnly) return
       if (this.isSupervisor) return this.loadOwnGroups()
       const id = ++this.reqId
       this.loadingTasks = true
@@ -562,7 +578,7 @@ export default {
       const g = (t) => this.groupById[t.team_id] || {}
       const q = this.q
       const base = all.filter((t) => (!this.fGroup || t.team_id === this.fGroup) && (!this.fDegree || g(t).degree === this.fDegree) &&
-        (!this.fSpec || g(t).specId === this.fSpec) && (!q || `${t.title} ${(t.assignees || []).map((a) => a.name).join(' ')}`.includes(q)))
+        (!this.fSpec || g(t).specId === this.fSpec) && (!this.fGender || groupGender(g(t)) === this.fGender) && (!q || `${t.title} ${(t.assignees || []).map((a) => a.name).join(' ')}`.includes(q)))
       const late = (t) => t.status !== 'done' && t.due_date && t.due_date < this.today
       this.counts = { all: base.length, late: base.filter(late).length }
       STATUSES.forEach((st) => { this.counts[st.value] = base.filter((t) => t.status === st.value).length })
@@ -616,7 +632,7 @@ export default {
     },
 
     clearFilters() {
-      Object.assign(this, { q: '', fCommittee: '', fGroup: '', fSup: '', fStatus: '', fDegree: '', fSpec: '' })
+      Object.assign(this, { q: '', fCommittee: '', fGroup: '', fSup: '', fStatus: '', fDegree: '', fSpec: '', fGender: '' })
     },
 
     openComposer() {

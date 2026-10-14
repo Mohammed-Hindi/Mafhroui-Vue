@@ -4,26 +4,36 @@ import ProfilePageStudent from '@/views/student/ProfilePage.vue'
 import ProposalPageStudent from '@/views/student/ProposalPage.vue'
 import TasksPageStudent from '@/views/student/TasksPage.vue'
 import MeetingsPageStudent from '@/views/student/MeetingsPage.vue'
-import AnnouncementsPageStudent from '@/views/student/AnnouncementsPage.vue'
+import AnnouncementsInboxPageStudent from '@/views/super-admin/AnnouncementsDesk.vue'
 import AssistantPageStudent from '@/views/student/AssistantPage.vue'
+
+// استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
+import ProfilePage from '@/views/student/ProfilePage.vue'
+import ProposalPage from '@/views/student/ProposalPage.vue'
+import TasksPage from '@/views/student/TasksPage.vue'
+import MeetingsPage from '@/views/student/MeetingsPage.vue'
+import AssistantPage from '@/views/student/AssistantPage.vue'
 
 /** مسارات لوحة الطالب — تُضاف صفحة بصفحة حسب الوصف */
 export default [
   {
     path: '/student',
     component: DashboardLayout,
-    meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
+    // بطاقة الاسم أعلى الصفحات مخفية في كل لوحة الطالب
+    meta: { requiresAuth: true, roles: [ROLES.STUDENT], hideIdentity: true },
     children: [
+      // أول ما يفتح الطالب الموقع: لوحة المهام
       {
         path: '',
         name: 'student-dashboard',
-        component: ProfilePageStudent,
-        meta: { title: 'الملف التعريفي' }
+        redirect: { name: 'student-tasks' }
       },
+      // الملف التعريفي ("بياناتي") من القائمة المنسدلة للاسم، لا من السايد بار
       {
         path: 'profile',
         name: 'student-profile',
-        redirect: { name: 'student-dashboard' }
+        component: ProfilePageStudent,
+        meta: { title: 'بياناتي' }
       },
       {
         path: 'tickets',
@@ -58,8 +68,8 @@ export default [
       {
         path: 'announcements',
         name: 'student-announcements',
-        component: AnnouncementsPageStudent,
-        meta: { title: 'الإعلانات' }
+        component: AnnouncementsInboxPageStudent,
+        meta: { title: 'الإعلانات والملفات' }
       },
       {
         path: 'assistant',

@@ -336,3 +336,29 @@ body { font-family: Arial, 'Cairo', sans-serif; direction: rtl; color: #000; } t
   a.click()
   setTimeout(() => URL.revokeObjectURL(a.href), 1000)
 }
+
+/** المقترح من النموذج كملف PDF (حين لا يرفع الطالب ملفًا): رأس الكلية + بيانات المشروع + أقسام الفكرة — يعيد File جاهزًا للإرسال */
+export async function proposalPdfFile(p, teamLabel = '') {
+  const rows = [['اسم المشروع', p.name], ['نوع المشروع', p.types.join('، ')], ['الفريق', teamLabel]].filter(([, v]) => v)
+  const sections = [['وصف المشروع', p.description], ['المشكلة', p.problems], ['الحل المقترح', p.solutions], ['المميزات والقيمة', p.features_value]].filter(([, v]) => v)
+  const page = `
+    <div style="${RFONT} width:794px; height:1123px; position:relative; padding:34px 40px;">
+      ${collegeHeader(72)}
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:10px;">
+        <b style="font-size:16px;">لجنة مشاريع التخرج</b>
+        <span style="font-size:13px; color:#444;">التاريخ: <span dir="ltr">${today()}</span></span>
+      </div>
+      <div style="border-top:2px solid #000; margin:6px -40px 0;"></div>
+      <div style="text-align:center; margin:16px 0 14px; font-size:19px; font-weight:800;">مقترح مشروع تخرج</div>
+      <table style="width:100%; border-collapse:collapse; margin-bottom:16px;">
+        ${rows.map(([k, v]) => `<tr><td style="${META_L}">${e(k)}</td><td style="${META_V}">${e(v)}</td></tr>`).join('')}
+      </table>
+      ${sections.map(([k, v]) => `
+        <div style="margin-bottom:12px;">
+          <div style="${RTH} text-align:right;">${e(k)}</div>
+          <div style="${RTD} border-top:0; white-space:pre-line; min-height:40px;">${e(v)}</div>
+        </div>`).join('')}
+    </div>`
+  const blob = await exportPagesPdf({ fileName: 'proposal.pdf', pages: [page], asBlob: true })
+  return new File([blob], `مقترح-${(p.name || 'مشروع').replace(/[/:*?"<>|]/g, '-')}.pdf`, { type: 'application/pdf' })
+}

@@ -1,91 +1,57 @@
 <template>
-  <nav
-    :class="[
-      'sticky top-0 z-sticky-header backdrop-blur-md border-b transition-all duration-base',
-      isScrolled
-        ? 'bg-surface/90 border-border shadow-[0_4px_20px_-12px_rgba(15,23,42,.15)]'
-        : 'bg-bg/85 border-transparent'
-    ]"
-  >
-    <div class="max-w-content mx-auto flex items-center justify-between gap-4 px-6 py-4">
-      <router-link to="/" class="flex items-center gap-2.5 font-cairo font-extrabold text-[15px] text-text-900">
-        <span class="grid place-items-center w-[34px] h-[34px] rounded-sm bg-gradient-to-bl from-primary-600 to-accent-500 text-white shrink-0">
-          <AppIcon name="graduation" :size="17" :stroke-width="2.2" />
+  <!-- هيدر موقع الكلية (195704، 200241): شريط تدرج علوي، الشعار والاسم يمينًا، الروابط، ثم الأدوات يسارًا -->
+  <header class="us-header">
+    <div class="us-wrap us-header-in">
+      <router-link to="/" class="us-brand" @click="open = false">
+        <UcasLogo :size="56" />
+        <span>
+          <strong>الكلية الجامعية للعلوم التطبيقية</strong>
+          <small>{{ APP_NAME }} — {{ APP_DESCRIPTION }}</small>
         </span>
-        <span class="hidden sm:block">{{ APP_NAME }}</span>
       </router-link>
 
-      <div class="flex items-center gap-2.5">
-        <button
-          type="button"
-          class="grid place-items-center w-[38px] h-[38px] rounded-pill border border-border bg-surface text-text-600 hover:-translate-y-px hover:text-primary-700 transition-transform duration-fast"
-          :aria-label="isDark ? 'التبديل إلى الوضع النهاري' : 'التبديل إلى الوضع الليلي'"
-          @click="toggleTheme"
-        >
-          <AppIcon :name="isDark ? 'sun' : 'moon'" :size="16" />
-        </button>
+      <nav :class="['us-nav', open && 'is-open']" aria-label="روابط الصفحة">
+        <router-link v-for="l in links" :key="l.label" :to="l.to" @click="open = false">{{ l.label }}</router-link>
+      </nav>
 
-        <button
-          v-if="isAuthenticated"
-          type="button"
-          class="grid place-items-center w-[38px] h-[38px] rounded-pill border border-border bg-surface text-text-600 hover:-translate-y-px hover:text-error hover:border-error-bg transition-all duration-fast"
-          aria-label="تسجيل الخروج"
-          title="تسجيل الخروج"
-          @click="handleLogout"
-        >
-          <LogOut :size="16" />
+      <div class="us-tools">
+        <button type="button" class="us-icon-btn" :aria-label="isDark ? 'التبديل إلى الوضع النهاري' : 'التبديل إلى الوضع الليلي'" @click="uiStore.toggleTheme()">
+          <Sun v-if="isDark" :size="18" /><Moon v-else :size="18" />
         </button>
-
-        <router-link
-          :to="loginTarget"
-          class="flex items-center gap-2 h-10 px-5 rounded-pill bg-gradient-to-bl from-primary-600 to-primary-700 text-white font-bold text-caption shadow-[0_8px_18px_-8px_rgba(37,99,235,.5)] hover:-translate-y-px transition-transform duration-fast"
-        >
-          <AppIcon name="login" :size="14" :stroke-width="2.4" />
+        <button v-if="isAuthenticated" type="button" class="us-icon-btn" aria-label="تسجيل الخروج" title="تسجيل الخروج" @click="authStore.logout()">
+          <LogOut :size="18" />
+        </button>
+        <router-link :to="isAuthenticated ? authStore.homeRoute : { name: 'login' }" class="us-btn is-solid is-sm">
           {{ isAuthenticated ? 'لوحة التحكم' : 'تسجيل الدخول' }}
         </router-link>
+        <button type="button" class="us-icon-btn us-menu-btn" :aria-expanded="open" aria-label="القائمة" @click="open = !open">
+          <Menu :size="20" />
+        </button>
       </div>
     </div>
-  </nav>
+  </header>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { LogOut } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { LogOut, Menu, Moon, Sun } from 'lucide-vue-next'
+import UcasLogo from '@/components/icons/UcasLogo.vue'
 import { useUiStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
-import { APP_NAME } from '@/utils/constants'
-import AppIcon from '@/components/icons/AppIcon.vue'
+import { APP_NAME, APP_DESCRIPTION } from '@/utils/constants'
 
 const uiStore = useUiStore()
 const authStore = useAuthStore()
-
-const isScrolled = ref(false)
+const open = ref(false)
 const isDark = computed(() => uiStore.isDark)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
-const homeRoute = computed(() => authStore.homeRoute)
 
-const loginTarget = computed(() => {
-  return isAuthenticated.value ? homeRoute.value : { name: 'login' }
-})
-
-const toggleTheme = () => {
-  uiStore.toggleTheme()
-}
-
-const handleLogout = () => {
-  authStore.logout()
-}
-
-const handleScroll = () => {
-  isScrolled.value = window.scrollY > 10
-}
-
-onMounted(() => {
-  window.addEventListener('scroll', handleScroll, { passive: true })
-  handleScroll()
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
-})
+const links = [
+  { label: 'الرئيسية', to: { name: 'landing' } },
+  { label: 'أفضل المشاريع', to: { name: 'landing', hash: '#projects' } },
+  { label: 'ميزات المنصة', to: { name: 'landing', hash: '#features' } },
+  { label: 'كيف تعمل', to: { name: 'landing', hash: '#how' } },
+  { label: 'الأقسام', to: { name: 'landing', hash: '#departments' } },
+  { label: 'أرشيف المشاريع', to: { name: 'projects-archive' } }
+]
 </script>

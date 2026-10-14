@@ -1,170 +1,306 @@
 <template>
+  <!-- المقترحات للطالب — نفس مسار التسليم المعتمد في الإدارة العامة (ProposalsReview):
+       المقترح: تقديم ← مراجعة (اعتماد / طلب تعديل / رفض) ← إعادة تقديم
+       التقرير النهائي (بعد اعتماد المقترح): رفع (فيديو + PDF + مضغوطة) ← موافقة المشرف ← اعتماد لجنة الإشراف ← أرشفة -->
   <div class="dash hd-page">
     <header class="dash-head"><h2 class="dash-title">المقترحات</h2></header>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-      <!-- المقترح -->
-      <section class="dash-card flex flex-col">
-        <div class="dash-card-head"><h3 class="portal-title">المقترح (Proposal)</h3></div>
 
-        <!-- نموذج تقديم المقترح (أو إعادة تقديمه بعد الرفض) — نوع المشروع إجباري عند أول تقديم ويُقفل بعدها (يعدّله المشرف) -->
-        <form v-if="showForm" class="flex flex-col gap-4" @submit.prevent="submit">
-          <BaseInput v-model.trim="form.name" label="اسم المشروع" placeholder="مثال: نظام حجز القاعات الجامعية" required />
-          <div>
-            <div class="text-label font-bold text-text-700 mb-2">نوع المشروع <b v-if="!typesLocked" class="text-error">*</b></div>
-            <div v-if="typesLocked">
-              <div class="flex flex-wrap gap-2">
-                <span v-for="t in projectTypes" :key="t" class="text-caption font-bold px-3 py-1.5 rounded-sm bg-primary-50 text-primary-700">{{ t }}</span>
-              </div>
-              <p class="text-caption text-text-400 mt-1.5">تم تحديد نوع المشروع، ويعدّله المشرف فقط.</p>
-            </div>
-            <template v-else>
-              <div class="flex flex-wrap gap-2" role="group" aria-label="نوع المشروع">
+    <PortalStepper v-model="view" :items="views" label="أقسام التسليم" />
+
+    <p v-if="teamsLoading && !myTeam" class="dash-card pt-muted">جارٍ التحميل…</p>
+
+    <!-- المقترح -->
+    <section v-else-if="view === 'proposal'" class="dash-card sp-card">
+      <div class="dash-card-head">
+        <h3 class="portal-title">المقترح (Proposal)</h3>
+        <span :class="['rv-pill', proposalState.pill]">{{ proposalState.label }}</span>
+      </div>
+
+      <!-- المراحل خانات قابلة للفتح: التقديم (النموذج) · الاعتماد -->
+      <ol class="sp-track" aria-label="مراحل المقترح">
+        <li v-for="(s, i) in proposalTrack" :key="s.label" :class="[s.state && `is-${s.state}`, step === i && 'is-open']">
+          <button type="button" :aria-current="step === i ? 'step' : undefined" @click="step = i"><b>{{ i + 1 }}</b> {{ s.label }}</button>
+        </li>
+      </ol>
+
+      <!-- 2. الاعتماد: الحالة، وعند الرفض أو طلب التعديل سببه + إعادة المحاولة + المحاولات المتبقية -->
+      <section v-if="step === 1" class="tk-sec">
+        <header class="tk-sec-head"><h4>اعتماد المقترح</h4></header>
+        <div class="tk-sec-body">
+          <dl class="tk-review">
+            <dt>حالة الاعتماد</dt><dd>{{ proposalState.label }}</dd>
+            <dt>{{ proposal?.status === 'approved' ? 'تاريخ الاعتماد' : 'آخر تحديث' }}</dt><dd class="mono">{{ proposal ? day(proposal.updated_at) : '—' }}</dd>
+            <dt>المحاولات المتبقية</dt><dd><span :class="['pr-count', !attemptsLeft && 'is-bad']">{{ attemptsLeft }}</span> من {{ MAX_ATTEMPTS }}</dd>
+          </dl>
+          <template v-if="proposal?.status === 'rejected'">
+            <p :class="['palert', changesRequested ? 'is-info' : 'is-error']">
+              <component :is="changesRequested ? 'PencilLine' : 'XCircle'" :size="18" />
+              <span><b>{{ changesRequested ? 'المطلوب تعديله:' : 'سبب الرفض:' }}</b> {{ reasonText || '—' }}</span>
+            </p>
+            <button v-if="canResubmit" type="button" class="pbtn is-cyan sp-retry" @click="startEdit"><RotateCcw :size="16" /> إعادة المحاولة — تعديل المقترح وإرساله</button>
+            <p v-else-if="!attemptsLeft" class="palert is-error"><XCircle :size="18" /><span>تم استنفاد محاولات إعادة التقديم المسموحة — تواصلوا مع لجنة الإشراف.</span></p>
+          </template>
+          <p v-else-if="proposal?.status === 'approved'" class="palert is-success"><CheckCircle2 :size="18" /><span>تم اعتماد المقترح — يمكنكم الآن رفع التقرير النهائي من تبويب "التقرير النهائي".</span></p>
+          <p v-else-if="proposal" class="palert is-info"><Hourglass :size="18" /><span>المقترح قيد المراجعة — يظهر هنا القرار وسبب الرفض إن وُجد.</span></p>
+        </div>
+      </section>
+
+      <!-- نموذج التقديم (أو إعادة التقديم بعد الرفض/طلب التعديل): بيانات المقترح يمينًا، وملف المقترح والإرسال في لوحة جانبية منفصلة.
+           نوع المشروع يحدده الطالب مع كل تقديم (الخادم يشترطه أول مرة ويحدّثه عند إعادة التقديم) -->
+      <form v-else-if="showForm" class="sp-wizard" @submit.prevent="submit">
+        <!-- تقديم المقترح بخطوات (نفس نمط تسليم التقرير): البيانات ← الفكرة ← الملف ← الإرسال -->
+        <p v-if="!canSubmit" class="palert is-info"><Lock :size="18" /><span>عرض تجريبي — لم يُسجَّل مشروع لفريقك بعد، ويُتاح الإرسال بعد تسجيله.</span></p>
+        <ol class="sp-steps" aria-label="خطوات تقديم المقترح">
+          <li v-for="(s, i) in proposalSteps" :key="s.label" :class="[i === pStep && 'is-current', s.ok && 'is-done']">
+            <button type="button" :aria-current="i === pStep ? 'step' : undefined" @click="pStep = i">
+              <b><Check v-if="s.ok && i !== pStep" :size="15" /><template v-else>{{ i + 1 }}</template></b>
+              <span>{{ s.label }}</span>
+            </button>
+          </li>
+        </ol>
+
+        <section class="tk-sec sp-step-body">
+          <header class="tk-sec-head"><h4>{{ proposalSteps[pStep].label }}</h4><span class="pt-muted">الخطوة {{ pStep + 1 }} من {{ proposalSteps.length }}</span></header>
+          <div v-if="pStep === 0" class="tk-sec-body">
+            <label class="pfield">
+              <span>اسم المشروع <b class="as-req">*</b></span>
+              <input v-model.trim="form.name" type="text" maxlength="200" placeholder="مثال: نظام حجز القاعات الجامعية">
+            </label>
+            <div class="pfield">
+              <span>نوع المشروع <b class="as-req">*</b></span>
+              <div class="tk-chips" role="group" aria-label="نوع المشروع">
                 <button
                   v-for="t in PROJECT_TYPES" :key="t" type="button" :aria-pressed="form.types.includes(t)"
-                  :disabled="!form.types.includes(t) && form.types.length >= 6"
-                  :class="['text-caption font-bold px-3 py-1.5 rounded-sm border transition-colors disabled:opacity-40', form.types.includes(t) ? 'bg-primary-600 border-primary-600 text-white' : 'border-border text-text-700 hover:border-primary-600']"
+                  :class="['tk-chip', form.types.includes(t) && 'is-on']" :disabled="!form.types.includes(t) && form.types.length >= 3"
                   @click="toggleType(t)"
                 >
                   {{ t }}
                 </button>
               </div>
-              <p class="text-caption text-text-400 mt-1.5">اختر نوعًا واحدًا على الأقل (حتى 6). لا يمكن تعديله بعد الإرسال إلا من المشرف.</p>
-            </template>
+              <small>اختر من نوع إلى 3 أنواع — المحدد: {{ form.types.length }} من 3</small>
+            </div>
           </div>
-          <BaseTextarea v-model.trim="form.description" label="وصف المشروع" :rows="3" placeholder="فكرة المشروع باختصار" />
-          <BaseTextarea v-model.trim="form.problems" label="المشكلة" :rows="2" placeholder="ما المشكلة التي يحلها المشروع؟" />
-          <BaseTextarea v-model.trim="form.solutions" label="الحل المقترح" :rows="2" />
-          <BaseTextarea v-model.trim="form.features_value" label="المميزات والقيمة" :rows="2" />
-          <div>
-            <div class="text-label font-bold text-text-700 mb-2">ملف المقترح <b v-if="!proposal" class="text-error">*</b><span v-else class="text-text-400 font-normal"> (اختياري — يبقى الملف السابق إن لم ترفع جديدًا)</span></div>
+          <div v-else-if="pStep === 1" class="tk-sec-body sp-idea">
+            <label class="pfield">
+              <span>وصف المشروع</span>
+              <textarea v-model="form.description" rows="2" @keydown.enter.shift.exact.prevent="bullet($event, 'description')" placeholder="فكرة المشروع باختصار" />
+            </label>
+            <label class="pfield">
+              <span>المشكلة</span>
+              <textarea v-model="form.problems" rows="2" @keydown.enter.shift.exact.prevent="bullet($event, 'problems')" placeholder="ما المشكلة التي يحلها المشروع؟" />
+            </label>
+            <label class="pfield">
+              <span>الحل المقترح</span>
+              <textarea v-model="form.solutions" rows="2" @keydown.enter.shift.exact.prevent="bullet($event, 'solutions')" placeholder="كيف يحل المشروع المشكلة؟" />
+            </label>
+            <label class="pfield">
+              <span>المميزات والقيمة</span>
+              <textarea v-model="form.features_value" rows="2" @keydown.enter.shift.exact.prevent="bullet($event, 'features_value')" placeholder="ما الذي يميّز المشروع وما قيمته للمستفيدين؟" />
+            </label>
+            <small class="pt-muted sp-hint">Shift + Enter لبدء بند جديد</small>
+          </div>
+          <div v-else-if="pStep === 2" class="tk-sec-body">
             <FileDropzone v-model="form.files" :max-mb="100" />
+            <small class="pt-muted">{{ proposal ? 'اختياري — يبقى الملف السابق إن لم ترفع ملفًا جديدًا.' : 'اختياري — ارفع تقرير المقترح، أو اتركه فيُنشأ ملف PDF من النموذج تلقائيًا عند الإرسال.' }}</small>
           </div>
-          <p v-if="missing" class="text-caption text-error">{{ missing }}</p>
-          <div class="flex gap-2">
-            <BaseButton type="submit" :loading="sending" :disabled="!!missing">{{ proposal ? 'إعادة إرسال المقترح' : 'إرسال المقترح' }}</BaseButton>
-            <BaseButton v-if="proposal" variant="outline" @click="editing = false">إلغاء</BaseButton>
+          <div v-else class="tk-sec-body">
+            <dl class="tk-review">
+              <dt>اسم المشروع</dt><dd>{{ form.name || '—' }}</dd>
+              <dt>نوع المشروع</dt><dd>{{ form.types.join('، ') || '—' }}</dd>
+              <dt>ملف المقترح</dt><dd>{{ form.files[0]?.name || (proposal ? 'الملف السابق' : 'يُنشأ PDF من النموذج تلقائيًا') }}</dd>
+            </dl>
+            <p v-if="missing" class="palert is-error"><XCircle :size="18" /><span>{{ missing }}</span></p>
           </div>
-        </form>
+        </section>
 
-        <div v-else-if="!proposal" class="flex-1 flex items-center justify-center p-6">
-          <div class="flex flex-col items-center gap-2.5 bg-bg border border-border rounded-lg px-7 py-6 max-w-[260px] text-center">
-            <span class="grid place-items-center w-12 h-12 rounded-pill bg-surface border border-border text-text-400"><Lock :size="20" /></span>
-            <p class="text-body-sm font-bold text-text-900">بانتظار إرسال المقترح من فريقك</p>
-            <p class="text-caption text-text-600">لتعبئة المقترح وإرساله</p>
-          </div>
-        </div>
+        <footer class="sp-actions">
+          <button v-if="pStep" type="button" class="pbtn is-outline" @click="pStep -= 1">السابق</button>
+          <button v-else-if="proposal" type="button" class="pbtn is-outline" @click="editing = false">إلغاء</button>
+          <span class="as-summary" />
+          <button v-if="pStep < proposalSteps.length - 1" type="button" class="pbtn is-cyan" @click="pStep += 1">التالي</button>
+          <button v-else type="submit" class="pbtn is-green" :disabled="!!missing || sending"><Send :size="16" /> {{ sending ? 'جارٍ الإرسال…' : proposal ? 'إعادة إرسال المقترح' : 'إرسال المقترح' }}</button>
+        </footer>
+      </form>
 
-        <SubmittedState
-          v-else class="flex-1 flex flex-col justify-center"
-          :rejected="proposal.status === 'rejected'"
-          :title="proposal.status === 'approved' ? 'تم اعتماد المقترح' : proposal.status === 'rejected' ? 'تم رفض المقترح' : 'تم تسليم الملف، بانتظار الموافقة'"
-          :description="proposal.status === 'approved' ? 'المشروع الآن قيد التنفيذ.' : proposal.status === 'rejected' ? 'يجب على الفريق تعديل المقترح وإعادة إرساله.' : 'بانتظار اعتماد المشرف للمقترح المُرسل.'"
-          :reject-reason="proposal.rejection_reason"
-          :items="proposalItems"
-        />
-        <BaseButton v-if="canResubmit && !editing" variant="outline" class="mt-4 self-start" @click="startEdit">تعديل المقترح وإعادة إرساله</BaseButton>
-      </section>
 
-      <!-- التقرير النهائي -->
-      <section class="dash-card flex flex-col">
-        <div class="dash-card-head"><h3 class="portal-title">التقرير النهائي للمشروع</h3></div>
 
-        <!-- سبب الرفض ومن رفض (المشرف أو لجنة الإشراف) فوق نموذج إعادة الرفع -->
-        <div v-if="reportRejected" class="flex items-start gap-2 p-3 mb-4 rounded-sm bg-error-bg">
-          <XCircle :size="16" class="text-error shrink-0 mt-0.5" />
-          <p class="text-caption text-error leading-relaxed">
-            <span class="font-bold">رُفض التقرير من {{ rejectedBy(finalReport) }}: </span>{{ finalReport.review_note || '—' }}
-            <span class="block mt-1">عدّل التقرير وأعد رفعه — يبدأ الاعتماد من جديد (المشرف ثم لجنة الإشراف).</span>
-          </p>
-        </div>
-
-        <!-- رفع التقرير النهائي (أو إعادة رفعه بعد الرفض) — بعد اعتماد المقترح، من حساب الفريق الأساسي -->
-        <form v-if="showReportForm" class="flex flex-col gap-4" @submit.prevent="submitReport">
-          <!-- 3 خانات: الفيديو · التقرير · الملفات المضغوطة -->
-          <div class="st-slots">
-            <div :class="['st-slot', (reportForm.video_url || reportForm.video.length) && 'is-filled']">
-              <h4><Video :size="16" /> فيديو العرض <b class="text-error">*</b></h4>
-              <BaseInput v-model.trim="reportForm.video_url" label="رابط يوتيوب" placeholder="https://www.youtube.com/watch?v=…" dir="ltr" />
-              <!-- ponytail: رفع فيديو صغير placeholder — الخادم يقبل الرابط فقط (video_url)؛ الملف لا يُرسل -->
-              <FileDropzone v-model="reportForm.video" :max-mb="50" />
-              <span class="pt-muted">رابط يوتيوب، أو فيديو قصير حتى 50MB.</span>
+      <!-- المقترح المُرسل: نفس التقسيم — البيانات يمينًا، والملف والإجراءات في اللوحة الجانبية -->
+      <div v-else class="sp-split">
+        <div class="sp-main">
+          <section class="tk-sec">
+            <header class="tk-sec-head"><h4>بيانات المشروع</h4></header>
+            <div class="tk-sec-body">
+              <dl class="tk-review">
+                <dt>اسم المشروع</dt><dd>{{ proposal.name || '—' }}</dd>
+                <dt>نوع المشروع</dt><dd>{{ projectTypes.join('، ') || '—' }}</dd>
+                <dt>تاريخ التقديم</dt><dd class="mono">{{ day(proposal.created_at) }}</dd>
+                <dt>آخر تحديث</dt><dd class="mono">{{ day(proposal.updated_at) }}</dd>
+              </dl>
             </div>
-            <div :class="['st-slot', reportForm.files.length && 'is-filled']">
-              <h4><FileCheck :size="16" /> التقرير النهائي (PDF) <b class="text-error">*</b></h4>
-              <FileDropzone v-model="reportForm.files" :max-mb="100" />
+          </section>
+          <section v-if="proposalTexts.length" class="tk-sec">
+            <header class="tk-sec-head"><h4>فكرة المشروع</h4></header>
+            <div class="tk-sec-body">
+              <div v-for="s in proposalTexts" :key="s.label" class="sp-text">
+                <h4 class="pr-h">{{ s.label }}</h4>
+                <p class="pr-text">{{ s.value }}</p>
+              </div>
             </div>
-            <div :class="['st-slot', reportForm.zip.length && 'is-filled']">
-              <h4><FileText :size="16" /> الملفات المضغوطة</h4>
+          </section>
+        </div>
+        <aside class="sp-side">
+          <section class="tk-sec">
+            <header class="tk-sec-head"><h4>ملف المقترح</h4></header>
+            <div class="tk-sec-body">
+              <button type="button" class="pbtn is-outline" @click="openProposal"><FileText :size="16" /> فتح ملف المقترح</button>
+              <button v-if="canResubmit && !editing" type="button" class="pbtn is-cyan" @click="startEdit"><PencilLine :size="16" /> تعديل المقترح وإعادة إرساله</button>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </section>
+
+    <!-- التقرير النهائي: تسليم بخطوات (التقرير ← رابط الفيديو ← الملفات المضغوطة ← التسليم)، وبعد التسليم الملفات المسلّمة فقط -->
+    <section v-else class="dash-card sp-card">
+      <div class="dash-card-head">
+        <h3 class="portal-title">التقرير النهائي للمشروع</h3>
+      </div>
+
+      <!-- رُفض التقرير: السبب + إعادة التسليم -->
+      <p v-if="reportRejected && !reportEditing" class="palert is-error">
+        <XCircle :size="18" />
+        <span><b>رُفض التقرير من {{ rejectedBy(finalReport) }}:</b> {{ finalReport.review_note || '—' }} — عدّل التقرير وأعد تسليمه.</span>
+      </p>
+
+      <!-- التسليم بخطوات (مفتوح في أي وقت — الخادم لا يشترط اعتماد المقترح) -->
+      <form v-if="showReportForm" class="sp-wizard" @submit.prevent="submitReport">
+        <p v-if="!canSubmit" class="palert is-info"><Lock :size="18" /><span>عرض تجريبي — لم يُسجَّل مشروع لفريقك بعد، ويُتاح التسليم بعد تسجيله.</span></p>
+        <ol class="sp-steps" aria-label="خطوات التسليم">
+          <li v-for="(s, i) in reportSteps" :key="s.label" :class="[i === rStep && 'is-current', s.ok && 'is-done']">
+            <button type="button" :aria-current="i === rStep ? 'step' : undefined" @click="rStep = i">
+              <b><Check v-if="s.ok && i !== rStep" :size="15" /><template v-else>{{ i + 1 }}</template></b>
+              <span>{{ s.label }}</span>
+            </button>
+          </li>
+        </ol>
+
+        <section class="tk-sec sp-step-body">
+          <header class="tk-sec-head"><h4>{{ reportSteps[rStep].label }} <b v-if="reportSteps[rStep].req" class="as-req">*</b></h4><span class="pt-muted">الخطوة {{ rStep + 1 }} من {{ reportSteps.length }}</span></header>
+          <div class="tk-sec-body">
+            <FileDropzone v-if="rStep === 0" v-model="reportForm.files" :max-mb="100" />
+            <label v-else-if="rStep === 1" class="pfield">
+              <span>رابط فيديو العرض (يوتيوب)</span>
+              <input v-model.trim="reportForm.video_url" type="url" dir="ltr" placeholder="https://www.youtube.com/watch?v=…">
+            </label>
+            <template v-else-if="rStep === 2">
               <!-- ponytail: الملفات المضغوطة placeholder — لا تُرسل حتى يوفّر الخادم حقلها -->
               <FileDropzone v-model="reportForm.zip" :max-mb="100" />
-              <span class="pt-muted">الكود المصدري والمخرجات (ZIP / RAR).</span>
-            </div>
+              <small class="pt-muted">الكود المصدري والمخرجات (ZIP / RAR) — اختياري.</small>
+            </template>
+            <template v-else>
+              <dl class="tk-review">
+                <dt>التقرير النهائي</dt><dd>{{ reportForm.files[0]?.name || '—' }}</dd>
+                <dt>فيديو العرض</dt><dd class="mono sp-link">{{ reportForm.video_url || '—' }}</dd>
+                <dt>الملفات المضغوطة</dt><dd>{{ reportForm.zip.map((f) => f.name).join('، ') || 'لا يوجد' }}</dd>
+              </dl>
+              <p v-if="reportMissing" class="palert is-error"><XCircle :size="18" /><span>{{ reportMissing }}</span></p>
+            </template>
           </div>
-          <div class="flex gap-2">
-            <BaseButton type="submit" :loading="uploading" :disabled="!reportForm.files.length || !reportForm.video_url">{{ reportRejected ? 'إعادة رفع التقرير' : 'رفع التقرير النهائي' }}</BaseButton>
-            <BaseButton v-if="reportRejected" variant="outline" @click="reportEditing = false">إلغاء</BaseButton>
-          </div>
-        </form>
+        </section>
 
-        <div v-else-if="!finalReport" class="flex-1 flex items-center justify-center p-6">
-          <div class="flex flex-col items-center gap-2.5 bg-bg border border-border rounded-lg px-7 py-6 max-w-[260px] text-center">
-            <span class="grid place-items-center w-12 h-12 rounded-pill bg-surface border border-border text-text-400"><Lock :size="20" /></span>
-            <p class="text-body-sm font-bold text-text-900">{{ proposal?.status === 'approved' ? 'بانتظار رفع التقرير من فريقك' : 'يُتاح بعد اعتماد المقترح' }}</p>
-            <p class="text-caption text-text-600">لرفع التقرير النهائي والمخرج</p>
-          </div>
+        <footer class="sp-actions">
+          <button v-if="rStep" type="button" class="pbtn is-outline" @click="rStep -= 1">السابق</button>
+          <button v-else-if="reportRejected" type="button" class="pbtn is-outline" @click="reportEditing = false">إلغاء</button>
+          <span class="as-summary" />
+          <button v-if="rStep < reportSteps.length - 1" type="button" class="pbtn is-cyan" @click="rStep += 1">التالي</button>
+          <button v-else type="submit" class="pbtn is-green" :disabled="!!reportMissing || uploading"><Send :size="16" /> {{ uploading ? 'جارٍ التسليم…' : 'تسليم التقرير النهائي' }}</button>
+        </footer>
+      </form>
+
+
+      <!-- بعد التسليم: الملفات المسلّمة فقط -->
+      <section v-else class="tk-sec">
+        <header class="tk-sec-head"><h4>الملفات المسلّمة</h4><span class="pt-muted mono">{{ day(finalReport.created_at) }}</span></header>
+        <div class="tk-sec-body">
+          <ul class="sp-files">
+            <li>
+              <FileText :size="20" />
+              <span><b>التقرير النهائي</b><small class="pt-muted">PDF</small></span>
+              <button type="button" class="pbtn is-outline is-sm" @click="openReport">فتح</button>
+            </li>
+            <li v-if="finalReport.video_url">
+              <PlayCircle :size="20" />
+              <span><b>فيديو العرض</b><small class="pt-muted mono sp-link">{{ finalReport.video_url }}</small></span>
+              <a :href="finalReport.video_url" target="_blank" rel="noopener" class="pbtn is-outline is-sm">مشاهدة</a>
+            </li>
+          </ul>
+          <button v-if="reportRejected && canSubmit && !reportEditing" type="button" class="pbtn is-cyan sp-retry" @click="startReportEdit"><RotateCcw :size="16" /> إعادة تسليم التقرير</button>
         </div>
-
-        <SubmittedState
-          v-else class="flex-1 flex flex-col justify-center"
-          :rejected="reportRejected"
-          :title="REVIEW[finalReport.review_status || 'pending_supervisor'].label"
-          :description="reportDescription"
-          :items="reportItems"
-        />
-        <BaseButton v-if="reportRejected && canSubmit && proposal?.status === 'approved' && !reportEditing" variant="outline" class="mt-4 self-start" @click="reportEditing = true">تعديل التقرير وإعادة رفعه</BaseButton>
-        <!-- ponytail: زر الأرشفة placeholder — الخادم يؤرشف المشروع تلقائيًا بعد اعتماد اللجنة -->
-        <button v-if="finalReport" type="button" class="pbtn is-cyan is-sm mt-3 self-start" :disabled="finalReport.review_status !== 'approved'" @click="$toast?.info('يُؤرشف المشروع تلقائيًا بعد اعتماد لجنة الإشراف')">
-          أرشفة المشروع
-        </button>
       </section>
-    </div>
+    </section>
   </div>
 </template>
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { FileText, FileCheck, Video, Lock, XCircle } from 'lucide-vue-next'
-import { REVIEW, latestReport, rejectedBy } from '@/utils/finalReport'
-import SubmittedState from '@/components/shared/SubmittedState.vue'
+import { Check, CheckCircle2, ClipboardList, Hourglass, RotateCcw, FileCheck, FileText, Lock, PencilLine, PlayCircle, Send, XCircle } from 'lucide-vue-next'
+import { latestReport, rejectedBy } from '@/utils/finalReport'
+import PortalStepper from '@/components/shared/PortalStepper.vue'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
-import BaseInput from '@/components/ui/BaseInput.vue'
-import BaseTextarea from '@/components/ui/BaseTextarea.vue'
-import BaseButton from '@/components/ui/BaseButton.vue'
-import { PROJECT_TYPES } from '@/utils/constants'
+import { PROJECT_TYPES, PROPOSAL_CHANGES_PREFIX } from '@/utils/constants'
+import { proposalPdfFile } from '@/utils/ucasReports'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
+
+/** محاولات التقديم المسموحة (تقديم أولي + محاولتا إعادة) — تطابق ProposalService::MAX_REJECTIONS في الخادم */
+const MAX_ATTEMPTS = 3
+
+const PROPOSAL_STATE = {
+  none: { label: 'لم يُرسل بعد', pill: '' },
+  pending: { label: 'قيد المراجعة', pill: 'is-pending' },
+  approved: { label: 'معتمد', pill: 'is-approved' },
+  changes: { label: 'يحتاج تعديل', pill: 'is-changes' },
+  rejected: { label: 'مرفوض', pill: 'is-rejected' }
+}
+
+/** مراحل المسار: ما قبل `done` مكتمل، والمرحلة `done` الحالية، أو مرفوضة عند `rejectedAt` */
+const track = (labels, done, rejectedAt = -1) => labels.map((label, i) => ({
+  label,
+  state: i === rejectedAt ? 'rejected' : i < done ? 'done' : i === done ? 'active' : ''
+}))
 
 export default {
   name: 'StudentProposalPage',
 
-  components: { FileText, FileCheck, Lock, XCircle, SubmittedState, FileDropzone, BaseInput, BaseTextarea, BaseButton },
+  components: { Check, CheckCircle2, Hourglass, RotateCcw, FileText, Lock, PencilLine, PlayCircle, Send, XCircle, PortalStepper, FileDropzone },
 
   data() {
     return {
-      REVIEW,
+      MAX_ATTEMPTS,
       PROJECT_TYPES,
+      view: 'proposal',
+      step: 0,
       editing: false,
       sending: false,
       reportEditing: false,
+      rStep: 0,
+      pStep: 0,
       uploading: false,
-      reportForm: { files: [], video_url: '', video: [], zip: [] },
+      reportForm: { files: [], video_url: '', zip: [] },
       form: { name: '', description: '', problems: '', solutions: '', features_value: '', types: [], files: [] }
     }
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['teams']),
+    ...mapState(useTeamsStore, ['teams', 'teamsLoading']),
     ...mapState(useAuthStore, ['user']),
+
+    views() {
+      return [
+        { key: 'proposal', label: 'المقترح', icon: ClipboardList },
+        { key: 'report', label: 'التقرير النهائي', icon: FileCheck }
+      ]
+    },
 
     myTeam() {
       return this.teams.find((t) => t.members?.some((m) => m.student?.id === this.user?.id))
@@ -174,32 +310,76 @@ export default {
       return this.myTeam?.project?.proposal || null
     },
 
-    // الخادم يقبل التقديم من حساب الفريق الأساسي فقط (leader_id داخليًا)
+    // الخادم يعرف pending/approved/rejected فقط — "طلب تعديل" رفضٌ سببه يبدأ بالبادئة (كما في ProposalsReview)
+    changesRequested() {
+      return this.proposal?.status === 'rejected' && (this.proposal.rejection_reason || '').startsWith(PROPOSAL_CHANGES_PREFIX)
+    },
+
+    reasonText() {
+      return (this.proposal?.rejection_reason || '').replace(PROPOSAL_CHANGES_PREFIX, '')
+    },
+
+    proposalState() {
+      if (!this.proposal) return PROPOSAL_STATE.none
+      return PROPOSAL_STATE[this.changesRequested ? 'changes' : this.proposal.status] || PROPOSAL_STATE.pending
+    },
+
+    proposalTrack() {
+      const labels = ['تقديم المقترح', 'اعتماد المقترح']
+      const s = this.proposal?.status
+      if (!s) return track(labels, 0)
+      if (s === 'rejected') return track(labels, 1, 1)
+      return track(labels, s === 'approved' ? 2 : 1)
+    },
+
+    /** الخادم يمنع إعادة التقديم بعد MAX_ATTEMPTS مرات رفض (ProposalService::MAX_REJECTIONS) */
+    attemptsLeft() {
+      return Math.max(0, MAX_ATTEMPTS - (this.proposal?.rejection_count || 0))
+    },
+
+    proposalTexts() {
+      const p = this.proposal || {}
+      return [
+        { label: 'وصف المشروع', value: p.description },
+        { label: 'المشكلة', value: p.problems },
+        { label: 'الحل المقترح', value: p.solutions },
+        { label: 'المميزات والقيمة', value: p.features_value }
+      ].filter((s) => s.value)
+    },
+
+    // أي طالب في الفريق يرفع المقترح والتقرير النهائي (الخادم يسمح لكل أعضاء الفريق)
     canSubmit() {
-      return !!this.myTeam?.project && this.myTeam.leader?.id === this.user?.id
+      return !!this.myTeam?.project
     },
 
     canResubmit() {
-      return this.canSubmit && this.proposal?.status === 'rejected'
+      return this.canSubmit && this.proposal?.status === 'rejected' && this.attemptsLeft > 0
     },
 
     showForm() {
-      return this.canSubmit && (!this.proposal || (this.canResubmit && this.editing))
+      // بلا مشروع مسجّل: النموذج يظهر كعرض تجريبي (placeholder) والإرسال معطّل
+      return !this.proposal || (this.canResubmit && this.editing)
     },
 
     projectTypes() {
       return this.myTeam?.project?.types || []
     },
 
-    // بعد تحديد النوع أول مرة لا يغيّره الطالب
-    typesLocked() {
-      return this.projectTypes.length > 0
+    /** خطوات تقديم المقترح — ok: الخطوة مكتملة (الملف اختياري عند إعادة التقديم) */
+    proposalSteps() {
+      const f = this.form
+      return [
+        { label: 'بيانات المشروع', ok: !!f.name && f.types.length > 0 },
+        { label: 'فكرة المشروع', ok: !!(f.description || f.problems || f.solutions || f.features_value).trim() },
+        { label: 'ملف المقترح', ok: f.files.length > 0 || !!this.proposal },
+        { label: 'الإرسال', ok: false }
+      ]
     },
 
     missing() {
+      if (!this.canSubmit) return 'عرض تجريبي — يُتاح الإرسال بعد تسجيل مشروع لفريقك'
       if (!this.form.name) return 'أدخل اسم المشروع'
-      if (!this.typesLocked && !this.form.types.length) return 'اختر نوع المشروع'
-      if (!this.proposal && !this.form.files.length) return 'أرفق ملف المقترح'
+      if (!this.form.types.length) return 'اختر نوع المشروع'
       return ''
     },
 
@@ -207,49 +387,72 @@ export default {
       return latestReport(this.myTeam?.project)
     },
 
+    reportStatus() {
+      return this.finalReport ? this.finalReport.review_status || 'pending_supervisor' : 'none'
+    },
+
     reportRejected() {
-      return this.finalReport?.review_status === 'rejected'
+      return this.reportStatus === 'rejected'
     },
 
-    /** أول رفع بعد اعتماد المقترح، أو إعادة الرفع بعد الرفض */
+    /** أول تسليم (في أي وقت — بلا شرط اعتماد المقترح)، أو إعادة التسليم بعد الرفض */
     showReportForm() {
-      return this.canSubmit && this.proposal?.status === 'approved' && (!this.finalReport || (this.reportRejected && this.reportEditing))
+      return !this.finalReport || (this.canSubmit && this.reportRejected && this.reportEditing)
     },
 
-    /** مسار الاعتماد: المشرف يوافق ← لجنة الإشراف تعتمد ← يُؤرشف المشروع */
-    reportDescription() {
-      const r = this.finalReport
-      return {
-        pending_supervisor: 'تم رفع التقرير النهائي — بانتظار موافقة المشرف.',
-        pending_committee: 'وافق المشرف على التقرير — بانتظار اعتماد لجنة الإشراف لأرشفة المشروع.',
-        approved: 'اعتُمد التقرير من المشرف ولجنة الإشراف وأُرشف المشروع.',
-        rejected: `رُفض من ${rejectedBy(r)} — عدّل التقرير وأعد رفعه.`
-      }[r.review_status || 'pending_supervisor']
+    /** خطوات التسليم — ok: الخطوة مكتملة */
+    reportSteps() {
+      const f = this.reportForm
+      return [
+        { label: 'التقرير النهائي (PDF)', req: true, ok: f.files.length > 0 },
+        { label: 'رابط فيديو العرض', req: true, ok: !!f.video_url },
+        { label: 'الملفات المضغوطة', req: false, ok: f.zip.length > 0 },
+        { label: 'التسليم', req: false, ok: false }
+      ]
     },
 
-    proposalItems() {
-      if (!this.proposal) return []
-      const ext = this.proposal.pdf_path?.split('.').pop() || 'pdf'
-      const fileName = `مقترح-${this.proposal.name}.${ext}`
-      return [{ icon: FileText, label: 'ملف المقترح', fileName, onClick: () => this.openProtectedFile(`/proposals/${this.proposal.id}/download`, fileName) }]
-    },
+    reportMissing() {
+      if (!this.canSubmit) return 'عرض تجريبي — يُتاح التسليم بعد تسجيل مشروع لفريقك'
+      if (!this.reportForm.files.length) return 'أرفق التقرير النهائي (PDF)'
+      if (!this.reportForm.video_url) return 'أضف رابط فيديو العرض'
+      return ''
+    }
+  },
 
-    reportItems() {
-      if (!this.finalReport) return []
-      const items = [{ icon: FileText, label: 'ملف التقرير النهائي', fileName: 'التقرير-النهائي.pdf', onClick: () => this.openProtectedFile(`/final-reports/${this.finalReport.id}/download`, 'التقرير-النهائي.pdf') }]
-      if (this.finalReport.video_url) {
-        items.push({ icon: Video, label: 'فيديو العرض النهائي', fileName: this.finalReport.video_url, onClick: () => window.open(this.finalReport.video_url, '_blank') })
+  watch: {
+    // بعد اعتماد المقترح يُفتح قسم التقرير النهائي مباشرة
+    'proposal.status': {
+      immediate: true,
+      handler(s) {
+        if (s === 'approved') this.view = 'report'
+        // بعد الإرسال تُفتح خانة الاعتماد (الحالة وسبب الرفض والمحاولات المتبقية)
+        if (s) this.step = 1
       }
-      return items
     }
   },
 
   async created() {
     await this.fetchTeams()
+    // أول تقديم: نوع المشروع المسجّل مسبقًا (إن وُجد) محدد مبدئيًا ويمكن تغييره
+    if (!this.proposal) this.form.types = this.projectTypes.slice(0, 3)
   },
+
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams', 'openProtectedFile', 'submitProposal', 'updateProposal', 'submitFinalReport']),
     rejectedBy,
+
+    day(v) {
+      return v ? new Date(v).toLocaleDateString('en-CA') : '—'
+    },
+
+    openProposal() {
+      const ext = this.proposal.pdf_path?.split('.').pop() || 'pdf'
+      this.openProtectedFile(`/proposals/${this.proposal.id}/download`, `مقترح-${this.proposal.name}.${ext}`).catch(() => {})
+    },
+
+    openReport() {
+      this.openProtectedFile(`/final-reports/${this.finalReport.id}/download`, 'التقرير-النهائي.pdf').catch(() => {})
+    },
 
     // POST /projects/{id}/final-reports — تقرير جديد يبدأ مسار الاعتماد من المشرف
     async submitReport() {
@@ -257,8 +460,9 @@ export default {
       try {
         await this.submitFinalReport(this.myTeam.project.id, { file: this.reportForm.files[0], video_url: this.reportForm.video_url })
         this.$toast?.success('تم رفع التقرير — بانتظار موافقة المشرف')
-        this.reportForm = { files: [], video_url: '', video: [], zip: [] }
+        this.reportForm = { files: [], video_url: '', zip: [] }
         this.reportEditing = false
+        this.rStep = 0
         await this.fetchTeams()
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر رفع التقرير')
@@ -267,24 +471,45 @@ export default {
       }
     },
 
+    startReportEdit() {
+      this.rStep = 0
+      this.reportEditing = true
+    },
+
+    /** Shift+Enter داخل الحقل النصي يبدأ بندًا جديدًا (• ) عند موضع المؤشر */
+    bullet(e, key) {
+      const el = e.target
+      // أول بند: يُضاف • للسطر الأول أيضًا
+      const head = this.form[key].trim() && !this.form[key].startsWith('• ') ? '• ' : ''
+      const v = head + this.form[key]
+      const at = el.selectionStart + head.length
+      const ins = v.trim() ? '\n• ' : '• '
+      this.form[key] = v.slice(0, at) + ins + v.slice(el.selectionEnd + head.length)
+      this.$nextTick(() => el.setSelectionRange(at + ins.length, at + ins.length))
+    },
+
     toggleType(t) {
       this.form.types = this.form.types.includes(t) ? this.form.types.filter((x) => x !== t) : [...this.form.types, t]
     },
 
     startEdit() {
       const p = this.proposal
-      this.form = { name: p.name || '', description: p.description || '', problems: p.problems || '', solutions: p.solutions || '', features_value: p.features_value || '', types: [], files: [] }
+      this.form = { name: p.name || '', description: p.description || '', problems: p.problems || '', solutions: p.solutions || '', features_value: p.features_value || '', types: this.projectTypes.slice(0, 3), files: [] }
       this.editing = true
+      this.step = 0
+      this.pStep = 0
     },
 
-    /** POST /proposals (أول تقديم) أو PUT /proposals/{id} (إعادة تقديم بعد الرفض) */
+    /** POST /proposals (أول تقديم) أو PUT /proposals/{id} (إعادة تقديم بعد الرفض أو طلب التعديل) */
     async submit() {
       const { files, types, ...fields } = this.form
-      const payload = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== ''))
+      const payload = Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, v.trim()]).filter(([, v]) => v !== ''))
       if (files[0]) payload.pdf = files[0]
-      if (!this.typesLocked) types.forEach((t, i) => { payload[`types[${i}]`] = t })
+      types.forEach((t, i) => { payload[`types[${i}]`] = t })
       this.sending = true
       try {
+        // أول تقديم بلا ملف مرفوع: يُنشأ ملف PDF من بيانات النموذج (الخادم يشترط ملفًا)
+        if (!payload.pdf && !this.proposal) payload.pdf = await proposalPdfFile({ ...this.form, ...payload, types }, this.myTeam?.name || '')
         if (this.proposal) await this.updateProposal(this.proposal.id, payload)
         else await this.submitProposal({ ...payload, project_id: this.myTeam.project.id })
         this.$toast?.success('تم إرسال المقترح للمراجعة')

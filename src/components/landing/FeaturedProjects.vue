@@ -1,122 +1,97 @@
 <template>
-  <section id="projects" class="py-14 sm:py-20 scroll-mt-20">
-    <div class="max-w-content mx-auto px-6">
-      <div class="flex flex-wrap items-end justify-between gap-5 mb-9">
-        <div class="reveal">
-          <span class="inline-block px-4 py-1.5 rounded-pill bg-primary-50 text-primary-700 text-label font-bold">
-            أفضل مشاريع التخرج
-          </span>
-          <h2 class="font-cairo font-extrabold text-sec-title-sm sm:text-sec-title text-text-900 mt-2">
-            مشاريع مميزة من طلابنا
-          </h2>
-          <p class="text-[13.5px] text-text-600 mt-1.5">أعمال متميزة تمت أرشفتها في المنصة</p>
-        </div>
+  <!-- معرض أفضل مشاريع التخرج (نمط معارض أعمال الجامعات): عنوان بالخطين الجانبيين، فلترا التخصص والدرجة،
+       سلايدر بطاقات (تمرير أصلي scroll-snap + أسهم + عدّاد)، وزر "المزيد" المحدّد -->
+  <section id="projects" class="us-section scroll-mt-24">
+    <div class="us-wrap">
+      <h2 class="us-title reveal">أفضل مشاريع التخرج</h2>
 
-        <router-link
-          :to="{ name: 'projects-archive' }"
-          class="reveal reveal-delay-1 inline-flex items-center gap-2 h-[38px] px-[18px] rounded-pill border border-border bg-surface shadow-card text-[12.5px] font-bold text-text-700 hover:text-primary-700 hover:border-primary-200 transition-colors duration-fast"
-        >
-          عرض الكل<span v-if="projects.length"> ({{ projects.length }})</span>
-          <AppIcon name="chevronStart" :size="14" :stroke-width="2.2" />
-        </router-link>
-      </div>
-
-      <!-- فارغ -->
-      <div v-if="!projects.length" class="flex flex-col items-center text-center py-12 bg-surface border border-border rounded-lg">
-        <span class="grid place-items-center w-16 h-16 rounded-pill bg-primary-50 text-primary-600 mb-4">
-          <AppIcon name="inbox" :size="28" />
-        </span>
-        <h3 class="font-cairo font-bold text-h3 text-text-900">لا توجد مشاريع منشورة بعد</h3>
-      </div>
-
-      <!-- السلايدر — 3 مشاريع بكل سلايد -->
-      <div v-else class="relative">
-        <!-- dir=ltr مقصود هنا فقط: يجعل رياضيات الانزلاق (translateX) مباشرة وقابلة للتنبؤ، وكل سلايد بالداخل يعاد ضبطه RTL لعرض المحتوى بشكل صحيح -->
-        <div class="overflow-hidden" dir="ltr">
-          <div
-            class="flex transition-transform duration-slow ease-standard"
-            :style="{ transform: `translateX(-${activeSlide * 100}%)` }"
-          >
-            <div v-for="(slide, index) in slides" :key="index" dir="rtl" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 shrink-0 w-full">
-              <ProjectCard v-for="project in slide" :key="project.id" :project="project" />
-            </div>
+      <p v-if="!projects.length" class="us-empty">لم تُعيَّن مشاريع مميزة بعد — تعيّنها لجنة الإشراف من أرشيف المشاريع.</p>
+      <template v-else>
+        <div class="us-filters" aria-label="تصفية المشاريع">
+          <div class="us-chips" role="radiogroup" aria-label="التخصص">
+            <span class="us-chips-label">التخصص</span>
+            <button v-for="o in specOptions" :key="o.value" type="button" role="radio" :aria-checked="spec === o.value" :class="['us-chip', spec === o.value && 'is-active']" @click="spec = o.value">
+              {{ o.label }} <b>{{ o.count }}</b>
+            </button>
+          </div>
+          <div class="us-chips" role="radiogroup" aria-label="الدرجة">
+            <span class="us-chips-label">الدرجة</span>
+            <button v-for="o in degreeOptions" :key="o.value" type="button" role="radio" :aria-checked="degree === o.value" :class="['us-chip', degree === o.value && 'is-active']" @click="degree = o.value">
+              {{ o.label }} <b>{{ o.count }}</b>
+            </button>
           </div>
         </div>
 
-        <div v-if="slides.length > 1" class="flex items-center justify-center gap-5 mt-9">
-          <button
-            type="button"
-            class="grid place-items-center shrink-0 w-11 h-11 rounded-pill bg-surface border border-border shadow-dropdown text-text-700 hover:text-primary-700 hover:border-primary-200 disabled:opacity-30 disabled:pointer-events-none transition-colors duration-fast"
-            :disabled="activeSlide === 0"
-            aria-label="المجموعة السابقة"
-            @click="activeSlide--"
-          >
-            <AppIcon name="chevronEnd" :size="18" />
-          </button>
-
-          <div class="flex flex-col items-center gap-2.5">
-            <div class="flex items-center gap-2">
-              <button
-                v-for="(slide, index) in slides" :key="index"
-                type="button"
-                class="h-2 rounded-pill transition-all duration-fast"
-                :class="index === activeSlide ? 'w-6 bg-primary-600' : 'w-2 bg-border hover:bg-primary-200'"
-                :aria-label="`الانتقال إلى المجموعة ${index + 1}`"
-                @click="activeSlide = index"
-              />
-            </div>
-            <span class="text-label font-semibold text-text-400">
-              المجموعة {{ activeSlide + 1 }} من {{ slides.length }} — {{ projects.length }} مشروعًا
-            </span>
+        <p v-if="!shown.length" class="us-empty">لا توجد مشاريع مطابقة للفلاتر</p>
+        <div v-else class="us-slider">
+          <button type="button" class="us-arrow" aria-label="السابق" @click="slide(1)"><ChevronRight :size="24" /></button>
+          <div ref="track" class="us-track" @scroll.passive="onScroll">
+            <ProjectCard v-for="project in shown" :key="project.id" :project="project" />
           </div>
-
-          <button
-            type="button"
-            class="grid place-items-center shrink-0 w-11 h-11 rounded-pill bg-surface border border-border shadow-dropdown text-text-700 hover:text-primary-700 hover:border-primary-200 disabled:opacity-30 disabled:pointer-events-none transition-colors duration-fast"
-            :disabled="activeSlide === slides.length - 1"
-            aria-label="المجموعة التالية"
-            @click="activeSlide++"
-          >
-            <AppIcon name="chevronStart" :size="18" />
-          </button>
+          <button type="button" class="us-arrow" aria-label="التالي" @click="slide(-1)"><ChevronLeft :size="24" /></button>
         </div>
+        <p v-if="shown.length" class="us-slider-count">{{ position }} من {{ shown.length }} مشروعًا</p>
+      </template>
+
+      <div class="us-more">
+        <router-link :to="{ name: 'projects-archive' }" class="us-btn">المزيد من المشاريع</router-link>
       </div>
     </div>
   </section>
 </template>
 
 <script>
+import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import ProjectCard from './ProjectCard.vue'
-import AppIcon from '@/components/icons/AppIcon.vue'
-
-const SLIDE_SIZE = 3
 
 export default {
   name: 'FeaturedProjects',
 
-  components: { ProjectCard, AppIcon },
+  components: { ChevronLeft, ChevronRight, ProjectCard },
 
   props: {
     projects: { type: Array, default: () => [] }
   },
 
   data() {
-    return { activeSlide: 0 }
+    return { spec: '', degree: '', position: 1 }
   },
 
   computed: {
-    slides() {
-      const chunks = []
-      for (let i = 0; i < this.projects.length; i += SLIDE_SIZE) {
-        chunks.push(this.projects.slice(i, i + SLIDE_SIZE))
-      }
-      return chunks.length ? chunks : [[]]
+    specOptions() {
+      const byDegree = this.projects.filter((p) => !this.degree || p.degree === this.degree)
+      const names = [...new Set(this.projects.map((p) => p.program_name).filter(Boolean))]
+      return [{ value: '', label: 'الكل', count: byDegree.length }, ...names.map((n) => ({ value: n, label: n, count: byDegree.filter((p) => p.program_name === n).length }))]
+    },
+    degreeOptions() {
+      const bySpec = this.projects.filter((p) => !this.spec || p.program_name === this.spec)
+      const names = [...new Set(this.projects.map((p) => p.degree).filter(Boolean))]
+      return [{ value: '', label: 'الكل', count: bySpec.length }, ...names.map((n) => ({ value: n, label: n, count: bySpec.filter((p) => p.degree === n).length }))]
+    },
+    shown() {
+      return this.projects.filter((p) => (!this.spec || p.program_name === this.spec) && (!this.degree || p.degree === this.degree))
     }
   },
 
   watch: {
-    slides(newSlides) {
-      if (this.activeSlide > newSlides.length - 1) this.activeSlide = 0
+    // فلتر جديد: السلايدر يعود لأول بطاقة
+    shown() {
+      this.position = 1
+      this.$nextTick(() => this.$refs.track?.scrollTo({ left: 0 }))
+    }
+  },
+
+  methods: {
+    /** بطاقة واحدة لكل ضغطة (dir: 1 للسابق، -1 للتالي في اتجاه RTL) */
+    slide(dir) {
+      const t = this.$refs.track
+      const step = (t?.firstElementChild?.offsetWidth || 300) + 28
+      t?.scrollBy({ left: dir * step, behavior: 'smooth' })
+    },
+    onScroll() {
+      const t = this.$refs.track
+      const step = (t.firstElementChild?.offsetWidth || 300) + 28
+      this.position = Math.min(this.shown.length, Math.round(Math.abs(t.scrollLeft) / step) + 1)
     }
   }
 }

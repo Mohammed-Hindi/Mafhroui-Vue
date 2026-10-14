@@ -1,54 +1,14 @@
 <template>
-  <section class="relative overflow-hidden py-14 sm:py-20 bg-surface border-y border-border-soft">
-    <span aria-hidden="true" data-parallax="0.06" class="animate-blob pointer-events-none absolute rounded-pill w-[280px] h-[280px] bg-primary-500/[0.06] -top-24 -start-24" />
-    <span aria-hidden="true" data-parallax="0.1" class="animate-blob pointer-events-none absolute rounded-pill w-[220px] h-[220px] bg-accent-500/[0.06] -bottom-16 -end-16" style="animation-delay:2.5s" />
-    <div class="relative max-w-content mx-auto px-6">
-      <div class="reveal text-center max-w-[640px] mx-auto mb-11">
-        <span class="inline-block px-4 py-1.5 rounded-pill bg-primary-50 text-primary-700 text-label font-bold mb-3.5">
-          ميزات المنصة
-        </span>
-        <h2 class="font-cairo font-extrabold text-sec-title-sm sm:text-sec-title text-text-900">حلول متكاملة لكل الأدوار</h2>
-      </div>
-
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <article
-          v-for="(role, index) in roles"
-          :key="role.title"
-          :class="[
-            'reveal rounded-lg border p-7 shadow-card hover:-translate-y-1 hover:shadow-card-hover transition-all duration-base',
-            role.highlight
-              ? 'bg-gradient-to-b from-primary-600 to-primary-700 border-transparent text-white'
-              : 'bg-surface border-border'
-          ]"
-          :style="{ transitionDelay: `${index * 80}ms` }"
-        >
-          <span
-            :class="[
-              'grid place-items-center w-[46px] h-[46px] rounded-md mb-[18px]',
-              role.highlight ? 'bg-white/15 text-white' : 'bg-primary-50 text-primary-600'
-            ]"
-          >
-            <AppIcon :name="role.icon" :size="22" />
-          </span>
-
-          <h3 :class="['font-cairo font-extrabold text-h3 mb-3.5', role.highlight ? 'text-white' : 'text-text-900']">
-            {{ role.title }}
-          </h3>
-
-          <ul class="flex flex-col gap-[11px]">
-            <li
-              v-for="feature in role.features"
-              :key="feature"
-              :class="['flex items-center gap-2.5 text-body-sm', role.highlight ? 'text-white/90' : 'text-text-600']"
-            >
-              <AppIcon
-                name="check"
-                :size="14"
-                :stroke-width="2.6"
-                :class="['shrink-0', role.highlight ? 'text-white' : 'text-secondary-600']"
-              />
-              {{ feature }}
-            </li>
+  <!-- ميزات المنصة بنمط "ما يميز الكلية!" (195926): خلفية التدرج، أيقونات خطية بيضاء، عناوين بيضاء -->
+  <section class="us-section us-feature-band">
+    <div class="us-wrap">
+      <h2 class="us-title reveal">ما يميز منصة مسار!</h2>
+      <div class="us-features">
+        <article v-for="role in roles" :key="role.title" class="us-feature reveal">
+          <component :is="role.icon" :size="68" :stroke-width="1.2" />
+          <h3>{{ role.title }}</h3>
+          <ul>
+            <li v-for="f in role.features" :key="f">{{ f }}</li>
           </ul>
         </article>
       </div>
@@ -57,45 +17,24 @@
 </template>
 
 <script setup>
-import AppIcon from '@/components/icons/AppIcon.vue'
+import { GraduationCap, ShieldCheck, UserCheck } from 'lucide-vue-next'
 
-/* محتوى تسويقي ثابت — ليس بيانات أعمال، لا يُجلب من الـ API */
+/* محتوى تعريفي ثابت — ليس بيانات أعمال */
 const roles = [
   {
     title: 'لجنة الإشراف',
-    icon: 'shield',
-    highlight: false,
-    features: [
-      'إدارة الفصول والتسجيلات',
-      'استيراد/تصدير Excel',
-      'أرشيف المشاريع الكامل',
-      'إدارة مواعيد المناقشات',
-      'الموافقة على المشرف',
-      'تحكم كامل بالصلاحيات'
-    ]
+    icon: ShieldCheck,
+    features: ['إدارة الفصول والمجموعات والمشرفين', 'جدولة مواعيد المناقشات ونشرها', 'اعتماد التقارير النهائية وأرشفة المشاريع', 'تعيين أفضل مشاريع التخرج']
   },
   {
-    title: 'للمشرف',
-    icon: 'checkSquare',
-    highlight: true,
-    features: [
-      'متابعة كل فريق تحت إشرافك',
-      'الموافقة على المقترحات والتقارير',
-      'إنشاء اجتماعات Meet بعد اختيار الطلاب للموعد',
-      'لوحة إحصائيات المشاريع'
-    ]
+    title: 'المشرف',
+    icon: UserCheck,
+    features: ['متابعة مجموعاته ومهامها وتقدّمها', 'مراجعة المقترحات والتقارير النهائية', 'الاجتماعات والتكليفات والإعلانات', 'تقييم الطلاب بنماذج الكلية']
   },
   {
-    title: 'للطالب',
-    icon: 'user',
-    highlight: false,
-    features: [
-      'ملف شخصي وفريق متكامل',
-      'تسليم المقترح والتقرير النهائي',
-      'لوحة Kanban لرفع المهام',
-      'مساعد ذكي للدردشة',
-      'طلب موعد الاجتماعات على Meet'
-    ]
+    title: 'الطالب',
+    icon: GraduationCap,
+    features: ['تقديم المقترح والتقرير النهائي', 'لوحة مهام الفريق والملاحظات', 'الاجتماعات والإعلانات والملفات', 'مساعد آلي للإجابة عن الاستفسارات']
   }
 ]
 </script>

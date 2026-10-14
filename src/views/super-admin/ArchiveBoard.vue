@@ -36,8 +36,8 @@
           <span class="ad-proj-tools">
             <span class="ad-done">{{ doneCount }} من {{ files.length }} تسليمات</span>
             <span :class="['rv-pill', REVIEW[stageOf(current)].tone]">{{ REVIEW[stageOf(current)].short }}</span>
-            <button type="button" :class="['ar-star', current.featured && 'is-on']" :aria-pressed="current.featured" :title="current.featured ? 'إلغاء التمييز' : 'تمييز للمعرض'" @click="toggleFeatured(current)">
-              <Star :size="18" :fill="current.featured ? 'currentColor' : 'none'" />
+            <button v-if="!isSup" type="button" :class="['pbtn is-sm ar-feature', current.featured ? 'is-green' : 'is-outline']" :aria-pressed="current.featured" @click="toggleFeatured(current)">
+              <Star :size="15" :fill="current.featured ? 'currentColor' : 'none'" /> {{ current.featured ? 'معروض كأفضل مشروع في الرئيسية' : 'تعيين كأفضل مشروع في الرئيسية' }}
             </button>
           </span>
         </div>
@@ -52,8 +52,8 @@
             </li>
           </ol>
           <p v-if="report?.review_status === 'rejected'" class="ad-flow-note"><X :size="16" /> سبب الرفض: {{ report.review_note }}</p>
-          <div v-if="report?.review_status === 'pending_committee'" class="ad-flow-act">
-            <span>وافق المشرف على التقرير — موافقة لجنة الإشراف تؤرشف المشروع.</span>
+          <div v-if="report?.review_status === waitStage" class="ad-flow-act">
+            <span>{{ isSup ? 'رفع الطلاب التقرير النهائي — موافقتك ترسله لاعتماد لجنة الإشراف.' : 'وافق المشرف على التقرير — موافقة لجنة الإشراف تؤرشف المشروع.' }}</span>
             <template v-if="rejecting">
               <input v-model.trim="rejectNote" type="text" class="ev-input" placeholder="سبب الرفض (يظهر للطلاب)" aria-label="سبب الرفض">
               <button type="button" class="pbtn is-outline" @click="rejecting = false">إلغاء</button>
@@ -61,7 +61,7 @@
             </template>
             <template v-else>
               <button type="button" class="pbtn is-outline is-red-text" @click="rejecting = true">رفض</button>
-              <button type="button" class="pbtn is-green" :disabled="reviewing" @click="review(current, true)"><CheckCircle2 :size="16" /> موافقة لجنة الإشراف</button>
+              <button type="button" class="pbtn is-green" :disabled="reviewing" @click="review(current, true)"><CheckCircle2 :size="16" /> {{ isSup ? 'موافقة المشرف' : 'موافقة لجنة الإشراف' }}</button>
             </template>
           </div>
         </section>
@@ -112,14 +112,23 @@
               <option v-for="sp in specs" :key="sp" :value="sp">{{ sp }} ({{ inView.filter((x) => x.spec === sp).length }})</option>
             </select>
           </label>
-          <label class="gr-pick">
+          <label v-if="!isSup" class="gr-pick">
             <span>الدرجة</span>
             <select v-model="f.degree" class="gr-select">
               <option value="">دبلوم وبكالوريوس</option>
               <option v-for="(l, k) in DEGREES" :key="k" :value="k">{{ l }}</option>
             </select>
           </label>
-          <button v-if="q || f.spec || f.degree" type="button" class="gr-clear" @click="q = ''; f = { spec: '', degree: '' }">مسح الفلاتر</button>
+          <!-- المشرف: فلترا التخصص والجنس فقط -->
+          <label v-else class="gr-pick">
+            <span>الجنس</span>
+            <select v-model="f.gender" class="gr-select">
+              <option value="">طلاب وطالبات</option>
+              <option value="male">طلاب</option>
+              <option value="female">طالبات</option>
+            </select>
+          </label>
+          <button v-if="q || f.spec || f.degree || f.gender" type="button" class="gr-clear" @click="q = ''; f = { spec: '', degree: '', gender: '' }">مسح الفلاتر</button>
         </div>
 
         <p v-if="loading" class="pt-muted tk-loading">جارٍ التحميل…</p>
@@ -131,7 +140,7 @@
                 <thead>
                   <tr>
                     <th>الشعبة</th><th>المشروع والطلبة</th><th>المشرف</th><th class="ad-c">موعد التسليم</th>
-                    <th class="ad-c">موافقة المشرف</th><th class="ad-c">لجنة الإشراف</th><th class="ad-c">الحالة</th>
+                    <th class="ad-c">موافقة المشرف</th><th class="ad-c">لجنة الإشراف</th><th class="ad-c">الحالة</th><th v-if="!isSup" class="ad-c">الصفحة الرئيسية</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -144,17 +153,26 @@
                     <td class="ad-nowrap">{{ p.supName }}</td>
                     <td class="ad-c ad-nowrap">{{ p.report ? formatDate(p.report.created_at) : '—' }}</td>
                     <td class="ad-c">
-                      <span :class="['ad-check', supState(p).cls]"><component :is="supState(p).icon" :size="15" /> {{ supState(p).text }}</span>
+                      <button v-if="isSup && stageOf(p) === 'pending_supervisor'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click.stop="review(p, true)">
+                        <CheckCircle2 :size="14" /> موافقة
+                      </button>
+                      <span v-else :class="['ad-check', supState(p).cls]"><component :is="supState(p).icon" :size="15" /> {{ supState(p).text }}</span>
                     </td>
                     <td class="ad-c">
-                      <button v-if="stageOf(p) === 'pending_committee'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click.stop="review(p, true)">
+                      <button v-if="!isSup && stageOf(p) === 'pending_committee'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click.stop="review(p, true)">
                         <CheckCircle2 :size="14" /> موافقة اللجنة
                       </button>
                       <span v-else :class="['ad-check', comState(p).cls]"><component :is="comState(p).icon" :size="15" /> {{ comState(p).text }}</span>
                     </td>
                     <td class="ad-c"><span :class="['rv-pill', REVIEW[stageOf(p)].tone]">{{ REVIEW[stageOf(p)].short }}</span></td>
+                    <!-- أفضل مشاريع التخرج في الصفحة الرئيسية: لجنة الإشراف والإدارة العامة فقط -->
+                    <td v-if="!isSup" class="ad-c">
+                      <button type="button" :class="['pbtn is-sm ar-feature', p.featured ? 'is-green' : 'is-outline']" :aria-pressed="p.featured" :title="p.featured ? 'إزالة من الصفحة الرئيسية' : 'تعيين كأفضل مشروع في الصفحة الرئيسية'" @click.stop="toggleFeatured(p)">
+                        <Star :size="14" :fill="p.featured ? 'currentColor' : 'none'" /> {{ p.featured ? 'في الرئيسية' : 'تعيين' }}
+                      </button>
+                    </td>
                   </tr>
-                  <tr v-if="!visible.length"><td colspan="7" class="gr-empty">لا توجد مشاريع مطابقة</td></tr>
+                  <tr v-if="!visible.length"><td :colspan="isSup ? 7 : 8" class="gr-empty">لا توجد مشاريع مطابقة</td></tr>
                 </tbody>
               </table>
             </div>
@@ -174,12 +192,14 @@
 </template>
 
 <script>
-import { mapActions } from 'pinia'
+import { mapActions, mapState } from 'pinia'
+import { useAuthStore } from '@/stores/auth.store'
 import { ArrowRight, Check, CheckCircle2, Clock, FileText, FileType2, Folder, FolderOpen, GraduationCap, Hourglass, Minus, PlayCircle, Search, Star, UserRound, Users, X } from 'lucide-vue-next'
 import FileViewer from '@/components/shared/FileViewer.vue'
 import SlideTable from '@/components/ui/SlideTable.vue'
 import api from '@/services/api'
 import { DEGREES } from '@/utils/progressData'
+import { groupGender } from '@/services/adminData'
 import { loadGroups } from '@/services/adminData'
 import { useTeamsStore } from '@/stores/teams.store'
 import { REVIEW, latestReport, rejectedBy, reviewReport } from '@/utils/finalReport'
@@ -203,7 +223,7 @@ export default {
       rejectNote: '',
       q: '',
       view: 'all',
-      f: { spec: '', degree: '' },
+      f: { spec: '', degree: '', gender: '' },
       current: null,
       loading: true,
       projects: []
@@ -211,9 +231,17 @@ export default {
   },
 
   computed: {
-    /** تقارير وافق عليها المشرف وتنتظر اعتماد اللجنة */
+    ...mapState(useAuthStore, ['userRole']),
+    // المشرف: مشاريعه فقط (loadGroups) ويوافق على التقرير أولًا، ثم تعتمده لجنة الإشراف
+    isSup() {
+      return this.userRole === 'supervisor'
+    },
+    waitStage() {
+      return this.isSup ? 'pending_supervisor' : 'pending_committee'
+    },
+    /** تقارير تنتظر موافقة المستخدم الحالي (المشرف أو اللجنة) */
     readyCount() {
-      return this.projects.filter((p) => this.stageOf(p) === 'pending_committee').length
+      return this.projects.filter((p) => this.stageOf(p) === this.waitStage).length
     },
     report() {
       return this.current?.report || null
@@ -245,7 +273,7 @@ export default {
         { key: 'all', label: 'كل المشاريع', icon: FolderOpen, count: this.projects.length },
         { key: 'featured', label: 'المميّزة', icon: Star, count: n((p) => p.featured) },
         { key: 'archived', label: 'مؤرشفة', icon: CheckCircle2, count: n((p) => p.archived) },
-        { key: 'ready', label: 'بانتظار اللجنة', icon: Hourglass, count: this.readyCount },
+        { key: 'ready', label: this.isSup ? 'بانتظار موافقتي' : 'بانتظار اللجنة', icon: Hourglass, count: this.readyCount },
         { key: 'pending', label: 'غير مؤرشفة', icon: Clock, count: n((p) => !p.archived) }
       ]
     },
@@ -253,7 +281,7 @@ export default {
     inView() {
       const q = this.q
       return this.projects.filter((p) =>
-        (this.view === 'all' || (this.view === 'featured' && p.featured) || (this.view === 'archived' && p.archived) || (this.view === 'ready' && this.stageOf(p) === 'pending_committee') || (this.view === 'pending' && !p.archived)) &&
+        (this.view === 'all' || (this.view === 'featured' && p.featured) || (this.view === 'archived' && p.archived) || (this.view === 'ready' && this.stageOf(p) === this.waitStage) || (this.view === 'pending' && !p.archived)) &&
         (!q || `${p.project} ${p.section} ${p.supName} ${p.members.map((m) => m.name).join(' ')}`.includes(q))
       )
     },
@@ -261,7 +289,7 @@ export default {
       return [...new Set(this.projects.map((x) => x.spec).filter(Boolean))]
     },
     visible() {
-      return this.inView.filter((p) => (!this.f.spec || p.spec === this.f.spec) && (!this.f.degree || p.degree === this.f.degree))
+      return this.inView.filter((p) => (!this.f.spec || p.spec === this.f.spec) && (!this.f.degree || p.degree === this.f.degree) && (!this.f.gender || groupGender(p) === this.f.gender))
     },
     /**
      * ملفات مجلد المشروع بنمط الصورة (مجلد · برومو · تقرير · وورد).
@@ -336,10 +364,10 @@ export default {
       this.reviewing = true
       try {
         p.report = { ...p.report, ...(await reviewReport(p.report.id, approve, approve ? null : this.rejectNote)) }
-        if (approve) p.archived = true
+        if (approve && !this.isSup) p.archived = true
         this.rejecting = false
         this.rejectNote = ''
-        this.$toast?.success(approve ? 'اعتُمد التقرير وأُرشف المشروع' : 'رُفض التقرير وأُعيد للطلاب')
+        this.$toast?.success(approve ? (this.isSup ? 'تمت الموافقة — أُرسل التقرير لاعتماد لجنة الإشراف' : 'اعتُمد التقرير وأُرشف المشروع') : 'رُفض التقرير وأُعيد للطلاب')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّرت المراجعة')
       } finally {
@@ -366,11 +394,12 @@ export default {
       return { cls: '', icon: Minus, text: 'بعد موافقة المشرف' }
     },
 
-    /** تمييز المشروع للمعرض (PATCH /projects/{id} is_featured) */
+    /** أفضل مشروع تخرج في الصفحة الرئيسية (PATCH /projects/{id} is_featured — لجنة الإشراف والإدارة العامة) */
     async toggleFeatured(p) {
       p.featured = !p.featured
       try {
         await api.patch(`/projects/${p.projectId}`, { is_featured: p.featured })
+        this.$toast?.success(p.featured ? 'عُيّن كأفضل مشروع ويظهر في الصفحة الرئيسية' : 'أُزيل من الصفحة الرئيسية')
       } catch (err) {
         p.featured = !p.featured
         this.$toast?.error(err.normalized?.message || 'تعذّر تحديث التمييز')

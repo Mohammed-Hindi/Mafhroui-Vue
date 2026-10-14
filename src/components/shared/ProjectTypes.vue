@@ -47,7 +47,7 @@ export default {
   emits: ['saved'],
 
   data() {
-    return { MAX: 6, editing: false, saving: false, draft: [] }
+    return { MAX: 3, editing: false, saving: false, draft: [] }
   },
 
   computed: {

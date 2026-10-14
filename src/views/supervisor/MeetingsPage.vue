@@ -1,60 +1,112 @@
 <template>
-  <div>
-    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-      <div class="max-w-xs w-full">
-        <BaseSelect v-model="selectedTeamId" label="اختر الفريق" :options="teamOptions" @update:model-value="onTeamChange" />
+  <!-- الاجتماعات للمشرف بنمط صفحة الطالب: اختيار المجموعة ← شريط عروض (القادمة / المنتهية) ← جدول البوابة + شريط ملخص أخضر -->
+  <div class="dash hd-page">
+    <header class="dash-head">
+      <h2 class="dash-title">الاجتماعات</h2>
+      <button v-if="selectedTeamId" type="button" class="pbtn is-green" @click="openCreate"><Plus :size="16" /> اجتماع جديد</button>
+    </header>
+
+    <!-- فلتر الفرق بنفس شريط صفحة المهام -->
+    <section v-if="teamOptions.length" class="dash-card tk-teambar">
+      <div class="gr-class" role="radiogroup" aria-label="المجموعة">
+        <span class="gr-class-label">المجموعة</span>
+        <div class="gr-seg">
+          <button
+            v-for="o in teamOptions" :key="o.value" type="button" role="radio"
+            :class="selectedTeamId === o.value && 'is-active'" :aria-checked="selectedTeamId === o.value" :title="o.name"
+            @click="pickTeam(o.value)"
+          >
+            {{ o.label }}
+          </button>
+        </div>
       </div>
-      <BaseButton v-if="selectedTeamId" :icon="Plus" @click="openCreate">اجتماع جديد</BaseButton>
-    </div>
+    </section>
 
-    <EmptyState v-if="!teamOptions.length" title="لا توجد فرق مُسندة إليك" />
+    <p v-if="loading" class="pt-muted">جارٍ التحميل…</p>
+    <p v-else-if="!teamOptions.length" class="palert is-info"><CalendarDays :size="18" /><span>لا توجد مجموعات مُسندة إليك</span></p>
     <template v-else>
-      <section class="mb-10">
-        <h3 class="font-cairo font-bold text-h4 text-text-900 mb-4 flex items-center gap-2.5">
-          الاجتماعات القادمة
-          <span class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600"><Clock :size="16" /></span>
-        </h3>
-        <EmptyState v-if="!upcoming.length" title="لا توجد اجتماعات قادمة حاليًا" />
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <MeetingCard v-for="meeting in upcomingPage" :key="meeting.id" :meeting="meeting" deletable :remind-number="remindNumber" @remind="sendReminder" @delete="confirmCancel" />
-        </div>
-        <Pagination v-if="upcoming.length" class="mt-4" :current-page="upcomingPage_" :last-page="upcomingLastPage" :total="upcoming.length" @change="upcomingPage_ = $event" />
-      </section>
+      <PortalStepper v-model="view" :items="views" label="عرض الاجتماعات" />
 
-      <section>
-        <h3 class="font-cairo font-bold text-h4 text-text-900 mb-4 flex items-center gap-2.5">
-          الاجتماعات المنتهية
-          <span class="grid place-items-center w-8 h-8 rounded-pill bg-success-bg text-success"><CheckCircle2 :size="16" /></span>
-        </h3>
-        <EmptyState v-if="!completed.length" title="لا توجد اجتماعات منتهية بعد" />
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <MeetingCard v-for="meeting in completedPage" :key="meeting.id" :meeting="meeting" done @remind="sendReminder" />
+      <section class="dash-card">
+        <div class="dash-card-head"><h3 class="portal-title">{{ view === 'upcoming' ? 'الاجتماعات القادمة' : 'الاجتماعات المنتهية' }}</h3></div>
+
+        <p v-if="view === 'upcoming' && upcoming[0]" class="palert is-info mt-meet-next">
+          <CalendarClock :size="18" />
+          <span><b>الاجتماع القادم:</b> {{ upcoming[0].title }} — {{ upcoming[0].date }} الساعة {{ upcoming[0].time }} ({{ upcoming[0].when }})</span>
+        </p>
+
+        <div class="gr-table-wrap">
+          <table class="gr-table mt-table">
+            <thead><tr><th>#</th><th>اسم الاجتماع</th><th>التاريخ</th><th>الساعة</th><th>الملاحظات</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+            <tbody>
+              <tr v-for="(m, i) in rows" :key="m.id" class="gr-row">
+                <td>{{ i + 1 }}</td>
+                <td class="pt-strong">{{ m.title }}</td>
+                <td class="mono">{{ m.date }}</td>
+                <td class="mono">{{ m.time }}</td>
+                <td class="pt-muted">{{ m.notes || '—' }}</td>
+                <td><span :class="['rv-pill', m.past ? 'is-approved' : 'is-pending']">{{ m.past ? 'منتهٍ' : m.when }}</span></td>
+                <td>
+                  <span v-if="m.past" class="pt-muted">—</span>
+                  <span v-else class="mt-acts">
+                    <a v-if="m.link" :href="m.link" target="_blank" rel="noopener" class="pbtn is-cyan is-sm"><Video :size="15" /> انضمام</a>
+                    <button v-if="remindNumber" type="button" class="pbtn is-outline is-sm" @click="sendReminder(m)"><MessageCircle :size="15" /> تذكير</button>
+                    <button type="button" class="pbtn is-outline is-sm is-red-text" @click="cancelTarget = m"><Trash2 :size="15" /> إلغاء</button>
+                  </span>
+                </td>
+              </tr>
+              <tr v-if="!rows.length"><td colspan="7" class="gr-empty">{{ view === 'upcoming' ? 'لا توجد اجتماعات قادمة حاليًا' : 'لا توجد اجتماعات منتهية بعد' }}</td></tr>
+            </tbody>
+          </table>
         </div>
-        <Pagination v-if="completed.length" class="mt-4" :current-page="completedPage_" :last-page="completedLastPage" :total="completed.length" @change="completedPage_ = $event" />
+
+        <div class="gr-sumbar">
+          <span>عدد الاجتماعات: {{ all.length }}</span>
+          <span>القادمة: {{ upcoming.length }}</span>
+          <span>المنتهية: {{ completed.length }}</span>
+        </div>
       </section>
     </template>
 
-    <BaseModal v-model="modalOpen" title="اجتماع جديد" description="سيتم إنشاؤه على Google Meet وإشعار الفريق المعني">
-      <div class="flex flex-col gap-4">
-        <BaseInput v-model="form.title" label="اسم الاجتماع" placeholder="مثال: مراجعة الفصل الثاني من التقرير" required />
-        <BaseSelect v-model="form.teamId" label="المجموعة" :options="teamOptions" />
-        <div class="grid grid-cols-2 gap-4">
-          <BaseInput v-model="form.date" type="date" label="التاريخ" required />
-          <BaseInput v-model="form.time" type="time" label="الوقت" required />
-        </div>
-        <BaseInput v-model="form.link" label="رابط الاجتماع (Google Meet)" placeholder="https://meet.google.com/xxx-xxxx-xxx" />
-        <BaseTextarea v-model="form.notes" label="ملاحظات" placeholder="أي نقاط تودّ مناقشتها في الاجتماع..." :rows="3" />
-      </div>
+    <!-- اجتماع جديد: POST /teams/{id}/meetings — المجموعة، الاسم، الموعد، الرابط، الملاحظات -->
+    <BaseModal v-model="createOpen" title="اجتماع جديد" size="md">
+      <form id="sup-meeting-form" class="sp-form" @submit.prevent="create">
+        <label class="pfield">
+          <span>المجموعة <b class="as-req">*</b></span>
+          <select v-model="form.teamId" class="gr-select">
+            <option v-for="o in teamOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
+          </select>
+        </label>
+        <label class="pfield">
+          <span>اسم الاجتماع <b class="as-req">*</b></span>
+          <input v-model.trim="form.title" type="text" maxlength="200" placeholder="مثال: مراجعة الفصل الثاني">
+        </label>
+        <label class="pfield">
+          <span>موعد الاجتماع <b class="as-req">*</b></span>
+          <input v-model="form.at" type="datetime-local" :min="minAt">
+        </label>
+        <label class="pfield">
+          <span>رابط الاجتماع</span>
+          <input v-model.trim="form.link" type="url" dir="ltr" placeholder="https://meet.google.com/…">
+        </label>
+        <label class="pfield">
+          <span>ملاحظات</span>
+          <textarea v-model.trim="form.notes" rows="3" placeholder="جدول الأعمال أو ما يجب تجهيزه" />
+        </label>
+      </form>
       <template #footer>
-        <BaseButton variant="ghost" @click="modalOpen = false">إلغاء</BaseButton>
-        <BaseButton :disabled="!canSubmit" :loading="submitting" @click="submitMeeting">إنشاء الاجتماع</BaseButton>
+        <span :class="['as-summary', !canCreate && 'is-missing']">{{ canCreate ? 'سيُبلَّغ طلاب المجموعة بالاجتماع' : 'اختر المجموعة وأدخل اسم الاجتماع وموعده' }}</span>
+        <button type="button" class="pbtn is-outline" @click="createOpen = false">إلغاء</button>
+        <button type="submit" form="sup-meeting-form" class="pbtn is-green" :disabled="!canCreate || saving"><Plus :size="16" /> {{ saving ? 'جارٍ الإنشاء…' : 'إنشاء الاجتماع' }}</button>
       </template>
     </BaseModal>
 
-    <BaseModal v-model="cancelModalOpen" title="إلغاء الاجتماع" :description="cancelTarget ? `حذف اجتماع &quot;${cancelTarget.title}&quot; نهائيًا` : ''" size="sm">
+    <!-- تأكيد إلغاء الاجتماع: DELETE /meetings/{id} -->
+    <BaseModal :model-value="!!cancelTarget" title="إلغاء الاجتماع" size="sm" @update:model-value="!$event && (cancelTarget = null)">
+      <p>سيُلغى اجتماع «{{ cancelTarget?.title }}» ({{ cancelTarget?.date }} الساعة {{ cancelTarget?.time }}).</p>
       <template #footer>
-        <BaseButton variant="ghost" @click="cancelModalOpen = false">تراجع</BaseButton>
-        <BaseButton variant="danger" :icon="Trash2" :loading="cancelling" @click="cancelMeeting">تأكيد الإلغاء</BaseButton>
+        <button type="button" class="pbtn is-outline" @click="cancelTarget = null">رجوع</button>
+        <button type="button" class="pbtn is-red" :disabled="cancelling" @click="cancel"><Trash2 :size="16" /> {{ cancelling ? 'جارٍ الإلغاء…' : 'تأكيد الإلغاء' }}</button>
       </template>
     </BaseModal>
   </div>
@@ -62,113 +114,97 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Plus, Clock, CheckCircle2, Trash2 } from 'lucide-vue-next'
-import BaseButton from '@/components/ui/BaseButton.vue'
+import { CalendarClock, CalendarDays, CheckCircle2, MessageCircle, Plus, Trash2, Video } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
-import BaseInput from '@/components/ui/BaseInput.vue'
-import BaseTextarea from '@/components/ui/BaseTextarea.vue'
-import BaseSelect from '@/components/ui/BaseSelect.vue'
-import Pagination from '@/components/ui/Pagination.vue'
-import EmptyState from '@/components/ui/EmptyState.vue'
-import MeetingCard from '@/components/shared/MeetingCard.vue'
+import PortalStepper from '@/components/shared/PortalStepper.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
 
-const PAGE_SIZE = 2
+const DAY = 864e5
 
 export default {
   name: 'SupervisorMeetingsPage',
 
-  components: { BaseButton, BaseModal, BaseInput, BaseTextarea, BaseSelect, Pagination, EmptyState, MeetingCard },
+  components: { BaseModal, CalendarClock, CalendarDays, MessageCircle, Plus, PortalStepper, Trash2, Video },
 
   data() {
-    return {
-      Plus, Clock, CheckCircle2, Trash2,
-      selectedTeamId: null,
-      modalOpen: false,
-      submitting: false,
-      cancelModalOpen: false,
-      cancelTarget: null,
-      cancelling: false,
-      upcomingPage_: 1,
-      completedPage_: 1,
-      form: this.emptyForm()
-    }
+    return { loading: true, view: 'upcoming', selectedTeamId: null, createOpen: false, saving: false, cancelTarget: null, cancelling: false, form: {} }
   },
 
   computed: {
     ...mapState(useTeamsStore, ['teamsForDisplay', 'teams', 'meetings']),
     ...mapState(useAuthStore, ['user']),
 
-    myTeams() {
-      return this.teamsForDisplay.filter((t) => t.supId === this.user?.id)
-    },
-
     teamOptions() {
-      return this.myTeams.map((t) => ({ value: t.id, label: t.name }))
+      return this.teamsForDisplay.filter((t) => t.supId === this.user?.id).map((t) => ({ value: t.id, label: t.section ? `شعبة ${t.section}` : t.name, name: t.name }))
     },
-
-    selectedTeamRaw() {
-      return this.teams.find((t) => t.id === this.selectedTeamId)
-    },
-
     remindNumber() {
-      return this.selectedTeamRaw?.leader?.whatsapp || ''
+      return this.teams.find((t) => t.id === this.selectedTeamId)?.leader?.whatsapp || ''
     },
-
-    mappedMeetings() {
-      return this.meetings.map((m) => ({
-        id: m.id,
-        title: m.title,
-        num: this.selectedTeamId,
-        date: this.formatDate(m.scheduled_at),
-        time: this.formatTime(m.scheduled_at),
-        link: m.google_meet_link || '',
-        notes: m.notes || '',
-        raw: m
-      }))
+    all() {
+      const now = Date.now()
+      return this.meetings
+        .map((m) => {
+          const at = new Date(m.scheduled_at)
+          const days = Math.ceil((at - now) / DAY)
+          return {
+            id: m.id,
+            title: m.title,
+            at: at.getTime(),
+            date: at.toLocaleDateString('en-CA'),
+            time: at.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+            link: m.google_meet_link || '',
+            notes: m.notes || '',
+            past: at.getTime() < now,
+            when: days <= 0 ? 'اليوم' : days === 1 ? 'غدًا' : `بعد ${days} أيام`
+          }
+        })
+        .sort((a, b) => a.at - b.at)
     },
     upcoming() {
-      return this.mappedMeetings.filter((m) => !this.isPast(m.raw))
+      return this.all.filter((m) => !m.past)
     },
+    // المنتهية: الأحدث أولًا
     completed() {
-      return this.mappedMeetings.filter((m) => this.isPast(m.raw))
+      return this.all.filter((m) => m.past).reverse()
     },
-    upcomingLastPage() {
-      return Math.max(1, Math.ceil(this.upcoming.length / PAGE_SIZE))
+    rows() {
+      return this.view === 'upcoming' ? this.upcoming : this.completed
     },
-    completedLastPage() {
-      return Math.max(1, Math.ceil(this.completed.length / PAGE_SIZE))
+    canCreate() {
+      return !!this.form.teamId && !!this.form.title && !!this.form.at
     },
-    upcomingPage() {
-      const start = (this.upcomingPage_ - 1) * PAGE_SIZE
-      return this.upcoming.slice(start, start + PAGE_SIZE)
+    minAt() {
+      const d = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4)
+      return d.toISOString().slice(0, 16)
     },
-    completedPage() {
-      const start = (this.completedPage_ - 1) * PAGE_SIZE
-      return this.completed.slice(start, start + PAGE_SIZE)
-    },
-
-    canSubmit() {
-      return this.form.title.trim() && this.form.teamId && this.form.date && this.form.time
+    views() {
+      return [
+        { key: 'upcoming', label: 'القادمة', icon: CalendarDays, count: this.upcoming.length },
+        { key: 'completed', label: 'المنتهية', icon: CheckCircle2, count: this.completed.length }
+      ]
     }
   },
 
   async created() {
-    await this.fetchTeams()
-    if (this.myTeams.length) {
-      this.selectedTeamId = this.myTeams[0].id
-      await this.loadMeetings()
+    try {
+      await this.fetchTeams()
+    } catch {
+      this.$toast?.error('تعذّر تحميل المجموعات')
+    } finally {
+      this.loading = false
     }
+    this.selectedTeamId = this.teamOptions[0]?.value ?? null
+    this.loadMeetings()
   },
 
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams', 'fetchMeetings', 'createMeeting', 'deleteMeeting']),
 
-    async onTeamChange() {
-      this.upcomingPage_ = 1
-      this.completedPage_ = 1
-      await this.loadMeetings()
+    pickTeam(id) {
+      if (id === this.selectedTeamId) return
+      this.selectedTeamId = id
+      this.loadMeetings()
     },
 
     async loadMeetings() {
@@ -180,59 +216,36 @@ export default {
       }
     },
 
-    formatDate(scheduledAt) {
-      return new Date(scheduledAt).toLocaleDateString('ar-EG')
-    },
-    formatTime(scheduledAt) {
-      return new Date(scheduledAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-    },
-    isPast(meeting) {
-      return new Date(meeting.scheduled_at) < new Date()
-    },
-
-    emptyForm() {
-      return { title: '', teamId: this.selectedTeamId, date: '', time: '', link: '', notes: '' }
-    },
-
     openCreate() {
-      this.form = this.emptyForm()
-      this.modalOpen = true
+      this.form = { teamId: this.selectedTeamId, title: '', at: '', link: '', notes: '' }
+      this.createOpen = true
     },
 
-    async submitMeeting() {
-      if (!this.canSubmit) return
-      this.submitting = true
+    async create() {
+      if (!this.canCreate) return
+      this.saving = true
       try {
-        await this.createMeeting(this.form.teamId, {
-          title: this.form.title,
-          scheduled_at: `${this.form.date} ${this.form.time}:00`,
-          google_meet_link: this.form.link || null,
-          notes: this.form.notes || null
-        })
-        this.modalOpen = false
-        this.$toast?.success('تم إنشاء الاجتماع بنجاح')
-        if (this.form.teamId !== this.selectedTeamId) {
-          this.selectedTeamId = this.form.teamId
+        const f = this.form
+        await this.createMeeting(f.teamId, { title: f.title, scheduled_at: `${f.at.replace('T', ' ')}:00`, google_meet_link: f.link || null, notes: f.notes || null })
+        this.$toast?.success('تم إنشاء الاجتماع')
+        this.createOpen = false
+        this.view = 'upcoming'
+        if (f.teamId !== this.selectedTeamId) {
+          this.selectedTeamId = f.teamId
+          await this.loadMeetings()
         }
-        await this.loadMeetings()
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء الاجتماع')
       } finally {
-        this.submitting = false
+        this.saving = false
       }
     },
 
-    confirmCancel(meeting) {
-      this.cancelTarget = meeting
-      this.cancelModalOpen = true
-    },
-
-    async cancelMeeting() {
-      if (!this.cancelTarget) return
+    async cancel() {
       this.cancelling = true
       try {
         await this.deleteMeeting(this.cancelTarget.id)
-        this.cancelModalOpen = false
+        this.cancelTarget = null
         this.$toast?.success('تم إلغاء الاجتماع')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إلغاء الاجتماع')
@@ -241,14 +254,8 @@ export default {
       }
     },
 
-    sendReminder(meeting) {
-      const text = [
-        `تذكير باجتماع: ${meeting.title}`,
-        `التاريخ: ${meeting.date}`,
-        `الوقت: ${meeting.time}`,
-        meeting.link ? `الرابط: ${meeting.link}` : null,
-        meeting.notes ? `الملاحظات: ${meeting.notes}` : null
-      ].filter(Boolean).join('\n')
+    sendReminder(m) {
+      const text = [`تذكير باجتماع: ${m.title}`, `التاريخ: ${m.date}`, `الوقت: ${m.time}`, m.link && `الرابط: ${m.link}`, m.notes && `الملاحظات: ${m.notes}`].filter(Boolean).join('\n')
       window.open(`https://wa.me/${this.remindNumber}?text=${encodeURIComponent(text)}`, '_blank')
     }
   }

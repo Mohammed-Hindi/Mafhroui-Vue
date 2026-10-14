@@ -2,10 +2,10 @@
   <div>
     <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
       <div class="flex flex-wrap gap-3">
-        <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-success-bg text-success text-caption font-bold hover:brightness-95 transition-all duration-fast disabled:opacity-40 disabled:pointer-events-none" :disabled="!allMembers.some((m) => m.whats)" @click="whatsAllModal = true">
+        <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-success-bg text-success text-caption font-bold hover:brightness-95 transition-all duration-fast disabled:opacity-40 disabled:pointer-events-none" :disabled="sendingWhatsAll || !allMembers.some((m) => m.whats)" @click="sendWhatsAll">
           <MessageCircle :size="15" /> واتساب للجميع ({{ allMembers.filter((m) => m.whats).length }})
         </button>
-        <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-primary-50 text-primary-700 text-caption font-bold hover:bg-primary-100 transition-colors duration-fast disabled:opacity-40 disabled:pointer-events-none" :disabled="!allMembers.some((m) => m.mail)" @click="sendMailAll">
+        <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-primary-50 text-primary-700 text-caption font-bold hover:bg-primary-100 transition-colors duration-fast disabled:opacity-40 disabled:pointer-events-none" :disabled="sendingMailAll || !allMembers.some((m) => m.mail)" @click="sendMailAll">
           <Mail :size="15" /> بريد للجميع (Gmail)
         </button>
       </div>
@@ -38,17 +38,18 @@
           </button>
 
           <div class="w-10 h-10 rounded-md shrink-0 grid place-items-center font-cairo font-extrabold text-body-sm text-white" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
-            {{ group.id }}
+            {{ group.section || group.id }}
           </div>
 
           <div class="flex-1 min-w-0 flex items-center gap-3 sm:gap-6 flex-wrap">
             <div>
               <div class="text-body-sm font-extrabold text-text-900">{{ group.name }}</div>
-              <div class="text-label text-text-400">رقم المجموعة {{ group.id }}<template v-if="group.section"> — {{ group.section }}</template></div>
+              <div class="text-label text-text-400">رقم المجموعة {{ group.section || '—' }}</div>
             </div>
             <BaseBadge variant="info">{{ group.spec }}</BaseBadge>
             <BaseBadge>{{ group.members.length }} {{ group.members.length === 1 ? 'طالب' : 'طلاب' }}</BaseBadge>
             <BaseBadge v-if="group.projectName" variant="info">{{ group.projectName }}</BaseBadge>
+            <ProjectTypes v-if="group.projectId" :project-id="group.projectId" :types="group.types" @saved="setProjectTypes(group.id, $event)" />
           </div>
 
           <div class="flex gap-1.5 shrink-0">
@@ -66,27 +67,16 @@
                 <span class="text-start text-label font-extrabold text-text-700">الرقم الجامعي</span>
                 <span class="text-start text-label font-extrabold text-text-700">الواتس</span>
                 <span class="text-start text-label font-extrabold text-text-700">البريد</span>
-                <span class="text-center text-label font-extrabold text-text-700">قائد الفريق</span>
                 <span class="text-center text-label font-extrabold text-text-700">تواصل</span>
               </div>
               <div class="divide-y divide-border-soft">
                 <div v-for="(member, idx) in group.members" :key="idx" class="row-interactive grid gap-2 px-5 py-3 items-center" :style="memberGridCols">
-                  <button type="button" class="font-bold text-primary-700 truncate text-start hover:underline" :title="`عرض ملف ${member.name}`" @click="openStudentProfile(member)">{{ member.name }}</button>
+                  <span class="font-bold text-text-900 truncate" :title="member.name">{{ member.name }}</span>
                   <span class="mono truncate">{{ member.uid }}</span>
                   <span class="mono truncate">{{ member.whats || '—' }}</span>
                   <span class="mono truncate" :title="member.mail">{{ member.mail || '—' }}</span>
-                  <span class="text-center">
-                    <button
-                      type="button"
-                      class="grid place-items-center w-8 h-8 rounded-pill transition-colors duration-fast"
-                      :class="member.leader ? 'bg-warning-bg text-warning-text' : 'border border-border text-text-400 hover:bg-warning-bg hover:text-warning-text'"
-                      :title="member.leader ? 'قائد الفريق الحالي' : 'تعيين قائدًا للفريق'"
-                      @click="requestLeaderChange(group, member)"
-                    >
-                      <Crown :size="14" :fill="member.leader ? 'currentColor' : 'none'" />
-                    </button>
-                  </span>
                   <span class="flex items-center justify-center gap-2">
+                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(member)"><Pencil :size="14" /></button>
                     <button v-if="member.whats" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member)"><MessageCircle :size="14" /></button>
                     <button v-if="member.mail" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member)"><Mail :size="14" /></button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تقييد على المهام" @click="openRestrict(member)"><Lock :size="14" /></button>
@@ -100,8 +90,7 @@
           <div class="md:hidden divide-y divide-border-soft">
             <div v-for="(member, idx) in group.members" :key="idx" class="p-4 space-y-2">
               <div class="flex items-center justify-between gap-3">
-                <button type="button" class="font-bold text-primary-700 text-start hover:underline" @click="openStudentProfile(member)">{{ member.name }}</button>
-                <Crown v-if="member.leader" :size="14" class="text-warning-text" fill="currentColor" />
+                <span class="font-bold text-text-900">{{ member.name }}</span>
               </div>
 
               <button
@@ -120,17 +109,9 @@
                 <div class="flex items-start justify-between gap-3">
                   <span class="text-label font-semibold text-text-400 shrink-0">تواصل</span>
                   <div class="flex gap-1.5">
+                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(member)"><Pencil :size="14" /></button>
                     <button v-if="member.whats" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member)"><MessageCircle :size="14" /></button>
                     <button v-if="member.mail" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member)"><Mail :size="14" /></button>
-                    <button
-                      type="button"
-                      class="grid place-items-center w-8 h-8 rounded-pill transition-colors duration-fast"
-                      :class="member.leader ? 'bg-warning-bg text-warning-text' : 'border border-border text-text-400'"
-                      :title="member.leader ? 'قائد الفريق الحالي' : 'تعيين قائدًا للفريق'"
-                      @click="requestLeaderChange(group, member)"
-                    >
-                      <Crown :size="14" :fill="member.leader ? 'currentColor' : 'none'" />
-                    </button>
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تقييد على المهام" @click="openRestrict(member)"><Lock :size="14" /></button>
                   </div>
                 </div>
@@ -162,7 +143,7 @@
       </template>
     </BaseModal>
 
-    <!-- تقييد قائد الفريق على وحدة المهام -->
+    <!-- تقييد الطالب على وحدة المهام -->
     <BaseModal v-model="restrictModalOpen" title="تقييد الوصول للمهام" :description="restrictTarget ? `صلاحية ${restrictTarget.name} على وحدة المهام` : ''" size="sm">
       <div class="flex flex-col gap-4">
         <BaseSelect
@@ -181,30 +162,18 @@
       </template>
     </BaseModal>
 
-    <!-- تعيين قائد الفريق -->
-    <BaseModal v-model="leaderModal" title="تعيين قائد الفريق" :description="leaderTarget ? `سيصبح ‏${leaderTarget.member.name} قائدًا لـ${leaderTarget.group.name}` : ''" size="sm">
-      <p class="text-body-sm text-text-600">سيفقد القائد الحالي صلاحية القيادة. هل تريدين المتابعة؟</p>
-      <template #footer>
-        <BaseButton variant="ghost" @click="leaderModal = false">إلغاء</BaseButton>
-        <BaseButton :icon="Crown" :loading="submittingLeader" @click="confirmLeaderChange">تأكيد</BaseButton>
-      </template>
-    </BaseModal>
-
-    <BaseModal v-model="whatsAllModal" title="التواصل مع الطلاب عبر واتساب" description="اختَر الطالب لفتح محادثته. لن يتم تغيير كلمة مرور أي طالب." size="lg">
-      <div class="flex flex-col gap-2 max-h-96 overflow-y-auto scrollbar-thin">
-        <div v-for="member in allMembers.filter((m) => m.whats)" :key="member.id" class="flex items-center justify-between gap-3 p-3 rounded-sm border border-border bg-bg">
-          <span class="font-semibold text-text-800 truncate">{{ member.name }}</span>
-          <a :href="whatsUrl(member.whats)" target="_blank" rel="noopener noreferrer" class="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-sm bg-whatsapp-bg text-whatsapp text-caption font-bold hover:brightness-95">
-            <MessageCircle :size="14" /> فتح المحادثة
-          </a>
-        </div>
+    <!-- تعديل بيانات عضو -->
+    <BaseModal v-model="editMemberModal" title="تعديل بيانات العضو">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <BaseInput v-model="editMemberForm.name" label="اسم الطالب" class="sm:col-span-2" />
+        <BaseInput v-model="editMemberForm.university_number" label="الرقم الجامعي" />
+        <BaseInput v-model="editMemberForm.whatsapp" label="رقم الواتس" />
       </div>
       <template #footer>
-        <BaseButton variant="ghost" @click="whatsAllModal = false">إغلاق</BaseButton>
+        <BaseButton variant="ghost" @click="editMemberModal = false">إلغاء</BaseButton>
+        <BaseButton :icon="Check" :loading="submitting" @click="saveEditMember">حفظ التعديلات</BaseButton>
       </template>
     </BaseModal>
-
-    <EmailComposeModal v-model="emailComposeOpen" :to="emailComposeTarget" default-subject="بخصوص مشروع التخرج" />
 
     <!-- الفرق المحذوفة -->
     <BaseModal v-model="trashedModal" title="الفرق المحذوفة" description="استرجعي أي فريق حُذف بالخطأ" size="lg">
@@ -223,18 +192,17 @@
         <BaseButton variant="ghost" @click="trashedModal = false">إغلاق</BaseButton>
       </template>
     </BaseModal>
-
-    <ProfileModal v-model="studentProfileOpen" kind="student" :person-id="studentProfileTarget?.id" :name="studentProfileTarget?.name" edit-project />
   </div>
 </template>
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Crown, Lock, Archive, RotateCcw } from 'lucide-vue-next'
+import { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Lock, Archive, RotateCcw } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
+import ProjectTypes from '@/components/shared/ProjectTypes.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
@@ -242,8 +210,8 @@ import Pagination from '@/components/ui/Pagination.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUsersStore } from '@/stores/users.store'
-import ProfileModal from '@/components/shared/ProfileModal.vue'
-import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
+import { sendEmail } from '@/services/api'
+import { APP_NAME } from '@/utils/constants'
 
 const GROUPS_PAGE_SIZE = 5
 
@@ -260,7 +228,7 @@ function digitsOnly(value) {
 export default {
   name: 'SupervisorTeamsPage',
 
-  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Crown, Lock, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, ProfileModal, EmailComposeModal },
+  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Lock, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, ProjectTypes },
 
   data() {
     return {
@@ -269,9 +237,8 @@ export default {
       openGroupIds: [],
       openMemberKeys: [],
       highlightId: null,
-      whatsAllModal: false,
-      emailComposeOpen: false,
-      emailComposeTarget: '',
+      sendingWhatsAll: false,
+      sendingMailAll: false,
 
       editGroupModal: false,
       editGroupTargetId: null,
@@ -294,12 +261,11 @@ export default {
       trashedModal: false,
       restoringId: null,
 
-      leaderModal: false,
-      leaderTarget: null,
-      submittingLeader: false,
 
-      studentProfileOpen: false,
-      studentProfileTarget: null,
+      editMemberModal: false,
+      editMemberTargetId: null,
+      editMemberForm: {},
+      submitting: false,
 
       page: 1
     }
@@ -318,7 +284,7 @@ export default {
     },
 
     memberGridCols() {
-      return { gridTemplateColumns: '22% 16% 16% 22% 12% 12%' }
+      return { gridTemplateColumns: '24% 17% 17% 26% 16%' }
     },
 
     groups() {
@@ -358,8 +324,8 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'updateTeam', 'deleteTeam', 'fetchTrashedTeams', 'restoreTeam', 'updateTeamLeader']),
-    ...mapActions(useUsersStore, ['fetchRestrictions', 'setRestriction', 'removeRestriction']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'updateTeam', 'deleteTeam', 'fetchTrashedTeams', 'restoreTeam', 'setProjectTypes']),
+    ...mapActions(useUsersStore, ['fetchRestrictions', 'setRestriction', 'removeRestriction', 'updateUser', 'setUserPassword']),
 
     isGroupOpen(id) {
       return this.openGroupIds.includes(id)
@@ -448,25 +414,6 @@ export default {
       }
     },
 
-    requestLeaderChange(group, member) {
-      if (member.leader) return
-      this.leaderTarget = { group, member }
-      this.leaderModal = true
-    },
-    async confirmLeaderChange() {
-      this.submittingLeader = true
-      try {
-        await this.updateTeamLeader(this.leaderTarget.group.id, this.leaderTarget.member.id)
-        this.leaderModal = false
-        this.$toast?.success('تم تعيين قائد الفريق')
-        await this.fetchTeams()
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر تعيين القائد')
-      } finally {
-        this.submittingLeader = false
-      }
-    },
-
     async openRestrict(member) {
       this.restrictTarget = member
       this.restrictLevel = 'full'
@@ -509,31 +456,108 @@ export default {
       }
     },
 
-    openStudentProfile(member) {
-      if (!member.id) return
-      this.studentProfileTarget = member
-      this.studentProfileOpen = true
+    openEditMember(member) {
+      this.editMemberTargetId = member.id
+      this.editMemberForm = { name: member.name, university_number: member.uid || '', whatsapp: member.whats || '' }
+      this.editMemberModal = true
     },
-    whatsUrl(whats) {
-      const num = digitsOnly(whats)
-      const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
-      return `https://wa.me/${full}`
+    async saveEditMember() {
+      if (!this.editMemberForm.name) {
+        this.$toast?.error('يرجى إدخال الاسم')
+        return
+      }
+      this.submitting = true
+      try {
+        await this.updateUser(this.editMemberTargetId, this.editMemberForm)
+        this.editMemberModal = false
+        this.$toast?.success('تم حفظ التعديلات')
+        await this.fetchTeams()
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر حفظ التعديلات')
+      } finally {
+        this.submitting = false
+      }
     },
-    sendWhats(member) {
-      if (!member.whats) return
-      window.open(this.whatsUrl(member.whats), '_blank', 'noopener,noreferrer')
+
+    credentialsMessage(member, password) {
+      return [
+        `مرحبًا ${member.name}،`,
+        `بيانات تسجيل الدخول لمنصة ${APP_NAME}:`,
+        `اسم المنصة: ${APP_NAME}`,
+        `رابط المنصة: ${window.location.origin}`,
+        `الاسم: ${member.name}`,
+        `الرقم الجامعي: ${member.uid}`,
+        `البريد الإلكتروني: ${member.mail}`,
+        `كلمة السر: ${password}`
+      ].join('\n')
     },
-    sendMail(member) {
-      if (!member.mail) return
-      this.emailComposeTarget = member.mail
-      this.emailComposeOpen = true
+
+    async sendWhats(member) {
+      if (!member.whats || !member.id) return
+      try {
+        const password = await this.setUserPassword(member.id)
+        const num = digitsOnly(member.whats)
+        const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
+        window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.credentialsMessage(member, password))}`, '_blank')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر توليد كلمة سر جديدة')
+      }
     },
-    sendMailAll() {
-      const targets = this.allMembers.filter((m) => m.mail)
+    async sendMail(member) {
+      if (!member.mail || !member.id) return
+      try {
+        const password = await this.setUserPassword(member.id)
+        await sendEmail({
+          to: member.mail,
+          subject: `بيانات تسجيل الدخول لمنصة ${APP_NAME}`,
+          message: this.credentialsMessage(member, password)
+        })
+        this.$toast?.success('تم إرسال البريد')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال البريد')
+      }
+    },
+
+    async sendWhatsAll() {
+      const targets = this.allMembers.filter((m) => m.whats && m.id)
       if (!targets.length) return
-      const bcc = targets.map((m) => m.mail).join(',')
-      const url = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${encodeURIComponent(bcc)}&su=${encodeURIComponent('بخصوص مشاريع التخرج')}`
-      window.open(url, '_blank', 'noopener,noreferrer')
+      if (!window.confirm(`سيتم توليد كلمة سر جديدة لكل عضو وفتح ${targets.length} محادثة واتساب. متابعة؟`)) return
+      this.sendingWhatsAll = true
+      try {
+        for (const [i, member] of targets.entries()) {
+          const password = await this.setUserPassword(member.id)
+          setTimeout(() => {
+            const num = digitsOnly(member.whats)
+            const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
+            window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.credentialsMessage(member, password))}`, '_blank')
+          }, i * 300)
+        }
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال البيانات للجميع')
+      } finally {
+        this.sendingWhatsAll = false
+      }
+    },
+    async sendMailAll() {
+      const targets = this.allMembers.filter((m) => m.mail && m.id)
+      if (!targets.length) return
+      if (!window.confirm(`سيتم توليد كلمة سر جديدة لكل عضو وإرسال ${targets.length} رسالة بريد عبر ${APP_NAME}. متابعة؟`)) return
+      this.sendingMailAll = true
+      try {
+        for (const member of targets) {
+          const password = await this.setUserPassword(member.id)
+          await sendEmail({
+            to: member.mail,
+            subject: `بيانات تسجيل الدخول لمنصة ${APP_NAME}`,
+            message: this.credentialsMessage(member, password)
+          })
+        }
+        this.$toast?.success('تم إرسال البريد للجميع')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال البيانات للجميع')
+      } finally {
+        this.sendingMailAll = false
+      }
     }
   }
 }

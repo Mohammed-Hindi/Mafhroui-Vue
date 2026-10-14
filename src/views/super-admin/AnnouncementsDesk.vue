@@ -6,28 +6,37 @@
       <h2 class="dash-title">الإعلانات والملفات</h2>
     </header>
 
-    <nav class="rv-tabs" aria-label="نوع المراسلة">
-      <button v-for="t in tabs" :key="t.value" type="button" :class="['rv-tab', tab === t.value && 'is-active']" @click="tab = t.value">
-        {{ t.label }} <span class="rv-count">{{ count(t.value) }}</span>
-      </button>
-    </nav>
+    <!-- التبويبات والفلاتر بطاقة واحدة: شريط التبويبات فوق وصف الفلاتر ملتصقًا به -->
+    <section class="hd-toolbar">
+      <nav class="rv-tabs" aria-label="نوع المراسلة">
+        <button v-for="t in tabs" :key="t.value" type="button" :class="['rv-tab', tab === t.value && 'is-active']" @click="tab = t.value">
+          {{ t.label }} <span class="rv-count">{{ count(t.value) }}</span>
+        </button>
+      </nav>
 
-    <div class="gr-filters hd-filters">
-      <label class="rv-search">
-        <Search :size="16" />
-        <input v-model.trim="q" type="search" placeholder="بحث بالعنوان أو النص أو المرسل أو اسم الملف…">
-      </label>
-      <select v-model="sender" class="gr-select" aria-label="المرسل">
-        <option value="">كل المرسلين</option>
-        <option v-for="s in senders" :key="s" :value="s">{{ s }}</option>
-      </select>
-      <select v-model="sort" class="gr-select" aria-label="الترتيب">
-        <option value="newest">الأحدث أولًا</option>
-        <option value="oldest">الأقدم أولًا</option>
-      </select>
-      <button v-if="q || sender" type="button" class="pbtn is-outline is-sm" @click="q = ''; sender = ''">مسح الفلاتر</button>
-      <button type="button" class="hd-refresh" :disabled="loading" title="تحديث" aria-label="تحديث" @click="load"><RefreshCw :size="16" /></button>
-    </div>
+      <div class="gr-filters hd-filters">
+        <label class="rv-search">
+          <Search :size="16" />
+          <input v-model.trim="q" type="search" placeholder="بحث بالعنوان أو النص أو المرسل أو اسم الملف…">
+        </label>
+        <label class="hd-field" title="المرسل">
+          <UserRound :size="16" />
+          <select v-model="sender" aria-label="المرسل">
+            <option value="">كل المرسلين</option>
+            <option v-for="s in senders" :key="s" :value="s">{{ s }}</option>
+          </select>
+        </label>
+        <label class="hd-field" title="الترتيب">
+          <ArrowDownUp :size="16" />
+          <select v-model="sort" aria-label="الترتيب">
+            <option value="newest">الأحدث أولًا</option>
+            <option value="oldest">الأقدم أولًا</option>
+          </select>
+        </label>
+        <button v-if="(q || sender) && userRole !== 'supervisor'" type="button" class="gr-clear hd-clear" @click="q = ''; sender = ''"><X :size="15" /> مسح الفلاتر</button>
+        <button type="button" class="hd-refresh" :disabled="loading" title="تحديث" aria-label="تحديث" @click="load"><RefreshCw :size="16" /></button>
+      </div>
+    </section>
 
     <div class="rv-layout hd-layout">
       <section class="rv-list hd-list" aria-label="المراسلات">
@@ -85,6 +94,7 @@
                 <p v-if="current.body">{{ current.body }}</p>
                 <p v-else class="pt-muted">بلا نص مرفق.</p>
               </article>
+              <router-link v-if="current.type === 'task'" :to="{ name: 'student-tasks' }" class="pbtn is-cyan is-sm"><ListTodo :size="15" /> فتح في لوحة المهام</router-link>
 
               <section v-if="current.attachments?.length" class="an-files" aria-label="المرفقات">
                 <h4 class="portal-title hd-props-title">المرفقات</h4>
@@ -108,6 +118,10 @@
             <dl class="hd-data">
               <div><dt>النوع :</dt><dd>{{ TYPE[kind(current)].label }}</dd></div>
               <div><dt>التاريخ :</dt><dd>{{ when(current.created_at) }}</dd></div>
+              <template v-if="current.type === 'task'">
+                <div><dt>موعد التسليم :</dt><dd class="mono">{{ current.due_date || 'بلا موعد' }}</dd></div>
+                <div><dt>الحالة :</dt><dd>{{ STATUS[current.status] || current.status }}</dd></div>
+              </template>
               <div v-if="current.team"><dt>المجموعة :</dt><dd>{{ current.team.section ? `شعبة ${current.team.section}` : current.team.name }}</dd></div>
               <div><dt>المرفقات :</dt><dd>{{ current.attachments?.length || 0 }}</dd></div>
             </dl>
@@ -125,7 +139,7 @@
 
 <script>
 import { markRaw } from 'vue'
-import { ArrowRight, Download, FileText, Inbox, Layers, Megaphone, Paperclip, RefreshCw, Search, Star } from 'lucide-vue-next'
+import { ArrowDownUp, ArrowRight, Download, FileText, Inbox, Layers, ListTodo, Megaphone, Paperclip, RefreshCw, Search, Star, UserRound, X } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
 import api from '@/services/api'
 import { downloadAttachment } from '@/services/announcements'
@@ -134,29 +148,28 @@ import { formatFileSize } from '@/utils/formatters'
 import { isPlaceholder, placeholderAnnouncements } from '@/utils/studentPlaceholders'
 import { mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
+import { useTeamsStore } from '@/stores/teams.store'
 
 const TYPE = {
   announcement: { label: 'إعلان', cls: 'is-answered', icon: markRaw(Megaphone) },
   file: { label: 'ملف', cls: 'is-closed', icon: markRaw(FileText) },
-  rating: { label: 'تقييم', cls: 'is-awaiting', icon: markRaw(Star) }
+  rating: { label: 'تقييم', cls: 'is-awaiting', icon: markRaw(Star) },
+  task: { label: 'مهمة', cls: 'is-awaiting', icon: markRaw(ListTodo) }
 }
+const STATUS = { pending: 'لم تبدأ', in_progress: 'قيد التنفيذ', review: 'قيد المراجعة', done: 'مكتملة' }
+const STAFF = ['supervisor', 'committee', 'super_admin']
 const rtf = new Intl.RelativeTimeFormat('ar', { numeric: 'auto' })
 
 export default {
   name: 'AnnouncementsDesk',
 
-  components: { ArrowRight, Download, FileText, Inbox, Paperclip, RefreshCw, Search, Star, UcasLogo },
+  components: { ArrowDownUp, ArrowRight, Download, FileText, Inbox, ListTodo, Paperclip, RefreshCw, Search, Star, UcasLogo, UserRound, X },
 
   data() {
     return {
       ROLE_LABELS,
       TYPE,
-      tabs: [
-        { value: '', label: 'كل الوارد', icon: markRaw(Layers) },
-        { value: 'announcement', label: 'الإعلانات', icon: markRaw(Megaphone) },
-        { value: 'file', label: 'الملفات', icon: markRaw(FileText) },
-        { value: 'rating', label: 'التقييمات', icon: markRaw(Star) }
-      ],
+      STATUS,
       tab: '',
       q: '',
       sender: '',
@@ -169,7 +182,20 @@ export default {
   },
 
   computed: {
-    ...mapState(useAuthStore, ['userRole']),
+    ...mapState(useAuthStore, ['userRole', 'user']),
+    ...mapState(useTeamsStore, ['teams']),
+    // الطالب: بلا تقييمات، وبدلها مهام الفريق المرسلة من المشرف أو اللجنة أو الإدارة
+    tabs() {
+      const student = this.userRole === 'student'
+      // المشرف: بلا تبويب التقييمات
+      const third = student ? { value: 'task', label: 'المهام', icon: markRaw(ListTodo) } : this.userRole !== 'supervisor' && { value: 'rating', label: 'التقييمات', icon: markRaw(Star) }
+      return [
+        { value: '', label: 'كل الوارد', icon: markRaw(Layers) },
+        { value: 'announcement', label: 'الإعلانات', icon: markRaw(Megaphone) },
+        { value: 'file', label: 'الملفات', icon: markRaw(FileText) },
+        ...(third ? [third] : [])
+      ]
+    },
     tabLabel() {
       return this.tabs.find((t) => t.value === this.tab)?.label
     },
@@ -198,8 +224,14 @@ export default {
       try {
         const { data } = await api.get('/announcements')
         this.items = data.data || data
-        // الطالب بلا إعلانات بعد: بيانات تجريبية (placeholder)
-        if (!this.items.length && this.userRole === 'student') this.items = placeholderAnnouncements()
+        // المشرف بلا تقييمات
+        if (this.userRole === 'supervisor') this.items = this.items.filter((a) => this.kind(a) !== 'rating')
+        if (this.userRole === 'student') {
+          // الطالب بلا إعلانات بعد: بيانات تجريبية (placeholder)
+          this.items = this.items.filter((a) => this.kind(a) !== 'rating')
+          if (!this.items.length) this.items = placeholderAnnouncements()
+          this.items = [...this.items, ...(await this.staffTasks())]
+        }
         // على الشاشات العريضة يُفتح أول عنصر تلقائيًا (كصناديق البريد)؛ على الجوال التفاصيل صفحة كاملة فلا تُفتح وحدها
         this.current = this.items.find((a) => a.id === this.current?.id) || (window.innerWidth >= 1024 ? this.shown[0] : null) || null
       } catch (err) {
@@ -209,8 +241,24 @@ export default {
       }
     },
 
+    /** GET /teams/{id}/tasks — مهام فريق الطالب التي أنشأها المشرف أو اللجنة أو الإدارة، بشكل المراسلة */
+    async staffTasks() {
+      const teams = useTeamsStore()
+      await teams.fetchTeams()
+      const team = this.teams.find((t) => t.members?.some((m) => m.student?.id === this.user?.id))
+      if (!team) return []
+      try {
+        const { data } = await api.get(`/teams/${team.id}/tasks`)
+        return (data.data || data)
+          .filter((t) => STAFF.includes(t.created_by?.role))
+          .map((t) => ({ ...t, id: `t${t.id}`, type: 'task', body: t.description || '', author: t.created_by, attachments: [] }))
+      } catch {
+        return []
+      }
+    },
+
     kind(a) {
-      return a.type === 'file' || a.type === 'rating' ? a.type : a.rating ? 'rating' : 'announcement'
+      return ['file', 'rating', 'task'].includes(a.type) ? a.type : a.rating ? 'rating' : 'announcement'
     },
 
     titleOf(a) {
