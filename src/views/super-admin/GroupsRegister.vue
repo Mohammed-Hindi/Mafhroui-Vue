@@ -48,7 +48,8 @@
           <option v-for="s in supList" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
       </label>
-      <label class="gr-pick">
+      <!-- المشرف: فلترا التخصص والجنس فقط -->
+      <label v-if="userRole !== 'supervisor'" class="gr-pick">
         <span>حجم الفريق</span>
         <select v-model="f.size" class="gr-select">
           <option value="">من 1 حتى 4</option>
@@ -344,9 +345,11 @@ export default {
         { value: '', label: 'الكل', count: all.length },
         ...Object.entries(labels).map(([value, label]) => ({ value, label, count: all.filter((m) => m[key] === value).length }))
       ]
+      const gender = { key: 'gender', label: 'الجنس', options: opts('gender', { male: 'طلاب', female: 'طالبات' }) }
+      if (this.isSupervisor) return [gender]
       return [
         { key: 'degree', label: 'الدرجة', options: opts('degree', DEGREES) },
-        { key: 'gender', label: 'الجنس', options: opts('gender', { male: 'طلاب', female: 'طالبات' }) },
+        gender,
         { key: 'region', label: 'مكان التواجد', options: opts('region', REGIONS) }
       ]
     },

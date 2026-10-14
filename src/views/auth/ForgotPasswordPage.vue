@@ -1,15 +1,15 @@
 <template>
   <!-- استرجاع كلمة المرور بنمط البوابة (200407، 200430): بطاقة النموذج بوسم سماوي بالزاوية + بطاقة "عزيزي المستخدم" -->
-  <div>
+  <div class="au-narrow">
     <div v-if="error" class="palert is-error au-alert"><AlertCircle :size="20" class="shrink-0" /> {{ error }}</div>
     <div v-if="submitted" class="palert is-success au-alert"><CheckCircle2 :size="20" class="shrink-0" /> أرسلنا رابط تعيين كلمة مرور جديدة إلى {{ form.email }}. تحقق من بريدك (ومن الرسائل غير المرغوب فيها).</div>
 
-    <div class="au-grid is-wide">
+    <div class="au-grid au-center">
       <section class="au-card">
         <router-link :to="{ name: 'login' }" class="au-corner">تسجيل الدخول</router-link>
         <h2 class="portal-title au-head">استرجاع كلمة المرور</h2>
 
-        <form class="au-rows" novalidate @submit.prevent="handleSubmit">
+        <form class="au-rows au-fp" novalidate @submit.prevent="handleSubmit">
           <div class="portal-form-row">
             <label for="fp-email">البريد الإلكتروني</label>
             <div>

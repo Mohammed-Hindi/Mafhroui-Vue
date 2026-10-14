@@ -26,7 +26,7 @@ export const ROLE_HOME_ROUTE = {
   [ROLES.SUPER_ADMIN]: '/committee',
   [ROLES.COMMITTEE]: '/committee',
   [ROLES.SUPERVISOR]: '/supervisor',
-  [ROLES.STUDENT]: '/student'
+  [ROLES.STUDENT]: '/student/tasks'
 }
 
 /** مفاتيح التخزين المحلي */
@@ -56,3 +56,6 @@ export const PROJECT_TYPES = [
   'تطوير ويب', 'تطبيقات موبايل', 'تصميم', 'واقع افتراضي VR', 'واقع معزز AR', 'ألعاب',
   'ذكاء اصطناعي', 'أنظمة إدارة', 'إنترنت الأشياء', 'أمن معلومات', 'شبكات', 'وسائط متعددة'
 ]
+
+/** الخادم يعرف pending/approved/rejected فقط — "طلب تعديل" رفضٌ سببه يبدأ بهذه البادئة (يعيد الفريق التقديم) */
+export const PROPOSAL_CHANGES_PREFIX = 'مطلوب تعديل: '

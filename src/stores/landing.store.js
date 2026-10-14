@@ -102,7 +102,13 @@ export const useLandingStore = defineStore('landing', () => {
     featuredError.value = null
     try {
       const { data } = await api.get('/projects/featured')
-      const rows = data.data || data
+      let rows = data.data || data
+      // معرض أفضل المشاريع يعرض كل المميّزة: باقي الصفحات (6 لكل صفحة) بالتوازي — ponytail: حد 5 صفحات، يُرفع عند الحاجة
+      const last = Math.min(data.last_page || 1, 5)
+      if (last > 1) {
+        const more = await Promise.all(Array.from({ length: last - 1 }, (_, i) => api.get('/projects/featured', { params: { page: i + 2 } })))
+        rows = rows.concat(...more.map((r) => r.data.data || []))
+      }
       featured.value = rows.map(mapProject)
       featuredTotal.value = data.total ?? featured.value.length
       return featured.value

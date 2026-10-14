@@ -5,11 +5,11 @@
       <div>
         <h2 class="dash-title">تقدّم المشاريع</h2>
       </div>
-      <button type="button" class="pbtn is-cyan" :disabled="loading || exporting" @click="exportPdf"><FileDown :size="16" /> {{ exporting ? 'جارٍ التصدير…' : 'تصدير PDF' }}</button>
+      <button v-if="!isSup" type="button" class="pbtn is-cyan" :disabled="loading || exporting" @click="exportPdf"><FileDown :size="16" /> {{ exporting ? 'جارٍ التصدير…' : 'تصدير PDF' }}</button>
     </header>
 
     <nav class="rv-tabs" aria-label="العرض">
-      <button type="button" :class="['rv-tab', tab === 'sup' && 'is-active']" @click="tab = 'sup'">المشرفون <span class="rv-count">{{ supervisors.length }}</span></button>
+      <button v-if="!isSup" type="button" :class="['rv-tab', tab === 'sup' && 'is-active']" @click="tab = 'sup'">المشرفون <span class="rv-count">{{ supervisors.length }}</span></button>
       <button type="button" :class="['rv-tab', tab === 'grp' && 'is-active']" @click="tab = 'grp'">المجموعات والطلاب <span class="rv-count">{{ groups.length }}</span></button>
     </nav>
 
@@ -19,7 +19,7 @@
           <Search :size="16" />
           <input v-model.trim="q" type="search" :placeholder="tab === 'sup' ? 'بحث باسم المشرف…' : 'بحث بالمجموعة أو الطالب أو المشرف…'">
         </label>
-        <select v-if="tab === 'grp'" v-model="supFilter" class="gr-select" aria-label="المشرف">
+        <select v-if="tab === 'grp' && !isSup" v-model="supFilter" class="gr-select" aria-label="المشرف">
           <option value="">كل المشرفين</option>
           <option v-for="s in supervisors" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
@@ -27,18 +27,24 @@
           <option value="">كل التخصصات</option>
           <option v-for="s in specs" :key="s" :value="s">{{ s }}</option>
         </select>
-        <select v-model="degreeFilter" class="gr-select" aria-label="الدرجة">
+        <select v-if="!isSup" v-model="degreeFilter" class="gr-select" aria-label="الدرجة">
           <option value="">كل الدرجات</option>
           <option value="diploma">دبلوم</option>
           <option value="bachelor">بكالوريوس</option>
         </select>
-        <select v-if="tab === 'grp'" v-model="levelFilter" class="gr-select" aria-label="مستوى الإنجاز">
+        <!-- المشرف: فلترا التخصص والجنس فقط -->
+        <select v-if="isSup" v-model="genderFilter" class="gr-select" aria-label="الجنس">
+          <option value="">طلاب وطالبات</option>
+          <option value="male">طلاب</option>
+          <option value="female">طالبات</option>
+        </select>
+        <select v-if="tab === 'grp' && !isSup" v-model="levelFilter" class="gr-select" aria-label="مستوى الإنجاز">
           <option value="">كل المستويات</option>
           <option value="low">إنجاز منخفض (أقل من 35%)</option>
           <option value="mid">متوسط (35–69%)</option>
           <option value="high">مرتفع (70% فأكثر)</option>
         </select>
-        <button v-if="q || supFilter || specFilter || degreeFilter || levelFilter" type="button" class="gr-clear" @click="q = ''; supFilter = ''; specFilter = ''; degreeFilter = ''; levelFilter = ''">مسح الفلاتر</button>
+        <button v-if="q || supFilter || specFilter || degreeFilter || levelFilter || genderFilter" type="button" class="gr-clear" @click="q = ''; supFilter = ''; specFilter = ''; degreeFilter = ''; levelFilter = ''; genderFilter = ''">مسح الفلاتر</button>
       </div>
 
       <p v-if="loading" class="pt-muted">جارٍ التحميل…</p>
@@ -127,7 +133,7 @@
                   <tr v-if="openGrp === g.id" class="pt-sub">
                     <td colspan="5">
                       <table class="ev-students">
-                        <thead><tr><th>الطالب</th><th>الموكلة</th><th>المنجزة</th><th>المتأخرة</th><th>نسبة الإنجاز</th></tr></thead>
+                        <thead><tr><th>الطالب</th><th>الموكلة</th><th>المنجزة</th><th>المتأخرة</th><th>نسبة الإنجاز</th><th>آخر نشاط</th></tr></thead>
                         <tbody>
                           <tr v-for="m in g.members" :key="m.id">
                             <td class="pt-strong">{{ m.name }}</td>
@@ -138,6 +144,7 @@
                               <span class="gr-progress"><span :class="level(m.percentage)" :style="{ width: m.percentage + '%' }" /></span>
                               <span class="gr-pct">{{ m.percentage }}%</span>
                             </td>
+                            <td class="ad-nowrap" :title="m.lastActive ? formatDateTime(m.lastActive) : ''">{{ m.lastActive ? formatRelativeTime(m.lastActive) : 'لم يدخل بعد' }}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -162,6 +169,8 @@
             <span>الطلاب: {{ grpRows.reduce((n, g) => n + g.members.length, 0) }}</span>
             <span>المهام المنجزة: {{ grpRows.reduce((n, g) => n + g.tasksDone, 0) }} / {{ grpRows.reduce((n, g) => n + g.tasksTotal, 0) }}</span>
             <span>متوسط الإنجاز: {{ avgOf(grpRows.map((g) => g.percentage)) }}%</span>
+            <!-- المشرف: تصدير PDF داخل الشريط الأخضر أسفل الجدول -->
+            <button v-if="isSup" type="button" class="pbtn is-sm gr-sumbar-btn" :disabled="loading || exporting" @click="exportPdf"><FileDown :size="15" /> {{ exporting ? 'جارٍ التصدير…' : 'تصدير PDF' }}</button>
           </div>
         </template>
       </SlideTable>
@@ -177,7 +186,9 @@ import { escapeHtml } from '@/utils/exportReport'
 import { exportTablePdf } from '@/utils/ucasReports'
 import api from '@/services/api'
 import { fetchGroups, level, TASK_STATUS } from '@/utils/progressData'
-import { formatDate } from '@/utils/formatters'
+import { formatDate, formatRelativeTime } from '@/utils/formatters'
+import { useAuthStore } from '@/stores/auth.store'
+import { groupGender } from '@/services/adminData'
 
 export default {
   name: 'ProgressBoard',
@@ -185,7 +196,9 @@ export default {
   components: { SlideTable, FileDown, Search },
 
   data() {
-    return { TASK_STATUS, tab: 'sup', groups: [], profiles: {}, tasks: {}, loading: true, q: '', supFilter: '', specFilter: '', degreeFilter: '', levelFilter: '', openSup: null, openGrp: null, exporting: false }
+    // المشرف: مجموعاته فقط (الخادم يقيّد /progress) بلا تبويب المشرفين
+    const isSup = useAuthStore().userRole === 'supervisor'
+    return { isSup, TASK_STATUS, tab: isSup ? 'grp' : 'sup', groups: [], profiles: {}, tasks: {}, loading: true, q: '', supFilter: '', specFilter: '', degreeFilter: '', levelFilter: '', genderFilter: '', openSup: null, openGrp: null, exporting: false }
   },
 
   computed: {
@@ -227,7 +240,8 @@ export default {
         (!this.supFilter || g.sup.id === this.supFilter) &&
         (!this.specFilter || g.spec === this.specFilter) &&
         (!this.degreeFilter || g.degree === this.degreeFilter) &&
-        (!this.levelFilter || level(g.percentage) === 'is-' + this.levelFilter)
+        (!this.levelFilter || level(g.percentage) === 'is-' + this.levelFilter) &&
+        (!this.genderFilter || groupGender(g) === this.genderFilter)
       )
     }
   },
@@ -243,6 +257,8 @@ export default {
 
   methods: {
     formatDate,
+    formatRelativeTime,
+    formatDateTime: (d) => new Date(d).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' }),
     level,
 
     async loadProfile(id) {

@@ -55,7 +55,9 @@ export async function fetchGroups() {
           total: p.total ?? 0,
           done: p.done ?? 0,
           percentage: Math.round(p.percentage ?? 0),
-          evaluation: p.evaluation ?? null
+          evaluation: p.evaluation ?? null,
+          // آخر نشاط = آخر استخدام لتوكن الدخول
+          lastActive: s.tokens_max_last_used_at || null
         }
       })
     }

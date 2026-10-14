@@ -1,10 +1,10 @@
 <template>
   <div>
     <div v-if="canCreate" class="flex items-center justify-between gap-4 mb-5 flex-wrap">
-      <p class="text-body-sm text-text-600">{{ canDrag ? 'اسحبي البطاقات أو استخدمي القائمة على البطاقة لتحديث الحالة' : 'تغيير حالة هذه المهمة غير متاح لحسابك' }}</p>
+      <p class="text-body-sm text-text-600">{{ canDrag ? 'اسحب البطاقات أو استخدم القائمة على البطاقة لتحديث الحالة' : 'الطلاب يحرّكون حالة المهام من لوحتهم' }}</p>
       <div class="flex items-center gap-2">
-        <BaseButton v-if="canDelete" variant="outline" size="sm" :icon="ArchiveIcon" @click="openArchive">الأرشيف</BaseButton>
-        <BaseButton size="sm" :icon="Plus" @click="openCreate()">مهمة جديدة</BaseButton>
+        <button v-if="canDelete" type="button" class="pbtn is-outline" @click="openArchive"><ArchiveIcon :size="16" /> الأرشيف</button>
+        <button type="button" class="pbtn is-green" @click="openCreate()"><Plus :size="16" /> مهمة جديدة</button>
       </div>
     </div>
 
@@ -33,18 +33,20 @@
             </span>
           </div>
 
+          <!-- عمود فائض بالمهام: عجلة الفأرة تبقى داخله ولا تحرّك الصفحة كاملة؛ العمود القصير لا يحجز التمرير -->
           <div
             class="flex-1 flex flex-col gap-2.5 p-3 overflow-y-auto scrollbar-thin transition-colors duration-fast"
             :class="dragOverColumn === column.id && 'bg-primary-50/40'"
+            @mouseenter="e => e.currentTarget.style.overscrollBehavior = e.currentTarget.scrollHeight > e.currentTarget.clientHeight ? 'contain' : ''"
             @dragenter="dragOverColumn = column.id"
             @dragleave="dragOverColumn = null"
           >
             <div
               v-for="task in tasksByColumn(column.id)"
               :key="task.id"
-              :draggable="canDrag"
+              :draggable="canDrag && acts(task)"
               class="task-card bg-surface rounded-lg border border-border shadow-card p-3.5 border-s-[3px] transition-all duration-fast hover:shadow-card-hover hover:-translate-y-0.5 cursor-pointer"
-              :class="[column.accentBorder, canDrag && 'cursor-grab active:cursor-grabbing']"
+              :class="[column.accentBorder, canDrag && acts(task) && 'cursor-grab active:cursor-grabbing']"
               @dragstart="onDragStart(task)"
               @dragend="dragOverColumn = null"
               @click="openDetail(task)"
@@ -75,18 +77,21 @@
                 </div>
               </div>
 
+              <!-- مصدر المهمة إن جاءت من المشرف أو لجنة الإشراف أو الإدارة العامة -->
+              <span v-if="showSource && staffSource(task)" class="tb-source">من {{ staffSource(task) }}</span>
               <p v-if="task.description" class="text-caption text-text-600 mb-1 leading-relaxed line-clamp-2">{{ task.description }}</p>
 
-              <div v-if="canDrag" class="mt-2" @click.stop>
+              <div v-if="canDrag && acts(task)" class="mt-2" @click.stop>
                 <BaseSelect
                   :model-value="task.status" :options="columnOptions"
                   @update:model-value="(val) => $emit('move', { id: task.id, status: val })"
                 />
               </div>
+              <p v-else-if="canDrag" class="text-label text-text-400 mt-2">مهمة زميلك — للاطلاع والملاحظات فقط</p>
 
               <!-- إضافة ملفات للمهمة: uploads-live = رفع فعلي POST /tasks/{id}/files (الطالب)، وإلا placeholder محلي بلا إرسال -->
               <div v-if="uploads" class="tb-upload mt-2.5 pt-2.5 border-t border-border-soft" @click.stop>
-                <label class="tb-upload-drop" @dragover.prevent @drop.prevent="addFiles(task.id, $event.dataTransfer.files)">
+                <label v-if="acts(task)" class="tb-upload-drop" @dragover.prevent @drop.prevent="addFiles(task.id, $event.dataTransfer.files)">
                   <input type="file" multiple class="sr-only" @change="addFiles(task.id, $event.target.files); $event.target.value = ''">
                   <Paperclip :size="14" /> إضافة ملف
                 </label>
@@ -146,7 +151,7 @@
                       <p class="text-caption text-text-600 leading-relaxed">{{ note.note }}</p>
                     </div>
                   </template>
-                  <div class="flex items-center gap-1.5">
+                  <div v-if="canNote" class="flex items-center gap-1.5">
                     <input
                       v-model="noteDrafts[task.id]" type="text" placeholder="اكتب ملاحظة..."
                       class="flex-1 h-8 px-2.5 rounded-sm border border-border bg-surface text-caption text-text-900 focus:border-primary-600 transition-colors duration-fast"
@@ -170,14 +175,37 @@
       </div>
     </div>
 
+    <!-- مهمة جديدة بهوية البوابة: الاسم والوصف والمنتسبون إلزامية، والملاحظات والملفات اختيارية -->
     <BaseModal v-model="modalOpen" title="مهمة جديدة" size="md">
-      <div class="flex flex-col gap-4">
-        <BaseInput v-model="form.title" label="عنوان المهمة" placeholder="مثال: تجهيز الفصل الثاني من التقرير" required />
-        <BaseTextarea v-model="form.description" label="الوصف" placeholder="تفاصيل إضافية عن المهمة (اختياري)" :rows="3" />
-      </div>
+      <form id="tb-create-form" class="sp-form" @submit.prevent="saveTask">
+        <label class="pfield">
+          <span>اسم المهمة <b class="as-req">*</b></span>
+          <input v-model.trim="form.title" type="text" maxlength="200" placeholder="مثال: تجهيز الفصل الثاني من التقرير">
+        </label>
+        <label class="pfield">
+          <span>وصف المهمة <b class="as-req">*</b></span>
+          <textarea v-model.trim="form.description" rows="4" placeholder="ما المطلوب تسليمه، وكيف، ومعايير القبول" />
+        </label>
+        <div v-if="members.length" class="pfield">
+          <span>تنتسب المهمة إلى <b class="as-req">*</b></span>
+          <div class="as-assignees">
+            <label class="gp-check"><input type="checkbox" :checked="form.assignees.length === members.length" @change="form.assignees = $event.target.checked ? members.map((m) => m.id) : []"> كل الطلاب</label>
+            <label v-for="m in members" :key="m.id" class="gp-check"><input v-model="form.assignees" type="checkbox" :value="m.id"> {{ m.name }}</label>
+          </div>
+        </div>
+        <label class="pfield">
+          <span>ملاحظات (اختياري)</span>
+          <textarea v-model.trim="form.note" rows="2" placeholder="ملاحظة تظهر للطلاب على المهمة" />
+        </label>
+        <div class="pfield">
+          <span>ملفات المهمة (اختياري)</span>
+          <FileDropzone v-model="form.files" multiple />
+        </div>
+      </form>
       <template #footer>
-        <BaseButton variant="ghost" @click="modalOpen = false">إلغاء</BaseButton>
-        <BaseButton :disabled="!form.title.trim()" @click="saveTask">إضافة المهمة</BaseButton>
+        <span :class="['as-summary', !canSave && 'is-missing']">{{ canSave ? `${form.assignees.length || 'كل'} طالب · ${form.files.length} ملف` : 'أدخل اسم المهمة ووصفها واختر الطلاب' }}</span>
+        <button type="button" class="pbtn is-outline" @click="modalOpen = false">إلغاء</button>
+        <button type="submit" form="tb-create-form" class="pbtn is-green" :disabled="!canSave"><Plus :size="16" /> إضافة المهمة</button>
       </template>
     </BaseModal>
 
@@ -226,7 +254,9 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
+import { ROLE_LABELS } from '@/utils/constants'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
+import FileDropzone from '@/components/shared/FileDropzone.vue'
 import { formatRelativeTime } from '@/utils/formatters'
 
 const COLUMNS = [
@@ -239,7 +269,7 @@ const COLUMNS = [
 export default {
   name: 'TaskBoard',
 
-  components: { BaseButton, BaseModal, BaseInput, BaseTextarea, BaseSelect, EmptyState, SkeletonLoader, MessageSquare, ChevronDown, Pencil, ArchiveIcon, Paperclip, X, History, FileText },
+  components: { BaseButton, BaseModal, BaseInput, BaseTextarea, BaseSelect, EmptyState, FileDropzone, SkeletonLoader, Plus, MessageSquare, ChevronDown, Pencil, ArchiveIcon, Paperclip, X, History, FileText },
 
   props: {
     tasks: { type: Array, default: () => [] },
@@ -257,7 +287,15 @@ export default {
     /** رفع فعلي للملفات (POST /tasks/{id}/files — مسموح للطالب) بدل الـ placeholder */
     uploadsLive: { type: Boolean, default: false },
     /** إظهار "سجل الحركة" على البطاقات (يُخفى في لوحة الطالب) */
-    showLog: { type: Boolean, default: true }
+    showLog: { type: Boolean, default: true },
+    /** هل يحرّك المستخدم هذه المهمة ويرفع ملفاتها (الطالب: المهام المنتسب لها فقط) — بلا دالة = كل المهام */
+    canAct: { type: Function, default: null },
+    /** وسم مصدر المهمة (المشرف / لجنة الإشراف / الإدارة العامة) — لوحة الطالب */
+    showSource: { type: Boolean, default: false },
+    /** إضافة ملاحظات على المهمة (الطالب يقرأ الملاحظات فقط ويحرّك الحالة) */
+    canNote: { type: Boolean, default: true },
+    /** طلاب المجموعة لاختيار المنتسبين للمهمة الجديدة */
+    members: { type: Array, default: () => [] }
   },
 
   emits: ['create', 'move', 'archive', 'update', 'open-archive', 'restore', 'force-delete', 'load-notes', 'add-note'],
@@ -279,7 +317,7 @@ export default {
       modalOpen: false,
       draggingId: null,
       dragOverColumn: null,
-      form: { title: '', description: '' },
+      form: { title: '', description: '', assignees: [], note: '', files: [] },
 
       detailModalOpen: false,
       detailForm: { id: null, title: '', description: '' },
@@ -292,6 +330,11 @@ export default {
   },
 
   computed: {
+    // الاسم والوصف إلزاميان، والمنتسبون إلزاميون حين تتوفر قائمة الطلاب
+    canSave() {
+      const f = this.form
+      return !!f.title.trim() && !!f.description.trim() && (!this.members.length || f.assignees.length > 0)
+    },
     columnOptions() {
       return this.columns.map((c) => ({ value: c.id, label: c.label }))
     },
@@ -302,6 +345,15 @@ export default {
   },
 
   methods: {
+    staffSource(task) {
+      const role = task.created_by?.role
+      return role && role !== 'student' ? ROLE_LABELS[role] : ''
+    },
+
+    acts(task) {
+      return !this.canAct || this.canAct(task)
+    },
+
     describeTaskEvent,
 
     /** فتح/طي سجل حركة المهمة */
@@ -355,13 +407,14 @@ export default {
     },
 
     openCreate() {
-      this.form = { title: '', description: '' }
+      this.form = { title: '', description: '', assignees: [], note: '', files: [] }
       this.modalOpen = true
     },
 
     saveTask() {
-      if (!this.form.title.trim()) return
-      this.$emit('create', { title: this.form.title, description: this.form.description })
+      if (!this.canSave) return
+      const f = this.form
+      this.$emit('create', { title: f.title, description: f.description, assignee_ids: f.assignees, note: f.note, files: f.files })
       this.modalOpen = false
     },
 
@@ -387,7 +440,7 @@ export default {
     },
 
     onDragStart(task) {
-      if (!this.canDrag) return
+      if (!this.canDrag || !this.acts(task)) return
       this.draggingId = task.id
     },
 

@@ -1,6 +1,6 @@
 <template>
   <!-- الملف التعريفي للطالب — بنمط "ملف الطالب" في بوابة الكلية (201300) كملف الإدارة العامة:
-       شريط تبويبات أزرق ← بطاقة الهوية ← صفوف (تسمية + قيمة). المطلوب: اسم المشرف (الضغط ← بروفايله: الاسم، الواتساب،
+       شريط تبويبات أزرق ← صفوف (تسمية + قيمة). المطلوب: اسم المشرف (الضغط ← بروفايله: الاسم، الواتساب،
        مكان التواجد، الشعبة) وبيانات المجموعة كنافذة منبثقة مع أماكن تواجد الطلاب. البيانات من GET /students/{me}/profile -->
   <div class="flex flex-col gap-6">
     <nav class="profile-tabs" aria-label="أقسام الملف التعريفي">
@@ -18,18 +18,10 @@
       </router-link>
     </nav>
 
-    <section class="pf-avatar">
-      <img v-if="avatarSrc" :src="avatarSrc" alt="الصورة الشخصية">
-      <span v-else aria-hidden="true">{{ (user?.name || '?').charAt(0) }}</span>
-      <div class="pf-id">
-        <strong>{{ user?.name || '—' }}</strong>
-        <span class="pf-role">طالب</span>
-        <small class="mono">{{ user?.email }}</small>
-      </div>
-    </section>
+    <ProfileInfoCard v-if="tab === 'info'" :sections="sections" />
 
-    <section class="profile-card">
-      <h3 class="portal-title pf-title">{{ tab === 'info' ? 'المعلومات الشخصية' : 'مجموعتي' }}</h3>
+    <section v-else class="profile-card">
+      <h3 class="portal-title pf-title">مجموعتي</h3>
       <p v-if="tab === 'team' && !myTeam" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لم تُنسب لمجموعة بعد</p>
       <div v-for="sec in sections" v-else :key="sec.title" class="pf-row">
         <h4 class="pf-row-title">{{ sec.title }}</h4>
@@ -64,21 +56,6 @@
         </tbody>
       </table>
     </BaseModal>
-
-    <!-- تعديل مكان التواجد -->
-    <BaseModal v-model="regionEditOpen" title="تعديل مكان التواجد" size="sm">
-      <div class="flex flex-col gap-4">
-        <label class="text-label font-semibold text-text-600">اختر مكان تواجدك الجديد</label>
-        <select v-model="selectedRegion" class="w-full h-10 px-3 border border-border bg-bg text-body text-text-900 focus:border-primary-600 transition-colors duration-fast">
-          <option value="">-- اختر المنطقة --</option>
-          <option v-for="(label, key) in REGIONS" :key="key" :value="key">{{ label }}</option>
-        </select>
-      </div>
-      <template #footer>
-        <BaseButton variant="ghost" @click="regionEditOpen = false">إلغاء</BaseButton>
-        <BaseButton variant="primary" :loading="savingRegion" @click="saveRegion">حفظ التغيير</BaseButton>
-      </template>
-    </BaseModal>
   </div>
 </template>
 
@@ -86,7 +63,7 @@
 import { mapState, mapActions } from 'pinia'
 import { IdCard, Lock, Users } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
-import BaseButton from '@/components/ui/BaseButton.vue'
+import ProfileInfoCard from '@/components/shared/ProfileInfoCard.vue'
 import api from '@/services/api'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
@@ -96,7 +73,7 @@ import { placeholderGroup } from '@/utils/studentPlaceholders'
 export default {
   name: 'StudentProfilePage',
 
-  components: { Lock, BaseModal, BaseButton },
+  components: { Lock, BaseModal, ProfileInfoCard },
 
   data() {
     return {
@@ -106,9 +83,6 @@ export default {
       supOpen: false,
       groupOpen: false,
       loaded: false,
-      regionEditOpen: false,
-      selectedRegion: '',
-      savingRegion: false,
       tabs: [
         { key: 'info', label: 'المعلومات الشخصية', icon: IdCard },
         { key: 'team', label: 'مجموعتي', icon: Users }
@@ -118,7 +92,7 @@ export default {
 
   computed: {
     ...mapState(useTeamsStore, ['teams']),
-    ...mapState(useAuthStore, ['user', 'avatarSrc']),
+    ...mapState(useAuthStore, ['user']),
 
     myTeam() {
       // بلا مجموعة: مجموعة تجريبية (placeholder) حتى يظهر شكل الصفحة
@@ -138,14 +112,15 @@ export default {
       if (this.tab === 'info') {
         return [
           { title: 'بيانات الطالب', fields: [
-            { label: 'الاسم', value: u.name },
+            { label: 'الاسم', value: u.name, key: 'name', required: true },
             { label: 'الرقم الجامعي', value: u.university_number, mono: true },
             { label: 'التخصص', value: u.specialization?.name },
             { label: 'الفصل الدراسي', value: u.academicTerm?.name }
           ] },
           { title: 'بيانات التواصل', fields: [
-            { label: 'البريد الإلكتروني', value: u.email, mono: true },
-            { label: 'مكان التواجد', value: REGIONS[this.profile?.region] || '—', action: () => { this.openRegionEdit() } }
+            { label: 'البريد الإلكتروني', value: u.email, key: 'email', type: 'email', required: true, mono: true },
+            { label: 'رقم الواتساب', value: u.whatsapp, key: 'whatsapp', mono: true, placeholder: 'مثال: 970591234567' },
+            { label: 'مكان التواجد', value: REGIONS[this.profile?.region] }
           ] }
         ]
       }
@@ -176,36 +151,7 @@ export default {
 
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams']),
-    ...mapActions(useAuthStore, ['fetchCurrentUser']),
-
-    openRegionEdit() {
-      this.selectedRegion = this.profile?.region || ''
-      this.regionEditOpen = true
-    },
-
-    async saveRegion() {
-      if (!this.selectedRegion) {
-        this.$toast?.error('يرجى اختيار مكان التواجد')
-        return
-      }
-
-      this.savingRegion = true
-      try {
-        await api.patch(`/students/${this.user?.id}`, { region: this.selectedRegion })
-        if (this.profile) {
-          this.profile.region = this.selectedRegion
-        }
-        if (this.user) {
-          this.user.region = this.selectedRegion
-        }
-        this.regionEditOpen = false
-        this.$toast?.success('تم تحديث مكان التواجد بنجاح')
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث مكان التواجد')
-      } finally {
-        this.savingRegion = false
-      }
-    }
+    ...mapActions(useAuthStore, ['fetchCurrentUser'])
   }
 }
 </script>

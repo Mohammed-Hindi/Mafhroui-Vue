@@ -28,10 +28,22 @@
           <option value="">كل المشرفين</option>
           <option v-for="s in supervisors" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
-        <select v-model="fGroup" class="gr-select" aria-label="المجموعة">
+        <select v-if="!isSupervisor" v-model="fGroup" class="gr-select" aria-label="المجموعة">
           <option value="">كل المجموعات</option>
           <option v-for="g in groupOptions" :key="g.id" :value="g.id">{{ g.label }}</option>
         </select>
+        <!-- المشرف: فلترا التخصص والفئة فقط -->
+        <template v-else>
+          <select v-model="fSpec" class="gr-select" aria-label="التخصص">
+            <option value="">كل التخصصات</option>
+            <option v-for="s in specNames" :key="s" :value="s">{{ s }}</option>
+          </select>
+          <select v-model="fGender" class="gr-select" aria-label="الفئة">
+            <option value="">طلاب وطالبات</option>
+            <option value="male">طلاب</option>
+            <option value="female">طالبات</option>
+          </select>
+        </template>
       </div>
 
       <p v-if="!loaded" class="pt-muted tk-loading">جارٍ التحميل…</p>
@@ -225,6 +237,7 @@ import FileDropzone from '@/components/shared/FileDropzone.vue'
 import GroupPicker from '@/components/shared/GroupPicker.vue'
 import TemplatePicker from '@/components/shared/TemplatePicker.vue'
 import api from '@/services/api'
+import { groupGender } from '@/services/adminData'
 import { mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
 import { CHANNELS, downloadAttachment, notifyExternal } from '@/services/announcements'
@@ -258,6 +271,8 @@ export default {
       fAudience: '',
       fMember: '',
       fGroup: '',
+      fSpec: '',
+      fGender: '',
       fSup: '',
       committee: [],
       supervisors: [],
@@ -288,6 +303,9 @@ export default {
     isFile() {
       return this.type === 'file'
     },
+    specNames() {
+      return [...new Set(this.groups.map((g) => g.spec).filter(Boolean))]
+    },
     groupById() {
       return Object.fromEntries(this.groups.map((g) => [g.id, g]))
     },
@@ -305,7 +323,7 @@ export default {
       ]
     },
     hasFilters() {
-      return !!(this.q || this.fAudience || this.fMember || this.fGroup || this.fSup)
+      return !!(this.q || this.fAudience || this.fMember || this.fGroup || this.fSup || this.fSpec || this.fGender)
     },
     /** GET /announcements/sent — كل فلتر يُرسل مستقلًا ويُطبّق في الخادم */
     params() {
@@ -364,6 +382,8 @@ export default {
     fAudience: 'load',
     fMember: 'load',
     fGroup: 'load',
+    fSpec: 'load',
+    fGender: 'load',
     fSup: 'load'
   },
 
@@ -372,7 +392,8 @@ export default {
     const people = (role) => api.get('/users', { params: { role } })
       .then(({ data }) => (data.data || data).map((u) => ({ id: u.id, name: u.name, email: u.email || '', whatsapp: u.whatsapp || '' })))
       .catch(() => [])
-    ;[this.committee, this.supervisors] = await Promise.all([people('committee'), people('supervisor')])
+    // المشرف يرسل لمجموعاته فقط فلا يحتاج قوائم اللجنة والمشرفين
+    if (!this.isSupervisor) [this.committee, this.supervisors] = await Promise.all([people('committee'), people('supervisor')])
   },
 
   beforeUnmount() {
@@ -429,7 +450,9 @@ export default {
       })
       const q = this.q
       const all = [...batches.values()].sort((x, y) => String(y.created_at).localeCompare(String(x.created_at)))
-      this.items = all.filter((b) => (!this.fGroup || b.groupIds.includes(this.fGroup)) && (!q || `${b.title || ''} ${b.body}`.includes(q)))
+      // الإرسال يطابق إن كانت إحدى مجموعاته من التخصص والفئة المختارين
+      const fits = (gid) => { const g = this.groupById[gid] || {}; return (!this.fSpec || g.spec === this.fSpec) && (!this.fGender || groupGender(g) === this.fGender) }
+      this.items = all.filter((b) => (!this.fGroup || b.groupIds.includes(this.fGroup)) && b.groupIds.some(fits) && (!q || `${b.title || ''} ${b.body}`.includes(q)))
       this.counts = { all: all.length, groups: all.length }
       this.loading = false
       this.loaded = true
@@ -467,7 +490,7 @@ export default {
     openComposer() {
       this.form = emptyForm()
       this.warnings = []
-      this.step = this.off
+      this.step = 0
       this.staffQ = ''
       this.selected = this.fGroup ? [this.fGroup] : []
       this.memberSel = this.fMember ? [this.fMember] : this.fSup ? [this.fSup] : []

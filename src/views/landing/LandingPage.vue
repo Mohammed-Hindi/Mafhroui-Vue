@@ -1,22 +1,12 @@
 <template>
   <div>
     <HeroSection />
-
     <FeaturedProjects :projects="featured" />
-
-    <div id="features" class="scroll-mt-20">
+    <div id="features" class="scroll-mt-24">
       <RolesSection />
     </div>
-
     <HowItWorksSection />
-
-    <div id="departments" class="scroll-mt-20">
-      <DepartmentsSection />
-    </div>
-
-    <StatsBanner />
-
-    <CtaSection />
+    <DepartmentsSection />
   </div>
 </template>
 
@@ -28,22 +18,19 @@ import FeaturedProjects from '@/components/landing/FeaturedProjects.vue'
 import RolesSection from '@/components/landing/RolesSection.vue'
 import HowItWorksSection from '@/components/landing/HowItWorksSection.vue'
 import DepartmentsSection from '@/components/landing/DepartmentsSection.vue'
-import StatsBanner from '@/components/landing/StatsBanner.vue'
-import CtaSection from '@/components/landing/CtaSection.vue'
 
 export default {
   name: 'LandingPage',
 
-  components: { HeroSection, FeaturedProjects, RolesSection, HowItWorksSection, DepartmentsSection, StatsBanner, CtaSection },
+  components: { HeroSection, FeaturedProjects, RolesSection, HowItWorksSection, DepartmentsSection },
 
   computed: {
     ...mapState(useLandingStore, ['featured'])
   },
 
   created() {
-    const landingStore = useLandingStore()
-    landingStore.fetchFeaturedProjects().catch(() => {
-      // الخطأ يُعرض بالواجهة عبر featuredError عند الحاجة
+    useLandingStore().fetchFeaturedProjects().catch(() => {
+      // القسم يعرض رسالة "لا مشاريع" عند الفشل
     })
   }
 }

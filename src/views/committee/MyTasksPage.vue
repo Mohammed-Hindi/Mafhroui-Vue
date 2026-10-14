@@ -5,8 +5,10 @@
     <header v-if="usesPortal" class="dash-head">
       <h2 class="dash-title">مهامي</h2>
       <!-- إرسال مهمة للمجموعات أو مجموعات محددة أو المشرفين (نفس أداة الإدارة العامة) -->
-      <router-link :to="`/${portalPrefix}/assignments`" class="pbtn is-green"><Plus :size="16" /> مهمة جديدة</router-link>
+      <button v-if="!isSup" type="button" class="pbtn is-green" @click="openComposer"><Plus :size="16" /> مهمة جديدة</button>
     </header>
+    <TasksWorkspace v-if="usesPortal && !isSup" ref="composer" compose-only :groups="groups" />
+    <p v-if="demo" class="palert is-info"><span>مهام تجريبية — تظهر مهامك هنا عندما ترسلها لك الإدارة العامة أو لجنة الإشراف.</span></p>
     <LoadingSpinner v-if="loading" />
     <EmptyState v-else-if="!tasks.length" title="لا توجد مهام مسندة لك" description="عندما ترسل لك الإدارة العامة مهمة ستظهر هنا." />
     <TaskBoard
@@ -26,24 +28,34 @@
 import { mapState, mapActions } from 'pinia'
 import { Plus } from 'lucide-vue-next'
 import TaskBoard from '@/components/shared/TaskBoard.vue'
+import TasksWorkspace from '@/views/super-admin/TasksWorkspace.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import api from '@/services/api'
+import { fetchGroups } from '@/utils/progressData'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
+import { isPlaceholder, placeholderStaffTasks } from '@/utils/studentPlaceholders'
 
 export default {
   name: 'CommitteeMyTasksPage',
 
-  components: { Plus, TaskBoard, EmptyState, LoadingSpinner },
+  components: { Plus, TaskBoard, TasksWorkspace, EmptyState, LoadingSpinner },
 
   data() {
-    return { tasks: [], loading: true }
+    return { tasks: [], loading: true, groups: [] }
   },
 
   computed: {
     ...mapState(useTeamsStore, ['taskNotes', 'taskNotesLoading']),
-    ...mapState(useAuthStore, ['user', 'usesPortal', 'portalPrefix'])
+    ...mapState(useAuthStore, ['user', 'usesPortal']),
+    // المشرف يستقبل مهامه فقط (بلا إنشاء مهام من هنا)
+    isSup() {
+      return this.user?.role === 'supervisor'
+    },
+    demo() {
+      return this.tasks.some(isPlaceholder)
+    }
   },
 
   // GET /tasks?audience=committee|supervisors&assignee_id=me (الخادم يفرض للمشرف مهامه هو فقط)
@@ -52,6 +64,8 @@ export default {
       const audience = this.user?.role === 'supervisor' ? 'supervisors' : 'committee'
       const { data } = await api.get('/tasks', { params: { audience, assignee_id: this.user?.id } })
       this.tasks = data.data || []
+      // المشرف بلا مهام بعد: مهام تجريبية (placeholder)
+      if (this.isSup && !this.tasks.length) this.tasks = placeholderStaffTasks()
     } catch (err) {
       this.$toast?.error(err.normalized?.message || 'تعذّر تحميل المهام')
     } finally {
@@ -62,12 +76,19 @@ export default {
   methods: {
     ...mapActions(useTeamsStore, ['fetchTaskNotes', 'addTaskNote']),
 
+    // نافذة "مهمة جديدة" نفسها (بوب أب) بدل الانتقال لصفحة التكليفات؛ المجموعات تُجلب عند أول فتح
+    async openComposer() {
+      this.$refs.composer.openComposer()
+      if (!this.groups.length) this.groups = await fetchGroups().catch(() => [])
+    },
+
     // PATCH /tasks/{id}/status — تحديث فوري مع التراجع عند الفشل
     async onMove({ id, status }) {
       const task = this.tasks.find((t) => t.id === id)
       if (!task || task.status === status) return
       const prev = task.status
       task.status = status
+      if (isPlaceholder(task)) return
       try {
         await api.patch(`/tasks/${id}/status`, { status })
       } catch (err) {
@@ -77,6 +98,7 @@ export default {
     },
 
     async onLoadNotes(id) {
+      if (id < 0) return
       try {
         await this.fetchTaskNotes(id)
       } catch (err) {
@@ -85,6 +107,7 @@ export default {
     },
 
     async onAddNote({ id, note }) {
+      if (id < 0) return this.$toast?.info('مهمة تجريبية — لا تُحفظ الملاحظات')
       try {
         await this.addTaskNote(id, note)
       } catch (err) {

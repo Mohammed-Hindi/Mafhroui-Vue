@@ -2,7 +2,7 @@
   <div ref="clickOutsideRoot" class="relative">
     <button
       type="button"
-      class="relative grid place-items-center w-icon-btn h-icon-btn rounded-sm border border-border text-text-700 hover:bg-primary-50 hover:text-primary-600 hover:border-primary-100 transition-colors duration-fast"
+      :class="['nb-btn relative grid place-items-center w-icon-btn h-icon-btn rounded-sm border border-border text-text-700 hover:bg-primary-50 hover:text-primary-600 hover:border-primary-100 transition-colors duration-fast', isOpen && 'is-open']"
       :aria-expanded="isOpen"
       aria-label="الإشعارات"
       @click="toggleOpen"
@@ -24,10 +24,10 @@
     >
       <div
         v-if="isOpen"
-        class="absolute left-0 mt-2 w-[320px] max-w-[calc(100vw-2rem)] rounded-md bg-surface border border-border shadow-dropdown z-dropdown overflow-hidden"
+        class="nb-panel absolute left-0 mt-2 w-[320px] max-w-[calc(100vw-2rem)] rounded-md bg-surface border border-border shadow-dropdown z-dropdown overflow-hidden"
       >
-        <div class="flex items-center justify-between px-4 py-3 border-b border-border-soft">
-          <h2 class="font-cairo font-bold text-h4 text-text-900">الإشعارات</h2>
+        <div class="nb-head flex items-center justify-between px-4 py-3 border-b border-border-soft">
+          <h2 class="font-cairo font-bold text-h4 text-text-900">التنبيهات</h2>
           <button
             v-if="hasUnread"
             type="button"
@@ -38,7 +38,7 @@
           </button>
         </div>
 
-        <div class="max-h-[360px] overflow-y-auto scrollbar-thin">
+        <div class="max-h-[360px] overflow-y-auto scrollbar-thin" @mouseenter="e => e.currentTarget.style.overscrollBehavior = e.currentTarget.scrollHeight > e.currentTarget.clientHeight ? 'contain' : ''">
           <LoadingSpinner v-if="isLoading" class="py-8" />
 
           <p v-else-if="error" class="px-4 py-6 text-center text-body-sm text-error">
@@ -49,11 +49,11 @@
             لا توجد إشعارات بعد
           </p>
 
-          <ul v-else class="divide-y divide-border-soft">
+          <ul v-else class="nb-list divide-y divide-border-soft">
             <li
               v-for="item in items"
               :key="item.id"
-              :class="['px-4 py-3 cursor-pointer transition-colors duration-fast hover:bg-border-soft', !item.is_read && 'bg-primary-50/60']"
+              :class="['nb-item px-4 py-3 cursor-pointer transition-colors duration-fast hover:bg-border-soft', !item.is_read && 'is-unread bg-primary-50/60']"
               @click="handleRead(item)"
             >
               <p class="text-body-sm font-semibold text-text-900">{{ item.title }}</p>

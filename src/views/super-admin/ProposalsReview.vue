@@ -27,7 +27,15 @@
         <Search :size="16" />
         <input :value="f.search" type="search" placeholder="بحث بالمشروع أو الفريق أو الشعبة أو المشرف…" @input="onSearch($event.target.value)">
       </label>
-      <label class="gr-pick">
+      <!-- المشرف: فلتر التخصص والفئة فقط (التخصص محليًا — الخادم لا يفلتر به) -->
+      <label v-if="isSupervisor" class="gr-pick">
+        <span>التخصص</span>
+        <select :value="f.spec" class="gr-select" @change="setFilter('spec', $event.target.value)">
+          <option value="">كل التخصصات</option>
+          <option v-for="s in specs" :key="s" :value="s">{{ s }}</option>
+        </select>
+      </label>
+      <label v-if="!isSupervisor" class="gr-pick">
         <span>الدرجة</span>
         <select :value="f.degree" class="gr-select" @change="setFilter('degree', $event.target.value)">
           <option value="">دبلوم وبكالوريوس</option>
@@ -176,7 +184,6 @@
                     </span>
                   </div>
                   <button type="button" class="pbtn is-outline is-sm" @click="openFile(`/final-reports/${r.id}/download`)"><FileText :size="15" /> التقرير</button>
-                  <a v-if="r.video_url" :href="r.video_url" target="_blank" rel="noopener" class="pbtn is-outline is-sm"><PlayCircle :size="15" /> فيديو العرض</a>
                 </li>
               </ul>
             </div>
@@ -221,13 +228,14 @@
 
 <script>
 import { markRaw } from 'vue'
-import { Search, X, Check, Eye, FileText, PlayCircle, PencilLine, ChevronLeft, ChevronRight, Layers, Hourglass, CheckCircle2, XCircle } from 'lucide-vue-next'
+import { Search, X, Check, Eye, FileText, PencilLine, ChevronLeft, ChevronRight, Layers, Hourglass, CheckCircle2, XCircle } from 'lucide-vue-next'
 import SlideTable from '@/components/ui/SlideTable.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import api from '@/services/api'
 import { useTeamsStore } from '@/stores/teams.store'
 import { DEGREES } from '@/utils/progressData'
 import { REVIEW, reviewReport } from '@/utils/finalReport'
+import { PROPOSAL_CHANGES_PREFIX } from '@/utils/constants'
 import { mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
 
@@ -237,16 +245,16 @@ const STATUS = {
   changes: { label: 'يحتاج تعديل', pill: 'is-changes' },
   rejected: { label: 'مرفوض', pill: 'is-rejected' }
 }
-// الخادم يعرف pending/approved/rejected فقط — "طلب تعديل" رفضٌ سببه يبدأ بهذه البادئة (يعيد الفريق التقديم)
-const CHANGES_PREFIX = 'مطلوب تعديل: '
+const CHANGES_PREFIX = PROPOSAL_CHANGES_PREFIX
 const HISTORY = { submit: 'قدّم المقترح', resubmit: 'أعاد تقديم المقترح', reject: 'رفض المقترح' }
-const EMPTY = { status: '', degree: '', gender: '', supervisor_id: '', search: '' }
+const EMPTY = { status: '', degree: '', gender: '', supervisor_id: '', search: '', spec: '' }
+const specOf = (p) => p.project?.team?.specialization?.name || ''
 const fmt = (v) => (v ? new Date(v).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' }) : '')
 
 export default {
   name: 'ProposalsReview',
 
-  components: { Search, X, Check, Eye, FileText, PlayCircle, PencilLine, ChevronLeft, ChevronRight, BaseModal, SlideTable },
+  components: { Search, X, Check, Eye, FileText, PencilLine, ChevronLeft, ChevronRight, BaseModal, SlideTable },
 
   data() {
     return {
@@ -274,6 +282,9 @@ export default {
 
   computed: {
     ...mapState(useAuthStore, ['userRole']),
+    specs() {
+      return [...new Set(this.all.map(specOf).filter(Boolean))]
+    },
     /** المشرف: نفس الصفحة بصلاحياته — مقترحات مجموعاته (الخادم يقيّدها) + موافقته على التقرير النهائي */
     isSupervisor() {
       return this.userRole === 'supervisor'
@@ -340,8 +351,9 @@ export default {
     async fetchRows() {
       this.loading = true
       try {
-        const params = Object.fromEntries(Object.entries(this.f).filter(([, v]) => v !== ''))
-        this.rows = Object.keys(params).length ? (await api.get('/proposals', { params })).data : this.all
+        const params = Object.fromEntries(Object.entries(this.f).filter(([k, v]) => v !== '' && k !== 'spec'))
+        const rows = Object.keys(params).length ? (await api.get('/proposals', { params })).data : this.all
+        this.rows = this.f.spec ? rows.filter((p) => specOf(p) === this.f.spec) : rows
       } catch {
         this.rows = []
         this.$toast?.error('تعذّر تحميل المقترحات')

@@ -1,6 +1,5 @@
 import {
   LayoutDashboard,
-  UserCircle,
   Users,
   UserPlus,
   ClipboardList,
@@ -63,30 +62,30 @@ export const NAV_ITEMS_BY_ROLE = {
     { label: 'المساعد الآلي', to: '/committee/assistant', icon: Bot, color: '#233B77' }
   ],
 
-  // لوحة المشرف
+  // أسماء الصفحات وترتيبها مطابقة للإدارة العامة (المرجع)، مع صفحات المشرف الخاصة (المهام، الاجتماعات)
   [ROLES.SUPERVISOR]: [
-    { label: 'الرئيسية', to: '/supervisor', icon: LayoutDashboard, exact: true, color: '#005BAA' },
-    { label: 'الملف الشخصي', to: '/supervisor/profile', icon: UserCircle },
-    { label: 'الفرق', to: '/supervisor/teams', icon: Users },
-    { label: 'المقترح / التقرير النهائي', to: '/supervisor/proposals', icon: ClipboardList },
-    { label: 'المهام (Kanban)', to: '/supervisor/tasks', icon: ListTodo },
-    { label: 'الإعلانات والملفات', to: '/supervisor/assignments', icon: Megaphone },
-    { label: 'الاجتماعات', to: '/supervisor/meetings', icon: CalendarDays },
+    { label: 'الرئيسية', to: '/supervisor', icon: LayoutDashboard, exact: true },
+    { label: 'المجموعات', to: '/supervisor/teams', icon: Users },
+    { label: 'المقترحات', to: '/supervisor/proposals', icon: ClipboardList },
+    { label: 'التكليفات والإعلانات', to: '/supervisor/assignments', icon: Megaphone },
+    { label: 'المهام', to: '/supervisor/tasks', icon: ListTodo },
     { label: 'مواعيد المناقشات', to: '/supervisor/appointments', icon: CalendarClock },
     { label: 'التقييمات', to: '/supervisor/evaluations', icon: ClipboardCheck },
-    { label: 'تقرير المجموعات', to: '/supervisor/reports', icon: FileCheck },
     { label: 'أرشيف المشاريع', to: '/supervisor/project-archive', icon: FileCheck },
-    { label: 'نسبة تقدّم الفرق', to: '/supervisor/progress', icon: TrendingUp },
+    { label: 'تقدّم المشاريع', to: '/supervisor/progress', icon: TrendingUp },
+    { label: 'الاجتماعات', to: '/supervisor/meetings', icon: CalendarDays },
+    { label: 'مهامي', to: '/supervisor/my-tasks', icon: ListTodo },
+    { label: 'الإعلانات والملفات', to: '/supervisor/announcements', icon: Megaphone },
     { label: 'المساعد الآلي', to: '/supervisor/assistant', icon: Bot }
   ],
 
+  // ترتيب عمل الطالب: المهام (الصفحة الأولى) ← المقترحات ← الاجتماعات ← الوارد ← الشكاوى ← المساعد. "بياناتي" في قائمة الاسم
   [ROLES.STUDENT]: [
-    { label: 'الملف التعريفي', to: '/student', icon: UserCircle, exact: true },
-    { label: 'المقترحات', to: '/student/proposal', icon: ClipboardList },
-    { label: 'المساعد الآلي', to: '/student/assistant', icon: Bot },
     { label: 'المهام', to: '/student/tasks', icon: ListTodo },
-    { label: 'الإعلانات والملفات', to: '/student/announcements', icon: Megaphone },
+    { label: 'المقترحات', to: '/student/proposal', icon: ClipboardList },
     { label: 'الاجتماعات', to: '/student/meetings', icon: CalendarDays },
-    { label: 'الشكاوى والملاحظات', to: '/student/tickets', icon: LifeBuoy }
+    { label: 'الإعلانات والملفات', to: '/student/announcements', icon: Megaphone },
+    { label: 'الشكاوى والملاحظات', to: '/student/tickets', icon: LifeBuoy },
+    { label: 'المساعد الآلي', to: '/student/assistant', icon: Bot }
   ]
 }
