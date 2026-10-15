@@ -289,7 +289,6 @@ export default {
       supFilter: '',
       placeFilter: '',
       statusFilter: '',
-      statusOptions: [{ value: 'confirmed', label: 'مؤكَّد' }, { value: 'pending', label: 'قيد الانتظار' }],
       openDiscussionIds: [],
 
       importModal: false,
