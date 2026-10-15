@@ -1,7 +1,7 @@
 <template>
   <!-- بروفايل طالب أو مشرف (نافذة منبثقة) — GET /students/{id}/profile و /supervisors/{id}/profile -->
   <BaseModal :model-value="modelValue" :title="title" size="lg" @update:model-value="$emit('update:modelValue', $event)">
-    <p v-if="loading" class="pf-muted">جارٍ تحميل البيانات…</p>
+    <SkeletonLoader v-if="loading" :rows="4" />
     <p v-else-if="!data" class="pf-muted">تعذّر تحميل البيانات</p>
 
     <!-- الطالب -->

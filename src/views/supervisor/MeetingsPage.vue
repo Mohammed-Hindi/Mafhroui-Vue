@@ -22,7 +22,7 @@
       </div>
     </section>
 
-    <p v-if="loading" class="pt-muted">جارٍ التحميل…</p>
+    <SkeletonLoader v-if="loading" :rows="4" height="40px" />
     <p v-else-if="!teamOptions.length" class="palert is-info"><CalendarDays :size="18" /><span>لا توجد مجموعات مُسندة إليك</span></p>
     <template v-else>
       <PortalStepper v-model="view" :items="views" label="عرض الاجتماعات" />

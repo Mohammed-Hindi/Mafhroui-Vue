@@ -1,28 +1,28 @@
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { ROLES } from '@/utils/constants'
-import DashboardPageCommittee from '@/views/committee/DashboardPage.vue'
-import TeamsPageCommittee from '@/views/committee/TeamsPage.vue'
-import MembersPageCommittee from '@/views/committee/MembersPage.vue'
-import ProposalsPageCommittee from '@/views/committee/ProposalsPage.vue'
-import AppointmentsPageCommittee from '@/views/committee/AppointmentsPage.vue'
-import ProjectArchivePageCommittee from '@/views/committee/ProjectArchivePage.vue'
-import ProjectDetailPageCommittee from '@/views/committee/ProjectDetailPage.vue'
-import ProgressPageCommittee from '@/views/committee/ProgressPage.vue'
-import AnnouncementsInboxPageCommittee from '@/views/super-admin/AnnouncementsDesk.vue'
-import EvaluationsPageCommittee from '@/views/super-admin/EvaluationsPage.vue'
-import AssistantPageCommittee from '@/views/committee/AssistantPage.vue'
-import MyTasksPageCommittee from '@/views/committee/MyTasksPage.vue'
+const DashboardPageCommittee = () => import('@/views/committee/DashboardPage.vue')
+const TeamsPageCommittee = () => import('@/views/committee/TeamsPage.vue')
+const MembersPageCommittee = () => import('@/views/committee/MembersPage.vue')
+const ProposalsPageCommittee = () => import('@/views/committee/ProposalsPage.vue')
+const AppointmentsPageCommittee = () => import('@/views/committee/AppointmentsPage.vue')
+const ProjectArchivePageCommittee = () => import('@/views/committee/ProjectArchivePage.vue')
+const ProjectDetailPageCommittee = () => import('@/views/committee/ProjectDetailPage.vue')
+const ProgressPageCommittee = () => import('@/views/committee/ProgressPage.vue')
+const AnnouncementsInboxPageCommittee = () => import('@/views/super-admin/AnnouncementsDesk.vue')
+const EvaluationsPageCommittee = () => import('@/views/super-admin/EvaluationsPage.vue')
+const AssistantPageCommittee = () => import('@/views/committee/AssistantPage.vue')
+const MyTasksPageCommittee = () => import('@/views/committee/MyTasksPage.vue')
 
-// استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
-import DashboardPage from '@/views/committee/DashboardPage.vue'
-import TeamsPage from '@/views/committee/TeamsPage.vue'
-import MembersPage from '@/views/committee/MembersPage.vue'
-import ProposalsPage from '@/views/committee/ProposalsPage.vue'
-import AppointmentsPage from '@/views/committee/AppointmentsPage.vue'
-import ProjectArchivePage from '@/views/committee/ProjectArchivePage.vue'
-import ProjectDetailPage from '@/views/committee/ProjectDetailPage.vue'
-import ProgressPage from '@/views/committee/ProgressPage.vue'
-import AssistantPage from '@/views/committee/AssistantPage.vue'
+// تحميل كسول + جلب مسبق وقت الفراغ (router/index.js) — حزمة أولى أصغر مع بقاء التنقّل فوريًا
+const DashboardPage = () => import('@/views/committee/DashboardPage.vue')
+const TeamsPage = () => import('@/views/committee/TeamsPage.vue')
+const MembersPage = () => import('@/views/committee/MembersPage.vue')
+const ProposalsPage = () => import('@/views/committee/ProposalsPage.vue')
+const AppointmentsPage = () => import('@/views/committee/AppointmentsPage.vue')
+const ProjectArchivePage = () => import('@/views/committee/ProjectArchivePage.vue')
+const ProjectDetailPage = () => import('@/views/committee/ProjectDetailPage.vue')
+const ProgressPage = () => import('@/views/committee/ProgressPage.vue')
+const AssistantPage = () => import('@/views/committee/AssistantPage.vue')
 
 /** مسارات لوحة لجنة الإشراف — تعيد استخدام صفحات الفرق/المقترحات/المواعيد/الأرشيف/التقدّم من دور المشرف */
 export default [

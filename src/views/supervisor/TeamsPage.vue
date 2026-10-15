@@ -20,7 +20,8 @@
       </div>
     </div>
 
-    <EmptyState v-if="!filteredGroups.length" title="لا توجد فرق مطابقة" description="جرّبي تعديل البحث." />
+    <SkeletonLoader v-if="!teamsLoaded && !filteredGroups.length" variant="cards" :rows="4" />
+    <EmptyState v-else-if="!filteredGroups.length" title="لا توجد فرق مطابقة" description="جرّبي تعديل البحث." />
 
     <div v-else class="flex flex-col gap-4">
       <div
@@ -272,7 +273,7 @@ export default {
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['teamsForDisplay', 'specializations', 'trashedTeamsForDisplay', 'trashedTeamsLoading']),
+    ...mapState(useTeamsStore, ['teamsForDisplay', 'teamsLoaded', 'specializations', 'trashedTeamsForDisplay', 'trashedTeamsLoading']),
     ...mapState(useAuthStore, ['user']),
 
     trashedGroups() {

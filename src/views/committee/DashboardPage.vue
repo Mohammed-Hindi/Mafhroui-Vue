@@ -31,6 +31,7 @@
             class="font-cairo font-extrabold text-h1 text-text-900 mt-2 transition-colors duration-base group-hover:text-primary-600"
           >
             <CountUp v-if="stat.value !== null" :value="stat.value" />
+            <span v-else-if="committeeStore.dashboardLoading" class="sk inline-block align-middle" style="width: 64px; height: 30px" />
             <span v-else>—</span>
           </div>
           <div class="text-caption text-text-400 mt-0.5">{{ stat.hint }}</div>

@@ -7,7 +7,9 @@ import toast from './plugins/toast'
 import './styles/main.css'
 import { initRevealObserver } from '@/directives/reveal'
 import { initParallax } from '@/directives/parallax'
+import { initResponsiveTables } from '@/utils/responsiveTables'
 import tilt from '@/directives/tilt'
+import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 
 const app = createApp(App)
 
@@ -15,10 +17,12 @@ app.use(createPinia())
 app.use(router)
 app.use(toast)
 app.directive('tilt', tilt)
+app.component('SkeletonLoader', SkeletonLoader)
 
 app.mount('#app')
 initRevealObserver()
 initParallax()
+initResponsiveTables()
 
 // القوائم المنسدلة الأصلية (select) تنسدل للأسفل: الحقل القريب من أسفل الشاشة يُرفع لمنتصفها قبل أن يفتح المتصفح قائمته
 document.addEventListener('mousedown', (e) => {

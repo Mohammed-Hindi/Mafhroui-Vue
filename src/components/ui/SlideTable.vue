@@ -11,7 +11,7 @@
 
     <slot name="after" />
 
-    <nav v-if="last > 1" class="gr-slider" :aria-label="`شرائح ${label}`" @keydown.left.prevent="go(page + 1)" @keydown.right.prevent="go(page - 1)">
+    <nav v-if="last > 1 || (always && rows.length)" class="gr-slider" :aria-label="`شرائح ${label}`" @keydown.left.prevent="go(page + 1)" @keydown.right.prevent="go(page - 1)">
       <div class="gr-pager">
         <button type="button" class="gr-slide-btn is-text" :disabled="page === 1" aria-label="الشريحة السابقة" @click="go(page - 1)"><ChevronRight :size="17" /> السابق</button>
         <div class="gr-pages">
@@ -44,7 +44,9 @@ export default {
     /** عدد الصفوف في كل شريحة */
     size: { type: Number, default: 6 },
     /** اسم العناصر في العدّاد: "المجموعات 1–6 من 20" */
-    label: { type: String, default: 'العناصر' }
+    label: { type: String, default: 'العناصر' },
+    /** يُظهر شريط الشرائح حتى لو كانت شريحة واحدة (هوية صفحات المجموعات) */
+    always: { type: Boolean, default: false }
   },
 
   data() {

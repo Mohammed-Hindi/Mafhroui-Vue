@@ -7,7 +7,7 @@
 
     <PortalStepper v-model="view" :items="views" label="أقسام التسليم" />
 
-    <p v-if="teamsLoading && !myTeam" class="dash-card pt-muted">جارٍ التحميل…</p>
+    <div v-if="!teamsLoaded && !myTeam" class="dash-card"><SkeletonLoader :rows="4" /></div>
 
     <!-- المقترح -->
     <section v-else-if="view === 'proposal'" class="dash-card sp-card">
@@ -76,7 +76,14 @@
                 >
                   {{ t }}
                 </button>
+                <button
+                  type="button" :aria-pressed="otherOn" :class="['tk-chip', otherOn && 'is-on']"
+                  :disabled="!otherOn && form.types.length >= 3" @click="toggleOther"
+                >
+                  أخرى
+                </button>
               </div>
+              <input v-if="otherOn" v-model="otherType" type="text" maxlength="50" class="mt-2" placeholder="اكتب نوع المشروع">
               <small>اختر من نوع إلى 3 أنواع — المحدد: {{ form.types.length }} من 3</small>
             </div>
           </div>
@@ -267,7 +274,7 @@ import { Check, CheckCircle2, ClipboardList, Hourglass, ImagePlus, RotateCcw, Fi
 import { latestReport, rejectedBy } from '@/utils/finalReport'
 import PortalStepper from '@/components/shared/PortalStepper.vue'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
-import { PROJECT_TYPES, PROPOSAL_CHANGES_PREFIX } from '@/utils/constants'
+import { PROJECT_TYPES, PROPOSAL_CHANGES_PREFIX, isOtherType } from '@/utils/constants'
 import { proposalPdfFile } from '@/utils/ucasReports'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
@@ -309,12 +316,13 @@ export default {
       reportForm: { files: [], video_url: '', cover: null, zip: [] },
       coverPreview: '',
       coverError: '',
+      otherOpen: false,
       form: { name: '', description: '', problems: '', solutions: '', features_value: '', types: [], files: [] }
     }
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['teams', 'teamsLoading']),
+    ...mapState(useTeamsStore, ['teams', 'teamsLoaded']),
     ...mapState(useAuthStore, ['user']),
 
     views() {
@@ -381,6 +389,19 @@ export default {
     showForm() {
       // بلا مشروع مسجّل: النموذج يظهر كعرض تجريبي (placeholder) والإرسال معطّل
       return !this.proposal || (this.canResubmit && this.editing)
+    },
+
+    otherOn() {
+      return this.otherOpen || this.form.types.some(isOtherType)
+    },
+
+    otherType: {
+      get() {
+        return this.form.types.find(isOtherType) || ''
+      },
+      set(v) {
+        this.form.types = [...this.form.types.filter((t) => !isOtherType(t)), ...(v.trim() ? [v] : [])]
+      }
     },
 
     projectTypes() {
@@ -529,6 +550,16 @@ export default {
       this.$nextTick(() => el.setSelectionRange(at + ins.length, at + ins.length))
     },
 
+    // "أخرى": يفتح حقلًا نصيًا، وقيمته تُحفظ نوعًا ضمن form.types
+    toggleOther() {
+      if (this.otherOn) {
+        this.otherOpen = false
+        this.form.types = this.form.types.filter((t) => !isOtherType(t))
+      } else {
+        this.otherOpen = true
+      }
+    },
+
     toggleType(t) {
       this.form.types = this.form.types.includes(t) ? this.form.types.filter((x) => x !== t) : [...this.form.types, t]
     },
@@ -543,7 +574,9 @@ export default {
 
     /** POST /proposals (أول تقديم) أو PUT /proposals/{id} (إعادة تقديم بعد الرفض أو طلب التعديل) */
     async submit() {
-      const { files, types, ...fields } = this.form
+      const { files, ...fields } = this.form
+      const types = fields.types.map((t) => t.trim()).filter(Boolean)
+      delete fields.types
       const payload = Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, v.trim()]).filter(([, v]) => v !== ''))
       if (files[0]) payload.pdf = files[0]
       types.forEach((t, i) => { payload[`types[${i}]`] = t })

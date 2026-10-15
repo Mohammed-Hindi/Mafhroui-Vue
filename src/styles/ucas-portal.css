@@ -4583,3 +4583,655 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .pb-tasks li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px 14px; border-radius: 12px; background: linear-gradient(270deg, rgba(98, 187, 70, .06), rgba(0, 91, 170, .03)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 9%, transparent); }
 .sa-skin .pb-tasks b { color: var(--ucas-blue); }
 .pb-drop .pb-tasks { max-height: none; margin: 0; padding: 0; overflow: visible; border: 0; background: none; }
+
+/* صف التفاصيل المنسدل (GroupsRegister / الأعضاء): العمودان متساويان بالعرض والطول وبهوية مسار
+   (بطاقة زوايا 16 بلا حد + ظل داخلي، عناوين زرقاء بخط تدرّج، دخول هادئ) */
+.gr-detail { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 18px; padding: 16px 18px 20px; }
+:root[data-brand="ucas"] .gr-table .gr-detail-row > td { background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-bg)); }
+.gr-detail > .gr-side,
+.gr-detail > .gr-members {
+  min-width: 0;
+  border: 0;
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent), 0 10px 30px rgba(4, 40, 80, .06);
+  animation: saFadeUp .45s ease backwards;
+}
+.gr-detail > .gr-members { animation-delay: .06s; }
+.gr-detail .gr-side h4 { position: relative; padding-bottom: 8px; font-size: 13.5px; font-weight: 800; color: var(--ucas-blue); }
+.gr-detail .gr-side h4::after { content: ''; position: absolute; bottom: 0; inset-inline-start: 0; width: 36px; height: 3px; border-radius: 999px; background: linear-gradient(270deg, #62BB46, #005BAA); }
+.gr-detail .gr-side h4:not(:first-child) { border-top-color: var(--color-border-soft); }
+.gr-detail .gr-stats { border: 0; border-radius: 14px; overflow: hidden; background: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .05)); }
+.gr-detail .gr-stats > div + div { border-inline-start-color: color-mix(in srgb, var(--ucas-blue) 12%, transparent); }
+.gr-detail .gr-stats b { color: var(--ucas-blue); }
+/* نصف العرض: الجدول يلتف بدل عرض أدنى ثابت، ويبقى التمرير الأفقي احتياطًا */
+.gr-detail .gr-members table { min-width: 460px; }
+.gr-detail .gr-items-scroll { border: 0; border-radius: 14px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent); }
+@media (max-width: 1023.98px) { .gr-detail { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .gr-detail > .gr-side, .gr-detail > .gr-members { animation: none; } }
+/* الطلاب أولًا بعرض كامل، وتحتهم عمودان متساويان: معلومات المجموعة | المهام والإعلانات والملفات */
+.gr-detail > .gr-detail-full { grid-column: 1 / -1; }
+.gr-detail .gr-detail-full table { min-width: 620px; }
+.gr-detail > .gr-timeline { display: flex; flex-direction: column; overflow: hidden; }
+.gr-detail .gr-timeline .gr-items-scroll { flex: 1 1 0; min-height: 260px; max-height: none; margin: 0; box-shadow: none; border-radius: 12px; }
+.gr-detail .gr-timeline table { min-width: 0; }
+.gr-detail .gr-timeline .gr-items td:first-child { font-weight: 700; color: var(--color-text-900); }
+/* المهام والإعلانات والملفات أعرض قليلًا من قسم الشعبة */
+@media (min-width: 1024px) { .gr-detail { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); } }
+
+/* المهام والإعلانات والملفات داخل تفاصيل المجموعة: رأس بعنوان أزرق وعدّاد، وقائمة بطاقات صغيرة بأيقونة النوع */
+.gr-timeline .tl-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.gr-timeline .tl-head h4 { position: relative; margin: 0; padding-bottom: 8px; font-size: 13.5px; font-weight: 800; color: var(--ucas-blue); }
+.gr-timeline .tl-head h4::after { content: ''; position: absolute; bottom: 0; inset-inline-start: 0; width: 36px; height: 3px; border-radius: 999px; background: linear-gradient(270deg, #62BB46, #005BAA); }
+.gr-timeline .tl-count { margin-inline-start: auto; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; color: var(--ucas-blue); background: linear-gradient(270deg, rgba(98, 187, 70, .16), rgba(0, 91, 170, .1)); }
+.gr-detail .gr-timeline .gr-items-scroll { padding: 2px 4px 2px 2px; border-radius: 0; }
+.tl-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.tl-list li {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px;
+  background: color-mix(in srgb, var(--ucas-blue) 3%, var(--color-surface));
+  box-shadow: inset -3px 0 0 var(--tl-c, var(--ucas-blue));
+  transition: background-color .2s ease;
+  animation: saFadeUp .4s ease backwards;
+}
+.tl-list li:hover { background: color-mix(in srgb, var(--ucas-blue) 7%, var(--color-surface)); }
+.tl-list li.is-task { --tl-c: var(--ucas-blue); }
+.tl-list li.is-announcement { --tl-c: var(--ucas-green); }
+.tl-list li.is-file { --tl-c: #F89E32; }
+.tl-ic { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; color: #FFFFFF; background: var(--tl-c); }
+.tl-list li.is-task .tl-ic { background: linear-gradient(270deg, #0E699C, #025DA9); }
+.tl-list li.is-announcement .tl-ic { background: linear-gradient(270deg, #62BB46, #50A16E); }
+.tl-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.tl-body b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13.5px; font-weight: 700; color: var(--color-text-900); }
+.tl-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12px; color: var(--color-text-400); }
+.tl-meta > span + span::before { content: '·'; margin-inline-end: 10px; }
+.tl-due { color: var(--color-text-600); }
+.tl-list li .rv-pill { flex-shrink: 0; }
+.tl-empty { padding: 36px 0; text-align: center; font-size: 13px; color: var(--color-text-400); }
+@media (prefers-reduced-motion: reduce) { .tl-list li { animation: none; } }
+/* القائمة بالشرائح بدل التمرير */
+.gr-timeline .tl-wrap { flex: 1; display: flex; flex-direction: column; }
+.gr-timeline .tl-wrap .gr-slider { margin-top: auto; padding-top: 14px; }
+.gr-timeline .tl-wrap > div { flex: 1; display: flex; flex-direction: column; }
+
+/* جدول الأعضاء داخل الدروب داون (كل اللوحات): رأس بتدرّج خفيف وزوايا 12، صفوف متناوبة، اسم بدائرة حرف أولى، الجنس كبسولة */
+.gr-detail .gr-detail-full,
+.mb-sup-members { padding: 6px; }
+:root[data-brand="ucas"] :is(.gr-members, .pb-drop) table { border-collapse: separate; border-spacing: 0; border: 0; overflow: hidden; border-radius: 12px; }
+:root[data-brand="ucas"] :is(.gr-members, .pb-drop) table thead th {
+  padding: 12px 14px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--ucas-blue);
+  white-space: nowrap;
+  border-bottom: 0;
+  background: linear-gradient(270deg, rgba(98, 187, 70, .12), rgba(0, 91, 170, .08));
+}
+:root[data-brand="ucas"] :is(.gr-members, .pb-drop) table tbody td { padding: 11px 14px; border-bottom: 1px solid var(--color-border-soft); }
+:root[data-brand="ucas"] :is(.gr-members, .pb-drop) table tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--ucas-blue) 2.5%, transparent); }
+:root[data-brand="ucas"] :is(.gr-members, .pb-drop) table tbody tr:last-child td { border-bottom: 0; }
+:root[data-brand="ucas"] :is(.gr-members, .pb-drop) table tbody tr:hover td { background: color-mix(in srgb, var(--ucas-blue) 6%, transparent); }
+:root[data-brand="ucas"] :is(.gr-members, .pb-drop) table tbody td:first-child { font-weight: 700; color: var(--color-text-900); }
+.gr-members .gr-member-name { display: inline-flex; align-items: center; gap: 10px; color: var(--color-text-900); }
+.gr-members .gr-member-name:hover { color: var(--ucas-blue); }
+.gm-av { display: grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; font-size: 13px; font-weight: 800; color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); }
+.gm-chip { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 9%, transparent); }
+.gm-chip.is-f { color: #2F7F1E; background: rgba(98, 187, 70, .14); }
+:root[data-brand="ucas"] .gr-members table .mono { color: var(--color-text-600); }
+/* تمرير قائمة المهام والإعلانات والملفات: ارتفاع ثابت، شريط رفيع متدرّج، وتلاشٍ ناعم أعلى/أسفل القائمة */
+.gr-timeline .tl-scroll {
+  flex: 1 1 0;
+  min-height: 300px;
+  max-height: 420px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  padding: 10px 2px 14px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ucas-blue) 35%, transparent) transparent;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 22px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 22px), transparent 100%);
+}
+.gr-timeline .tl-scroll::-webkit-scrollbar { width: 6px; }
+.gr-timeline .tl-scroll::-webkit-scrollbar-track { background: transparent; }
+.gr-timeline .tl-scroll::-webkit-scrollbar-thumb { border-radius: 999px; background: linear-gradient(180deg, #62BB46, #005BAA); }
+.gr-timeline .tl-scroll > .tl-list { padding-bottom: 6px; }
+/* المهام والإعلانات والملفات: القسم كاملًا يتمرّر بطول قسم الشعبة المجاور، والرأس ثابت أعلاه */
+.gr-detail > .gr-timeline { position: relative; display: block; max-height: 460px; overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth; padding-top: 0; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ucas-blue) 35%, transparent) transparent; }
+.gr-detail > .gr-timeline::-webkit-scrollbar { width: 6px; }
+.gr-detail > .gr-timeline::-webkit-scrollbar-track { background: transparent; margin: 14px 0; }
+.gr-detail > .gr-timeline::-webkit-scrollbar-thumb { border-radius: 999px; background: linear-gradient(180deg, #62BB46, #005BAA); }
+.gr-timeline .tl-head { position: sticky; top: 0; z-index: 2; margin: 0 -16px 10px; padding: 16px 16px 10px; background: var(--color-surface); box-shadow: 0 8px 12px -10px rgba(4, 40, 80, .18); }
+.gr-timeline .tl-wrap { display: block; }
+@media (min-width: 1024px) { .gr-detail > .gr-timeline { height: 0; min-height: max(100%, 340px); max-height: none; } }
+/* رئيسية المشرف/الإدارة: أرقام البانر وقسم حالة المهام كهياكل وهمية أثناء التحميل */
+.sa-stat-sk { display: inline-block; width: 64px; height: 34px; border-radius: 10px; background: linear-gradient(90deg, rgba(255, 255, 255, .18) 25%, rgba(255, 255, 255, .38) 50%, rgba(255, 255, 255, .18) 75%); background-size: 200% 100%; }
+.hm-prog-sk { display: flex; flex-direction: column; gap: 14px; padding: 6px 0 14px; }
+
+/* ===== الجداول على الجوال (كل اللوحات): بطاقات منسدلة بدل التمرير الأفقي — data-* من utils/responsiveTables.js ===== */
+@media (max-width: 1023.98px) {
+  .ucas-portal table[data-rt] { display: block; width: 100% !important; min-width: 0 !important; border: 0 !important; background: none !important; box-shadow: none !important; }
+  .ucas-portal table[data-rt] > thead { display: none; }
+  .ucas-portal table[data-rt] > tbody { display: flex; flex-direction: column; gap: 10px; background: none !important; }
+  .ucas-portal table[data-rt] > tbody + tbody { margin-top: 10px; }
+  .ucas-portal :is(.hm-table-wrap, .gr-table-wrap, .pt-wrap, .gr-members) { overflow: visible !important; }
+
+  .ucas-portal table[data-rt] > tbody > tr {
+    display: block;
+    overflow: hidden;
+    border: 0 !important;
+    border-radius: 14px;
+    background: var(--color-surface) !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent), 0 8px 22px rgba(4, 40, 80, .07);
+    animation: none !important;
+  }
+  .ucas-portal table[data-rt] > tbody > tr > td {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px !important;
+    border: 0 !important;
+    border-top: 1px solid var(--color-border-soft) !important;
+    background: none !important;
+    text-align: start;
+    white-space: normal !important;
+    font-size: 13.5px;
+  }
+  .ucas-portal table[data-rt] > tbody > tr > td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    max-width: 45%;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--ucas-green);
+  }
+  .ucas-portal table[data-rt] > tbody > tr > td[data-label=""]::before { content: none; }
+  .ucas-portal table[data-rt] > tbody > tr > td[data-label=""] { justify-content: flex-end; }
+
+  /* عنوان البطاقة: ظاهر دائمًا، أزرق عريض، وسهم يدور عند الفتح */
+  .ucas-portal table[data-rt] > tbody > tr > td[data-rt-title] {
+    display: flex;
+    position: relative;
+    padding: 13px 14px !important;
+    padding-inline-end: 44px !important;
+    border-top: 0 !important;
+    font-weight: 800;
+    color: var(--ucas-blue);
+    cursor: pointer;
+    background: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .05)) !important;
+  }
+  .ucas-portal table[data-rt] > tbody > tr > td[data-rt-title]::before { content: none; }
+  .ucas-portal table[data-rt] > tbody > tr > td[data-rt-title]::after {
+    content: '';
+    position: absolute;
+    inset-inline-end: 16px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    margin-top: -6px;
+    border-inline-end: 2px solid var(--ucas-blue);
+    border-bottom: 2px solid var(--ucas-blue);
+    transform: rotate(45deg);
+    transition: transform .25s ease;
+  }
+  .ucas-portal table[data-rt] > tbody > tr[data-rt-open] > td[data-rt-title]::after { transform: rotate(-135deg); margin-top: -2px; }
+  .ucas-portal table[data-rt] > tbody > tr[data-rt-open] > td { display: flex; animation: saFadeUp .3s ease backwards; }
+
+  /* صفوف الحالة/التحميل/التفاصيل: كتلة كاملة بلا تسميات */
+  .ucas-portal table[data-rt] > tbody > tr[data-rt-full] { box-shadow: none; background: none !important; overflow: visible; }
+  .ucas-portal table[data-rt] > tbody > tr[data-rt-full] > td { display: block; padding: 0 !important; border: 0 !important; }
+  .ucas-portal table[data-rt] > tbody > tr[data-rt-full] > td::before { content: none; }
+  .ucas-portal table[data-rt] > tbody > tr.sk-tr { display: flex; flex-direction: column; gap: 8px; padding: 14px; background: var(--color-surface) !important; }
+  .ucas-portal table[data-rt] > tbody > tr.sk-tr > td { display: block; padding: 0 !important; }
+  .ucas-portal table[data-rt] .gr-empty { padding: 28px 12px !important; }
+}
+@media (max-width: 1023.98px) and (prefers-reduced-motion: reduce) {
+  .ucas-portal table[data-rt] > tbody > tr[data-rt-open] > td { animation: none; }
+}
+
+/* ===== كل البوب اب في اللوحات (BaseModal): طبقة صقل بهوية مسار فوق الرأس المتدرّج ===== */
+/* خلفية التعتيم كحلية بدل الرمادي */
+:root[data-brand="ucas"] .z-modal-overlay { background: rgba(11, 37, 69, .55); backdrop-filter: blur(4px); }
+/* جسم النافذة: خلفية تدرّج خفيفة جدًا، مسافات أوسع، وشريط تمرير رفيع متدرّج */
+:root[data-brand="ucas"] [role="dialog"] > div > header + div {
+  padding: 22px 26px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ucas-blue) 3%, var(--color-surface)), var(--color-surface) 140px);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ucas-blue) 35%, transparent) transparent;
+}
+:root[data-brand="ucas"] [role="dialog"] > div > header + div::-webkit-scrollbar { width: 6px; }
+:root[data-brand="ucas"] [role="dialog"] > div > header + div::-webkit-scrollbar-thumb { border-radius: 999px; background: linear-gradient(180deg, #62BB46, #005BAA); }
+:root[data-brand="ucas"] [role="dialog"] > div > header h2 { font-size: 18px; font-weight: 800; }
+/* عناوين الأقسام داخل النافذة: زرقاء بخط تدرّج قصير */
+:root[data-brand="ucas"] [role="dialog"] > div > header + div :is(h3, h4) { position: relative; padding-bottom: 8px; margin-bottom: 12px; font-weight: 800; color: var(--ucas-blue); }
+:root[data-brand="ucas"] [role="dialog"] > div > header + div :is(h3, h4)::after { content: ''; position: absolute; bottom: 0; inset-inline-start: 0; width: 36px; height: 3px; border-radius: 999px; background: linear-gradient(270deg, #62BB46, #005BAA); }
+/* الحقول: ارتفاع موحّد، زوايا 12، تسمية خضراء عريضة */
+:root[data-brand="ucas"] [role="dialog"] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="color"]), select) { min-height: 44px; }
+:root[data-brand="ucas"] [role="dialog"] :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea, .gr-input) { border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); transition: border-color .2s ease, box-shadow .2s ease; }
+:root[data-brand="ucas"] [role="dialog"] .gr-form label > span, :root[data-brand="ucas"] [role="dialog"] .gr-form legend { font-weight: 800; color: var(--ucas-green); }
+:root[data-brand="ucas"] [role="dialog"] input[type="checkbox"], :root[data-brand="ucas"] [role="dialog"] input[type="radio"] { accent-color: var(--ucas-blue); }
+/* أزرار الأدوات داخل النوافذ والفوتر: كبسولات — الأساسي بتدرّج الهوية والثانوي بإطار أزرق */
+:root[data-brand="ucas"] [role="dialog"] .gr-tool { height: 40px; padding-inline: 18px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--ucas-blue) 30%, transparent); background: var(--color-surface); color: var(--ucas-blue); font-weight: 700; }
+:root[data-brand="ucas"] [role="dialog"] .gr-tool.is-primary { border: 0; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); color: #FFFFFF; box-shadow: 0 6px 16px rgba(4, 40, 80, .18); }
+:root[data-brand="ucas"] [role="dialog"] > div > footer { gap: 10px; padding: 14px 26px; background: color-mix(in srgb, var(--ucas-blue) 3%, var(--color-bg)); border-top: 0; box-shadow: 0 -1px 0 color-mix(in srgb, var(--ucas-blue) 10%, transparent); }
+:root[data-brand="ucas"] [role="dialog"] > div > footer :is(.pbtn, button) { border-radius: 999px; }
+/* تنبيهات وبطاقات داخلية: زوايا 14 بلا حدود ثقيلة */
+:root[data-brand="ucas"] [role="dialog"] :is(.rounded-sm, .rounded-md).border { border-radius: 14px; border-color: color-mix(in srgb, var(--ucas-blue) 12%, transparent); }
+@media (max-width: 639.98px) {
+  :root[data-brand="ucas"] [role="dialog"] { align-items: flex-end; padding: 0; }
+  :root[data-brand="ucas"] [role="dialog"] > div { max-height: 92vh; border-radius: 18px 18px 0 0; }
+  :root[data-brand="ucas"] [role="dialog"] > div > header + div { padding: 18px; }
+  :root[data-brand="ucas"] [role="dialog"] > div > footer { padding: 12px 18px; }
+  :root[data-brand="ucas"] [role="dialog"] > div > footer > * { flex: 1; }
+}
+/* بطاقات الجوال/الآيباد: العنوان أولًا ثم أعمدة الملخّص (data-rt-show) ظاهرة دائمًا تحته، وزر تفاصيل المجموعة واضح */
+@media (max-width: 1023.98px) {
+  .ucas-portal table[data-rt] > tbody > tr:not([data-rt-full]):not(.sk-tr) { display: flex; flex-direction: column; }
+  .ucas-portal table[data-rt] > tbody > tr > td[data-rt-title] { order: -2; font-size: 15px; }
+  .ucas-portal table[data-rt] > tbody > tr > td[data-rt-show] {
+    order: -1;
+    display: flex;
+    padding: 4px 14px 12px !important;
+    border-top: 0 !important;
+    background: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .05)) !important;
+    font-size: 13px;
+    color: var(--color-text-700);
+  }
+  .ucas-portal table[data-rt] > tbody > tr > td[data-rt-show] + td[data-rt-show] { padding-top: 0 !important; }
+  .ucas-portal table[data-rt] > tbody > tr > td[data-rt-show]::before { color: var(--ucas-green); }
+  .ucas-portal table[data-rt] > tbody > tr > td[data-rt-show] :is(.gr-name, .gr-project, .gr-types) { display: inline; }
+  /* زر فتح تفاصيل المجموعة (الطلاب والمهام) يصير زرًا كاملًا داخل البطاقة */
+  .ucas-portal table[data-rt] .gr-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 42px; border-radius: 999px; color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); }
+  .ucas-portal table[data-rt] .gr-toggle::after { content: 'عرض الطلاب والتفاصيل'; font-size: 13.5px; font-weight: 700; }
+  .ucas-portal table[data-rt] .gr-toggle[aria-expanded="true"]::after { content: 'إخفاء التفاصيل'; }
+  .ucas-portal table[data-rt] > tbody > tr > td:has(> .gr-toggle) { order: 99; display: none; }
+  .ucas-portal table[data-rt] > tbody > tr[data-rt-open] > td:has(> .gr-toggle) { display: flex; }
+  /* الصفحة: مسافات أريح ولمسات أكبر */
+  .ucas-portal .gr-filters { gap: 10px; }
+  .ucas-portal .gr-filters > * { flex: 1 1 100%; }
+  .ucas-portal .gr-slider .gr-page { min-width: 38px; height: 38px; }
+}
+@media (min-width: 640px) and (max-width: 1023.98px) {
+  .ucas-portal .gr-filters > * { flex: 1 1 calc(50% - 5px); }
+  /* الآيباد: البطاقات عمودين */
+  .ucas-portal table[data-rt]:not(.gr-table) > tbody { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .ucas-portal table[data-rt]:not(.gr-table) > tbody > tr[data-rt-full] { grid-column: 1 / -1; }
+}
+
+/* ===== نافذة عرض المقترح (prd-modal): إزالة بقايا الهوية القديمة (تبويبات سماوية، تنبيه وردي، صناديق رمادية بزوايا 4) ===== */
+/* التبويبات: كبسولة كحلية، النشط بتدرّج الهوية، والأعداد كبسولات */
+[role="dialog"] .pr-tabs { gap: 4px; padding: 4px; border-radius: 999px; background: #0B2545; box-shadow: none; }
+[role="dialog"] .pr-tabs button { height: 36px; padding-inline: 16px; border-radius: 999px; color: rgba(255, 255, 255, .8); font-weight: 700; background: transparent; }
+[role="dialog"] .pr-tabs button:hover { color: #FFFFFF; background: rgba(255, 255, 255, .1); }
+[role="dialog"] .pr-tabs button.is-active { color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); box-shadow: 0 4px 12px rgba(4, 40, 80, .3); }
+[role="dialog"] .pr-tabs button span { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-inline-start: 4px; padding: 0 6px; border-radius: 999px; font-size: 11.5px; color: #FFFFFF; background: rgba(255, 255, 255, .18); }
+/* رأس النافذة: خط تدرّج بدل الخط الأزرق، وأزرار التنقّل دوائر */
+.prd-modal .prd-head { padding-bottom: 14px; border-bottom: 0; box-shadow: 0 2px 0 0 transparent; background-image: linear-gradient(270deg, #62BB46, #005BAA); background-size: 100% 2px; background-repeat: no-repeat; background-position: bottom; }
+.prd-modal .prd-step { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 50%; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 9%, transparent); }
+.prd-modal .prd-step:not(:disabled):hover { color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #005BAA); }
+.prd-modal .prd-step:disabled { opacity: .35; }
+.prd-modal .prd-head .pbtn.is-outline { border-radius: 999px; }
+/* الصناديق: زوايا 16 بلا حدود + ظل داخلي خفيف */
+.prd-modal :is(.prd-main, .prd-card) { border: 0; border-radius: 16px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent), 0 10px 30px rgba(4, 40, 80, .06); }
+.prd-modal .prd-card h4 { position: relative; padding-bottom: 8px; color: var(--ucas-blue); }
+.prd-modal .prd-kv dt { color: var(--ucas-green); font-weight: 700; }
+.prd-modal .prd-kv dd { color: var(--color-text-900); }
+.prd-modal .prd-kv > div { border-bottom-color: color-mix(in srgb, var(--ucas-blue) 8%, transparent); }
+.prd-modal .prd-decided { border-radius: 14px; font-weight: 600; color: var(--ucas-blue); background: linear-gradient(270deg, rgba(98, 187, 70, .12), rgba(0, 91, 170, .07)); }
+/* تنبيه سبب الرفض: نمط palert (زوايا 14، خلفية خفيفة + شريط جانبي) */
+.prd-modal .rv-alert { display: block; padding: 12px 16px; border: 0; border-radius: 14px; font-size: 13.5px; line-height: 1.9; color: #9B2C2C; background: rgba(255, 91, 91, .08); box-shadow: inset -4px 0 0 #FF5B5B; }
+.prd-modal .rv-alert b { display: block; margin-bottom: 2px; color: #C53030; }
+:root[data-theme="dark"] .prd-modal .rv-alert { color: #FF9C9C; background: rgba(255, 91, 91, .12); }
+/* محاولات الرفض والتقارير: بطاقات زوايا 14، رقم المحاولة بدائرة متدرّجة */
+.prd-modal :is(.pr-attempts, .pr-reports) li { border: 0; border-radius: 14px; background: color-mix(in srgb, var(--ucas-blue) 3%, var(--color-surface)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 10%, transparent); }
+.prd-modal .pr-attempt-no { color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #005BAA); }
+.prd-modal .pr-attempts .pr-attempt-no { color: #FFFFFF; background: linear-gradient(270deg, #FF8A8A, #E53E3E); }
+/* أعضاء الفريق: كبسولات بدائرة متدرّجة */
+.prd-modal .rv-members li { border: 0; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 14%, transparent); }
+.prd-modal .rv-avatar { color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); }
+
+/* عنوان الصفحة في التوب بار: على الجوال الكلمة الأولى + … والضغط يكشف الباقي بانزلاق؛ على الشاشات الأكبر يظهر كاملًا */
+.portal-topbar-title .tt-dots { display: none; }
+.portal-topbar-title .tt-rest { display: inline-block; vertical-align: bottom; white-space: nowrap; }
+@media (max-width: 639.98px) {
+  .portal-topbar-title.has-rest { cursor: pointer; }
+  .portal-topbar-title.has-rest .tt-dots { display: inline; margin-inline-start: 2px; transition: opacity .25s ease; }
+  .portal-topbar-title.has-rest .tt-rest { max-width: 0; overflow: hidden; opacity: 0; transition: max-width .45s cubic-bezier(.2, .8, .2, 1), opacity .3s ease; }
+  .portal-topbar-title.has-rest.is-open .tt-rest { max-width: 60vw; opacity: 1; }
+  .portal-topbar-title.has-rest.is-open .tt-dots { display: none; }
+}
+@media (max-width: 639.98px) and (prefers-reduced-motion: reduce) {
+  .portal-topbar-title.has-rest .tt-rest { transition: none; }
+}
+
+/* سبب رفض المقترح: شريط بارز أعلى نافذة المقترح */
+.prd-reject { display: flex; align-items: flex-start; gap: 12px; margin: 14px 0 4px; padding: 14px 16px; border-radius: 14px; background: linear-gradient(270deg, rgba(255, 91, 91, .12), rgba(255, 91, 91, .05)); box-shadow: inset -4px 0 0 #FF5B5B; }
+.prd-reject-ic { display: grid; place-items: center; flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%; color: #FFFFFF; background: linear-gradient(270deg, #FF8A8A, #E53E3E); }
+.prd-reject b { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 800; color: #C53030; }
+.prd-reject p { margin: 0; font-size: 13.5px; line-height: 1.9; color: var(--color-text-700); }
+
+/* ===== بطاقات الجوال/الآيباد: ملخّص نظيف — الشعبة كبسولة مميّزة، ثم اسم المشروع فقط، بلا تسميات ===== */
+@media (max-width: 1023.98px) {
+  /* الملخّص بلا تسمية عمود */
+  .ucas-portal table[data-rt] > tbody > tr > td[data-rt-show]::before { content: none !important; }
+  .ucas-portal table[data-rt] > tbody > tr > td[data-rt-show] { justify-content: flex-start; padding-top: 2px !important; font-size: 14px; font-weight: 700; line-height: 1.7; color: var(--color-text-900); }
+  /* أسطر ثانوية داخل خلية المشروع (الحالة، الأنواع) تختفي في الملخّص */
+  .ucas-portal table[data-rt] > tbody > tr > td[data-rt-show] :is(.gr-project, .gr-types, .pt-muted, .hm-muted) { display: none !important; }
+  /* العنوان: الشعبة كبسولة خضراء بنص أبيض، وباقي العنوان أزرق */
+  .ucas-portal table[data-rt] > tbody > tr > td[data-rt-title] { flex-wrap: wrap; justify-content: flex-start; gap: 8px; padding-bottom: 6px !important; }
+  .ucas-portal table[data-rt] > tbody > tr > td[data-rt-title] :is(.gr-section, .rt-section) { display: inline-flex; align-items: center; padding: 3px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 800; color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #3E9B5C); box-shadow: 0 4px 10px rgba(98, 187, 70, .25); }
+  .ucas-portal table[data-rt] > tbody > tr > td[data-rt-title] .d-block { display: inline; }
+  /* صفوف لها قائمة منسدلة أصلية (رئيسية المشرف/الإدارة): ملخّص فقط وسهمها الأصلي، بلا سهم البطاقة */
+  .ucas-portal table[data-rt] > tbody > tr[data-rt-native] > td:not([data-rt-title]):not([data-rt-show]) { display: none !important; }
+  .ucas-portal table[data-rt] > tbody > tr[data-rt-native] > td[data-rt-title] { padding-inline-end: 14px !important; }
+  .ucas-portal table[data-rt] > tbody > tr[data-rt-native] > td[data-rt-title]::after { content: none; }
+  .ucas-portal table[data-rt] > tbody > tr[data-rt-native] > td[data-rt-title] .hm-muted { display: none; }
+  /* رئيسية: صندوق الجداول يتمرّر داخليًا بدل أن يفيض فوق البطاقة التالية */
+  .ucas-portal .hm-table-wrap.hm-scroll { overflow-y: auto !important; overflow-x: hidden !important; }
+  .ucas-portal .hm-drop { margin: 0; }
+  /* تبويبات حالة المقترحات: الجوال الكل/المعتمدة/بانتظار المراجعة، والآيباد + المرفوضة */
+  .ucas-portal .rv-tab.is-changes { display: none; }
+  .ucas-portal .rv-tabs { flex-wrap: nowrap; overflow: hidden; }
+  .ucas-portal .rv-tab { flex: 1 1 0; justify-content: center; white-space: nowrap; }
+}
+@media (max-width: 639.98px) {
+  .ucas-portal .rv-tab.is-rejected { display: none; }
+  .ucas-portal .rv-tab { padding-inline: 8px; font-size: 12.5px; }
+}
+@media (max-width: 1023.98px) {
+  /* الخلايا تملأ عرض البطاقة (عرض الأعمدة الثابت للجدول كان يترك فراغًا أبيض) */
+  .ucas-portal table[data-rt] > tbody > tr > td { width: auto !important; min-width: 0 !important; max-width: none !important; align-self: stretch; box-sizing: border-box; }
+}
+/* على الشاشات الكبيرة اسم الشعبة في الرئيسية يبقى نصًا عاديًا */
+@media (min-width: 1024px) { .hm-table .rt-section { font: inherit; color: inherit; } }
+
+/* ===== لوحة المهام (Kanban) في صفحة التكليفات — كل اللوحات: أعمدة وبطاقات بهوية مسار ===== */
+.tk-board { gap: 14px; }
+.tk-col { padding: 0; gap: 0; overflow: hidden; border-radius: 16px; background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-bg)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 10%, transparent); }
+.tk-col-head { position: relative; padding: 13px 14px; font-size: 14.5px; font-weight: 800; color: var(--ucas-blue); background: var(--color-surface); }
+.tk-col-head::after { content: ''; position: absolute; inset-inline: 0; bottom: 0; height: 3px; background: var(--tk-c, #98A6AD); }
+.tk-col:has(.tk-dot.is-in_progress) { --tk-c: linear-gradient(270deg, #35B8E0, #0E699C); }
+.tk-col:has(.tk-dot.is-review) { --tk-c: linear-gradient(270deg, #F9C851, #F89E32); }
+.tk-col:has(.tk-dot.is-done) { --tk-c: linear-gradient(270deg, #62BB46, #0E699C); }
+.tk-col-head span { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 999px; font-size: 12px; font-weight: 800; color: var(--ucas-blue); background: linear-gradient(270deg, rgba(98, 187, 70, .16), rgba(0, 91, 170, .1)); }
+.tk-dot.is-in_progress { background: #0E699C; }
+.tk-dot.is-done { background: var(--ucas-green); }
+.tk-col-body { padding: 12px; margin: 0; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ucas-blue) 30%, transparent) transparent; }
+.tk-card { position: relative; overflow: hidden; gap: 7px; padding: 14px 16px 12px 14px; padding-inline-start: 18px; border: 0; border-radius: 14px; background: var(--color-surface); box-shadow: 0 4px 14px rgba(4, 40, 80, .07); }
+.tk-card::before { content: ''; position: absolute; inset-block: 0; inset-inline-start: 0; width: 4px; background: var(--tk-c, #98A6AD); }
+.tk-card b { font-size: 14.5px; font-weight: 800; color: var(--color-text-900); }
+.tk-card:hover, .tk-card:focus-visible { box-shadow: 0 10px 26px rgba(4, 40, 80, .13); }
+.tk-card .tk-card-who { color: var(--color-text-600); }
+/* زر المرفقات والسجل: كبسولة */
+.tk-card-more { justify-content: flex-start; margin-top: 4px; padding: 7px 12px; border: 0; border-radius: 999px; font-size: 12.5px; font-weight: 700; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 7%, transparent); transition: background-color .25s ease; }
+.tk-card-more:hover, .tk-card-more[aria-expanded="true"] { background: color-mix(in srgb, var(--ucas-blue) 13%, transparent); }
+/* المرفقات والسجل */
+.tk-card-info { gap: 8px; margin-top: 4px; padding-top: 10px; border-top: 1px dashed color-mix(in srgb, var(--ucas-blue) 18%, transparent); font-size: 13px; color: var(--color-text-700); }
+.tk-done-by { display: flex; align-items: center; gap: 6px; margin: 0; padding: 6px 10px; border-radius: 10px; font-size: 12.5px; color: #2F7F1E; background: rgba(98, 187, 70, .12); }
+.tk-done-by b { font-size: 12.5px; color: #2F7F1E; }
+.tk-info-title { display: flex; align-items: center; gap: 6px; margin: 4px 0 0; font-size: 13px; font-weight: 800; color: var(--ucas-blue); }
+.tk-info-title svg { color: var(--ucas-green); }
+.tk-info-title span { margin-inline-start: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; font-size: 11px; line-height: 20px; text-align: center; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 9%, transparent); }
+.tk-files { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.tk-files li { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 4px 10px; overflow: hidden; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; color: var(--color-text-700); background: var(--color-bg); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent); }
+.tk-files svg { flex-shrink: 0; color: var(--ucas-blue); }
+.tk-info-empty { margin: 0; font-size: 12.5px; color: var(--color-text-400); }
+.tk-card-log { gap: 0; margin: 0; padding: 0; border: 0; list-style: none; }
+.tk-card-log li { position: relative; display: flex; flex-direction: column; gap: 1px; padding: 0 16px 10px 0; padding-inline-start: 18px; padding-inline-end: 0; font-size: 12.5px; line-height: 1.6; }
+.tk-card-log li::before { content: ''; position: absolute; inset-inline-start: 3px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: linear-gradient(270deg, #62BB46, #005BAA); }
+.tk-card-log li::after { content: ''; position: absolute; inset-inline-start: 6.5px; top: 16px; bottom: 0; width: 1px; background: color-mix(in srgb, var(--ucas-blue) 18%, transparent); }
+.tk-card-log li:last-child { padding-bottom: 0; }
+.tk-card-log li:last-child::after { content: none; }
+.tk-card-log b { font-size: 12.5px; font-weight: 800; color: var(--ucas-blue); }
+.tk-card-log span { color: var(--color-text-700); }
+.tk-card-log time { font-family: 'Tajawal', sans-serif; font-size: 11.5px; font-variant-numeric: tabular-nums; color: var(--color-text-400); }
+
+/* ===== نافذة "مهمة جديدة" (TasksWorkspace composer) بهوية مسار ===== */
+[role="dialog"] .tk-stepper { gap: 10px; }
+[role="dialog"] .tk-stepper li { border-bottom: 0; border-radius: 14px; background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-bg)); overflow: hidden; }
+[role="dialog"] .tk-stepper li::after { bottom: 0; background: linear-gradient(270deg, #62BB46, #005BAA); }
+[role="dialog"] .tk-stepper li.is-done::after { transform: scaleX(1); opacity: .45; }
+[role="dialog"] .tk-stepper button { justify-content: center; padding: 11px 8px; }
+[role="dialog"] .tk-stepper .is-active button { color: var(--ucas-blue); }
+[role="dialog"] .tk-stepper .is-active b, [role="dialog"] .tk-stepper .is-done b { color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #005BAA); }
+[role="dialog"] .tk-sec { border: 0; border-radius: 16px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent), 0 10px 30px rgba(4, 40, 80, .05); }
+[role="dialog"] .tk-sec-head { border-bottom: 0; background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .06)); }
+[role="dialog"] .tk-sec-head h4 { color: var(--ucas-blue); font-weight: 800; }
+[role="dialog"] .pfield > span, [role="dialog"] .pfield > label > span { color: var(--ucas-green); font-weight: 800; }
+[role="dialog"] .tk-chip { height: 32px; padding-inline: 14px; border-radius: 999px; border-color: color-mix(in srgb, var(--ucas-blue) 22%, transparent); color: var(--ucas-blue); font-weight: 700; }
+[role="dialog"] .tk-chip.is-on { border-color: transparent; color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #005BAA); }
+[role="dialog"] .fz-drop { border: 1.5px dashed color-mix(in srgb, var(--ucas-blue) 35%, transparent); border-radius: 16px; background: linear-gradient(270deg, rgba(98, 187, 70, .05), rgba(0, 91, 170, .04)); }
+[role="dialog"] .fz-drop:hover, [role="dialog"] .fz-drop.is-over { border-color: var(--ucas-green); background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .07)); }
+[role="dialog"] .fz-drop svg { color: var(--ucas-green); }
+[role="dialog"] .fz-drop u { color: var(--ucas-blue); }
+[role="dialog"] .pbtn.is-cyan, [role="dialog"] .pbtn.is-green { border: 0; color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); box-shadow: 0 6px 16px rgba(4, 40, 80, .18); }
+[role="dialog"] .pbtn.is-outline { border-color: color-mix(in srgb, var(--ucas-blue) 35%, transparent); color: var(--ucas-blue); }
+[role="dialog"] .as-summary { font-size: 13px; color: var(--color-text-600); }
+[role="dialog"] .as-summary.is-missing { color: #C53030; font-weight: 700; }
+
+/* زر التقرير النهائي في رأس نافذة المقترح + زر كل نسخة كبطاقة ملف */
+.prd-modal .prd-report-btn { border: 0; border-radius: 999px; color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); box-shadow: 0 6px 16px rgba(4, 40, 80, .18); }
+.prd-modal .prd-report-btn span { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; font-size: 11.5px; background: rgba(255, 255, 255, .22); }
+.prd-modal .prd-report-btn:hover { filter: brightness(1.07); }
+.prd-modal .pr-reports li { align-items: center; flex-wrap: nowrap; }
+.pr-report-file { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; flex-shrink: 0; width: 86px; padding: 10px 6px; border-radius: 14px; font-size: 12px; font-weight: 800; color: var(--ucas-blue); background: linear-gradient(270deg, rgba(98, 187, 70, .12), rgba(0, 91, 170, .08)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 14%, transparent); transition: box-shadow .25s ease, transform .25s ease; }
+.pr-report-file svg { color: var(--ucas-green); }
+.pr-report-file:hover { box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 30%, transparent), 0 8px 18px rgba(4, 40, 80, .12); }
+@media (max-width: 639.98px) { .prd-modal .pr-reports li { flex-wrap: wrap; } .pr-report-file { width: 100%; flex-direction: row; } }
+.tk-col-body > * { flex-shrink: 0; }
+.prd-modal .pr-review-act .pbtn { height: 38px; border-radius: 999px; }
+.prd-modal .pr-review-act .pbtn.is-green { border: 0; color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); }
+.prd-modal .pr-review-act .pbtn.is-red { border: 0; color: #FFFFFF; background: linear-gradient(270deg, #FF8A8A, #E53E3E); }
+.prd-modal .pr-review-act .ev-input { height: 38px; border-radius: 999px; padding-inline: 14px; }
+
+/* ===== مهام: وصف المهمة ولمن أُسندت على بطاقة الكانبان (TaskBoard) ===== */
+.tb-desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 2px 0 6px; font-size: 12.5px; line-height: 1.7; color: var(--color-text-600); }
+.tb-assignees { display: flex; flex-wrap: wrap; gap: 5px; margin: 4px 0 2px; }
+.tb-assignee { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px 2px 3px; padding-inline-start: 3px; padding-inline-end: 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 8%, transparent); }
+.tb-assignee i { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-style: normal; font-size: 10.5px; font-weight: 800; color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); }
+.tb-assignee.is-team { color: #2F7F1E; background: rgba(98, 187, 70, .12); }
+
+/* ===== تصنيفات المجموعات (gr-seg) في كل اللوحات: أكثر من 5 = تمرير أفقي ناعم بدل الالتفاف ===== */
+.gr-seg:has(> button:nth-child(6)) { flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .35) transparent; }
+.gr-seg:has(> button:nth-child(6)) > button { flex: 0 0 auto; min-width: 140px; scroll-snap-align: start; }
+.gr-seg::-webkit-scrollbar { height: 5px; }
+.gr-seg::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(255, 255, 255, .35); }
+
+/* ===== الجداول في كل اللوحات (سطح المكتب): النص في وسط عموده، والعمود الأول (الاسم) يبقى في بدايته ===== */
+@media (min-width: 1024px) {
+  :root[data-brand="ucas"] :is(.ucas-portal, [role="dialog"]) table :is(th, td):not(:first-child) { text-align: center; }
+  :root[data-brand="ucas"] :is(.ucas-portal, [role="dialog"]) table td:not(:first-child) > :is(.gr-progress, .rv-pill, .tk-status, .mono) { margin-inline: auto; }
+  :root[data-brand="ucas"] :is(.ucas-portal, [role="dialog"]) table td.sh-progress, :root[data-brand="ucas"] :is(.ucas-portal, [role="dialog"]) table td:has(> .gr-progress) { text-align: center; }
+}
+
+/* ===== صفحة التكليفات والإعلانات: مربعات الإحصاء بهوية صفحة المهام ===== */
+.tk-stats { gap: 12px; border: 0; background: none; box-shadow: none; }
+.tk-stats .hm-stat { position: relative; overflow: hidden; border: 0 !important; border-radius: 16px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 10%, transparent), 0 10px 26px rgba(4, 40, 80, .06); transition: box-shadow .3s ease, background-color .3s ease; }
+.tk-stats .hm-stat::after { content: ''; position: absolute; inset-inline: 0; bottom: 0; height: 3px; background: linear-gradient(270deg, #62BB46, #005BAA); transform: scaleX(0); transform-origin: right; transition: transform .35s ease; }
+.tk-stats .hm-stat:hover { box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 20%, transparent), 0 14px 30px rgba(4, 40, 80, .1); }
+.tk-stats .hm-stat.is-active { background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .06)), var(--color-surface); }
+.tk-stats .hm-stat.is-active::after { transform: scaleX(1); }
+.tk-stats .hm-stat-label { font-weight: 700; color: var(--color-text-600); }
+.tk-stats .hm-stat-value { color: var(--ucas-blue); font-weight: 800; }
+
+/* ===== صورة الحساب في بطاقة الهوية أعلى الصفحات + الشريط العلوي: مقاس ثابت، قص سليم، وإطار متدرّج ===== */
+:root[data-brand="ucas"] .portal-identity-photo { width: 64px; height: 64px; padding: 3px; border: 0; border-radius: 50%; object-fit: cover; background: linear-gradient(270deg, #62BB46, #005BAA); box-shadow: 0 6px 16px rgba(4, 40, 80, .18); }
+:root[data-brand="ucas"] .portal-avatar { object-fit: cover; border-radius: 50%; }
+@media (max-width: 639.98px) { :root[data-brand="ucas"] .portal-identity-photo { width: 52px; height: 52px; } }
+
+/* زر "عرض التقرير" بأعلى بطاقة النسخة لا في وسطها */
+.prd-modal .pr-reports li { align-items: flex-start; }
+.prd-modal .pr-report-file { align-self: flex-start; }
+/* مرفقات المهمة على بطاقة الكانبان */
+.tb-files-wrap { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-border-soft); }
+.tb-files-btn { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 7%, transparent); }
+.tb-files-btn > span { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; font-size: 11px; line-height: 18px; text-align: center; color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #005BAA); }
+.tb-files-caret { transition: transform .25s ease; }
+.tb-files-caret.is-open { transform: rotate(180deg); }
+.tb-files li bdi { overflow: hidden; text-overflow: ellipsis; }
+
+/* محاولات الرفض في نافذة المقترح: عدّاد المحاولات + بطاقة لكل رفض */
+.pr-meter { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 14px; background: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .05)); }
+.pr-meter-label { font-size: 13px; font-weight: 800; color: var(--ucas-green); }
+.pr-meter-dots { display: inline-flex; gap: 6px; margin-inline-start: auto; }
+.pr-meter-dots i { width: 34px; height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--ucas-blue) 12%, transparent); }
+.pr-meter-dots i.is-on { background: linear-gradient(270deg, #62BB46, #005BAA); }
+.pr-meter-dots i.is-bad { background: linear-gradient(270deg, #FF8A8A, #E53E3E); }
+.pr-meter b { font-size: 13.5px; color: var(--ucas-blue); }
+.pr-rejects { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 0; padding: 0; list-style: none; }
+.pr-rejects li { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 10%, transparent), inset -4px 0 0 #FF5B5B; }
+.pr-rejects header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pr-rejects header b { font-size: 14px; color: var(--ucas-blue); }
+.pr-rejects header time { margin-inline-start: auto; font-size: 12px; color: var(--color-text-400); }
+.pr-rejects .pr-attempt-no { width: 28px; height: 28px; font-size: 13px; color: #FFFFFF; background: linear-gradient(270deg, #FF8A8A, #E53E3E); }
+.pr-reject-reason { margin: 0; padding: 10px 12px; border-radius: 12px; font-size: 13.5px; line-height: 1.9; color: var(--color-text-700); background: rgba(255, 91, 91, .06); }
+.pr-reject-meta { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 0; font-size: 12.5px; }
+.pr-reject-meta div { display: flex; gap: 6px; }
+.pr-reject-meta dt { font-weight: 700; color: var(--ucas-green); }
+.pr-reject-meta dd { margin: 0; color: var(--color-text-700); }
+.pr-report-file.is-inline { align-self: flex-start; flex-direction: row; width: auto; padding: 7px 14px; border-radius: 999px; }
+
+/* ===== نافذة "مهمة جديدة": المستلمون والمراجعة (كل اللوحات) بهوية مسار ===== */
+/* خطوات أكثر من 3: نص في سطر واحد */
+[role="dialog"] .tk-stepper button { font-size: 13.5px; white-space: nowrap; }
+@media (max-width: 720px) { [role="dialog"] .tk-stepper button { font-size: 12px; gap: 5px; } }
+/* الجهة المستلمة: كبسولة كحلية، النشط بالتدرّج */
+.tk-aud { gap: 4px; padding: 4px; border-radius: 999px; background: #0B2545; }
+.tk-aud button { min-height: 40px; border-radius: 999px; color: rgba(255, 255, 255, .82); }
+.tk-aud button:hover { color: #FFFFFF; background: rgba(255, 255, 255, .1); }
+.tk-aud button.is-active { color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); box-shadow: 0 4px 12px rgba(0, 0, 0, .25); }
+/* البحث: كبسولة واحدة (بلا إطار داخلي مكرّر) */
+[role="dialog"] .gr-search { border-radius: 999px; }
+[role="dialog"] .gr-search input { min-height: 0 !important; border: 0 !important; box-shadow: none !important; background: transparent !important; }
+[role="dialog"] .gr-select { border-radius: 999px; }
+/* شريط التحديد */
+.gp-bar { padding: 10px 14px; border: 0; border-radius: 12px; background: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .05)); }
+.gp-check { color: var(--ucas-blue); }
+.gp-check input, .gp-item input { accent-color: var(--ucas-blue); }
+/* قائمة المجموعات/الأشخاص: بطاقات صغيرة، والمحدد بخلفية تدرّج وشريط جانبي */
+.gp-list { gap: 6px; padding: 6px 2px; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ucas-blue) 30%, transparent) transparent; }
+.gp-item { border: 0 !important; border-radius: 12px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 9%, transparent); transition: background-color .2s ease, box-shadow .2s ease; }
+.gp-item:hover { background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-surface)); }
+.gp-item.is-on { background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .06)), var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 22%, transparent), inset -4px 0 0 var(--ucas-green); }
+.gp-item-main b, .gp-item-main strong { color: var(--ucas-blue); }
+/* المراجعة والإرسال: ملخّص كبطاقة بتسميات خضراء */
+[role="dialog"] .tk-sec dl { margin: 0; }
+[role="dialog"] .tk-sec dl > div { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid color-mix(in srgb, var(--ucas-blue) 8%, transparent); }
+[role="dialog"] .tk-sec dl > div:last-child { border-bottom: 0; }
+[role="dialog"] .tk-sec dl dt { flex: 0 0 130px; font-weight: 800; color: var(--ucas-green); }
+[role="dialog"] .tk-sec dl dd { margin: 0; font-weight: 600; color: var(--color-text-900); }
+/* قنوات الإرسال (ChannelPicker): بطاقات زوايا 14، المختار بتدرّج خفيف وشريط جانبي */
+.bc-channel-pick { gap: 8px; }
+.bc-channel-opt { border: 0 !important; border-radius: 14px !important; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 10%, transparent); transition: background-color .2s ease, box-shadow .2s ease; }
+.bc-channel-opt:hover:not(.is-locked) { background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-surface)); }
+.bc-channel-opt.is-on { background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .06)), var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 22%, transparent), inset -4px 0 0 var(--ucas-green); }
+.bc-channel-opt svg { color: var(--ucas-blue); }
+.bc-channel-opt input { accent-color: var(--ucas-blue); }
+
+/* ===== صفحة التقييمات وورقة تقييم المشروع (كل اللوحات) بهوية مسار ===== */
+.ev-sec-chip { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 800; color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #3E9B5C); box-shadow: 0 4px 10px rgba(98, 187, 70, .22); }
+/* بطاقات الورقة: زوايا 18 بلا حدود */
+.es-card { border-radius: 18px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 8%, transparent), 0 12px 32px rgba(4, 40, 80, .07); }
+/* رأس المشروع: خلفية تدرّج خفيفة، رقم الشعبة دائرة متدرّجة، العنوان أزرق، وسطر المعلومات كبسولات */
+.es-group { position: relative; overflow: hidden; border-inline-start: 0; background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .05)), var(--color-surface); }
+.es-group::before { content: ''; position: absolute; inset-block: 0; inset-inline-start: 0; width: 5px; background: linear-gradient(180deg, #62BB46, #005BAA); }
+.es-group-no { min-width: 84px; min-height: 84px; padding: 10px; border-radius: 50%; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); box-shadow: 0 0 0 6px rgba(0, 91, 170, .08), 0 10px 22px rgba(4, 40, 80, .2); }
+.es-group-no small { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; }
+.es-group-text h2, .es-group-text h3, .es-group-text b:first-child { color: var(--ucas-blue); font-weight: 800; }
+.es-group-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.es-group-meta > * { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: var(--color-text-700); background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 10%, transparent); }
+.es-group-meta svg { color: var(--ucas-green); }
+.es-featured { height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, #F89E32 40%, transparent); cursor: pointer; }
+.es-featured.is-on { color: #FFFFFF; background: linear-gradient(270deg, #F9C851, #F89E32); box-shadow: 0 6px 14px rgba(248, 158, 50, .3); }
+.es-featured.is-on svg { color: #FFFFFF; fill: #FFFFFF; }
+/* عنوان النموذج وشريط الاكتمال */
+.es-form-head h3, .es-form-head h2 { color: var(--ucas-blue); font-weight: 800; }
+.es-progress-bar { border-radius: 999px; overflow: hidden; }
+.es-progress-bar > span { background: linear-gradient(270deg, #62BB46, #005BAA) !important; }
+/* جدول البنود: حقول الدرجة كبسولات في الوسط */
+.es-table .es-col input, .es-table td input, .es-table td select { width: 64px; height: 38px; margin-inline: auto; border: 1px solid color-mix(in srgb, var(--ucas-blue) 20%, transparent); border-radius: 12px; text-align: center; font-weight: 800; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 3%, var(--color-surface)); transition: border-color .2s ease, box-shadow .2s ease; }
+.es-table td input:focus { outline: 0; border-color: var(--ucas-green); box-shadow: 0 0 0 4px rgba(98, 187, 70, .15); }
+.es-table td input:disabled { opacity: .75; }
+.es-table tbody tr:last-child td { font-weight: 800; color: var(--ucas-blue); background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .06)) !important; }
+.tk-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+
+/* ===== أرشيف المشاريع (كل اللوحات): بطاقة تخصص أكبر، وعند المرور تخرج صور المشاريع من المجلد على شكل قوس ===== */
+.ab-folders { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+.ab-folder { flex-wrap: wrap; align-items: center; min-height: 300px; padding: 182px 22px 20px; cursor: pointer; transition: box-shadow .35s ease, transform .35s ease; }
+.ab-folder:focus-visible { outline: 3px solid color-mix(in srgb, var(--ucas-blue) 40%, transparent); outline-offset: 2px; }
+.ab-fan { position: absolute; inset-inline: 0; top: 0; height: 168px; overflow: hidden; background: radial-gradient(120% 90% at 50% 100%, rgba(98, 187, 70, .14), rgba(0, 91, 170, .06) 60%, transparent), linear-gradient(180deg, color-mix(in srgb, var(--ucas-blue) 5%, var(--color-surface)), var(--color-surface)); }
+.ab-fan-card {
+  --a: calc(var(--i) - (var(--n) - 1) / 2);
+  position: absolute; left: 50%; bottom: -18px; width: 108px; height: 138px; margin-left: -54px;
+  overflow: hidden; border-radius: 14px; background: var(--color-surface);
+  box-shadow: 0 10px 24px rgba(4, 40, 80, .18), 0 0 0 3px #FFFFFF;
+  transform-origin: 50% 120%;
+  transform: rotate(calc(var(--a) * 4deg)) translateY(18px);
+  transition: transform .55s cubic-bezier(.2, .8, .2, 1), box-shadow .55s ease;
+  transition-delay: calc(var(--i) * 40ms);
+}
+.ab-folder:hover .ab-fan-card, .ab-folder:focus-visible .ab-fan-card { transform: translateX(calc(var(--a) * 34px)) rotate(calc(var(--a) * 15deg)) translateY(-14px); box-shadow: 0 16px 34px rgba(4, 40, 80, .24), 0 0 0 3px #FFFFFF; }
+.ab-fan-card img { width: 100%; height: 100%; object-fit: cover; }
+.ab-fan-ph { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; height: 100%; padding: 10px; text-align: center; color: #FFFFFF; background: linear-gradient(160deg, #62BB46, #0E699C 60%, #025DA9); }
+.ab-fan-ph svg { padding: 4px; border-radius: 50%; background: #FFFFFF; }
+.ab-fan-ph b { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 11.5px; font-weight: 800; line-height: 1.5; }
+.ab-folder-body strong { font-size: 16px; color: var(--ucas-blue); }
+/* زر النافذة الجديدة */
+.ab-newtab { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 7px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 700; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 8%, transparent); transition: background-color .25s ease, color .25s ease; position: relative; z-index: 1; }
+.ab-newtab:hover { color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #005BAA); }
+@media (prefers-reduced-motion: reduce) { .ab-fan-card { transition: none; } }
+@media (max-width: 639.98px) { .ab-folders { grid-template-columns: minmax(0, 1fr); } }
+
+/* ===== بياناتي: التفاعل الكلي والتفاعل مع كل مجموعة (كل اللوحات) بهوية مسار ===== */
+.sp-meter { gap: 12px 18px; padding: 18px 20px; border-radius: 16px; background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .06)); }
+.sp-meter b { font-size: 28px; font-weight: 800; color: var(--ucas-blue); }
+.sp-meter .gr-progress { height: 10px; border-radius: 999px; }
+.profile-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.profile-stats > div { flex-direction: column; align-items: flex-start; gap: 4px; padding: 14px 16px !important; border: 0 !important; border-radius: 14px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 10%, transparent); }
+.profile-stats dt { font-size: 12.5px; font-weight: 700; color: var(--ucas-green); }
+.profile-stats dd { font-size: 22px; font-weight: 800; color: var(--ucas-blue); }
+.sp-groups { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+.sp-group { position: relative; gap: 8px; overflow: hidden; padding: 18px 18px 16px; border: 0; border-radius: 16px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 9%, transparent), 0 10px 26px rgba(4, 40, 80, .06); transition: box-shadow .3s ease, transform .3s ease; }
+.sp-group::before { content: ''; position: absolute; inset-inline: 0; top: 0; height: 4px; background: linear-gradient(270deg, #62BB46, #005BAA); }
+.sp-group.is-link:hover, .sp-group.is-link:focus-visible { outline: 0; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 22%, transparent), 0 16px 34px rgba(4, 40, 80, .12); }
+.sp-group header b { display: inline-flex; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 800; color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #3E9B5C); }
+.sp-score { padding: 4px 10px; border-radius: 999px; background: linear-gradient(270deg, #35B8E0, #0E699C); }
+.sp-score.is-high { background: linear-gradient(270deg, #62BB46, #0E699C); }
+.sp-score.is-low { color: #FFFFFF; background: linear-gradient(270deg, #F9C851, #F89E32); }
+.sp-group-name { font-size: 15px; font-weight: 800; color: var(--ucas-blue); }
+.sp-group .gr-progress { height: 8px; border-radius: 999px; }
+.sp-group dl { gap: 8px; margin-top: 8px; }
+.sp-group dl div { flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px; border: 0; border-radius: 12px; text-align: center; background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-surface)); }
+.sp-group dl dt { font-size: 11.5px; font-weight: 700; color: var(--ucas-green); }
+.sp-group dl dd { margin: 0; font-size: 16px; font-weight: 800; color: var(--ucas-blue); }
+.sp-group dl { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+/* زر "إضافة" للملاحظات في المهام (كل اللوحات): كبسولة بتدرّج الهوية ونص أبيض واضح، والحقل كبسولة */
+.tb-note-add input, .td-note-add input, .tk-note-form input { height: 36px !important; padding-inline: 14px !important; border-radius: 999px !important; border: 1px solid color-mix(in srgb, var(--ucas-blue) 20%, transparent) !important; background: var(--color-surface) !important; }
+.tb-note-add input:focus, .td-note-add input:focus, .tk-note-form input:focus { outline: 0; border-color: var(--ucas-green) !important; box-shadow: 0 0 0 3px rgba(98, 187, 70, .15); }
+.tb-note-add > button, .td-note-add > button, .tk-note-form > button { height: 36px !important; padding-inline: 16px !important; border: 0 !important; border-radius: 999px !important; font-size: 13px !important; font-weight: 800 !important; color: #FFFFFF !important; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9) !important; box-shadow: 0 4px 12px rgba(4, 40, 80, .18); transition: filter .2s ease, box-shadow .2s ease; }
+.tb-note-add > button:hover, .td-note-add > button:hover, .tk-note-form > button:hover:not(:disabled) { filter: brightness(1.08); box-shadow: 0 6px 16px rgba(4, 40, 80, .24); }
+.tk-note-form > button:disabled { opacity: .5; }
+/* نتيجة تقييم المشرف المباشر داخل نموذج لجنة المشاريع (للاطلاع) */
+.es-viewonly { padding: 12px 16px; border-radius: 14px; font-weight: 600; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 6%, transparent); box-shadow: inset -4px 0 0 var(--ucas-blue); }
+.es-supres { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; border-radius: 16px; background: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .05)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 10%, transparent); }
+.es-supres header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.es-supres h5 { margin: 0; font-size: 15px; font-weight: 800; color: var(--ucas-blue); }
+.es-supres ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.es-supres li { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 9%, transparent); }
+.es-supres li > b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; color: var(--color-text-900); }
+.es-supres-score { flex-shrink: 0; font-size: 12.5px; color: var(--color-text-400); }
+.es-supres-score b { font-size: 18px; font-weight: 800; color: var(--ucas-blue); }
+
+/* ===== تقدّم المشاريع (كل اللوحات): الجداول داخل القائمة المنسدلة — رأس بتدرّج الهوية ونص أبيض واضح، صفوف متناوبة ===== */
+:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table { width: 100%; margin: 0 0 14px; border: 0; border-collapse: separate; border-spacing: 0; overflow: hidden; border-radius: 14px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent), 0 8px 22px rgba(4, 40, 80, .06); }
+:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table thead tr { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9) !important; }
+:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table thead th { padding: 12px 14px !important; border: 0 !important; font-size: 13px !important; font-weight: 800 !important; color: #FFFFFF !important; background: transparent !important; background-image: none !important; opacity: 1 !important; white-space: nowrap; }
+:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table tbody td { padding: 11px 14px !important; border: 0 !important; border-bottom: 1px solid color-mix(in srgb, var(--ucas-blue) 7%, transparent) !important; font-size: 13.5px; color: var(--color-text-700); background: transparent !important; }
+:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--ucas-blue) 3%, transparent) !important; }
+:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table tbody tr:hover td { background: color-mix(in srgb, var(--ucas-blue) 6%, transparent) !important; }
+:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table tbody tr:last-child td { border-bottom: 0 !important; }
+:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table tbody td:first-child { font-weight: 800; color: var(--ucas-blue); background-image: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .04)) !important; }
+:root[data-brand="ucas"] .sa-skin .pt tr.pt-sub > td, .sa-skin .pt tr.pt-sub > td { padding: 10px 14px 16px !important; }
+/* حالة المتأخرة داخل جدول الطلاب */
+.pb-drop .ev-students .is-bad, .pb-drop .ev-students .is-late { color: #E53E3E; font-weight: 800; }

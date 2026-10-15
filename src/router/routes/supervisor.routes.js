@@ -1,23 +1,23 @@
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { ROLES } from '@/utils/constants'
-import ProfilePageSupervisor from '@/views/supervisor/ProfilePage.vue'
-import TeamsPageSupervisor from '@/views/supervisor/TeamsPage.vue'
-import TasksPageSupervisor from '@/views/supervisor/TasksPage.vue'
-import MeetingsPageSupervisor from '@/views/supervisor/MeetingsPage.vue'
-import AppointmentsPageSupervisor from '@/views/supervisor/AppointmentsPage.vue'
-import AnnouncementsInboxPageSupervisor from '@/views/super-admin/AnnouncementsDesk.vue'
-import EvaluationsPageSupervisor from '@/views/super-admin/EvaluationsPage.vue'
-import AssistantPageSupervisor from '@/views/supervisor/AssistantPage.vue'
+const ProfilePageSupervisor = () => import('@/views/supervisor/ProfilePage.vue')
+const TeamsPageSupervisor = () => import('@/views/supervisor/TeamsPage.vue')
+const TasksPageSupervisor = () => import('@/views/supervisor/TasksPage.vue')
+const MeetingsPageSupervisor = () => import('@/views/supervisor/MeetingsPage.vue')
+const AppointmentsPageSupervisor = () => import('@/views/supervisor/AppointmentsPage.vue')
+const AnnouncementsInboxPageSupervisor = () => import('@/views/super-admin/AnnouncementsDesk.vue')
+const EvaluationsPageSupervisor = () => import('@/views/super-admin/EvaluationsPage.vue')
+const AssistantPageSupervisor = () => import('@/views/supervisor/AssistantPage.vue')
 // نفس صفحة "مهامي" في لجنة الإشراف: مهام الإدارة العامة المسندة للمستخدم نفسه
-import MyTasksPageSupervisor from '@/views/committee/MyTasksPage.vue'
+const MyTasksPageSupervisor = () => import('@/views/committee/MyTasksPage.vue')
 
-// استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
-import ProfilePage from '@/views/supervisor/ProfilePage.vue'
-import TeamsPage from '@/views/supervisor/TeamsPage.vue'
-import TasksPage from '@/views/supervisor/TasksPage.vue'
-import MeetingsPage from '@/views/supervisor/MeetingsPage.vue'
-import AppointmentsPage from '@/views/supervisor/AppointmentsPage.vue'
-import AssistantPage from '@/views/supervisor/AssistantPage.vue'
+// تحميل كسول + جلب مسبق وقت الفراغ (router/index.js) — حزمة أولى أصغر مع بقاء التنقّل فوريًا
+const ProfilePage = () => import('@/views/supervisor/ProfilePage.vue')
+const TeamsPage = () => import('@/views/supervisor/TeamsPage.vue')
+const TasksPage = () => import('@/views/supervisor/TasksPage.vue')
+const MeetingsPage = () => import('@/views/supervisor/MeetingsPage.vue')
+const AppointmentsPage = () => import('@/views/supervisor/AppointmentsPage.vue')
+const AssistantPage = () => import('@/views/supervisor/AssistantPage.vue')
 
 /** مسارات لوحة المشرف — تُضاف صفحة بصفحة حسب الوصف */
 export default [
@@ -29,7 +29,7 @@ export default [
       {
         path: '',
         name: 'supervisor-dashboard',
-        component: () => import('@/views/supervisor/HomePage.vue'),
+        component: () => import('@/views/super-admin/PortalDashboard.vue'),
         meta: { title: 'الرئيسية' }
       },
       {

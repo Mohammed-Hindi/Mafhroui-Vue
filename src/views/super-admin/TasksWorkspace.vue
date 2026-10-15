@@ -56,7 +56,7 @@
         </select>
       </div>
 
-      <p v-if="!loaded" class="pt-muted tk-loading">جارٍ تحميل المهام…</p>
+      <SkeletonLoader v-if="!loaded" variant="cards" :rows="6" />
 
       <!-- القائمة: سلايدر بنمط سجل المجموعات (6 مهام لكل شريحة) + شريط الملخص الأخضر -->
       <SlideTable v-else-if="view === 'list'" :rows="rows" label="المهام" :class="loadingTasks && 'tk-busy'">
@@ -110,17 +110,29 @@
                 </footer>
                 <!-- للمسؤول: المرفقات ومن أنجزها وسجل الحركة — يُجلب عند الفتح (GET /tasks/{id} + /activity) -->
                 <button type="button" class="tk-card-more" :aria-expanded="!!info[t.id]" @click.stop="toggleInfo(t)">
-                  <History :size="13" /> المرفقات والسجل <ChevronDown :size="13" :class="info[t.id] && 'is-open'" />
+                  <History :size="13" /> {{ canSeeLog(t) ? 'المرفقات والسجل' : 'المرفقات' }} <ChevronDown :size="13" :class="info[t.id] && 'is-open'" />
                 </button>
                 <div v-if="info[t.id]" class="tk-card-info" @click.stop>
-                  <p v-if="info[t.id] === 'loading'" class="pt-muted">جارٍ التحميل…</p>
+                  <SkeletonLoader v-if="info[t.id] === 'loading'" :rows="3" height="14px" />
                   <template v-else>
-                    <p v-if="t.status === 'done'"><b>أنجزها:</b> {{ completedBy(info[t.id].log) || '—' }}</p>
-                    <p><b>المرفقات ({{ info[t.id].files.length }}):</b> {{ info[t.id].files.map((f) => fileName(f.file_path)).join('، ') || 'لا يوجد' }}</p>
+                    <p v-if="t.status === 'done'" class="tk-done-by"><Check :size="14" /> أنجزها <b>{{ completedBy(info[t.id].log) || '—' }}</b></p>
+                    <h5 class="tk-info-title"><Paperclip :size="14" /> المرفقات <span>{{ info[t.id].files.length }}</span></h5>
+                    <ul v-if="info[t.id].files.length" class="tk-files">
+                      <li v-for="f in info[t.id].files" :key="f.id || f.file_path" :title="fileName(f.file_path)"><FileText :size="14" /> {{ fileName(f.file_path) }}</li>
+                    </ul>
+                    <p v-else class="tk-info-empty">لا توجد مرفقات</p>
+                    <!-- السجل حسب الدور: الإدارة الكل، اللجنة المشرفين والمجموعات، المشرف مجموعاته -->
+                    <template v-if="canSeeLog(t)">
+                    <h5 class="tk-info-title"><History :size="14" /> السجل <span>{{ info[t.id].log.length }}</span></h5>
                     <ol v-if="info[t.id].log.length" class="tk-card-log">
-                      <li v-for="(e, i) in info[t.id].log" :key="i"><b>{{ e.user?.name || 'النظام' }}</b> {{ describeTaskEvent(e) }} <span class="pt-muted">{{ formatDate(e.created_at) }}</span></li>
+                      <li v-for="(e, i) in info[t.id].log" :key="i">
+                        <b>{{ e.user?.name || 'النظام' }}</b>
+                        <span>{{ describeTaskEvent(e) }}</span>
+                        <time>{{ shortDate(e.created_at) }}</time>
+                      </li>
                     </ol>
-                    <p v-else class="pt-muted">لا توجد حركات مسجّلة بعد.</p>
+                    <p v-else class="tk-info-empty">لا توجد حركات مسجّلة بعد</p>
+                    </template>
                   </template>
                 </div>
               </article>
@@ -136,7 +148,7 @@
     </template>
 
     <!-- إنشاء مهمة -->
-    <BaseModal v-model="composer" title="مهمة جديدة" size="xl">
+    <BaseModal v-model="composer" title="مهمة جديدة" size="lg">
       <!-- خطوات الإنشاء: التفاصيل ← المستلمون ← المراجعة والإرسال -->
       <ol class="tk-stepper">
         <li v-for="(s, i) in steps" :key="s" :class="[i === step && 'is-active', i < step && 'is-done']">
@@ -276,14 +288,14 @@
 
     <TaskDetailModal
       v-if="!composeOnly"
-      :task="detail" :members="detailMembers" :statuses="STATUSES"
+      :task="detail" :members="detailMembers" :statuses="STATUSES" :show-log="!!detail && canSeeLog(detail)"
       @close="detail = null" @updated="replace" @removed="removeTask"
     />
   </div>
 </template>
 
 <script>
-import { CalendarDays, ChevronDown, Columns3, History, List, Plus, Search, Send, Users, X } from 'lucide-vue-next'
+import { Check, FileText, Paperclip, CalendarDays, ChevronDown, Columns3, History, List, Plus, Search, Send, Users, X } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ChannelPicker from '@/components/shared/ChannelPicker.vue'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
@@ -312,7 +324,7 @@ const emptyForm = () => ({ title: '', description: '', due: '', files: [], assig
 export default {
   name: 'TasksWorkspace',
 
-  components: { BaseModal, ChannelPicker, FileDropzone, GroupPicker, SlideTable, TaskDetailModal, TemplatePicker, CalendarDays, ChevronDown, Columns3, History, List, Plus, Search, Send, Users, X },
+  components: { BaseModal, ChannelPicker, FileDropzone, GroupPicker, SlideTable, TaskDetailModal, TemplatePicker, Check, FileText, Paperclip, CalendarDays, ChevronDown, Columns3, History, List, Plus, Search, Send, Users, X },
 
   props: {
     groups: { type: Array, default: () => [] },
@@ -357,7 +369,7 @@ export default {
   },
 
   computed: {
-    ...mapState(useAuthStore, ['userRole']),
+    ...mapState(useAuthStore, ['userRole', 'user']),
     /** الإرسال للجنة الإشراف للإدارة العامة وحدها؛ اللجنة ترسل للمشرفين والمجموعات */
     /** المشرف: نفس الصفحة بصلاحياته — مجموعاته فقط عبر /teams/{id}/tasks */
     isSupervisor() {
@@ -503,6 +515,25 @@ export default {
   },
 
   methods: {
+    /**
+     * سجل حركة المهام في صفحة التكليفات حسب الدور:
+     * الإدارة العامة: كل المهام (لجنة الإشراف والمشرفون والمجموعات) · لجنة الإشراف: مهام المشرفين والمجموعات (لا مهام اللجنة نفسها)
+     * المشرف: مهام مجموعاته فقط
+     */
+    canSeeLog(t) {
+      if (this.isAdmin) return true
+      if (this.isSupervisor) return !!t.groupId
+      const committeeIds = new Set(this.committee.map((u) => u.id))
+      return !!t.groupId || !(t.assignees || []).some((a) => committeeIds.has(a.id))
+    },
+
+    /** تاريخ قصير بأرقام لاتينية للسجل: "16 أكتوبر · 14:05" */
+    shortDate(v) {
+      const d = new Date(v)
+      if (Number.isNaN(d.getTime())) return '—'
+      return new Intl.DateTimeFormat('ar-EG-u-nu-latn', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(d)
+    },
+
     formatDate,
     initials,
     completedBy,
@@ -539,6 +570,8 @@ export default {
         status: t.status,
         due: t.due_date || '',
         assignees: t.assignees || [],
+        createdBy: t.created_by?.id ?? null,
+        created_by: t.created_by || null,
         groupId: t.team_id,
         // مهمة بلا فريق = مهمة لجنة الإشراف
         group: !t.team_id ? (this.isStaff ? 'لجنة الإشراف' : 'مهمة للمشرف') : section ? `شعبة ${section}` : team.name || g?.name || '—',

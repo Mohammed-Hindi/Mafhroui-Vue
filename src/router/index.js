@@ -44,4 +44,14 @@ const router = createRouter({
 router.beforeEach(authGuard)
 router.afterEach(titleGuard)
 
+// الصفحات تُحمَّل كسولًا؛ بعد أول دخول للوحة تُجلب صفحات نفس القسم وقت فراغ المتصفح فيبقى التنقّل بينها فوريًا
+const prefetched = new Set()
+router.afterEach((to) => {
+  const section = to.matched[0]
+  if (!section?.children?.length || prefetched.has(section.path)) return
+  prefetched.add(section.path)
+  const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1500))
+  idle(() => section.children.forEach((r) => typeof r.component === 'function' && r.component().catch(() => {})))
+})
+
 export default router

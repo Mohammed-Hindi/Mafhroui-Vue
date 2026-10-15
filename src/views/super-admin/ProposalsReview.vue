@@ -14,7 +14,7 @@
     <nav class="rv-tabs" aria-label="حالة المقترح">
       <button
         v-for="t in tabs" :key="t.value" type="button"
-        :class="['rv-tab', f.status === t.value && 'is-active']" :aria-pressed="f.status === t.value"
+        :class="['rv-tab', f.status === t.value && 'is-active', 'is-' + (t.value || 'all')]" :aria-pressed="f.status === t.value"
         @click="setFilter('status', t.value)"
       >
         {{ t.label }} <span class="rv-count">{{ count(t.value) }}</span>
@@ -25,7 +25,7 @@
     <div class="gr-filters" aria-label="تصفية المقترحات">
       <label class="gr-search">
         <Search :size="16" />
-        <input :value="f.search" type="search" placeholder="بحث بالمشروع أو الفريق أو الشعبة أو المشرف…" @input="onSearch($event.target.value)">
+        <input :value="f.search" type="search" :placeholder="isSupervisor ? 'بحث بالمشروع أو الفريق أو الشعبة…' : 'بحث بالمشروع أو الفريق أو الشعبة أو المشرف…'" @input="onSearch($event.target.value)">
       </label>
       <!-- المشرف: فلتر التخصص والفئة فقط (التخصص محليًا — الخادم لا يفلتر به) -->
       <label v-if="isSupervisor" class="gr-pick">
@@ -59,21 +59,21 @@
       </label>
     </div>
 
-    <SlideTable :rows="rows" label="المقترحات">
+    <SlideTable :rows="rows" :size="5" label="المقترحات">
       <template #default="{ rows: slideRows }">
         <div class="gr-table-wrap">
           <table class="gr-table pr-table">
             <thead>
               <tr>
-                <th>المشروع</th><th>الفريق / الشعبة</th><th>المشرف</th><th>الدرجة</th><th>تاريخ التقديم</th>
+                <th data-rt-show>المشروع</th><th data-rt-title>الفريق / الشعبة</th><th v-if="!isSupervisor">المشرف</th><th>الدرجة</th><th>تاريخ التقديم</th>
                 <th>الحالة</th><th>مرات الرفض</th><th>التقارير</th><th aria-label="عرض" />
               </tr>
             </thead>
             <tbody>
               <tr v-for="p in slideRows" :key="p.id" class="gr-row" @click="open(p)">
                 <td><span class="gr-name">{{ p.name }}</span></td>
-                <td><span class="d-block">{{ p.team?.name || '—' }}</span><span class="pt-muted">{{ p.team?.section ? 'شعبة ' + p.team.section : '' }}</span></td>
-                <td>{{ p.supervisor?.name || '—' }}</td>
+                <td><span v-if="p.team?.section" class="rt-section">شعبة {{ p.team.section }}</span><span class="d-block">{{ p.team?.name || '—' }}</span></td>
+                <td v-if="!isSupervisor">{{ p.supervisor?.name || '—' }}</td>
                 <td>{{ DEGREES[p.degree] || '—' }}</td>
                 <td><span class="mono">{{ day(p.created_at) }}</span></td>
                 <td><span :class="['rv-pill', STATUS[p.status].pill]">{{ STATUS[p.status].label }}</span></td>
@@ -81,7 +81,8 @@
                 <td><span class="pr-count">{{ p.final_reports.length }}</span></td>
                 <td @click.stop><button type="button" class="pbtn is-cyan is-sm" @click="open(p)"><Eye :size="15" /> عرض المقترح</button></td>
               </tr>
-              <tr v-if="!rows.length"><td colspan="9" class="gr-empty">{{ loading ? 'جارٍ التحميل…' : 'لا توجد مقترحات مطابقة' }}</td></tr>
+              <SkeletonLoader v-if="loading && !rows.length" variant="table" :cols="isSupervisor ? 8 : 9" :rows="5" />
+              <tr v-else-if="!rows.length"><td :colspan="isSupervisor ? 8 : 9" class="gr-empty">لا توجد مقترحات مطابقة</td></tr>
             </tbody>
           </table>
         </div>
@@ -119,6 +120,15 @@
           </div>
         </header>
 
+        <!-- سبب الرفض: فقط لمقترح مرفوض (أو مطلوب تعديله)، في مكان بارز أعلى النافذة -->
+        <div v-if="['rejected', 'changes'].includes(view.p.status) && view.p.rejection_reason" class="prd-reject" role="alert">
+          <span class="prd-reject-ic"><XCircle :size="20" /></span>
+          <div>
+            <b>{{ view.p.status === 'changes' ? 'المطلوب تعديله' : 'سبب رفض المقترح' }}</b>
+            <p>{{ view.p.rejection_reason }}</p>
+          </div>
+        </div>
+
         <div class="prd-body">
           <div class="prd-main">
             <nav class="hm-tabs pr-tabs" aria-label="أقسام المقترح">
@@ -129,7 +139,6 @@
 
             <!-- المقترح -->
             <div v-if="view.tab === 'proposal'" class="pr-pane">
-              <p v-if="view.p.rejection_reason" class="rv-alert" role="note"><b>{{ view.p.status === 'changes' ? 'المطلوب تعديله:' : 'سبب الرفض الأخير:' }}</b> {{ view.p.rejection_reason }}</p>
               <h4 class="pr-h">وصف المشروع</h4>
               <p class="pr-text">{{ view.p.description || '—' }}</p>
               <h4 class="pr-h">أعضاء الفريق</h4>
@@ -140,18 +149,35 @@
 
             <!-- محاولات الرفض: كل رفض بسببه وتاريخه، ضمن سجل التقديم -->
             <div v-else-if="view.tab === 'rejections'" class="pr-pane">
-              <p v-if="view.loading" class="pt-muted">جارٍ التحميل…</p>
-              <p v-else-if="!rejections.length" class="pt-muted">لم يُرفض هذا المقترح من قبل.</p>
-              <ol v-else class="pr-attempts">
-                <li v-for="(r, i) in rejections" :key="i">
-                  <span class="pr-attempt-no">{{ i + 1 }}</span>
-                  <div>
-                    <b>{{ r.changes ? 'طلب تعديل' : 'رفض' }} — المحاولة {{ i + 1 }}</b>
-                    <span class="pt-muted">{{ r.at }} · {{ r.who }}</span>
-                    <p>{{ r.reason || 'بدون سبب مذكور' }}</p>
-                  </div>
-                </li>
-              </ol>
+              <SkeletonLoader v-if="view.loading" :rows="5" />
+              <template v-else>
+                <!-- المحاولات المستخدمة من المسموح (تقديم أولي + محاولتا إعادة) -->
+                <div class="pr-meter">
+                  <span class="pr-meter-label">المحاولات المستخدمة</span>
+                  <span class="pr-meter-dots" aria-hidden="true">
+                    <i v-for="n in MAX_ATTEMPTS" :key="n" :class="n <= attemptsUsed && (n <= rejections.length ? 'is-bad' : 'is-on')" />
+                  </span>
+                  <b>{{ attemptsUsed }} من {{ MAX_ATTEMPTS }}</b>
+                </div>
+                <p v-if="!rejections.length" class="tk-info-empty">لم يُرفض هذا المقترح من قبل.</p>
+                <ol v-else class="pr-rejects">
+                  <li v-for="(r, i) in rejections" :key="i">
+                    <header>
+                      <span class="pr-attempt-no">{{ i + 1 }}</span>
+                      <b>المحاولة {{ i + 1 }}</b>
+                      <span :class="['rv-pill', r.changes ? 'is-pending' : 'is-rejected']">{{ r.changes ? 'طلب تعديل' : 'رفض' }}</span>
+                      <time>{{ r.at }}</time>
+                    </header>
+                    <p class="pr-reject-reason">{{ r.reason || 'بدون سبب مذكور' }}</p>
+                    <dl class="pr-reject-meta">
+                      <div><dt>المراجِع</dt><dd>{{ r.who }}</dd></div>
+                      <div v-if="r.submittedAt"><dt>المقترح المقدَّم</dt><dd>{{ r.submittedAt }}<template v-if="r.submittedBy"> · {{ r.submittedBy }}</template></dd></div>
+                    </dl>
+                    <!-- الخادم يحفظ آخر ملف مقترح فقط، فالملف يُعرض مع آخر محاولة -->
+                    <button v-if="i === rejections.length - 1" type="button" class="pr-report-file is-inline" @click="openFile(`/proposals/${view.p.id}/download`)"><FileText :size="16" /><span>ملف المقترح</span></button>
+                  </li>
+                </ol>
+              </template>
               <h4 v-if="view.history.length" class="pr-h">سجل التقديم</h4>
               <ol class="tl-log">
                 <li v-for="(h, i) in view.history" :key="i">
@@ -183,7 +209,7 @@
                       <button type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click="reviewLatest(r, true)">موافقة ورفع للجنة</button>
                     </span>
                   </div>
-                  <button type="button" class="pbtn is-outline is-sm" @click="openFile(`/final-reports/${r.id}/download`)"><FileText :size="15" /> التقرير</button>
+                  <button type="button" class="pr-report-file" @click="openFile(`/final-reports/${r.id}/download`)"><FileText :size="18" /><span>عرض التقرير</span></button>
                 </li>
               </ul>
             </div>
@@ -246,6 +272,8 @@ const STATUS = {
   rejected: { label: 'مرفوض', pill: 'is-rejected' }
 }
 const CHANGES_PREFIX = PROPOSAL_CHANGES_PREFIX
+/** محاولات التقديم المسموحة — تطابق ProposalService::MAX_REJECTIONS (نفس ثابت صفحة مقترح الطالب) */
+const MAX_ATTEMPTS = 3
 const HISTORY = { submit: 'قدّم المقترح', resubmit: 'أعاد تقديم المقترح', reject: 'رفض المقترح' }
 const EMPTY = { status: '', degree: '', gender: '', supervisor_id: '', search: '', spec: '' }
 const specOf = (p) => p.project?.team?.specialization?.name || ''
@@ -254,11 +282,11 @@ const fmt = (v) => (v ? new Date(v).toLocaleString('ar-EG', { dateStyle: 'medium
 export default {
   name: 'ProposalsReview',
 
-  components: { Search, X, Check, Eye, FileText, PencilLine, ChevronLeft, ChevronRight, BaseModal, SlideTable },
+  components: { Search, X, Check, Eye, FileText, PencilLine, ChevronLeft, ChevronRight, XCircle, BaseModal, SlideTable },
 
   data() {
     return {
-      DEGREES, STATUS,
+      DEGREES, STATUS, MAX_ATTEMPTS,
       all: [],
       rows: [],
       loading: true,
@@ -281,7 +309,7 @@ export default {
   },
 
   computed: {
-    ...mapState(useAuthStore, ['userRole']),
+    ...mapState(useAuthStore, ['userRole', 'user']),
     specs() {
       return [...new Set(this.all.map(specOf).filter(Boolean))]
     },
@@ -299,11 +327,19 @@ export default {
       return [...map.values()]
     },
     /** كل رفض بسببه (من سجل المراجعة) */
+    /** المحاولات المستخدمة: عدد مرات التقديم (أولي + إعادات)، ولا يقل عن مرات الرفض */
+    attemptsUsed() {
+      const subs = this.view.raw.filter((h) => ['submit', 'resubmit'].includes(h.action)).length
+      return Math.min(MAX_ATTEMPTS, Math.max(subs, this.rejections.length + (this.view.p?.status === 'pending' ? 1 : 0), 1))
+    },
+
     rejections() {
-      const list = this.view.raw.filter((h) => h.action === 'reject').map((h) => {
+      const list = this.view.raw.map((h, i) => ({ h, i })).filter(({ h }) => h.action === 'reject').map(({ h, i }) => {
         const reason = h.meta?.reason || ''
         const changes = reason.startsWith(CHANGES_PREFIX)
-        return { changes, reason: changes ? reason.slice(CHANGES_PREFIX.length) : reason, who: h.user?.name || '—', at: fmt(h.created_at) }
+        // التقديم الذي رُفض: آخر تقديم/إعادة تقديم قبل هذا الرفض
+        const sub = this.view.raw.slice(0, i).reverse().find((x) => ['submit', 'resubmit'].includes(x.action))
+        return { changes, reason: changes ? reason.slice(CHANGES_PREFIX.length) : reason, who: h.user?.name || '—', at: fmt(h.created_at), submittedAt: sub ? fmt(sub.created_at) : '', submittedBy: sub?.user?.name || '' }
       })
       // سجلات قديمة بلا سجل مراجعة: نعرض الرفض الحالي على الأقل
       const p = this.view.p
@@ -341,10 +377,15 @@ export default {
       return status ? this.all.filter((p) => p.status === status).length : this.all.length
     },
 
+    /** المشرف يرى مقترحات وتقارير مجموعاته فقط (لا يُعتمد على تقييد الخادم وحده) */
+    mine(list) {
+      return this.isSupervisor ? list.filter((p) => p.supervisor?.id === this.user?.id) : list
+    },
+
     /** القائمة الكاملة (للعدّادات وقائمة المشرفين) + القائمة المفلترة من الخادم */
     async reload() {
       const [all] = await Promise.allSettled([api.get('/proposals')])
-      this.all = all.value?.data || []
+      this.all = this.mine(all.value?.data || [])
       await this.fetchRows()
     },
 
@@ -352,7 +393,7 @@ export default {
       this.loading = true
       try {
         const params = Object.fromEntries(Object.entries(this.f).filter(([k, v]) => v !== '' && k !== 'spec'))
-        const rows = Object.keys(params).length ? (await api.get('/proposals', { params })).data : this.all
+        const rows = Object.keys(params).length ? this.mine((await api.get('/proposals', { params })).data) : this.all
         this.rows = this.f.spec ? rows.filter((p) => specOf(p) === this.f.spec) : rows
       } catch {
         this.rows = []

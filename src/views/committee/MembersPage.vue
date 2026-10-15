@@ -147,9 +147,9 @@
                               <thead><tr><th>الطالب</th><th>الرقم الجامعي</th><th>الجنس</th><th>مكان التواجد</th><th>الواتس</th></tr></thead>
                               <tbody>
                                 <tr v-for="m in g.members || []" :key="m.id">
-                                  <td><button type="button" class="gr-member-name gr-link" title="عرض بروفايل الطالب" @click="openProfile({ id: m.student?.id, name: m.student?.name }, 'student')">{{ m.student?.name }}</button></td>
+                                  <td><button type="button" class="gr-member-name gr-link" title="عرض بروفايل الطالب" @click="openProfile({ id: m.student?.id, name: m.student?.name }, 'student')"><span class="gm-av" aria-hidden="true">{{ (m.student?.name || '؟').charAt(0) }}</span>{{ m.student?.name }}</button></td>
                                   <td><span class="mono">{{ m.student?.university_number || '—' }}</span></td>
-                                  <td>{{ GENDERS[m.student?.gender] || 'غير محدد' }}</td>
+                                  <td><span :class="['gm-chip', m.student?.gender === 'female' && 'is-f']">{{ GENDERS[m.student?.gender] || 'غير محدد' }}</span></td>
                                   <td>{{ REGIONS[m.student?.region] || 'غير محدد' }}</td>
                                   <td>
                                     <button v-if="m.student?.whatsapp" type="button" class="gr-link mono" title="فتح واتساب" @click="sendWhats(m.student.whatsapp)">{{ m.student.whatsapp }}</button>
@@ -251,7 +251,7 @@
           <BaseButton :icon="Send" :loading="notifySending" :disabled="!notifyPreviewResult || notifySending" @click="confirmSendNotify">إرسال ({{ notifySelectedIds.length }})</BaseButton>
         </div>
 
-        <div v-if="notifyDirectoryLoading" class="py-8 text-center text-body-sm text-text-400">جارٍ التحميل...</div>
+        <SkeletonLoader v-if="notifyDirectoryLoading" :rows="5" height="28px" />
         <EmptyState v-else-if="!notifyDirectory.length" title="لا يوجد أعضاء" description="لا يوجد أعضاء بهذا الدور حاليًا." />
         <EmptyState v-else-if="!filteredNotifyDirectory.length" title="لا نتائج" description="لا يوجد عضو مطابق للبحث." />
         <template v-else>

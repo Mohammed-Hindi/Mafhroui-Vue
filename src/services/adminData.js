@@ -13,10 +13,10 @@ const day = (v) => (v ? String(v).slice(0, 10) : '')
  *   members: [{ id, name, gender, region, uni, whatsapp, email, online, total, done, percentage, evaluation }],
  *   done, tasksTotal, percentage }
  */
-export async function loadGroups() {
+export async function loadGroups(fresh = false) {
   // المشرف يرى مجموعاته فقط (لا يُعتمد على تقييد الخادم وحده)
   const { user } = useAuthStore()
-  const groups = (await fetchGroups()).filter((g) => user?.role !== 'supervisor' || g.sup.id === user.id)
+  const groups = (await fetchGroups(fresh)).filter((g) => user?.role !== 'supervisor' || g.sup.id === user.id)
   return groups.map((g) => ({
     id: g.id,
     name: g.section ? `شعبة ${g.section}` : g.name,

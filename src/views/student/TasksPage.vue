@@ -2,9 +2,11 @@
   <!-- مهام الطالب: ملاحظات على كل مهام الفريق (مهامه ومهام زملائه)، ورفع الملفات وتغيير الحالة للمهام المنتسب لها فقط (نفس قيود الخادم) -->
   <div class="dash hd-page">
     <header class="dash-head"><h2 class="dash-title">المهام</h2></header>
+    <SkeletonLoader v-if="loading" variant="cards" :rows="6" />
     <TaskBoard
+      v-else
       :tasks="boardTasks"
-      :can-create="false" :can-drag="true" :can-delete="false" uploads uploads-live :show-log="false" :can-act="isMine" show-source
+      :can-create="false" :can-drag="true" :can-delete="false" uploads uploads-live :can-act="isMine" show-source
       :notes-by-task="taskNotes"
       :notes-loading-by-task="taskNotesLoading"
       @move="onMove"
@@ -27,7 +29,7 @@ export default {
   components: { TaskBoard },
 
   data() {
-    return { demo: placeholderTasks() }
+    return { loading: true, demo: placeholderTasks() }
   },
 
   computed: {
@@ -38,14 +40,13 @@ export default {
       return this.teams.find((t) => t.members?.some((m) => m.student?.id === this.user?.id))
     },
 
-    /** بلا فريق أو بلا مهام: مهام تجريبية (placeholder) */
     boardTasks() {
-      return this.myTeam && this.tasks.length ? this.tasks : this.demo
+      return this.myTeam ? this.tasks : []
     }
   },
 
   async created() {
-    await this.fetchTeams()
+    await this.fetchTeams().catch(() => {})
     if (this.myTeam) {
       try {
         await this.fetchTasks(this.myTeam.id)
@@ -53,6 +54,7 @@ export default {
         this.$toast?.error(err.normalized?.message || 'تعذّر تحميل المهام')
       }
     }
+    this.loading = false
   },
 
   methods: {

@@ -59,6 +59,7 @@
 
         <DataTable
           :columns="columns" :rows="pageRows" row-key="id"
+          :loading="!teamsLoaded"
           :meta="{ current_page: page, last_page: totalPages, total: filteredProposals.length }"
           empty-title="لا توجد مقترحات مطابقة"
           @page-change="page = $event"
@@ -152,7 +153,7 @@ export default {
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['teams', 'specializationName']),
+    ...mapState(useTeamsStore, ['teams', 'teamsLoaded', 'specializationName']),
     ...mapState(useAuthStore, ['userRole']),
 
     /** قوالب البوابة (هوية UCAS) للإدارة العامة ولجنة الإشراف */

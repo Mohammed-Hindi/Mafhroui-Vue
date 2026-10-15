@@ -46,7 +46,7 @@
         </template>
       </div>
 
-      <p v-if="!loaded" class="pt-muted tk-loading">جارٍ التحميل…</p>
+      <SkeletonLoader v-if="!loaded" variant="cards" :rows="4" />
 
       <SlideTable v-else :rows="items" :label="isFile ? 'الملفات' : 'الإعلانات'" :class="loading && 'tk-busy'">
         <template #default="{ rows: pageRows }">

@@ -63,7 +63,8 @@
       </div>
     </section>
 
-    <EmptyState v-if="!teamOptions.length" title="لا توجد فرق مُسندة إليك" />
+    <SkeletonLoader v-if="!teamsLoaded && !teamOptions.length" variant="cards" :rows="4" />
+    <EmptyState v-else-if="!teamOptions.length" :icon="UsersIcon" title="لا توجد فرق مُسندة إليك" description="عند إسناد مجموعات إليك من لجنة الإشراف ستظهر هنا مهامها وتفاعل طلابها." />
     <TaskBoard
       v-else-if="selectedTeamId && view === 'tasks'"
       :tasks="tasks"
@@ -108,6 +109,7 @@ export default {
 
   data() {
     return {
+      UsersIcon: markRaw(Users),
       selectedTeamId: null,
       view: 'tasks',
       restoringId: null,
@@ -116,7 +118,7 @@ export default {
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['teamsForDisplay', 'tasks', 'trashedTasks', 'trashedTasksLoading', 'taskNotes', 'taskNotesLoading']),
+    ...mapState(useTeamsStore, ['teamsForDisplay', 'teamsLoaded', 'tasks', 'trashedTasks', 'trashedTasksLoading', 'taskNotes', 'taskNotesLoading']),
     ...mapState(useAuthStore, ['user']),
 
     myTeams() {

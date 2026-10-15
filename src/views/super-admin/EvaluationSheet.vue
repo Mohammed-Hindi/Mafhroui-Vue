@@ -7,7 +7,7 @@
       <button type="button" class="pbtn is-cyan" @click="back"><ArrowRight :size="16" /> رجوع</button>
     </div>
 
-    <p v-if="loading" class="pt-muted tk-loading">جارٍ تحميل ورقة التقييم…</p>
+    <SkeletonLoader v-if="loading" :rows="6" height="40px" />
     <div v-else-if="sheet" class="es">
       <!-- 1) بطاقة المجموعة -->
       <section class="es-card es-group">
@@ -125,6 +125,21 @@
             <span v-if="!others.length">لم يُقيّم المناقشون هذه المجموعة بعد.</span>
           </p>
 
+          <!-- نموذج لجنة المشاريع (للاطلاع): نتيجة تقييم المشرف المباشر لكل طالب (من 50) بجانب علامة اللجنة -->
+          <section v-if="viewOnly && !examinerOnly" class="es-supres">
+            <header>
+              <h5>نتيجة تقييم المشرف المباشر</h5>
+              <span class="es-scope">من {{ weights.supervisor }} درجة لكل طالب</span>
+            </header>
+            <ul>
+              <li v-for="m in sheet.team.members" :key="m.id">
+                <span class="es-avatar">{{ (m.name || '؟').charAt(0) }}</span>
+                <b>{{ m.name }}</b>
+                <span class="es-supres-score"><b class="mono">{{ result(m.id)?.supervisor_score ?? '—' }}</b> / {{ weights.supervisor }}</span>
+              </li>
+            </ul>
+          </section>
+
           <template v-else>
             <p v-if="mine" class="es-status is-saved">
               <CheckCircle2 :size="17" /> تقييمك محفوظ — آخر تحديث {{ formatDateTime(mine.updated_at) }}
@@ -139,10 +154,10 @@
                 <table class="pt es-table">
                   <thead>
                     <tr v-if="s.scope === 'project'">
-                      <th class="es-n">#</th><th>البند</th><th class="es-max">القصوى</th><th class="es-col">الدرجة</th><th class="es-note">ملاحظات</th>
+                      <th class="es-n">#</th><th data-rt-title>البند</th><th class="es-max">القصوى</th><th class="es-col">الدرجة</th><th class="es-note">ملاحظات</th>
                     </tr>
                     <tr v-else>
-                      <th class="es-n">#</th><th>البند</th><th class="es-max">القصوى</th>
+                      <th class="es-n">#</th><th data-rt-title>البند</th><th class="es-max">القصوى</th>
                       <th v-for="m in sheet.team.members" :key="m.id" class="es-col">
                         {{ m.name }}
                         <button v-if="!readonly" type="button" class="es-fill" :title="`الدرجة الكاملة لـ ${m.name} في هذا القسم`" @click="fillMax(s, m.id)">الدرجة الكاملة</button>

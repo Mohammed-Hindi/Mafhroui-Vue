@@ -1,7 +1,7 @@
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { ROLES } from '@/utils/constants'
-import MembersPage from '@/views/committee/MembersPage.vue'
-import OrgStructurePage from '@/views/super-admin/OrgStructurePage.vue'
+const MembersPage = () => import('@/views/committee/MembersPage.vue')
+const OrgStructurePage = () => import('@/views/super-admin/OrgStructurePage.vue')
 
 /** مسارات لوحة الإدارة العامة (Super Admin) — إنشاء وإدارة حسابات المشرفين ولجنة الإشراف */
 export default [

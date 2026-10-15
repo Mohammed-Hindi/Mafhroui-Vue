@@ -65,16 +65,17 @@
             <thead>
               <tr>
                 <th class="w-12" aria-label="فتح" />
-                <th>رقم المجموعة</th>
-                <th>المشروع</th>
-                <th>المشرف</th>
+                <th data-rt-title>رقم المجموعة</th>
+                <th data-rt-show>المشروع</th>
+                <th v-if="!isSupervisor" data-rt-show>المشرف</th>
                 <th class="gr-hide-md">التخصص</th>
                 <th class="gr-hide-md">الطلاب</th>
                 <th>التقدّم</th>
               </tr>
             </thead>
             <tbody v-if="!rows.length">
-              <tr><td colspan="7" class="gr-empty">{{ loading ? 'جارٍ تحميل المجموعات…' : 'لا توجد مجموعات مطابقة للفلاتر' }}</td></tr>
+              <SkeletonLoader v-if="loading" variant="table" :cols="isSupervisor ? 6 : 7" :rows="8" />
+              <tr v-else><td :colspan="isSupervisor ? 6 : 7" class="gr-empty">لا توجد مجموعات مطابقة للفلاتر</td></tr>
             </tbody>
             <template v-else>
               <tbody v-for="g in pageRows" :key="g.id" :class="['gr-group', isOpen(g.id) && 'is-open']">
@@ -90,7 +91,7 @@
                     <span class="gr-project">{{ STATUS[g.projectStatus] }}</span>
                     <span v-if="g.types.length" class="gr-types">{{ g.types.join(' · ') }}</span>
                   </td>
-                  <td>{{ g.supName }}</td>
+                  <td v-if="!isSupervisor">{{ g.supName }}</td>
                   <td class="gr-hide-md">
                     <span class="gr-spec">{{ g.spec }}</span>
                     <span class="gr-degree">{{ DEGREES[g.degree] }}</span>
@@ -106,8 +107,30 @@
                 </tr>
   
                 <tr v-if="isOpen(g.id)" class="gr-detail-row">
-                  <td colspan="7">
+                  <td :colspan="isSupervisor ? 6 : 7">
                     <div class="gr-detail">
+                      <div class="gr-members gr-detail-full">
+                        <table>
+                          <thead>
+                            <tr><th>الطالب</th><th>الرقم الجامعي</th><th>الجنس</th><th>مكان التواجد</th><th v-if="isSupervisor">واتساب</th><th v-if="isSupervisor">البريد</th><th>المهام</th><th>التقدّم</th></tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="m in g.shown" :key="m.id">
+                              <td><button type="button" class="gr-member-name gr-link" title="عرض بروفايل الطالب" @click="openPerson('student', m.id, m.name)"><span class="gm-av" aria-hidden="true">{{ m.name.charAt(0) }}</span>{{ m.name }}</button></td>
+                              <td><span class="mono">{{ m.uni }}</span></td>
+                              <td><span :class="['gm-chip', m.gender === 'female' && 'is-f']">{{ GENDERS[m.gender] || '—' }}</span></td>
+                              <td>{{ REGIONS[m.region] || '—' }}</td>
+                              <td v-if="isSupervisor"><span class="mono">{{ m.whatsapp || '—' }}</span></td>
+                              <td v-if="isSupervisor"><span class="mono">{{ m.email || '—' }}</span></td>
+                              <td><span class="mono">{{ m.done }}/{{ m.total }}</span></td>
+                              <td>
+                                <span class="gr-progress is-sm"><span :class="levelClass(m.percentage)" :style="{ width: m.percentage + '%' }" /></span>
+                                <span class="gr-pct">{{ m.percentage }}%</span>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                       <aside class="gr-side">
                         <!-- المشرف: الشعبة ووصف المشروع (المطلوب في صفحة المجموعات) -->
                         <template v-if="isSupervisor">
@@ -130,9 +153,9 @@
                           @saved="(types) => { g.types = types; g.type = types.join('، ') }"
                         />
 
-                        <template v-if="!isSupervisor">
-                        <h4>تفاعل المشرف مع المجموعة</h4>
-                        <p class="gr-sup">
+                        <!-- نفس تفاصيل الإدارة العامة للمشرف أيضًا، على مجموعاته فقط -->
+                        <h4>{{ isSupervisor ? 'تفاعلي مع المجموعة' : 'تفاعل المشرف مع المجموعة' }}</h4>
+                        <p v-if="!isSupervisor" class="gr-sup">
                           <button type="button" class="gr-link" title="عرض بروفايل المشرف" @click="openPerson('supervisor', g.supId, g.supName)">{{ g.supName }}</button>
                         </p>
                         <template v-if="g.act">
@@ -146,57 +169,36 @@
                             <div><dt>الملفات المرفوعة</dt><dd>{{ g.act.files_count ?? 0 }}</dd></div>
                           </dl>
                         </template>
-                        <p v-else class="gr-muted">{{ supLoading[g.supId] ? 'جارٍ تحميل نشاط المشرف…' : 'لا تتوفر بيانات نشاط' }}</p>
+                        <SkeletonLoader v-else-if="supLoading[g.supId]" :rows="3" />
+                        <p v-else class="gr-muted">لا تتوفر بيانات نشاط</p>
   
-                        <h4>إضافة للمجموعة</h4>
-                        <div class="gr-add-row">
-                          <button v-for="(t, key) in ITEM_TYPES" :key="key" type="button" class="gr-tool" @click="openAdd(g, key)">
-                            <component :is="t.icon" :size="15" /> {{ t.label }}
-                          </button>
-                        </div>
-                        </template>
                       </aside>
-  
-                      <div class="gr-members">
-                        <table>
-                          <thead>
-                            <tr><th>الطالب</th><th>الرقم الجامعي</th><th>الجنس</th><th>مكان التواجد</th><th v-if="isSupervisor">واتساب</th><th v-if="isSupervisor">البريد</th><th>المهام</th><th>التقدّم</th></tr>
-                          </thead>
-                          <tbody>
-                            <tr v-for="m in g.shown" :key="m.id">
-                              <td><button type="button" class="gr-member-name gr-link" title="عرض بروفايل الطالب" @click="openPerson('student', m.id, m.name)">{{ m.name }}</button></td>
-                              <td><span class="mono">{{ m.uni }}</span></td>
-                              <td>{{ GENDERS[m.gender] }}</td>
-                              <td>{{ REGIONS[m.region] }}</td>
-                              <td v-if="isSupervisor"><span class="mono">{{ m.whatsapp || '—' }}</span></td>
-                              <td v-if="isSupervisor"><span class="mono">{{ m.email || '—' }}</span></td>
-                              <td><span class="mono">{{ m.done }}/{{ m.total }}</span></td>
-                              <td>
-                                <span class="gr-progress is-sm"><span :class="levelClass(m.percentage)" :style="{ width: m.percentage + '%' }" /></span>
-                                <span class="gr-pct">{{ m.percentage }}%</span>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-  
-                        <!-- قائمة طويلة: تمرير داخل الصندوق نفسه برأس ثابت -->
-                        <div v-if="!isSupervisor" class="gr-items-scroll">
-                          <table class="gr-items">
-                            <thead><tr><th>المهام والإعلانات والملفات</th><th>النوع</th><th>التاريخ</th><th>موعد التسليم</th></tr></thead>
-                            <tbody>
-                              <tr v-if="!timelines[g.id] || timelines[g.id].loading"><td colspan="4" class="gr-muted">جارٍ التحميل…</td></tr>
-                              <tr v-else-if="!g.timeline.length"><td colspan="4" class="gr-muted">لا توجد مهام أو إعلانات بعد</td></tr>
-                              <tr v-for="i in g.timeline" :key="i.key">
-                                <td>{{ i.title }}</td>
-                                <td><span :class="['rv-pill', i.pill]">{{ i.kind }}</span></td>
-                                <td><span class="mono">{{ i.date }}</span></td>
-                                <td><span class="mono">{{ i.due || '—' }}</span></td>
-                              </tr>
-                            </tbody>
-                          </table>
+                      <div class="gr-members gr-timeline">
+                        <header class="tl-head">
+                          <h4>المهام والإعلانات والملفات</h4>
+                          <span class="tl-count">{{ g.timeline.length }}</span>
+                        </header>
+                        <!-- القسم كاملًا يتمرّر (الرأس ثابت أعلاه) بشريط رفيع بهوية مسار -->
+                        <div class="tl-wrap">
+                          <SkeletonLoader v-if="!timelines[g.id] || timelines[g.id].loading" :rows="4" height="46px" />
+                          <p v-else-if="!g.timeline.length" class="tl-empty">لا توجد مهام أو إعلانات بعد</p>
+                          <ul v-else class="tl-list">
+                            <li v-for="i in g.timeline" :key="i.key" :class="'is-' + i.type">
+                              <span class="tl-ic"><component :is="ITEM_TYPES[i.type].icon" :size="16" /></span>
+                              <div class="tl-body">
+                                <b :title="i.title">{{ i.title }}</b>
+                                <span class="tl-meta">
+                                  <span>{{ i.kind }}</span>
+                                  <span class="mono">{{ i.date }}</span>
+                                  <span v-if="i.due" class="tl-due">التسليم <span class="mono">{{ i.due }}</span></span>
+                                </span>
+                              </div>
+                              <span v-if="i.status" :class="['rv-pill', i.status.pill]">{{ i.status.label }}</span>
+                            </li>
+                          </ul>
+                        </div>
                         </div>
                       </div>
-                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -229,38 +231,6 @@
     <ProfileModal v-model="profile.open" :kind="profile.kind" :person-id="profile.id" :name="profile.name" />
 
     <!-- إضافة مهمة / إعلان / ملف (محلي فقط) -->
-    <BaseModal v-model="add.open" :title="add.group ? `${ITEM_TYPES[add.type].label} — ${add.group.name}` : ''" size="md">
-      <form id="gr-add-form" class="gr-form" @submit.prevent="saveAdd">
-        <label>
-          <span>{{ add.type === 'file' ? 'وصف الملف' : 'العنوان' }}</span>
-          <input v-model.trim="add.title" required class="gr-input">
-        </label>
-        <label v-if="add.type === 'announcement'">
-          <span>نص الإعلان</span>
-          <textarea v-model.trim="add.body" rows="4" required class="gr-input" />
-        </label>
-        <template v-if="add.type === 'task'">
-          <label>
-            <span>موعد التسليم</span>
-            <input v-model="add.due" type="date" required class="gr-input">
-          </label>
-          <fieldset>
-            <legend>المكلّفون (بدون اختيار = كل الفريق)</legend>
-            <label v-for="m in add.group.members" :key="m.id" class="gr-check">
-              <input v-model="add.assignees" type="checkbox" :value="m.id"> {{ m.name }}
-            </label>
-          </fieldset>
-        </template>
-        <label v-if="add.type === 'file'">
-          <span>الملف</span>
-          <input type="file" required class="gr-input" @change="add.file = $event.target.files[0] || null">
-        </label>
-      </form>
-      <template #footer>
-        <button type="button" class="gr-tool" @click="add.open = false">إلغاء</button>
-        <button type="submit" form="gr-add-form" class="gr-tool is-primary" :disabled="add.saving">{{ add.saving ? 'جارٍ الحفظ…' : 'حفظ' }}</button>
-      </template>
-    </BaseModal>
   </section>
 </template>
 
@@ -268,7 +238,6 @@
 import SlideTable from '@/components/ui/SlideTable.vue'
 import ProjectTypes from '@/components/shared/ProjectTypes.vue'
 import { Search, ChevronLeft, FileSpreadsheet, Printer, ListTodo, Megaphone, Paperclip } from 'lucide-vue-next'
-import BaseModal from '@/components/ui/BaseModal.vue'
 import ProfileModal from '@/components/shared/ProfileModal.vue'
 import { DEGREES, GENDERS, REGIONS, PROJECT_STATUS as STATUS, level } from '@/utils/progressData'
 import { exportSupervisorsPdf } from '@/utils/ucasReports'
@@ -278,6 +247,13 @@ import { mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
 
 import { loadGroups, loadSupervisors, loadGroupTimeline, activeSemesterName } from '@/services/adminData'
+
+/** حالة المهمة في القائمة: مكتملة / متأخرة (تجاوزت موعدها) / جارية */
+const taskStatus = (t) => {
+  if (t.status === 'done') return { label: 'مكتملة', pill: 'is-approved' }
+  if (t.due && t.due < new Date().toISOString().slice(0, 10)) return { label: 'متأخرة', pill: 'is-rejected' }
+  return { label: 'جارية', pill: 'is-pending' }
+}
 
 const ITEM_TYPES = {
   task: { label: 'مهمة', icon: ListTodo, pill: 'is-pending' },
@@ -290,7 +266,7 @@ const EMPTY_FILTERS = { degree: '', gender: '', region: '', spec: '', sup: '', s
 export default {
   name: 'GroupsRegister',
 
-  components: { SlideTable, ProjectTypes, Search, ChevronLeft, FileSpreadsheet, Printer, BaseModal, ProfileModal },
+  components: { SlideTable, ProjectTypes, Search, ChevronLeft, FileSpreadsheet, Printer, ProfileModal },
 
   data() {
     return {
@@ -305,7 +281,6 @@ export default {
       f: { ...EMPTY_FILTERS },
       openIds: [],
       exporting: '',
-      add: { open: false, saving: false, group: null, type: 'task', title: '', body: '', due: '', assignees: [], file: null },
       profile: { open: false, kind: 'student', id: null, name: '' }
     }
   },
@@ -326,8 +301,8 @@ export default {
         const act = this.supProfiles[g.supId]?.interaction?.teams?.find((t) => t.team.id === g.id)?.interaction || null
         const tl = this.timelines[g.id] || { tasks: [], announcements: [] }
         const timeline = [
-          ...tl.tasks.map((t) => ({ key: `t${t.id}`, title: t.title, kind: 'مهمة', pill: ITEM_TYPES.task.pill, date: t.issued, due: t.due })),
-          ...tl.announcements.map((a) => ({ key: `a${a.id}`, title: [a.title, a.body].filter(Boolean).join(' — '), kind: 'إعلان', pill: ITEM_TYPES.announcement.pill, date: String(a.created_at || '').slice(0, 10) }))
+          ...tl.tasks.map((t) => ({ key: `t${t.id}`, type: 'task', title: t.title, kind: 'مهمة', date: t.issued, due: t.due, status: taskStatus(t) })),
+          ...tl.announcements.map((a) => ({ key: `a${a.id}`, type: 'announcement', title: [a.title, a.body].filter(Boolean).join(' — '), kind: 'إعلان', date: String(a.created_at || '').slice(0, 10) }))
         ].sort((x, y) => y.date.localeCompare(x.date))
         return { ...g, shown, act, timeline }
       })
@@ -449,37 +424,6 @@ export default {
 
     openPerson(kind, id, name) {
       if (id) this.profile = { open: true, kind, id, name }
-    },
-
-    openAdd(g, type) {
-      this.add = { open: true, saving: false, group: g, type, title: '', body: '', due: '', assignees: [], file: null }
-    },
-
-    /** إضافة مهمة / إعلان / ملف للمجموعة عبر الـ API ثم تحديث تفاصيلها وتقدّمها */
-    async saveAdd() {
-      const { group, type, title, body, due, assignees, file } = this.add
-      this.add.saving = true
-      try {
-        if (type === 'task') {
-          await api.post(`/teams/${group.id}/tasks`, { title, description: body || null, due_date: due || null, ...(assignees.length ? { assignee_ids: assignees } : {}) })
-        } else if (type === 'announcement') {
-          await api.post(`/teams/${group.id}/announcements`, { title: title || null, body })
-        } else {
-          if (!group.projectId) throw new Error('المجموعة بلا مشروع مسجّل — لا يمكن رفع ملف')
-          const fd = new FormData()
-          fd.append('file', file)
-          if (title) fd.append('stage', title)
-          await api.post(`/projects/${group.projectId}/files`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-        }
-        this.add.open = false
-        this.$toast?.success(`تمت إضافة ${ITEM_TYPES[type].label} إلى ${group.name}`)
-        this.loadTimeline(group.id, true)
-        if (type === 'task') this.list = await loadGroups()
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || err.message || 'تعذّر الحفظ')
-      } finally {
-        this.add.saving = false
-      }
     },
 
     async exportExcel() {

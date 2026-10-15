@@ -25,7 +25,7 @@
           <h3 class="portal-title">رسائلي</h3>
           <span class="hd-card-sub">{{ tickets.length }}</span>
         </header>
-        <p v-if="loading" class="dash-empty">جارٍ التحميل…</p>
+        <SkeletonLoader v-if="loading" variant="cards" :rows="4" />
         <p v-else-if="!tickets.length" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لم ترسل أي رسالة بعد</p>
         <button
           v-for="t in tickets" :key="t.id" type="button"

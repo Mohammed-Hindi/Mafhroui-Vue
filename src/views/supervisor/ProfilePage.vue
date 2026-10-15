@@ -54,7 +54,8 @@
             </div>
           </div>
 
-          <p v-if="!myTeams.length" class="text-caption text-text-400 text-center py-6">لا توجد فرق مُسندة إليك حالياً</p>
+          <SkeletonLoader v-if="!teamsLoaded && !myTeams.length" variant="cards" :rows="2" />
+          <EmptyState v-else-if="!myTeams.length" :icon="UsersIcon" title="لا توجد فرق مُسندة إليك حالياً" description="ستظهر هنا مجموعاتك ومشاريعها بمجرد إسنادها إليك." />
         </div>
       </div>
     </div>
@@ -96,7 +97,9 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { ChevronLeft } from 'lucide-vue-next'
+import { markRaw } from 'vue'
+import { ChevronLeft, Users } from 'lucide-vue-next'
+import EmptyState from '@/components/ui/EmptyState.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import { initials } from '@/utils/formatters'
 import { useAuthStore } from '@/stores/auth.store'
@@ -108,10 +111,11 @@ const STATUS_LABELS = { in_progress: 'قيد التنفيذ', completed: 'مكت
 export default {
   name: 'SupervisorProfilePage',
 
-  components: { BaseBadge, ChevronLeft, ChangePasswordModal },
+  components: { BaseBadge, ChevronLeft, ChangePasswordModal, EmptyState },
 
   data() {
     return {
+      UsersIcon: markRaw(Users),
       changePasswordOpen: false,
       progressByTeam: {}
     }
@@ -119,7 +123,7 @@ export default {
 
   computed: {
     ...mapState(useAuthStore, ['user']),
-    ...mapState(useTeamsStore, ['teamsForDisplay']),
+    ...mapState(useTeamsStore, ['teamsForDisplay', 'teamsLoaded']),
 
     initials() {
       return initials(this.user?.name || '')
