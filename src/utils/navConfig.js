@@ -80,12 +80,22 @@ export const NAV_ITEMS_BY_ROLE = {
   ],
 
   // ترتيب عمل الطالب: المهام (الصفحة الأولى) ← المقترحات ← الاجتماعات ← الوارد ← الشكاوى ← المساعد. "بياناتي" في قائمة الاسم
+  // الطالب: مجموعة "أدوات الطالب" (عمل المشروع)، وتحتها باقي الصفحات بلا عنوان
   [ROLES.STUDENT]: [
-    { label: 'المهام', to: '/student/tasks', icon: ListTodo },
-    { label: 'المقترحات', to: '/student/proposal', icon: ClipboardList },
-    { label: 'الاجتماعات', to: '/student/meetings', icon: CalendarDays },
-    { label: 'الإعلانات والملفات', to: '/student/announcements', icon: Megaphone },
-    { label: 'الشكاوى والملاحظات', to: '/student/tickets', icon: LifeBuoy },
-    { label: 'المساعد الآلي', to: '/student/assistant', icon: Bot }
+    {
+      title: 'أدوات الطالب',
+      items: [
+        { label: 'المهام', to: '/student/tasks', icon: ListTodo },
+        { label: 'المقترحات', to: '/student/proposal', icon: ClipboardList },
+        { label: 'الاجتماعات', to: '/student/meetings', icon: CalendarDays },
+        { label: 'الإعلانات والملفات', to: '/student/announcements', icon: Megaphone }
+      ]
+    },
+    {
+      items: [
+        { label: 'الشكاوى والملاحظات', to: '/student/tickets', icon: LifeBuoy },
+        { label: 'المساعد الآلي', to: '/student/assistant', icon: Bot }
+      ]
+    }
   ]
 }

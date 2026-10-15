@@ -1,68 +1,60 @@
 <template>
-  <!-- نفس تخطيط صفحة "تغيير كلمة المرور" في بوابة الكلية (Screenshot 201137):
-       بطاقة النموذج يمينًا (تسمية بعمود + حقل) وبطاقة "عزيزي المستخدم" بالتعليمات يسارًا -->
-  <div class="grid grid-cols-1 lg:grid-cols-[1.9fr_1fr] gap-6 items-start">
-    <section class="bg-surface rounded-lg border border-border shadow-card p-6 sm:p-8">
-      <div class="flex flex-wrap items-baseline gap-3 mb-6">
-        <h2 class="portal-title">سجل بياناتك</h2>
-        <span class="text-caption font-semibold text-text-600">تغيير كلمة المرور</span>
-      </div>
-
-      <div class="portal-alert portal-alert-info mb-6">
-        <AlertCircle :size="20" class="shrink-0" />
-        يجب أن تحتوي كلمة المرور على حروف خاصة ( @ , % , # ) وأرقام
-      </div>
-
-      <form class="flex flex-col gap-5" novalidate @submit.prevent="handleSubmit">
-        <div class="portal-form-row">
-          <label for="new-password">كلمة المرور الجديدة</label>
-          <div>
-            <input
-              id="new-password" v-model="form.password" type="password" autocomplete="new-password"
-              placeholder="كلمة المرور الجديدة"
-              :class="['portal-input', errors.password && 'is-invalid']"
-              @blur="validatePassword"
-            >
-            <PasswordStrengthMeter :password="form.password" />
-            <p v-if="errors.password" class="portal-field-error">{{ errors.password }}</p>
-          </div>
+  <!-- تغيير كلمة المرور (كل اللوحات) بالهوية الجديدة: بطاقة النموذج برأس متدرّج وحقول بأيقونات وزر إظهار ومقياس القوة،
+       وبطاقة "نصائح الأمان" بخطوات مرقّمة -->
+  <div class="cp-grid">
+    <section class="cp-card">
+      <header class="cp-head">
+        <span class="cp-head-ic"><KeyRound :size="22" /></span>
+        <div>
+          <h2>تغيير كلمة المرور</h2>
+          <p>اختر كلمة مرور قوية لحماية حسابك في المنصة</p>
         </div>
+      </header>
 
-        <div class="portal-form-row">
-          <label for="confirm-password">تأكيد كلمة المرور</label>
-          <div>
-            <input
-              id="confirm-password" v-model="form.password_confirmation" type="password" autocomplete="new-password"
-              placeholder="تأكيد كلمة المرور"
-              :class="['portal-input', errors.password_confirmation && 'is-invalid']"
-              @blur="validateConfirmation"
-            >
-            <p v-if="errors.password_confirmation" class="portal-field-error">{{ errors.password_confirmation }}</p>
-          </div>
-        </div>
+      <form class="cp-form" novalidate @submit.prevent="handleSubmit">
+        <p class="cp-hint"><Info :size="17" /> يجب ألا تقل عن ثمانية أحرف، وأن تحتوي على أرقام ورموز خاصة مثل <bdi dir="ltr">@ % #</bdi></p>
 
-        <div class="flex justify-end pt-2">
-          <BaseButton type="submit" variant="secondary" size="lg" :loading="isLoading">تغيير كلمة المرور</BaseButton>
+        <label class="cp-field">
+          <span>كلمة المرور الجديدة</span>
+          <span :class="['cp-input', errors.password && 'is-invalid']">
+            <Lock :size="18" />
+            <input v-model="form.password" :type="show ? 'text' : 'password'" autocomplete="new-password" placeholder="••••••••" dir="ltr" @blur="validatePassword">
+            <button type="button" :aria-label="show ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'" @click="show = !show"><EyeOff v-if="show" :size="18" /><Eye v-else :size="18" /></button>
+          </span>
+          <PasswordStrengthMeter :password="form.password" />
+          <small v-if="errors.password" class="cp-error">{{ errors.password }}</small>
+        </label>
+
+        <label class="cp-field">
+          <span>تأكيد كلمة المرور</span>
+          <span :class="['cp-input', errors.password_confirmation && 'is-invalid']">
+            <ShieldCheck :size="18" />
+            <input v-model="form.password_confirmation" :type="show ? 'text' : 'password'" autocomplete="new-password" placeholder="••••••••" dir="ltr" @blur="validateConfirmation">
+          </span>
+          <small v-if="errors.password_confirmation" class="cp-error">{{ errors.password_confirmation }}</small>
+        </label>
+
+        <div class="cp-actions">
+          <button type="submit" class="pbtn is-green cp-submit" :disabled="isLoading"><Check :size="18" /> {{ isLoading ? 'جارٍ الحفظ…' : 'حفظ كلمة المرور' }}</button>
         </div>
       </form>
     </section>
 
-    <section class="bg-surface rounded-lg border border-border shadow-card p-6 sm:p-8">
-      <h2 class="portal-title mb-4">عزيزي المستخدم</h2>
-      <ul class="portal-bullets">
+    <aside class="cp-card cp-tips">
+      <h3><ShieldCheck :size="18" /> نصائح الأمان</h3>
+      <ol>
         <li>يمكنك تغيير كلمة المرور الخاصة بك من خلال هذه الصفحة</li>
         <li>أنت الوحيد المسؤول عن سرية كلمة المرور الخاصة بك</li>
         <li>ننصحك بتغيير كلمة المرور من فترة لأخرى</li>
         <li>يجب ألا تقل كلمة المرور الجديدة عن ثمانية أحرف</li>
-      </ul>
-    </section>
+      </ol>
+    </aside>
   </div>
 </template>
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { AlertCircle } from 'lucide-vue-next'
-import BaseButton from '@/components/ui/BaseButton.vue'
+import { Check, Eye, EyeOff, Info, KeyRound, Lock, ShieldCheck } from 'lucide-vue-next'
 import PasswordStrengthMeter from '@/components/shared/PasswordStrengthMeter.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { required, matches, strongPassword } from '@/utils/validators'
@@ -76,10 +68,11 @@ const emptyForm = () => ({ password: '', password_confirmation: '' })
 export default {
   name: 'SuperAdminChangePasswordPage',
 
-  components: { AlertCircle, BaseButton, PasswordStrengthMeter },
+  components: { Check, Eye, EyeOff, Info, KeyRound, Lock, PasswordStrengthMeter, ShieldCheck },
 
   data() {
     return {
+      show: false,
       form: emptyForm(),
       errors: { password: '', password_confirmation: '' }
     }

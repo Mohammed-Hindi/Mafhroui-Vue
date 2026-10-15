@@ -3936,3 +3936,510 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
   :root[data-brand="ucas"] .sa-skin .hm-grid .hm-table :is(th, td):first-child { padding-inline-start: 14px; }
   :root[data-brand="ucas"] .sa-skin .hm-grid .hm-table :is(th, td):last-child { padding-inline-end: 12px; }
 }
+
+/* ======================================================================
+   محتوى صفحات اللوحات بالهوية الجديدة (الطالب أولًا، ويشمل كل الأدوار لأن المكوّنات مشتركة):
+   رأس الصفحة، البطاقات، الأزرار، التبويبات، الجداول، شريط الملخص، لوحة المهام، الأقسام، الملف الشخصي
+   ====================================================================== */
+.sa-skin { --sa-grad: linear-gradient(270deg, #62BB46 0%, #50A16E 30%, #0E699C 65%, #025DA9 100%); --sa-soft: linear-gradient(270deg, rgba(98, 187, 70, .12), rgba(0, 91, 170, .07)); }
+
+/* رأس الصفحة: بطاقة بخلفية تدرّج خفيفة وشريط تدرّج جانبي، والعنوان أزرق بخط تدرّج تحته */
+.sa-skin .dash-head { position: relative; overflow: hidden; border-radius: 16px; background: var(--color-surface); box-shadow: 0 10px 30px rgba(4, 40, 80, .08); animation: saFadeUp .5s ease backwards; }
+.sa-skin .dash-head::after { content: ""; position: absolute; inset-block: 0; inset-inline-start: 0; width: 5px; background: linear-gradient(180deg, #62BB46, #005BAA); }
+.sa-skin .dash-head { background-image: var(--sa-soft); }
+.sa-skin .dash-title { color: var(--ucas-blue); }
+:root[data-theme="dark"] .sa-skin .dash-title { color: #71B6F9; }
+.sa-skin .dash-title::before { background: linear-gradient(180deg, #62BB46, #005BAA); border-radius: 3px; }
+
+/* البطاقات والأقسام */
+.sa-skin :is(.dash-card, .tk-sec, .hd-toolbar, .rv-list, .rv-detail, .ev-steps-bar) { border-radius: 16px; box-shadow: 0 10px 30px rgba(4, 40, 80, .08); animation: saFadeUp .5s ease .05s backwards; }
+.sa-skin .tk-sec { border: 0; }
+.sa-skin .tk-sec-head { background: var(--sa-soft); border-bottom: 0; }
+.sa-skin .tk-sec-head h4 { color: var(--ucas-blue); }
+.sa-skin .portal-title { color: var(--ucas-blue); }
+
+/* الأزرار: كبسولات — الأساسي بتدرّج الهوية، والثانوي بإطار */
+.sa-skin .pbtn { border-radius: 999px; padding-inline: 20px; transition: filter .3s ease, box-shadow .3s ease, background-color .3s ease, color .3s ease; }
+.sa-skin .pbtn:is(.is-green, .is-cyan, .is-sky) { border: 0; background: var(--sa-grad); color: #FFFFFF; box-shadow: 0 6px 16px rgba(4, 40, 80, .18); }
+.sa-skin .pbtn:is(.is-green, .is-cyan, .is-sky):hover:not(:disabled) { background: var(--sa-grad); filter: brightness(1.07); box-shadow: 0 8px 22px rgba(4, 40, 80, .24); }
+.sa-skin .pbtn.is-outline { border: 1.5px solid color-mix(in srgb, var(--ucas-blue) 45%, transparent); background: var(--color-surface); color: var(--ucas-blue); }
+.sa-skin .pbtn.is-outline:hover:not(:disabled) { border-color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 7%, var(--color-surface)); }
+
+/* التبويبات (شريط العروض، تبويبات الوارد، تبويبات الأدوات): كبسولة كحلية والنشط بالتدرّج */
+.sa-skin :is(.rv-tabs, .portal-tabs) { padding: 5px; gap: 4px; border-radius: 999px; background: #0B2545; }
+.sa-skin .hd-toolbar > .rv-tabs { margin: 10px 10px 0; }
+.sa-skin :is(.rv-tab, .portal-tabs > button) { border-radius: 999px; color: rgba(255, 255, 255, .8); }
+.sa-skin :is(.rv-tab.is-active, .portal-tabs > button.bg-primary-600) { background: var(--sa-grad); color: #FFFFFF; }
+.sa-skin .tk-stepper li { border-bottom-color: color-mix(in srgb, var(--ucas-blue) 12%, transparent); }
+.sa-skin .tk-stepper li::after { background: linear-gradient(270deg, #62BB46, #005BAA); }
+.sa-skin .tk-stepper li.is-active button { color: var(--ucas-blue); }
+
+/* الجداول العامة (.pt): رأس متدرّج، صفوف متناوبة، أول عمود بلون الحقول */
+:root[data-brand="ucas"] .sa-skin .pt thead tr { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); }
+:root[data-brand="ucas"] .sa-skin .pt thead th { background: transparent; }
+.sa-skin .pt tbody tr:nth-child(even) { background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-surface)); }
+.sa-skin .pt tbody td:first-child { background-image: linear-gradient(color-mix(in srgb, var(--color-bg) 85%, transparent), color-mix(in srgb, var(--color-bg) 85%, transparent)); }
+.sa-skin :is(.pt-wrap, .gr-table-wrap, .pt-scroll):has(> .pt), .sa-skin .dash-card > div:has(> .pt) { border-radius: 12px; overflow: auto; }
+
+/* شريط الملخص الأخضر ← تدرّج الهوية */
+.sa-skin .gr-sumbar { border-radius: 14px; background: var(--sa-grad); box-shadow: 0 8px 22px rgba(4, 40, 80, .15); }
+
+/* لوحة المهام: أعمدة ناعمة بشريط علوي بلون الحالة، وبطاقات بظل ورفع خفيف عند المرور */
+.sa-skin .tk-card { border-radius: 14px; box-shadow: 0 4px 14px rgba(4, 40, 80, .08); transition: box-shadow .35s ease; animation: saFadeUp .45s ease backwards; }
+.sa-skin .tk-card:hover { box-shadow: 0 10px 26px rgba(4, 40, 80, .14); }
+
+/* خطوات التسليم (المقترح/التقرير): التدرّج للحالية والمكتملة */
+.sa-skin .sp-steps .is-current b { border-color: transparent; background: var(--sa-grad); box-shadow: 0 0 0 5px rgba(0, 91, 170, .14); }
+.sa-skin .sp-steps .is-done b { border-color: #62BB46; background: #62BB46; }
+.sa-skin .sp-steps li.is-done + li::before { background: linear-gradient(270deg, #62BB46, #0E699C); }
+
+/* الملف الشخصي: تبويبات بتدرّج الهوية */
+.sa-skin .profile-tabs { overflow: hidden; border-radius: 16px; background: var(--sa-grad); box-shadow: 0 10px 30px rgba(4, 40, 80, .15); }
+.sa-skin .profile-tab { background: transparent; transition: background-color .35s ease; }
+.sa-skin .profile-tab:hover { background: rgba(255, 255, 255, .12); }
+.sa-skin .profile-tab.is-active { background: rgba(255, 255, 255, .2); box-shadow: inset 0 -4px 0 #FFFFFF; }
+
+/* الحقول والتنبيهات */
+.sa-skin :is(.portal-input, .hd-field, .rv-search, .em-field input, .em-field textarea) { border-radius: 12px; }
+.sa-skin .palert { border-radius: 12px; }
+.sa-skin .rv-item.is-selected, .sa-skin .rv-item:hover { background: var(--sa-soft); }
+.sa-skin .rv-item.is-selected { box-shadow: inset -4px 0 0 #62BB46; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sa-skin :is(.dash-head, .dash-card, .tk-sec, .hd-toolbar, .rv-list, .rv-detail, .ev-steps-bar, .tk-card) { animation: none; }
+}
+/* لوحة المهام (TaskBoard): أعمدة ناعمة برأس بلون الحالة، وبطاقات بزوايا ناعمة وظل */
+.sa-skin .task-col { border: 0; border-radius: 16px; background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-bg)); box-shadow: 0 10px 30px rgba(4, 40, 80, .08); animation: saFadeUp .5s ease backwards; }
+.sa-skin .task-col:nth-child(2) { animation-delay: .06s; } .sa-skin .task-col:nth-child(3) { animation-delay: .12s; } .sa-skin .task-col:nth-child(4) { animation-delay: .18s; }
+.sa-skin .task-col-head { position: relative; border-bottom: 0; background: var(--color-surface) !important; }
+.sa-skin .task-col-head::after { content: ""; position: absolute; inset-inline: 0; bottom: 0; height: 3px; background: var(--tc, #98A6AD); }
+.sa-skin .task-col:nth-child(2) .task-col-head { --tc: linear-gradient(270deg, #35B8E0, #0E699C); }
+.sa-skin .task-col:nth-child(3) .task-col-head { --tc: linear-gradient(270deg, #F9C851, #F89E32); }
+.sa-skin .task-col:nth-child(4) .task-col-head { --tc: linear-gradient(270deg, #62BB46, #0E699C); }
+.sa-skin .task-col-head > span:first-child { color: var(--ucas-blue); }
+.sa-skin .task-card { border-radius: 14px; border-color: transparent; box-shadow: 0 4px 14px rgba(4, 40, 80, .08); }
+.sa-skin .task-card:hover { box-shadow: 0 10px 26px rgba(4, 40, 80, .14); }
+/* الجداول gr-table (الاجتماعات وغيرها): رأس متدرّج */
+:root[data-brand="ucas"] .sa-skin .gr-table thead tr { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); }
+:root[data-brand="ucas"] .sa-skin .gr-table thead th { background: transparent; color: #FFFFFF; }
+.sa-skin .gr-table tbody tr:nth-child(even) { background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-surface)); }
+.sa-skin .gr-table tbody td:first-child { background-image: linear-gradient(color-mix(in srgb, var(--color-bg) 85%, transparent), color-mix(in srgb, var(--color-bg) 85%, transparent)); }
+:root[data-brand="ucas"] .sa-skin .gr-card, .sa-skin .gr-table-wrap { border-radius: 12px; }
+/* خطوات التبويب الداخلية والاختيارات */
+.sa-skin .tk-stepper .is-active b { background: var(--sa-grad); }
+.sa-skin .tk-stepper li.is-active { background: var(--sa-soft); border-radius: 12px 12px 0 0; }
+.sa-skin .tk-chip { border-radius: 999px; }
+.sa-skin .tk-chip.is-on { border-color: transparent; background: var(--sa-grad); }
+.sa-skin .hd-corner, .sa-skin .an-tag, .sa-skin .rv-count { border-radius: 999px; }
+/* مراحل المقترح والصورة في الملف الشخصي وبطاقة الملف */
+.sa-skin .sp-track li { border-radius: 12px 12px 0 0; }
+.sa-skin .sp-track li.is-open { border-bottom-color: transparent; background: var(--sa-soft); box-shadow: inset 0 -3px 0 #0E699C; }
+.sa-skin .sp-track li.is-open b, .sa-skin .sp-track .is-current b { background: var(--sa-grad); color: #FFFFFF; }
+.sa-skin .sp-track .is-done b { background: #62BB46; }
+.sa-skin .pf-photo-img { border: 0 !important; background: var(--sa-grad) !important; color: #FFFFFF !important; box-shadow: 0 0 0 4px rgba(98, 187, 70, .22); }
+.sa-skin .profile-card { border-radius: 16px; box-shadow: 0 10px 30px rgba(4, 40, 80, .08); animation: saFadeUp .5s ease backwards; }
+.sa-skin .profile-card .pf-row input, .sa-skin .profile-card :is(input, select, textarea) { border-radius: 12px; }
+
+/* الجوال والآيباد: عند فتح السايد بار يأتي اسم المنصة أولًا، وزر الإغلاق في نهاية رأسه —
+   دائرة بيضاء واضحة بعلامة × زرقاء عريضة وظل، تدور قليلًا عند المرور */
+@media (max-width: 1023.98px) {
+  .sa-skin #app-sidebar .sidebar-head { padding-inline-start: 16px; padding-inline-end: 68px; }
+  .sa-skin .portal-burger.is-open {
+    top: 15px; inset-inline-start: calc(min(var(--sidebar-width), 85vw) - 56px);
+    width: 42px; height: 42px; gap: 0; border-radius: 50%;
+    background: #FFFFFF; color: var(--ucas-blue);
+    box-shadow: 0 6px 18px rgba(4, 30, 60, .3), 0 0 0 3px rgba(255, 255, 255, .35);
+    transition: inset-inline-start 0s, background-color .3s ease, transform .4s ease;
+  }
+  .sa-skin .portal-burger.is-open:hover { background: #FFFFFF; transform: rotate(90deg); }
+  .sa-skin .portal-burger.is-open span { position: absolute; width: 18px; height: 2.5px; background: linear-gradient(270deg, #62BB46, #005BAA); }
+  .sa-skin .portal-burger.is-open span:nth-child(1) { transform: rotate(45deg); }
+  .sa-skin .portal-burger.is-open span:nth-child(3) { transform: rotate(-45deg); }
+}
+@media (prefers-reduced-motion: reduce) { .sa-skin .portal-burger.is-open:hover { transform: none; } }
+@media (max-width: 1023.98px) { .sa-skin #app-sidebar .sidebar-head .text-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11.5px; } .sa-skin #app-sidebar .sidebar-head > a { gap: 10px; } }
+
+/* ======================================================================
+   صفحات المهام (كل الأدوار) بالهوية الجديدة فقط — لا سماوي البوابة القديم
+   ====================================================================== */
+/* اللون الأساسي داخل اللوحات = أزرق الهوية (كان سماويًا) — يشمل روابط وأزرار Tailwind (primary) */
+.sa-skin, :root[data-brand="ucas"] [role="dialog"], :root[data-brand="ucas"] ul[role="listbox"] {
+  --color-primary-50: #EAF3FB; --color-primary-100: #D3E6F6; --color-primary-200: #A9CDEB;
+  --color-primary-300: #6FAADB; --color-primary-400: #2F82C8; --color-primary-500: #0E699C;
+  --color-primary-600: #005BAA; --color-primary-700: #004A8C; --color-primary-800: #023B70; --color-primary-900: #062C52;
+  --portal-cyan: #0E699C;
+}
+.sa-skin :is(button, a).select-none.bg-primary-600,
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-primary-600 { border-radius: 999px; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); color: #FFFFFF; box-shadow: 0 6px 16px rgba(4, 40, 80, .18); }
+.sa-skin :is(button, a).select-none.bg-primary-600:not(:disabled):hover,
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-primary-600:not(:disabled):hover { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); filter: brightness(1.07); }
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.border-border { border-radius: 999px; }
+
+/* بطاقة الهوية أعلى الصفحات (المشرف/اللجنة): بطاقة ناعمة بخلفية تدرّج خفيفة وصورة بحلقة متدرّجة */
+.sa-skin .portal-identity { border: 0; border-radius: 16px; background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .05)), var(--color-surface); box-shadow: 0 10px 30px rgba(4, 40, 80, .08); animation: saFadeUp .5s ease backwards; }
+.sa-skin .portal-identity h2 { color: var(--ucas-blue) !important; }
+.sa-skin .portal-identity-role { border-radius: 999px; background: linear-gradient(270deg, #62BB46, #0E699C); color: #FFFFFF; }
+.sa-skin .portal-identity-photo, .sa-skin .portal-identity-logo { border-radius: 50%; box-shadow: 0 0 0 3px #FFFFFF, 0 0 0 5px rgba(98, 187, 70, .55); }
+.sa-skin .portal-identity-details dt { color: var(--ucas-green); }
+
+/* اختيار المجموعة (شعب المشرف): كبسولة كحلية والنشط بالتدرّج */
+.sa-skin .tk-teambar { border-radius: 16px; }
+.sa-skin .gr-class { border: 0; border-radius: 14px; background: transparent; padding-inline: 0; }
+.sa-skin .gr-class-label { color: var(--ucas-green); }
+.sa-skin .gr-seg { padding: 5px; gap: 4px; border-radius: 999px; background: #0B2545; }
+.sa-skin .gr-seg button { border-radius: 999px; color: rgba(255, 255, 255, .82); transition: background-color .3s ease, color .3s ease; }
+.sa-skin .gr-seg button:hover:not(.is-active) { background: rgba(255, 255, 255, .1); color: #FFFFFF; }
+.sa-skin .gr-seg button.is-active { background: linear-gradient(270deg, #62BB46, #0E699C 60%, #025DA9); color: #FFFFFF; box-shadow: 0 4px 12px rgba(0, 0, 0, .25); }
+.sa-skin .gr-seg button b { border-radius: 999px; background: rgba(255, 255, 255, .16); color: #FFFFFF; }
+.sa-skin .tk-teammeta { border-radius: 14px; background: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .05)); padding: 12px 16px; border: 0; }
+.sa-skin .tk-teammeta dt { color: var(--ucas-green); }
+.sa-skin .tk-teammeta dd { color: var(--ucas-blue); font-weight: 700; }
+
+/* اللوحة: الحاوية بلا إطار مربّع، والعدّاد كبسولة */
+.sa-skin .hd-page > section:has(.task-col), .sa-skin section:has(> .grid > .task-col) { border-radius: 18px; background: transparent; box-shadow: none; padding: 0; }
+.sa-skin .task-col-head > span:last-child, .sa-skin .task-col-head .rounded-pill { border: 0; border-radius: 999px; background: linear-gradient(270deg, rgba(98, 187, 70, .18), rgba(0, 91, 170, .12)); color: var(--ucas-blue); box-shadow: none; }
+.sa-skin .task-col > div:not(.task-col-head) { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ucas-blue) 30%, transparent) transparent; }
+
+/* بطاقة المهمة: شريط حالة جانبي متدرّج بدل الحد الملوّن، وأقسام داخلية مرتبة */
+.sa-skin .task-card { position: relative; overflow: hidden; border-width: 0 !important; padding-inline-start: 18px !important; }
+.sa-skin .task-card::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: 0; width: 4px; background: var(--tc, #98A6AD); }
+.sa-skin .task-col:nth-child(2) .task-card { --tc: linear-gradient(180deg, #35B8E0, #0E699C); }
+.sa-skin .task-col:nth-child(3) .task-card { --tc: linear-gradient(180deg, #F9C851, #F89E32); }
+.sa-skin .task-col:nth-child(4) .task-card { --tc: linear-gradient(180deg, #62BB46, #0E699C); }
+.sa-skin .task-card .font-bold { color: var(--ucas-blue); }
+.sa-skin .task-card :is(.border-t, .tb-upload) { border-top-color: color-mix(in srgb, var(--ucas-blue) 10%, transparent) !important; }
+/* القائمة المنسدلة للحالة داخل البطاقة */
+.sa-skin .task-card button[aria-haspopup="listbox"] { height: 38px; border-radius: 999px; border-color: color-mix(in srgb, var(--ucas-blue) 25%, transparent); background: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .05)); }
+.sa-skin .task-card button[aria-haspopup="listbox"] span { color: var(--ucas-blue); font-weight: 700; }
+.sa-skin .task-card button[aria-haspopup="listbox"] svg { color: var(--ucas-blue); }
+/* رفع الملفات */
+.sa-skin .tb-upload-drop { height: 36px; border: 1.5px dashed color-mix(in srgb, var(--ucas-green) 60%, transparent); border-radius: 12px; color: #2F7F1E; background: rgba(98, 187, 70, .05); transition: background-color .3s ease, border-color .3s ease; }
+.sa-skin .tb-upload-drop:hover { border-color: var(--ucas-green); background: rgba(98, 187, 70, .12); }
+.sa-skin .tb-upload-more { color: var(--ucas-blue); }
+.sa-skin .tb-upload-list li { border-radius: 10px; }
+/* روابط سجل الحركة والملاحظات */
+.sa-skin .task-card button.text-primary-600 { color: var(--ucas-blue); border-radius: 999px; padding: 3px 10px; margin-inline-start: -10px; transition: background-color .3s ease; }
+.sa-skin .task-card button.text-primary-600:hover { background: rgba(0, 91, 170, .07); color: var(--ucas-blue); }
+.sa-skin .tb-log, .sa-skin .task-card .bg-bg { border-radius: 12px; }
+.sa-skin .tb-source { border-radius: 999px; }
+
+/* التنبيه المعلوماتي (مهام تجريبية...) */
+.sa-skin .palert.is-info { border: 0; border-inline-start: 4px solid transparent; border-image: linear-gradient(180deg, #62BB46, #005BAA) 1; background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .06)); color: var(--ucas-blue); }
+
+/* بوب اب المهمة: الحقول ناعمة والتسميات خضراء */
+:root[data-brand="ucas"] [role="dialog"] label { color: var(--color-text-700); }
+:root[data-brand="ucas"] [role="dialog"] :is(label, .text-label).font-semibold { color: var(--ucas-blue); }
+/* تصحيحات لوحة المهام: الحاوية، العدّاد، النقاط، وموضع شريط الحالة (يمين البطاقة في RTL) */
+.sa-skin .task-board { border-radius: 20px; background: linear-gradient(270deg, rgba(98, 187, 70, .06), rgba(0, 91, 170, .04)), var(--color-surface); box-shadow: 0 10px 30px rgba(4, 40, 80, .08); }
+.sa-skin .task-col-head > span:last-child { min-width: 28px; height: 26px; border: 0 !important; border-radius: 999px !important; background: linear-gradient(270deg, #62BB46, #0E699C) !important; color: #FFFFFF !important; box-shadow: 0 3px 8px rgba(4, 40, 80, .2) !important; }
+.sa-skin .task-col-head > span:first-child > span { width: 9px; height: 9px; background: var(--tdot, #98A6AD) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--tdot, #98A6AD) 25%, transparent); }
+.sa-skin .task-col:nth-child(2) { --tdot: #0E699C; } .sa-skin .task-col:nth-child(3) { --tdot: #F89E32; } .sa-skin .task-col:nth-child(4) { --tdot: #62BB46; }
+.sa-skin .task-card::before { inset-inline-start: auto; right: 0; }
+.sa-skin .task-card { padding-inline-start: 14px !important; padding-right: 18px !important; }
+
+/* تفاصيل المهمة في البوب اب */
+.td { display: flex; flex-direction: column; gap: 16px; }
+.td-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 0; }
+.td-meta > div { padding: 12px 14px; border-radius: 12px; background: linear-gradient(135deg, rgba(98, 187, 70, .09), rgba(0, 91, 170, .06)); }
+.td-meta dt { font-size: 12.5px; font-weight: 700; color: var(--ucas-green); }
+.td-meta dd { margin: 4px 0 0; font-size: 14px; font-weight: 700; color: var(--ucas-blue); }
+.td-meta dd small { font-weight: 600; color: var(--color-text-500, #6F6F6F); }
+.td-status { display: inline-flex; padding: 2px 12px; border-radius: 999px; font-size: 13px; color: #FFFFFF; background: #98A6AD; }
+.td-status.is-in_progress { background: linear-gradient(270deg, #35B8E0, #0E699C); }
+.td-status.is-review { background: linear-gradient(270deg, #F9C851, #F89E32); }
+.td-status.is-done { background: linear-gradient(270deg, #62BB46, #0E699C); }
+.td-sec { padding: 14px 16px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 0 0 1px var(--color-border); }
+.td-sec h4 { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; padding-bottom: 8px; border-bottom: 2px solid transparent; border-image: linear-gradient(270deg, #62BB46, #005BAA) 1; font-size: 14.5px; font-weight: 800; color: var(--ucas-blue); }
+.td-sec h4 small { font-weight: 600; color: var(--color-text-500, #6F6F6F); }
+.td-title { margin: 0 0 6px; font-size: 16px; font-weight: 800; color: var(--color-text-900); }
+.td-text { margin: 0; font-size: 14.5px; line-height: 1.9; color: var(--color-text-700); white-space: pre-line; }
+.td-muted { margin: 0; font-size: 13.5px; color: var(--color-text-400); }
+.td-files { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.td-files li { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: var(--color-bg); font-size: 13.5px; color: var(--color-text-700); }
+.td-files svg { flex-shrink: 0; color: var(--ucas-blue); }
+.td-note { margin-bottom: 8px; padding: 10px 12px; border-radius: 12px; background: var(--color-bg); }
+.td-note header { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; font-size: 13px; }
+.td-note header b { color: var(--ucas-blue); }
+.td-note header span { color: var(--color-text-400); }
+.td-note p { margin: 0; font-size: 13.5px; line-height: 1.8; color: var(--color-text-700); }
+.td-note-add { display: flex; gap: 8px; margin-top: 8px; }
+.td-note-add input { flex: 1; min-width: 0; height: 38px; padding-inline: 14px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-bg); font-size: 13.5px; color: var(--color-text-900); }
+.td-note-add input:focus { outline: 0; border-color: var(--ucas-blue); box-shadow: 0 0 0 4px rgba(0, 91, 170, .1); }
+.td-log { display: flex; flex-direction: column; gap: 0; margin: 0; padding: 0 16px 0 0; list-style: none; border-inline-start: 2px solid color-mix(in srgb, var(--ucas-blue) 18%, transparent); }
+.td-log li { position: relative; padding: 6px 0; font-size: 13px; color: var(--color-text-700); }
+.td-log li::before { content: ""; position: absolute; inset-inline-start: -21px; top: 12px; width: 8px; height: 8px; border-radius: 50%; background: linear-gradient(270deg, #62BB46, #0E699C); }
+.td-log b { color: var(--ucas-blue); }
+.td-log span { color: var(--color-text-400); font-size: 12px; }
+
+/* ======================================================================
+   الفلاتر موحّدة في كل اللوحات: شريط ناعم، كل فلتر كبسولة بارتفاع واحد، والتسمية داخل الكبسولة
+   ====================================================================== */
+.sa-skin :is(.gr-filters, .hm-filters, .hd-filters) { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px; border-radius: 16px; background: linear-gradient(270deg, rgba(98, 187, 70, .07), rgba(0, 91, 170, .04)); box-shadow: none; }
+.sa-skin :is(.gr-search, .rv-search, .gr-select, .hd-field, .us-select, select.portal-input) { height: 44px; border: 1px solid color-mix(in srgb, var(--ucas-blue) 18%, var(--color-border)); border-radius: 999px; background-color: var(--color-surface); transition: border-color .3s ease, box-shadow .3s ease; }
+.sa-skin :is(.gr-search, .rv-search) { padding-inline: 16px; }
+.sa-skin :is(.gr-search, .rv-search, .hd-field) svg { color: var(--ucas-blue); }
+.sa-skin :is(.gr-select, .hd-field):hover, .sa-skin :is(.gr-search, .rv-search):hover { border-color: color-mix(in srgb, var(--ucas-blue) 45%, transparent); }
+.sa-skin :is(.gr-search, .rv-search, .hd-field):focus-within, .sa-skin .gr-select:focus { border-color: var(--ucas-blue); box-shadow: 0 0 0 4px rgba(0, 91, 170, .1); }
+.sa-skin .gr-select { padding-inline: 16px 14px; font-weight: 600; color: var(--color-text-700); }
+/* تسمية الفلتر (التخصص، الفئة، المشرف...) كبسولة خضراء صغيرة بجانب القائمة */
+.sa-skin :is(.gr-filters, .hm-filters) > label:not(.gr-search), .sa-skin .gr-filter-label, .sa-skin .gr-filters > span:not([class]) { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: var(--ucas-green); }
+.sa-skin :is(.gr-clear, .hd-clear) { height: 44px; padding-inline: 16px; border-radius: 999px; color: var(--ucas-blue); text-decoration: none; }
+.sa-skin :is(.gr-clear, .hd-clear):hover { background: rgba(0, 91, 170, .07); text-decoration: none; }
+.sa-skin .hd-refresh { width: 44px; height: 44px; border-radius: 50%; border-color: color-mix(in srgb, var(--ucas-blue) 25%, transparent); color: var(--ucas-blue); }
+
+/* ======================================================================
+   زر "إضافة" الملاحظة في المهام: كبسولة بتدرّج الهوية وحقل كبسولي
+   ====================================================================== */
+.sa-skin .task-card .bg-primary-600, .sa-skin .task-card button.bg-primary-600 { height: 34px; padding-inline: 16px; border-radius: 999px; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); box-shadow: 0 4px 12px rgba(4, 40, 80, .18); transition: filter .3s ease; }
+.sa-skin .task-card .bg-primary-600:hover { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); filter: brightness(1.08); }
+.sa-skin .task-card input[placeholder="اكتب ملاحظة..."] { height: 34px; border-radius: 999px; padding-inline: 14px; background: var(--color-bg); }
+.td-note-add button { flex-shrink: 0; min-width: 84px; border-radius: 999px !important; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9) !important; color: #FFFFFF !important; box-shadow: 0 4px 12px rgba(4, 40, 80, .18); }
+.td-note-add button:hover { filter: brightness(1.08); }
+
+/* ======================================================================
+   صفحة المقترحات (كل اللوحات): عنوان القسم، الجدول، الترقيم، وتفاصيل الطالب
+   ====================================================================== */
+.sa-skin .dash-card > :is(h2, h3).portal-title, .sa-skin .gr-card-title h3, .sa-skin .dash-card > header > h2 { position: relative; padding-bottom: 10px; color: var(--ucas-blue); }
+.sa-skin .dash-card > :is(h2, h3).portal-title::after, .sa-skin .gr-card-title h3::after { content: ""; position: absolute; bottom: 0; inset-inline-start: 0; width: 52px; height: 3px; border-radius: 3px; background: linear-gradient(270deg, #62BB46, #005BAA); }
+.sa-skin .pt .pbtn.is-sm { height: 36px; }
+.sa-skin .rv-pill { border-radius: 999px; padding-inline: 12px; font-weight: 800; }
+.sa-skin .rv-pill.is-approved { background: rgba(98, 187, 70, .15); color: #2F7F1E; }
+.sa-skin .rv-pill.is-pending { background: rgba(249, 200, 81, .2); color: #A86A00; }
+.sa-skin .rv-pill.is-rejected { background: rgba(255, 91, 91, .14); color: #D33B3B; }
+/* الترقيم بالنقاط والأسهم */
+/* الطالب: الملفات المسلّمة والخطوات */
+.sa-skin .sp-files li { border: 0; border-radius: 14px; background: linear-gradient(270deg, rgba(98, 187, 70, .07), rgba(0, 91, 170, .04)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent); transition: box-shadow .3s ease; }
+.sa-skin .sp-files li:hover { box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 30%, transparent), 0 8px 20px rgba(4, 40, 80, .08); }
+.sa-skin .sp-files li > svg { display: grid; width: 38px; height: 38px; padding: 9px; border-radius: 50%; background: linear-gradient(270deg, #62BB46, #0E699C); color: #FFFFFF; flex-shrink: 0; }
+.sa-skin .sp-files b { color: var(--ucas-blue); }
+.sa-skin .sp-wizard, .sa-skin .sp-form { border-radius: 16px; }
+.sa-skin .sp-actions { border-top-color: color-mix(in srgb, var(--ucas-blue) 12%, transparent); }
+.sa-skin .tk-review { border-radius: 14px; background: linear-gradient(270deg, rgba(98, 187, 70, .07), rgba(0, 91, 170, .04)); }
+.sa-skin .tk-review dt { color: var(--ucas-green); }
+.sa-skin .tk-review dd { color: var(--ucas-blue); font-weight: 700; }
+.sa-skin .sp-cover { border-radius: 16px; border-color: color-mix(in srgb, var(--ucas-green) 55%, transparent); }
+.sa-skin .sp-cover > span svg { color: var(--ucas-green); }
+.sa-skin :is(.portal-input, textarea.portal-input):focus { border-color: var(--ucas-blue); box-shadow: 0 0 0 4px rgba(0, 91, 170, .1); }
+.sa-skin .pfield > span, .sa-skin .pfield label { color: var(--ucas-blue); font-weight: 700; }
+/* فلتر بتسمية (gr-pick): التسمية والقائمة كبسولة واحدة — التسمية خضراء على يمينها */
+.sa-skin .gr-pick { gap: 0; height: 44px; padding-inline-start: 16px; border: 1px solid color-mix(in srgb, var(--ucas-blue) 18%, var(--color-border)); border-radius: 999px; background: var(--color-surface); transition: border-color .3s ease, box-shadow .3s ease; }
+.sa-skin .gr-pick:hover { border-color: color-mix(in srgb, var(--ucas-blue) 45%, transparent); }
+.sa-skin .gr-pick:focus-within { border-color: var(--ucas-blue); box-shadow: 0 0 0 4px rgba(0, 91, 170, .1); }
+.sa-skin .gr-pick > span { padding-inline-end: 10px; border-inline-end: 1px solid color-mix(in srgb, var(--ucas-blue) 15%, transparent); font-size: 13px; font-weight: 800; color: var(--ucas-green); }
+.sa-skin .gr-pick > .gr-select { height: 42px; border: 0; box-shadow: none !important; background-color: transparent; }
+/* ترقيم الجداول (SlideTable) */
+.sa-skin .gr-dots button.is-active, .sa-skin .gr-dots .is-active { background: linear-gradient(270deg, #62BB46, #0E699C) !important; }
+.sa-skin .gr-slide-btn { border-radius: 50%; border-color: color-mix(in srgb, var(--ucas-blue) 25%, transparent); color: var(--ucas-blue); }
+.sa-skin .gr-slide-btn:hover:not(:disabled) { background: rgba(0, 91, 170, .07); }
+/* بطاقة المهمة بطولها الكامل دائمًا: لا تنضغط داخل العمود القابل للتمرير */
+.task-col .task-card { flex-shrink: 0; }
+.sp-video-step { display: grid; gap: 18px; }
+.sp-cover { position: relative; }
+.sp-cover-play { position: absolute; inset: 0; display: grid; place-items: center; background: linear-gradient(to top, rgba(4, 30, 60, .45), transparent 70%); color: #FFFFFF; pointer-events: none; }
+
+/* ======================================================================
+   شريط العروض (PortalStepper — المقترح/التقرير، القادمة/المنتهية...): خانات كاملة بزوايا ناعمة،
+   خلفية النشط تملأ الخانة كلها والخط السفلي يمتد بعرضها كاملًا
+   ====================================================================== */
+.sa-skin .ev-steps-bar { padding: 8px; border-radius: 18px; background: var(--color-surface); box-shadow: 0 10px 30px rgba(4, 40, 80, .08); }
+.sa-skin .ev-steps-bar .tk-stepper { gap: 8px; margin: 0; }
+.sa-skin .ev-steps-bar .tk-stepper li { overflow: hidden; border: 0; border-radius: 14px; background: var(--color-bg); transition: background-color .4s ease, box-shadow .4s ease; }
+.sa-skin .ev-steps-bar .tk-stepper li::after { inset-inline: 0; bottom: 0; height: 3px; background: linear-gradient(270deg, #62BB46, #005BAA); transform-origin: center; }
+.sa-skin .ev-steps-bar .tk-stepper li.is-active { background: linear-gradient(270deg, rgba(98, 187, 70, .16), rgba(0, 91, 170, .1)); box-shadow: inset 0 0 0 1px rgba(0, 91, 170, .12); }
+.sa-skin .ev-steps-bar .tk-stepper button { justify-content: center; min-height: 48px; padding: 10px 14px; border-radius: 14px; color: var(--color-text-500, #6F6F6F); }
+.sa-skin .ev-steps-bar .tk-stepper li:not(.is-active):hover { background: color-mix(in srgb, var(--ucas-blue) 6%, var(--color-bg)); }
+.sa-skin .ev-steps-bar .tk-stepper li.is-active button { color: var(--ucas-blue); font-weight: 800; }
+.sa-skin .ev-steps-bar .tk-stepper li.is-active svg { color: var(--ucas-green); }
+.sa-skin .ev-steps-bar .tk-stepper b { background: color-mix(in srgb, var(--ucas-blue) 10%, var(--color-surface)); color: var(--ucas-blue); }
+
+/* ======================================================================
+   الإعلانات والملفات (كل اللوحات): شريط الأدوات، القائمة، بطاقات الرسائل، والتفاصيل
+   ====================================================================== */
+.sa-skin .hd-toolbar { padding-bottom: 4px; }
+.sa-skin .hd-toolbar > .gr-filters { margin: 8px 10px 6px; }
+.sa-skin .hd-field { flex: 1 1 200px; padding-inline: 14px; }
+.sa-skin .hd-field select { font-weight: 600; color: var(--color-text-700); }
+/* القائمة */
+.sa-skin .hd-list { overflow-x: hidden; overflow-y: auto; }
+.sa-skin .hd-card-head { height: 56px; border-bottom: 0; background: linear-gradient(270deg, rgba(98, 187, 70, .12), rgba(0, 91, 170, .07)); }
+.sa-skin .hd-card-head .portal-title { color: var(--ucas-blue); }
+.sa-skin .hd-corner { height: 30px; padding-inline: 14px; border-radius: 999px; background: linear-gradient(270deg, #62BB46, #0E699C); color: #FFFFFF; box-shadow: 0 4px 12px rgba(4, 40, 80, .18); }
+.sa-skin .hd-item { margin: 6px 8px; border: 0; border-radius: 14px; transition: background-color .35s ease, box-shadow .35s ease; animation: saFadeUp .4s ease backwards; }
+.sa-skin .hd-item + .hd-item { border-top: 0; }
+.sa-skin .hd-item:hover { background: color-mix(in srgb, var(--ucas-blue) 5%, var(--color-surface)); }
+.sa-skin .hd-item.is-selected { background: linear-gradient(270deg, rgba(98, 187, 70, .14), rgba(0, 91, 170, .07)); box-shadow: inset -4px 0 0 #62BB46; }
+.sa-skin .hd-item-top b, .sa-skin .hd-item .portal-title { color: var(--ucas-blue); }
+.sa-skin .an-icon { border-radius: 50%; color: #FFFFFF !important; background: linear-gradient(270deg, #35B8E0, #0E699C) !important; box-shadow: 0 4px 10px rgba(4, 40, 80, .18); }
+.sa-skin .an-icon.is-file { background: linear-gradient(270deg, #62BB46, #2F7F1E) !important; }
+.sa-skin .an-icon.is-task { background: linear-gradient(270deg, #F9C851, #F89E32) !important; }
+.sa-skin .hd-state { border-radius: 999px; padding-inline: 10px; font-weight: 800; }
+/* التفاصيل */
+.sa-skin .hd-detail { overflow: hidden; }
+.sa-skin .hd-detail-head { background: linear-gradient(270deg, rgba(98, 187, 70, .12), rgba(0, 91, 170, .07)); border-bottom: 0; }
+.sa-skin .hd-detail-title { color: var(--ucas-blue); }
+.sa-skin .hd-body, .sa-skin .an-body { border: 0; border-radius: 16px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent), 0 8px 22px rgba(4, 40, 80, .06); line-height: 2; }
+.sa-skin .hd-props { border-radius: 16px; background: linear-gradient(180deg, rgba(98, 187, 70, .07), rgba(0, 91, 170, .04)); }
+.sa-skin .hd-props-title { color: var(--ucas-blue); }
+.sa-skin .hd-data dt { color: var(--ucas-green); font-weight: 800; }
+.sa-skin .hd-data dd { color: var(--ucas-blue); }
+.sa-skin .hd-avatar { box-shadow: 0 0 0 3px #FFFFFF, 0 0 0 5px rgba(98, 187, 70, .5); }
+.sa-skin .an-files li { border: 0; border-radius: 14px; background: linear-gradient(270deg, rgba(98, 187, 70, .07), rgba(0, 91, 170, .04)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent); }
+.sa-skin .an-file-ic { border-radius: 50%; background: linear-gradient(270deg, #62BB46, #0E699C) !important; color: #FFFFFF !important; }
+/* الإعلانات والملفات: القائمة والتفاصيل بنفس الطول دائمًا (يملآن ارتفاع الشاشة المتاح، وكل منهما يمرَّر داخليًا) */
+@media (min-width: 1024px) {
+  .hd-layout { align-items: stretch; }
+  .hd-layout > .hd-list, .hd-layout > .hd-detail { height: clamp(460px, calc(100vh - 300px), 820px); max-height: none; }
+}
+
+/* ======================================================================
+   ستيبر خطوات التسليم (المقترح / التقرير النهائي): شريط ناعم، دوائر بتدرّج الهوية، خط تقدّم متدرّج
+   ====================================================================== */
+.sa-skin .sp-steps { padding: 18px 10px 14px; border-radius: 18px; background: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .05)); }
+.sa-skin .sp-steps li + li::before { top: 23px; height: 4px; border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 12%, var(--color-surface)); }
+.sa-skin .sp-steps li.is-done + li::before, .sa-skin .sp-steps li.is-done + li.is-current::before { background: linear-gradient(270deg, #62BB46, #0E699C); }
+.sa-skin .sp-steps b { width: 46px; height: 46px; border: 0; background: var(--color-surface); color: var(--color-text-400); font-size: 16px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--ucas-blue) 15%, transparent), 0 4px 12px rgba(4, 40, 80, .08); transition: transform .35s ease, box-shadow .35s ease, background-color .35s ease; }
+.sa-skin .sp-steps button:hover b { box-shadow: 0 0 0 2px color-mix(in srgb, var(--ucas-blue) 40%, transparent), 0 6px 16px rgba(4, 40, 80, .12); }
+.sa-skin .sp-steps .is-done b { background: #62BB46; color: #FFFFFF; box-shadow: 0 4px 12px rgba(98, 187, 70, .35); }
+.sa-skin .sp-steps .is-current b { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); color: #FFFFFF; box-shadow: 0 0 0 6px rgba(0, 91, 170, .12), 0 8px 20px rgba(4, 40, 80, .25); }
+.sa-skin .sp-steps span { color: var(--color-text-500, #6F6F6F); }
+.sa-skin .sp-steps .is-done span { color: #2F7F1E; }
+.sa-skin .sp-steps .is-current span { color: var(--ucas-blue); font-weight: 800; }
+
+/* خطوة "التسليم/الإرسال": بطاقة مراجعة بهوية المنصة */
+.sa-skin .sp-step-body { overflow: hidden; border: 0; border-radius: 18px; box-shadow: 0 10px 30px rgba(4, 40, 80, .08); }
+.sa-skin .sp-step-body > .tk-sec-head { padding: 14px 20px; background: linear-gradient(270deg, rgba(98, 187, 70, .14), rgba(0, 91, 170, .08)); }
+.sa-skin .sp-step-body > .tk-sec-body { background: var(--color-surface); }
+.sa-skin .tk-review { display: grid; grid-template-columns: max-content 1fr; gap: 0; overflow: hidden; padding: 0; border-radius: 16px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent); }
+.sa-skin .tk-review :is(dt, dd) { margin: 0; padding: 13px 18px; border-bottom: 1px solid color-mix(in srgb, var(--ucas-blue) 8%, transparent); }
+.sa-skin .tk-review dt { background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .05)); font-size: 13.5px; font-weight: 800; color: var(--ucas-green); }
+.sa-skin .tk-review dd { font-size: 14px; font-weight: 700; color: var(--ucas-blue); word-break: break-word; }
+.sa-skin .tk-review :is(dt, dd):nth-last-child(-n+2) { border-bottom: 0; }
+.sa-skin .sp-actions { padding-top: 16px; }
+.sa-skin .sp-actions .pbtn.is-green { min-width: 190px; height: 46px; font-size: 15px; }
+
+/* ======================================================================
+   المساعد الآلي: بطاقة ناعمة، رأس متدرّج بأيقونة، خلفية بشبكة نقاط هادئة، فقاعات بالهوية
+   ====================================================================== */
+.ucas-portal.sa-skin .portal-page .ac-wrap { border-radius: 20px; box-shadow: 0 12px 34px rgba(4, 40, 80, .1); }
+.ucas-portal.sa-skin .portal-page .ac-wrap > header { position: relative; padding: 16px 22px; border-bottom: 0; background: linear-gradient(270deg, #62BB46 0%, #50A16E 30%, #0E699C 65%, #025DA9 100%); }
+.ucas-portal.sa-skin .portal-page .ac-wrap > header::before { content: ""; position: absolute; inset: 0; opacity: .14; background-image: radial-gradient(#FFFFFF 1.2px, transparent 1.2px); background-size: 22px 22px; pointer-events: none; }
+.ucas-portal.sa-skin .portal-page .ac-head-icon { position: relative; display: grid; width: 40px; height: 40px; border-radius: 50%; background: #FFFFFF; color: var(--ucas-blue); box-shadow: 0 4px 12px rgba(0, 0, 0, .18); }
+.ucas-portal.sa-skin .portal-page .ac-wrap > header .portal-title { position: relative; color: #FFFFFF; font-size: 17px; }
+.ucas-portal.sa-skin .portal-page .ac-wrap > div { background-color: var(--color-bg); background-image: radial-gradient(color-mix(in srgb, var(--ucas-blue) 10%, transparent) 1px, transparent 1.2px); background-size: 22px 22px; }
+.ucas-portal.sa-skin .portal-page .ac-empty-icon { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); color: #FFFFFF; box-shadow: 0 0 0 8px rgba(0, 91, 170, .08), 0 10px 24px rgba(4, 40, 80, .2); animation: saFadeUp .5s ease backwards; }
+.ucas-portal.sa-skin .portal-page .ac-chip { padding: 9px 18px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--ucas-blue) 25%, transparent); background: var(--color-surface); color: var(--ucas-blue); box-shadow: 0 4px 12px rgba(4, 40, 80, .06); transition: background-color .3s ease, border-color .3s ease, color .3s ease; animation: saFadeUp .45s ease backwards; }
+.ucas-portal.sa-skin .portal-page .ac-chip:nth-child(2) { animation-delay: .08s; } .ucas-portal.sa-skin .portal-page .ac-chip:nth-child(3) { animation-delay: .16s; }
+.ucas-portal.sa-skin .portal-page .ac-chip:hover { border-color: transparent; background: linear-gradient(270deg, #62BB46, #0E699C); color: #FFFFFF; }
+.ucas-portal.sa-skin .portal-page .ac-msg { border-radius: 18px; padding: 12px 16px; box-shadow: 0 4px 14px rgba(4, 40, 80, .07); animation: saFadeUp .35s ease backwards; }
+.ucas-portal.sa-skin .portal-page .ac-msg.is-user { border-end-start-radius: 6px; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); color: #FFFFFF; }
+.ucas-portal.sa-skin .portal-page .ac-msg.is-ai { border: 0; border-end-end-radius: 6px; background: var(--color-surface); color: var(--color-text-800, #333); }
+.ucas-portal.sa-skin .portal-page .ac-wrap > form { padding: 14px 18px; border-top: 0; background: var(--color-surface); box-shadow: 0 -6px 18px rgba(4, 40, 80, .05); }
+.ucas-portal.sa-skin .portal-page .ac-input { height: 48px; padding-inline: 20px; border-radius: 999px; border-color: color-mix(in srgb, var(--ucas-blue) 18%, var(--color-border)); background: var(--color-bg); }
+.ucas-portal.sa-skin .portal-page .ac-input:focus { border-color: var(--ucas-blue); background: var(--color-surface); box-shadow: 0 0 0 4px rgba(0, 91, 170, .1); }
+.ucas-portal.sa-skin .portal-page .ac-send { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); box-shadow: 0 6px 16px rgba(4, 40, 80, .22); transition: filter .3s ease; }
+.ucas-portal.sa-skin .portal-page .ac-send:not(:disabled):hover { filter: brightness(1.08); }
+.ucas-portal.sa-skin .portal-page .ac-send svg { transform: scaleX(-1); }
+.ucas-portal.sa-skin .portal-page .ac-head-icon { background: #FFFFFF !important; background-image: none !important; color: var(--ucas-blue) !important; }
+.ucas-portal.sa-skin .portal-page .ac-wrap > header .portal-title::before { display: none; }
+.sa-skin .palert.is-error { border: 0; border-radius: 14px; background: rgba(255, 91, 91, .09); color: #D33B3B; box-shadow: inset -4px 0 0 #FF5B5B; }
+
+/* ======================================================================
+   الشكاوى والملاحظات (كل اللوحات): بطاقة التواصل، قائمة الرسائل، المحادثة بنمط البريد، والكتابة
+   ====================================================================== */
+/* بطاقة التواصل مع المشرف العام: ثلاث خانات ناعمة بأيقونة خط تدرّج */
+.sa-skin .st-contact { background: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .04)), var(--color-surface); }
+.sa-skin .sv-info { gap: 12px; }
+.sa-skin .sv-info div { align-items: center; padding: 14px 16px; border: 0; border-radius: 14px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent), 0 6px 16px rgba(4, 40, 80, .05); }
+.sa-skin .sv-info dt { color: var(--ucas-green); font-weight: 800; }
+.sa-skin .sv-info dd, .sa-skin .sv-info a { color: var(--ucas-blue); font-weight: 700; text-decoration: none; }
+.sa-skin .sv-info a:hover { text-decoration: underline; }
+@media (max-width: 767.98px) { .sa-skin .sv-info { grid-template-columns: 1fr; } }
+
+/* قائمة الرسائل */
+.sa-skin .em-item { margin: 6px 8px; width: calc(100% - 16px); border: 0; border-radius: 14px; transition: background-color .35s ease, box-shadow .35s ease; animation: saFadeUp .4s ease backwards; }
+.sa-skin .em-item:hover { background: color-mix(in srgb, var(--ucas-blue) 5%, var(--color-surface)); }
+.sa-skin .em-item.is-selected { background: linear-gradient(270deg, rgba(98, 187, 70, .14), rgba(0, 91, 170, .07)); box-shadow: inset -4px 0 0 #62BB46; }
+.sa-skin .em-subject { color: var(--ucas-blue); font-weight: 800; }
+.sa-skin .em-date { color: var(--color-text-400); }
+.sa-skin .em-count { border-radius: 999px; background: linear-gradient(270deg, #62BB46, #0E699C); color: #FFFFFF; padding-inline: 8px; }
+.sa-skin .em-closed { border-radius: 999px; padding-inline: 10px; }
+
+/* المحادثة: كل رسالة بطاقة بظل ناعم، ورسائلي بشريط تدرّج جانبي */
+.sa-skin .em-mail { border: 0; border-radius: 16px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 10%, transparent), 0 8px 22px rgba(4, 40, 80, .06); animation: saFadeUp .4s ease backwards; }
+.sa-skin .em-mail:has(.em-avatar.is-me) { background: linear-gradient(270deg, rgba(98, 187, 70, .07), rgba(0, 91, 170, .04)), var(--color-surface); box-shadow: inset -4px 0 0 #62BB46, 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 10%, transparent), 0 8px 22px rgba(4, 40, 80, .06); }
+.sa-skin .em-mail-who b, .sa-skin .em-mail-head b { color: var(--ucas-blue); }
+.sa-skin .em-mail-body, .sa-skin .em-text { line-height: 2; color: var(--color-text-700); }
+.sa-skin .em-avatar { background: color-mix(in srgb, var(--ucas-blue) 10%, var(--color-surface)); color: var(--ucas-blue); font-weight: 800; box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px color-mix(in srgb, var(--ucas-blue) 15%, transparent); }
+.sa-skin .em-avatar.is-me { background: linear-gradient(270deg, #62BB46, #0E699C); color: #FFFFFF; box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px rgba(98, 187, 70, .4); }
+
+/* كتابة رسالة جديدة / رد */
+.sa-skin .em-field input, .sa-skin .em-field textarea, .sa-skin .em-reply textarea { border-radius: 14px; border-color: color-mix(in srgb, var(--ucas-blue) 18%, var(--color-border)); background: var(--color-bg); }
+.sa-skin .em-field :is(input, textarea):focus, .sa-skin .em-reply textarea:focus { border-color: var(--ucas-blue); background: var(--color-surface); box-shadow: 0 0 0 4px rgba(0, 91, 170, .1); }
+.sa-skin .em-field > span, .sa-skin .em-field label { color: var(--ucas-blue); font-weight: 700; }
+.sa-skin .hd-composer-bar { border-top: 0; background: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .04)); }
+.sa-skin .hd-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: linear-gradient(270deg, rgba(98, 187, 70, .05), rgba(0, 91, 170, .03)), var(--color-surface); }
+.sa-skin .hd-empty svg { width: 56px; height: 56px; padding: 14px; border-radius: 50%; background: linear-gradient(270deg, #62BB46, #0E699C); color: #FFFFFF; box-shadow: 0 8px 20px rgba(4, 40, 80, .2); }
+.sa-skin .hd-ic { border-radius: 50%; }
+.sa-skin .palert.is-success { border: 0; border-radius: 14px; background: rgba(98, 187, 70, .1); color: #2F7F1E; box-shadow: inset -4px 0 0 #62BB46; }
+.sa-skin .palert.is-warning { border: 0; border-radius: 14px; background: rgba(249, 200, 81, .14); color: #8A5A00; box-shadow: inset -4px 0 0 #F89E32; }
+
+/* المساعد الآلي: كلمة مسار بقبعة التخرج واسم المنصة بدل الأيقونة */
+.ac-brand { display: flex; flex-direction: column; align-items: center; margin-bottom: 14px; animation: saFadeUp .5s ease backwards; }
+.ac-brand .us-hero-word.ac-wordmark { width: 190px; }
+.ac-brand .hw-text { fill: var(--ucas-blue); filter: drop-shadow(0 8px 16px rgba(4, 40, 80, .15)); }
+.ac-brand-name { margin: 2px 0 0; font-size: 15px; font-weight: 800; color: var(--ucas-green); }
+:root[data-theme="dark"] .ac-brand .hw-text { fill: #FFFFFF; }
+
+/* ======================================================================
+   تغيير كلمة المرور (كل اللوحات)
+   ====================================================================== */
+.cp-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 1023.98px) { .cp-grid { grid-template-columns: 1fr; } }
+.cp-card { overflow: hidden; border-radius: 18px; background: var(--color-surface); box-shadow: 0 10px 30px rgba(4, 40, 80, .08); animation: saFadeUp .5s ease backwards; }
+.cp-head { position: relative; display: flex; align-items: center; gap: 14px; padding: 20px 24px; background: linear-gradient(270deg, #62BB46 0%, #50A16E 30%, #0E699C 65%, #025DA9 100%); color: #FFFFFF; }
+.cp-head::before { content: ""; position: absolute; inset: 0; opacity: .14; background-image: radial-gradient(#FFFFFF 1.2px, transparent 1.2px); background-size: 22px 22px; pointer-events: none; }
+.cp-head-ic { position: relative; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: #FFFFFF; color: var(--ucas-blue); box-shadow: 0 6px 16px rgba(0, 0, 0, .18); }
+.cp-head > div { position: relative; }
+.cp-head h2 { margin: 0; font-size: 19px; font-weight: 800; color: #FFFFFF; }
+.cp-head p { margin: 2px 0 0; font-size: 13.5px; color: rgba(255, 255, 255, .88); }
+.cp-form { display: flex; flex-direction: column; gap: 18px; padding: 24px; }
+.cp-hint { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 12px 14px; border-radius: 12px; background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .06)); font-size: 13.5px; line-height: 1.8; color: var(--ucas-blue); }
+.cp-hint svg { flex-shrink: 0; margin-top: 3px; }
+.cp-field { display: flex; flex-direction: column; gap: 8px; }
+.cp-field > span:first-child { font-size: 14px; font-weight: 800; color: var(--ucas-blue); }
+.cp-input { display: flex; align-items: center; gap: 10px; height: 50px; padding-inline: 16px; border: 1.5px solid color-mix(in srgb, var(--ucas-blue) 18%, var(--color-border)); border-radius: 14px; background: var(--color-bg); color: var(--color-text-400); transition: border-color .3s ease, box-shadow .3s ease, background-color .3s ease; }
+.cp-input:focus-within { border-color: var(--ucas-blue); background: var(--color-surface); box-shadow: 0 0 0 4px rgba(0, 91, 170, .1); color: var(--ucas-blue); }
+.cp-input.is-invalid { border-color: #FF5B5B; }
+.cp-input input, .cp-input input:focus { flex: 1; min-width: 0; height: 100%; padding: 0 !important; border: 0 !important; outline: 0 !important; box-shadow: none !important; background: transparent !important; font-size: 15px; color: var(--color-text-900); text-align: right; }
+.cp-input button { display: grid; place-items: center; color: var(--color-text-400); transition: color .3s ease; }
+.cp-input button:hover { color: var(--ucas-blue); }
+.cp-error { font-size: 13px; color: #E04848; }
+.cp-actions { display: flex; justify-content: flex-end; padding-top: 6px; border-top: 1px solid color-mix(in srgb, var(--ucas-blue) 10%, transparent); }
+.cp-submit { min-width: 200px; height: 48px; margin-top: 14px; font-size: 15px; }
+.cp-tips { padding: 22px 24px; background: linear-gradient(180deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .04)), var(--color-surface); }
+.cp-tips h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; padding-bottom: 10px; border-bottom: 2px solid transparent; border-image: linear-gradient(270deg, #62BB46, #005BAA) 1; font-size: 16px; font-weight: 800; color: var(--ucas-blue); }
+.cp-tips h3 svg { color: var(--ucas-green); }
+.cp-tips ol { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; counter-reset: tip; }
+.cp-tips li { position: relative; padding-inline-start: 40px; font-size: 14px; line-height: 1.8; color: var(--color-text-700); counter-increment: tip; }
+.cp-tips li::before { content: counter(tip); position: absolute; inset-inline-start: 0; top: 0; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(270deg, #62BB46, #0E699C); font-size: 13px; font-weight: 800; color: #FFFFFF; }
+
+/* ======================================================================
+   بياناتي (كل اللوحات): بطاقة الملف، صفوف البيانات، الحقول والقيم والروابط
+   ====================================================================== */
+.sa-skin .profile-card { overflow: hidden; padding: 0; }
+.sa-skin .profile-card > :first-child { padding: 22px 24px; background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .05)); }
+.sa-skin .profile-card > :not(:first-child) { margin-inline: 24px; }
+.sa-skin .profile-card > :last-child { margin-bottom: 20px; }
+.sa-skin .pf-row { border-bottom-color: color-mix(in srgb, var(--ucas-blue) 10%, transparent); }
+.sa-skin .pf-row-title { display: flex; align-items: flex-start; gap: 8px; color: var(--ucas-blue); font-weight: 800; }
+.sa-skin .pf-row-title::before { content: ""; flex-shrink: 0; width: 4px; height: 22px; margin-top: 2px; border-radius: 4px; background: linear-gradient(180deg, #62BB46, #005BAA); }
+.sa-skin .profile-field-label { color: var(--ucas-green); font-weight: 700; }
+.sa-skin .profile-field-value { border: 1px solid color-mix(in srgb, var(--ucas-blue) 12%, transparent); border-radius: 12px; background: linear-gradient(270deg, rgba(98, 187, 70, .06), rgba(0, 91, 170, .04)), var(--color-surface); color: var(--ucas-blue); font-weight: 700; }
+.sa-skin .profile-field-value a { color: var(--ucas-blue); text-decoration: none; }
+.sa-skin .profile-field-value a:hover { color: var(--ucas-green); }
+.sa-skin .pf-input input { border-radius: 12px; border-color: color-mix(in srgb, var(--ucas-blue) 18%, var(--color-border)); }
+.sa-skin .pf-input input:focus { border-color: var(--ucas-blue); box-shadow: 0 0 0 4px rgba(0, 91, 170, .1); }
+.sa-skin .pf-photo-text .portal-title { color: var(--ucas-blue); }
+.sa-skin .profile-tab { gap: 8px; }
+.sa-skin .profile-tab svg { transition: transform .4s ease; }
+.sa-skin .profile-tab.is-active svg { transform: translateY(-2px); }

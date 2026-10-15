@@ -116,7 +116,12 @@ export default {
   },
 
   watch: {
-    id: { immediate: true, handler(id) { this.playing = false; this.fetchProjectById(id).catch(() => {}) } }
+    id: { immediate: true, async handler(id) {
+        this.playing = false
+        await this.fetchProjectById(id).catch(() => {})
+        // قادم من معرض المشاريع بزر التشغيل: الفيديو يعمل مباشرة مكان الصورة
+        if (this.$route.query.play && this.embedUrl) this.playing = true
+      } }
   },
 
   methods: {
