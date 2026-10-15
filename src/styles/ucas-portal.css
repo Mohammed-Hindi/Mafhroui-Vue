@@ -4562,3 +4562,24 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .ad-prev-body b { color: var(--ucas-blue); }
 @media (max-width: 767.98px) { .sa-skin .ad-files, .sa-skin .ad-previews { grid-template-columns: 1fr; } .sa-skin .ad-flow-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .sa-skin .ab-card-state { background: rgba(255, 255, 255, .94) !important; box-shadow: 0 2px 8px rgba(4, 40, 80, .15); }
+
+/* تقدّم المشاريع — المجموعات: شارة شعبة متدرّجة واسم مميز، وصف قابل للفتح بلوحة تفاصيل تمرَّر داخليًا */
+.pb-grp { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.pb-caret { flex-shrink: 0; width: 26px; height: 26px; padding: 5px; border-radius: 50%; background: color-mix(in srgb, var(--ucas-blue) 10%, transparent); color: var(--ucas-blue); transition: transform .35s ease, background-color .35s ease, color .35s ease; }
+.pb-caret.is-open { transform: rotate(180deg); background: linear-gradient(270deg, #62BB46, #0E699C); color: #FFFFFF; }
+.pb-sec { flex-shrink: 0; padding: 4px 12px; border-radius: 999px; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); font-size: 12.5px; font-weight: 800; color: #FFFFFF; white-space: nowrap; box-shadow: 0 3px 8px rgba(4, 40, 80, .18); }
+.pb-grp-text { display: flex; flex-direction: column; min-width: 0; }
+.pb-grp-text b { font-size: 14.5px; font-weight: 800; color: var(--ucas-blue); }
+.pb-grp-text small { font-size: 12.5px; color: var(--color-text-500, #6F6F6F); }
+.sa-skin .pt tr.is-link.is-open { background: linear-gradient(270deg, rgba(98, 187, 70, .14), rgba(0, 91, 170, .08)) !important; }
+.sa-skin .pt tr.is-link.is-open > td:first-child { box-shadow: inset -4px 0 0 #62BB46; }
+.sa-skin .pt tr.pt-sub > td { padding: 4px 10px 14px; background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-bg)) !important; background-image: none !important; }
+.pb-drop { max-height: 420px; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px; border-radius: 16px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent), 0 10px 26px rgba(4, 40, 80, .08); border-inline-start: 4px solid transparent; border-image: linear-gradient(180deg, #62BB46, #005BAA) 1; animation: saDropIn .4s cubic-bezier(.2, .8, .2, 1); scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ucas-blue) 30%, transparent) transparent; }
+.pb-drop-title { display: flex; align-items: center; gap: 6px; margin: 4px 0 10px; font-size: 14px; font-weight: 800; color: var(--ucas-blue); }
+.pb-drop-title svg { color: var(--ucas-green); }
+.pb-drop-title small { padding: 1px 9px; border-radius: 999px; background: linear-gradient(270deg, rgba(98, 187, 70, .18), rgba(0, 91, 170, .1)); font-size: 12px; color: var(--ucas-blue); }
+.pb-drop .ev-students { margin-bottom: 16px; overflow: hidden; border-radius: 12px; }
+.sa-skin .pb-tasks { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.sa-skin .pb-tasks li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px 14px; border-radius: 12px; background: linear-gradient(270deg, rgba(98, 187, 70, .06), rgba(0, 91, 170, .03)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 9%, transparent); }
+.sa-skin .pb-tasks b { color: var(--ucas-blue); }
+.pb-drop .pb-tasks { max-height: none; margin: 0; padding: 0; overflow: visible; border: 0; background: none; }

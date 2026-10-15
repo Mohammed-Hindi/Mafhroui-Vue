@@ -120,7 +120,14 @@
               <tbody>
                 <template v-for="g in shown" :key="g.id">
                   <tr :class="['is-link', openGrp === g.id && 'is-open']" @click="toggleGrp(g)">
-                    <td><span class="pt-strong">{{ g.name }}</span><span class="pt-muted d-block">{{ g.section ? 'شعبة ' + g.section + ' · ' : '' }}{{ g.project?.name || 'بلا مشروع' }}</span></td>
+                    <!-- المجموعة: شارة الشعبة متدرّجة + الاسم بلون مميز + سهم الفتح -->
+                    <td>
+                      <span class="pb-grp">
+                        <ChevronDown :size="16" :class="['pb-caret', openGrp === g.id && 'is-open']" />
+                        <span v-if="g.section" class="pb-sec">شعبة {{ g.section }}</span>
+                        <span class="pb-grp-text"><b>{{ g.name }}</b><small>{{ g.project?.name || 'بلا مشروع' }}</small></span>
+                      </span>
+                    </td>
                     <td>{{ g.sup.name }}</td>
                     <td><span class="mono">{{ g.tasksDone }}/{{ g.tasksTotal }}</span></td>
                     <td><span :class="lateClass(lateOf(g.id))">{{ lateOf(g.id) ?? '—' }}</span></td>
@@ -131,6 +138,9 @@
                   </tr>
                   <tr v-if="openGrp === g.id" class="pt-sub">
                     <td colspan="5">
+                      <!-- تفاصيل المجموعة: الطلاب ثم المهام، داخل لوحة منسدلة تمرَّر داخليًا -->
+                      <div class="pb-drop">
+                      <h5 class="pb-drop-title"><Users :size="15" /> الطلاب <small>{{ g.members.length }}</small></h5>
                       <table class="ev-students">
                         <thead><tr><th>الطالب</th><th>الموكلة</th><th>المنجزة</th><th>المتأخرة</th><th>نسبة الإنجاز</th><th>آخر نشاط</th></tr></thead>
                         <tbody>
@@ -147,13 +157,17 @@
                           </tr>
                         </tbody>
                       </table>
-                      <ul v-if="tasks[g.id]?.length" class="pb-tasks">
+                      <h5 class="pb-drop-title"><ListTodo :size="15" /> المهام <small>{{ tasks[g.id]?.length ?? '…' }}</small></h5>
+                      <p v-if="!tasks[g.id]" class="pt-muted">جارٍ التحميل…</p>
+                      <p v-else-if="!tasks[g.id].length" class="pt-muted">لا توجد مهام لهذه المجموعة</p>
+                      <ul v-else class="pb-tasks">
                         <li v-for="t in tasks[g.id]" :key="t.id">
                           <span :class="['rv-pill', t.status === 'done' ? 'is-approved' : isLate(t) ? 'is-rejected' : 'is-pending']">{{ isLate(t) ? 'متأخرة' : TASK_STATUS[t.status] || t.status }}</span>
                           <b>{{ t.title }}</b>
                           <span class="pt-muted">{{ (t.assignees || []).map((a) => a.name).join('، ') || 'كل الفريق' }}<template v-if="t.due_date"> · التسليم {{ formatDate(t.due_date) }}</template></span>
                         </li>
                       </ul>
+                      </div>
                     </td>
                   </tr>
                 </template>
@@ -179,7 +193,7 @@
 
 <script>
 import SlideTable from '@/components/ui/SlideTable.vue'
-import { FileDown, Search } from 'lucide-vue-next'
+import { ChevronDown, FileDown, ListTodo, Search, Users } from 'lucide-vue-next'
 
 import { escapeHtml } from '@/utils/exportReport'
 import { exportTablePdf } from '@/utils/ucasReports'
@@ -192,7 +206,7 @@ import { groupGender } from '@/services/adminData'
 export default {
   name: 'ProgressBoard',
 
-  components: { SlideTable, FileDown, Search },
+  components: { SlideTable, ChevronDown, FileDown, ListTodo, Search, Users },
 
   data() {
     // المشرف: مجموعاته فقط (الخادم يقيّد /progress) بلا تبويب المشرفين
