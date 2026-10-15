@@ -34,7 +34,6 @@
           <BaseSelect v-model="specFilter" class="min-w-[200px]" placeholder="جميع التخصصات" include-placeholder-option :options="specOptions" />
           <BaseSelect v-model="deptFilter" class="min-w-[170px]" placeholder="جميع الأقسام" include-placeholder-option :options="deptOptions" />
           <BaseSelect v-model="featuredFilter" class="min-w-[150px]" placeholder="كل المشاريع" include-placeholder-option :options="featuredOptions" />
-          <button v-if="search || specFilter || deptFilter || featuredFilter" type="button" class="gr-clear" @click="search = ''; specFilter = ''; deptFilter = ''; featuredFilter = ''">مسح الفلاتر</button>
         </div>
       </div>
 

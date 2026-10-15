@@ -33,8 +33,6 @@
             <option value="oldest">الأقدم أولًا</option>
           </select>
         </label>
-        <button v-if="(q || sender) && !['supervisor', 'student'].includes(userRole)" type="button" class="gr-clear hd-clear" @click="q = ''; sender = ''"><X :size="15" /> مسح الفلاتر</button>
-        <button v-if="userRole !== 'student'" type="button" class="hd-refresh" :disabled="loading" title="تحديث" aria-label="تحديث" @click="load"><RefreshCw :size="16" /></button>
       </div>
     </section>
 
@@ -139,7 +137,7 @@
 
 <script>
 import { markRaw } from 'vue'
-import { ArrowDownUp, ArrowRight, Download, FileText, Inbox, Layers, ListTodo, Megaphone, Paperclip, RefreshCw, Search, Star, UserRound, X } from 'lucide-vue-next'
+import { ArrowDownUp, ArrowRight, Download, FileText, Inbox, Layers, ListTodo, Megaphone, Paperclip, Search, Star, UserRound, X } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
 import api from '@/services/api'
 import { downloadAttachment } from '@/services/announcements'
@@ -163,7 +161,7 @@ const rtf = new Intl.RelativeTimeFormat('ar', { numeric: 'auto' })
 export default {
   name: 'AnnouncementsDesk',
 
-  components: { ArrowDownUp, ArrowRight, Download, FileText, Inbox, ListTodo, Paperclip, RefreshCw, Search, Star, UcasLogo, UserRound, X },
+  components: { ArrowDownUp, ArrowRight, Download, FileText, Inbox, ListTodo, Paperclip, Search, Star, UcasLogo, UserRound, X },
 
   data() {
     return {

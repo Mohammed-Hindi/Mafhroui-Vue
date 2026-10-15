@@ -54,7 +54,6 @@
             <option v-for="s in supOptions" :key="s.id" :value="s.id">{{ s.name }}</option>
           </select>
         </label>
-        <button v-if="gq || gSup || gDegree || gStatus || gGender || gSpec" type="button" class="gr-clear" @click="gq = gSup = gDegree = gStatus = gGender = gSpec = ''">مسح الفلاتر</button>
       </div>
 
       <p v-if="loading" class="pt-muted tk-loading">جارٍ التحميل…</p>
@@ -142,7 +141,6 @@
           <span>التمييز</span>
           <select v-model="f.featured" class="gr-select"><option value="">الكل</option><option value="yes">مشروع مميّز</option><option value="no">غير مميّز</option></select>
         </label>
-        <button v-if="q || Object.values(f).some(Boolean)" type="button" class="gr-clear" @click="clearResultFilters">مسح الفلاتر</button>
       </div>
 
       <SlideTable :rows="resultRows" label="الطلاب">

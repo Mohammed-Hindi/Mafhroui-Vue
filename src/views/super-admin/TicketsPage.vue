@@ -27,8 +27,6 @@
         <option value="newest">الأحدث فتحًا</option>
         <option value="oldest">الأقدم فتحًا</option>
       </select>
-      <button v-if="q || roleFilter" type="button" class="pbtn is-outline is-sm" @click="q = ''; roleFilter = ''">مسح الفلاتر</button>
-      <button type="button" class="hd-refresh" :disabled="loading" title="تحديث" aria-label="تحديث" @click="load"><RefreshCw :size="16" /></button>
     </div>
 
     <div class="rv-layout hd-layout">
@@ -151,7 +149,7 @@
 
 <script>
 import { markRaw } from 'vue'
-import { Search, Send, ArrowRight, RefreshCw, MessageSquare, CheckCircle2, RotateCcw, Archive, ArchiveRestore, Trash2, Inbox, MessageSquareReply, Layers } from 'lucide-vue-next'
+import { Search, Send, ArrowRight, MessageSquare, CheckCircle2, RotateCcw, Archive, ArchiveRestore, Trash2, Inbox, MessageSquareReply, Layers } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
 import api from '@/services/api'
 
@@ -161,7 +159,7 @@ const rtf = new Intl.RelativeTimeFormat('ar', { numeric: 'auto' })
 export default {
   name: 'TicketsPage',
 
-  components: { Search, Send, ArrowRight, RefreshCw, MessageSquare, CheckCircle2, RotateCcw, Archive, ArchiveRestore, Trash2, Inbox, UcasLogo },
+  components: { Search, Send, ArrowRight, MessageSquare, CheckCircle2, RotateCcw, Archive, ArchiveRestore, Trash2, Inbox, UcasLogo },
 
   data() {
     return {

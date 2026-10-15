@@ -56,7 +56,6 @@
           <option v-for="n in 4" :key="n" :value="n">{{ n }} {{ n === 1 ? 'طالب' : 'طلاب' }}</option>
         </select>
       </label>
-      <button v-if="hasFilters" type="button" class="gr-clear" @click="clearFilters">مسح الفلاتر</button>
     </div>
 
     <SlideTable :rows="rows" label="المجموعات">

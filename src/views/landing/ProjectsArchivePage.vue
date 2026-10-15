@@ -34,7 +34,6 @@
               <option v-for="o in degreeOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
             </select>
           </label>
-          <button v-if="hasActiveFilters" type="button" class="us-btn is-sm" @click="resetFilters">مسح الفلاتر</button>
         </div>
 
         <p v-if="projectsLoading" class="us-empty">جارٍ تحميل المشاريع…</p>
