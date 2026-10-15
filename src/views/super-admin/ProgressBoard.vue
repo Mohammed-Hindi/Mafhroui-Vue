@@ -44,7 +44,6 @@
           <option value="mid">متوسط (35–69%)</option>
           <option value="high">مرتفع (70% فأكثر)</option>
         </select>
-        <button v-if="q || supFilter || specFilter || degreeFilter || levelFilter || genderFilter" type="button" class="gr-clear" @click="q = ''; supFilter = ''; specFilter = ''; degreeFilter = ''; levelFilter = ''; genderFilter = ''">مسح الفلاتر</button>
       </div>
 
       <p v-if="loading" class="pt-muted">جارٍ التحميل…</p>

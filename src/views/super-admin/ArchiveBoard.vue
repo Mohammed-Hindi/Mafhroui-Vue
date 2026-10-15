@@ -109,7 +109,7 @@
 
         <div class="gr-filters" aria-label="تصفية المشاريع">
           <label class="gr-search"><Search :size="16" /><input v-model.trim="q" type="search" placeholder="بحث بالمشروع أو الشعبة أو المشرف أو الطالب…"></label>
-          <label class="gr-pick">
+          <label v-if="layout === 'table'" class="gr-pick">
             <span>التخصص</span>
             <select v-model="f.spec" class="gr-select">
               <option value="">كل التخصصات</option>
@@ -132,38 +132,68 @@
               <option value="female">طالبات</option>
             </select>
           </label>
-          <button v-if="q || f.spec || f.degree || f.gender" type="button" class="gr-clear" @click="q = ''; f = { spec: '', degree: '', gender: '' }">مسح الفلاتر</button>
         </div>
 
         <p v-if="loading" class="pt-muted tk-loading">جارٍ التحميل…</p>
         <!-- جدول المشاريع بالسلايدر والشريط الأخضر: موافقة المشرف + موافقة لجنة الإشراف ← أرشفة -->
         <!-- معرض الأعمال: بطاقة لكل مشروع (الشعبة، التخصص، الطلبة، المشرف، حالة الاعتماد)، الضغط يفتح مجلد المشروع -->
         <template v-else-if="layout === 'gallery'">
-          <p v-if="!visible.length" class="gr-empty">لا توجد مشاريع مطابقة</p>
-          <div v-else class="ab-gallery">
-            <article v-for="p in visible" :key="p.id" class="ab-card" tabindex="0" @click="openProject(p)" @keydown.enter="openProject(p)">
-              <div class="ab-card-media">
-                <span class="ab-card-sec">شعبة {{ p.section }}</span>
-                <span :class="['rv-pill', REVIEW[stageOf(p)].tone, 'ab-card-state']">{{ REVIEW[stageOf(p)].short }}</span>
-                <span class="ab-card-mark" aria-hidden="true"><UcasLogo :size="46" /></span>
-                <span v-if="p.featured" class="ab-card-star"><Star :size="14" fill="currentColor" /> في الرئيسية</span>
-              </div>
-              <div class="ab-card-body">
-                <small>{{ p.spec }} · {{ DEGREES[p.degree] }}</small>
-                <h4>{{ p.project }}</h4>
-                <span class="ab-card-meta"><UserRound :size="14" /> {{ p.supName }}</span>
-                <span class="ab-card-meta"><Users :size="14" /> {{ p.members.map((m) => m.name).join('، ') || '—' }}</span>
-              </div>
-              <footer class="ab-card-foot" @click.stop>
-                <button v-if="isSup && stageOf(p) === 'pending_supervisor'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click="review(p, true)"><CheckCircle2 :size="14" /> موافقة</button>
-                <button v-else-if="!isSup && stageOf(p) === 'pending_committee'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click="review(p, true)"><CheckCircle2 :size="14" /> موافقة اللجنة</button>
-                <button v-if="!isSup" type="button" :class="['pbtn is-sm ar-feature', p.featured ? 'is-green' : 'is-outline']" :aria-pressed="p.featured" @click="toggleFeatured(p)">
-                  <Star :size="14" :fill="p.featured ? 'currentColor' : 'none'" /> {{ p.featured ? 'في الرئيسية' : 'تعيين للرئيسية' }}
-                </button>
-                <button type="button" class="pbtn is-cyan is-sm" @click="openProject(p)"><FolderOpen :size="14" /> فتح المشروع</button>
-              </footer>
-            </article>
-          </div>
+          <!-- مجلد لكل تخصص (كأنظمة إدارة الملفات): العدد، المؤرشفة، المميّزة، والدرجات — الضغط يفتح مشاريع التخصص -->
+          <template v-if="!f.spec && !q">
+            <p v-if="!folders.length" class="gr-empty">لا توجد مشاريع</p>
+            <div v-else class="ab-folders">
+              <button v-for="fd in folders" :key="fd.spec" type="button" class="ab-folder" @click="f.spec = fd.spec">
+                <span class="ab-folder-ic"><Folder :size="30" /><b>{{ fd.count }}</b></span>
+                <span class="ab-folder-body">
+                  <strong>{{ fd.spec }}</strong>
+                  <small>{{ fd.degrees }}</small>
+                  <span class="ab-folder-stats">
+                    <span><CheckCircle2 :size="13" /> {{ fd.archived }} مؤرشف</span>
+                    <span v-if="fd.featured"><Star :size="13" /> {{ fd.featured }} مميّز</span>
+                  </span>
+                </span>
+                <span class="ab-folder-bar" aria-hidden="true"><span :style="{ width: `${fd.count ? (fd.archived / fd.count) * 100 : 0}%` }" /></span>
+              </button>
+            </div>
+          </template>
+
+          <template v-else>
+            <nav class="ab-crumbs" aria-label="مسار التصفح">
+              <button type="button" @click="f.spec = ''; q = ''"><FolderOpen :size="15" /> كل التخصصات</button>
+              <span>/</span>
+              <b>{{ f.spec || `نتائج البحث «${q}»` }}</b>
+              <span class="dash-chip">{{ visible.length }} مشروع</span>
+            </nav>
+            <p v-if="!visible.length" class="gr-empty">لا توجد مشاريع مطابقة</p>
+            <SlideTable v-else :rows="visible" label="المشاريع">
+              <template #default="{ rows: pageRows }">
+                <div class="ab-gallery">
+                  <article v-for="p in pageRows" :key="p.id" class="ab-card" tabindex="0" @click="openProject(p)" @keydown.enter="openProject(p)">
+                    <div class="ab-card-media">
+                      <span class="ab-card-sec">شعبة {{ p.section }}</span>
+                      <span :class="['rv-pill', REVIEW[stageOf(p)].tone, 'ab-card-state']">{{ REVIEW[stageOf(p)].short }}</span>
+                      <span class="ab-card-mark" aria-hidden="true"><UcasLogo :size="46" /></span>
+                      <span v-if="p.featured" class="ab-card-star"><Star :size="14" fill="currentColor" /> في الرئيسية</span>
+                    </div>
+                    <div class="ab-card-body">
+                      <small>{{ p.spec }} · {{ DEGREES[p.degree] }}</small>
+                      <h4>{{ p.project }}</h4>
+                      <span class="ab-card-meta"><UserRound :size="14" /> {{ p.supName }}</span>
+                      <span class="ab-card-meta"><Users :size="14" /> {{ p.members.map((m) => m.name).join('، ') || '—' }}</span>
+                    </div>
+                    <footer class="ab-card-foot" @click.stop>
+                      <button v-if="isSup && stageOf(p) === 'pending_supervisor'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click="review(p, true)"><CheckCircle2 :size="14" /> موافقة</button>
+                      <button v-else-if="!isSup && stageOf(p) === 'pending_committee'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click="review(p, true)"><CheckCircle2 :size="14" /> موافقة اللجنة</button>
+                      <button v-if="!isSup" type="button" :class="['pbtn is-sm ar-feature', p.featured ? 'is-green' : 'is-outline']" :aria-pressed="p.featured" @click="toggleFeatured(p)">
+                        <Star :size="14" :fill="p.featured ? 'currentColor' : 'none'" /> {{ p.featured ? 'في الرئيسية' : 'تعيين للرئيسية' }}
+                      </button>
+                      <button type="button" class="pbtn is-cyan is-sm" @click="openProject(p)"><FolderOpen :size="14" /> فتح المشروع</button>
+                    </footer>
+                  </article>
+                </div>
+              </template>
+            </SlideTable>
+          </template>
           <div class="gr-sumbar">
             <span>عدد المشاريع: {{ visible.length }}</span>
             <span v-for="(l, k) in REVIEW" :key="k">{{ l.short }}: {{ visible.filter((p) => stageOf(p) === k).length }}</span>
@@ -323,6 +353,20 @@ export default {
         (this.view === 'all' || (this.view === 'featured' && p.featured) || (this.view === 'archived' && p.archived) || (this.view === 'ready' && this.stageOf(p) === this.waitStage) || (this.view === 'pending' && !p.archived)) &&
         (!q || `${p.project} ${p.section} ${p.supName} ${p.members.map((m) => m.name).join(' ')}`.includes(q))
       )
+    },
+    /** مجلد لكل تخصص من مشاريع العرض الحالي (بعد فلتر الدرجة/الجنس) */
+    folders() {
+      const base = this.inView.filter((p) => (!this.f.degree || p.degree === this.f.degree) && (!this.f.gender || groupGender(p) === this.f.gender))
+      return this.specs.map((spec) => {
+        const list = base.filter((p) => p.spec === spec)
+        return {
+          spec,
+          count: list.length,
+          archived: list.filter((p) => p.archived).length,
+          featured: list.filter((p) => p.featured).length,
+          degrees: [...new Set(list.map((p) => DEGREES[p.degree]).filter(Boolean))].join(' · ') || '—'
+        }
+      }).filter((x) => x.count)
     },
     specs() {
       return [...new Set(this.projects.map((x) => x.spec).filter(Boolean))]

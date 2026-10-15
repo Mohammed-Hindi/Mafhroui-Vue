@@ -34,7 +34,6 @@
       <BaseSelect v-model="supFilter" class="min-w-[170px]" placeholder="جميع المشرفين" include-placeholder-option :options="supOptions" />
       <BaseSelect v-model="placeFilter" class="min-w-[160px]" placeholder="جميع القاعات" include-placeholder-option :options="placeOptions" />
       <BaseSelect v-model="statusFilter" class="min-w-[150px]" placeholder="كل الحالات" include-placeholder-option :options="statusOptions" />
-      <button v-if="search || deptFilter || specFilter || supFilter || placeFilter || statusFilter" type="button" class="gr-clear" @click="search = ''; deptFilter = ''; specFilter = ''; supFilter = ''; placeFilter = ''; statusFilter = ''">مسح الفلاتر</button>
     </div>
 
     <div class="flex items-center justify-between gap-4 mb-4">

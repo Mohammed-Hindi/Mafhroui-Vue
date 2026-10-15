@@ -54,7 +54,6 @@
           <option value="male">طلاب</option>
           <option value="female">طالبات</option>
         </select>
-        <button v-if="hasFilters" type="button" class="pbtn is-outline is-sm" @click="clearFilters">مسح الفلاتر</button>
       </div>
 
       <p v-if="!loaded" class="pt-muted tk-loading">جارٍ تحميل المهام…</p>
