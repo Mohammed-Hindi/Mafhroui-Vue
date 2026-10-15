@@ -192,7 +192,17 @@
               <span>رابط فيديو العرض (يوتيوب)</span>
               <input v-model.trim="reportForm.video_url" type="url" dir="ltr" placeholder="https://www.youtube.com/watch?v=…">
             </label>
+            <!-- صورة المشروع: تظهر في معرض الأعمال وصفحة المشروع بعد الأرشفة -->
             <template v-else-if="rStep === 2">
+              <label :class="['sp-cover', coverPreview && 'has-image']">
+                <img v-if="coverPreview" :src="coverPreview" alt="معاينة صورة المشروع">
+                <span v-else><ImagePlus :size="30" /><b>اختر صورة تعبّر عن المشروع</b><small class="pt-muted">PNG أو JPG أو WEBP — حتى 5MB، ويفضّل أن تكون عرضية (16:10)</small></span>
+                <input type="file" accept="image/png,image/jpeg,image/webp" hidden @change="pickCover">
+              </label>
+              <p v-if="coverError" class="palert is-error"><XCircle :size="18" /><span>{{ coverError }}</span></p>
+              <button v-if="reportForm.cover" type="button" class="pbtn is-outline is-sm" @click="reportForm.cover = null">إزالة الصورة</button>
+            </template>
+            <template v-else-if="rStep === 3">
               <!-- ponytail: الملفات المضغوطة placeholder — لا تُرسل حتى يوفّر الخادم حقلها -->
               <FileDropzone v-model="reportForm.zip" :max-mb="100" />
               <small class="pt-muted">الكود المصدري والمخرجات (ZIP / RAR) — اختياري.</small>
@@ -201,6 +211,7 @@
               <dl class="tk-review">
                 <dt>التقرير النهائي</dt><dd>{{ reportForm.files[0]?.name || '—' }}</dd>
                 <dt>فيديو العرض</dt><dd class="mono sp-link">{{ reportForm.video_url || '—' }}</dd>
+                <dt>صورة المشروع</dt><dd>{{ reportForm.cover?.name || 'لا يوجد' }}</dd>
                 <dt>الملفات المضغوطة</dt><dd>{{ reportForm.zip.map((f) => f.name).join('، ') || 'لا يوجد' }}</dd>
               </dl>
               <p v-if="reportMissing" class="palert is-error"><XCircle :size="18" /><span>{{ reportMissing }}</span></p>
@@ -228,6 +239,11 @@
               <span><b>التقرير النهائي</b><small class="pt-muted">PDF</small></span>
               <button type="button" class="pbtn is-outline is-sm" @click="openReport">فتح</button>
             </li>
+            <li v-if="finalReport.cover_url">
+              <img :src="finalReport.cover_url" alt="صورة المشروع" class="sp-cover-thumb">
+              <span><b>صورة المشروع</b><small class="pt-muted">تظهر في معرض الأعمال</small></span>
+              <a :href="finalReport.cover_url" target="_blank" rel="noopener" class="pbtn is-outline is-sm">عرض</a>
+            </li>
             <li v-if="finalReport.video_url">
               <PlayCircle :size="20" />
               <span><b>فيديو العرض</b><small class="pt-muted mono sp-link">{{ finalReport.video_url }}</small></span>
@@ -243,7 +259,7 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Check, CheckCircle2, ClipboardList, Hourglass, RotateCcw, FileCheck, FileText, Lock, PencilLine, PlayCircle, Send, XCircle } from 'lucide-vue-next'
+import { Check, CheckCircle2, ClipboardList, Hourglass, ImagePlus, RotateCcw, FileCheck, FileText, Lock, PencilLine, PlayCircle, Send, XCircle } from 'lucide-vue-next'
 import { latestReport, rejectedBy } from '@/utils/finalReport'
 import PortalStepper from '@/components/shared/PortalStepper.vue'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
@@ -272,7 +288,7 @@ const track = (labels, done, rejectedAt = -1) => labels.map((label, i) => ({
 export default {
   name: 'StudentProposalPage',
 
-  components: { Check, CheckCircle2, Hourglass, RotateCcw, FileText, Lock, PencilLine, PlayCircle, Send, XCircle, PortalStepper, FileDropzone },
+  components: { Check, CheckCircle2, ImagePlus, Hourglass, RotateCcw, FileText, Lock, PencilLine, PlayCircle, Send, XCircle, PortalStepper, FileDropzone },
 
   data() {
     return {
@@ -286,7 +302,9 @@ export default {
       rStep: 0,
       pStep: 0,
       uploading: false,
-      reportForm: { files: [], video_url: '', zip: [] },
+      reportForm: { files: [], video_url: '', cover: null, zip: [] },
+      coverPreview: '',
+      coverError: '',
       form: { name: '', description: '', problems: '', solutions: '', features_value: '', types: [], files: [] }
     }
   },
@@ -406,6 +424,7 @@ export default {
       return [
         { label: 'التقرير النهائي (PDF)', req: true, ok: f.files.length > 0 },
         { label: 'رابط فيديو العرض', req: true, ok: !!f.video_url },
+        { label: 'صورة المشروع', req: false, ok: !!f.cover },
         { label: 'الملفات المضغوطة', req: false, ok: f.zip.length > 0 },
         { label: 'التسليم', req: false, ok: false }
       ]
@@ -420,6 +439,12 @@ export default {
   },
 
   watch: {
+    // معاينة صورة المشروع المختارة (تُحرّر الذاكرة عند الاستبدال)
+    'reportForm.cover'(file) {
+      if (this.coverPreview) URL.revokeObjectURL(this.coverPreview)
+      this.coverPreview = file ? URL.createObjectURL(file) : ''
+    },
+
     // بعد اعتماد المقترح يُفتح قسم التقرير النهائي مباشرة
     'proposal.status': {
       immediate: true,
@@ -437,7 +462,20 @@ export default {
     if (!this.proposal) this.form.types = this.projectTypes.slice(0, 3)
   },
 
+  beforeUnmount() {
+    if (this.coverPreview) URL.revokeObjectURL(this.coverPreview)
+  },
+
   methods: {
+    /** صورة المشروع: صورة فقط وحتى 5MB */
+    pickCover(e) {
+      const file = e.target.files?.[0]
+      e.target.value = ''
+      if (!file) return
+      this.coverError = !/^image\/(png|jpeg|webp)$/.test(file.type) ? 'اختر صورة PNG أو JPG أو WEBP' : file.size > 5 * 1024 * 1024 ? 'حجم الصورة أكبر من 5MB' : ''
+      if (!this.coverError) this.reportForm.cover = file
+    },
+
     ...mapActions(useTeamsStore, ['fetchTeams', 'openProtectedFile', 'submitProposal', 'updateProposal', 'submitFinalReport']),
     rejectedBy,
 
@@ -458,9 +496,9 @@ export default {
     async submitReport() {
       this.uploading = true
       try {
-        await this.submitFinalReport(this.myTeam.project.id, { file: this.reportForm.files[0], video_url: this.reportForm.video_url })
+        await this.submitFinalReport(this.myTeam.project.id, { file: this.reportForm.files[0], video_url: this.reportForm.video_url, cover: this.reportForm.cover })
         this.$toast?.success('تم رفع التقرير — بانتظار موافقة المشرف')
-        this.reportForm = { files: [], video_url: '', zip: [] }
+        this.reportForm = { files: [], video_url: '', cover: null, zip: [] }
         this.reportEditing = false
         this.rStep = 0
         await this.fetchTeams()

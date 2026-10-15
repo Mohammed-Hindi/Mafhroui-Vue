@@ -44,8 +44,16 @@ export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100]
 export const DEFAULT_PAGE_SIZE = 10
 
 /** بيانات التواصل المعروضة باللاندنج والتذييل */
+// روابط صفحات الهبوط — نفسها في الناف بار و"روابط سريعة" بالفوتر
+export const LANDING_LINKS = [
+  { label: 'الرئيسية', to: { name: 'landing' } },
+  { label: 'من نحن', to: { name: 'about' } },
+  { label: 'أفضل المشاريع', to: { name: 'landing', hash: '#projects' } },
+  { label: 'ميزات المنصة', to: { name: 'landing', hash: '#features' } }
+]
+
 export const CONTACT = {
-  EMAIL: 'academy@ucas.edu.ps',
+  EMAIL: 'anas120226878@gmail.com',
   PHONE: '0597 302 452',
   PHONE_RAW: '+970597302452',
   ADDRESS: 'فلسطين - غزة'

@@ -1,6 +1,6 @@
 <template>
   <!-- تغيير كلمة المرور الإجباري بعد أول دخول — POST /me/change-password ثم المتابعة للوحة -->
-  <NewPasswordCards subtitle="مطلوب تعيين كلمة مرور جديدة قبل المتابعة" :loading="isLoading" :error="authError || ''" :server-errors="serverErrors" @submit="handleSubmit" />
+  <NewPasswordCards title="تغيير كلمة المرور" subtitle="مطلوب تعيين كلمة مرور جديدة قبل المتابعة إلى المنصة" :back="{ to: { name: 'landing' }, label: 'العودة إلى الصفحة الرئيسية' }" :loading="isLoading" :error="authError || ''" :server-errors="serverErrors" @submit="handleSubmit" />
 </template>
 
 <script>

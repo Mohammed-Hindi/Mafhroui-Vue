@@ -1,21 +1,43 @@
 <template>
   <!-- الرئيسية للإدارة العامة — بيانات تجريبية (placeholder) بلا ربط بالخادم:
        الإحصاءات ← نشاط المشرفين والمجموعات (بحث + فلاتر + بروفايل) ← مهام وتكليفات كل مجموعة + الرسم البياني -->
-  <div class="dash">
-    <header class="dash-head">
-      <h2 class="dash-title">الرئيسية</h2>
-    </header>
-
-    <!-- الإحصاءات -->
-    <section class="hm-stats" aria-label="إحصاءات عامة">
-      <div v-for="s in stats" :key="s.label" class="hm-stat">
-        <span class="hm-stat-label">{{ s.label }}</span>
-        <span class="hm-stat-value">{{ s.value }}</span>
-        <span class="hm-stat-split">
-          <template v-for="(p, i) in s.split" :key="p.label"><span v-if="i" class="hm-sep">·</span>{{ p.label }} <b>{{ p.value }}</b></template>
-        </span>
+  <div ref="root" class="dash">
+    <!-- الإدارة العامة: بانر بهوية صفحة الهبوط (تدرّج + مطر البيانات + شعار مسار + الإحصاءات بأرقام بيضاء) -->
+    <section v-if="isSA" class="sa-hero">
+      <DataRain :gain="2.4" :focus="wordRect" />
+      <div class="sa-hero-in">
+        <div class="sa-hero-text">
+          <span class="sa-hero-eyebrow">لوحة الإدارة العامة</span>
+          <h2 class="sa-hero-title">مرحبًا، {{ firstName }}</h2>
+          <p>تابع المجموعات والمشرفين والمهام في الفصل الدراسي الحالي من مكان واحد.</p>
+        </div>
+        <MasarWordmark ref="word" class="sa-hero-word" />
+      </div>
+      <div class="sa-hero-stats" aria-label="إحصاءات عامة">
+        <div v-for="s in stats" :key="s.label" class="sa-stat">
+          <b><CountUp :value="s.value" /></b>
+          <span>{{ s.label }}</span>
+          <small><template v-for="(p, i) in s.split" :key="p.label"><template v-if="i"> · </template>{{ p.label }} {{ p.value }}</template></small>
+        </div>
       </div>
     </section>
+
+    <template v-else>
+      <header class="dash-head">
+        <h2 class="dash-title">الرئيسية</h2>
+      </header>
+
+      <!-- الإحصاءات -->
+      <section class="hm-stats" aria-label="إحصاءات عامة">
+        <div v-for="s in stats" :key="s.label" class="hm-stat">
+          <span class="hm-stat-label">{{ s.label }}</span>
+          <span class="hm-stat-value">{{ s.value }}</span>
+          <span class="hm-stat-split">
+            <template v-for="(p, i) in s.split" :key="p.label"><span v-if="i" class="hm-sep">·</span>{{ p.label }} <b>{{ p.value }}</b></template>
+          </span>
+        </div>
+      </section>
+    </template>
 
     <!-- نشاط المشرفين والمجموعات -->
     <section class="dash-card">
@@ -53,12 +75,12 @@
       <!-- كل الصفوف في صندوق بارتفاع ثابت يمرَّر داخليًا (رأس الجدول ثابت) بدل الشرائح -->
       <div class="hm-table-wrap hm-scroll">
           <table v-if="tab === 'sup'" class="hm-table">
-            <thead><tr><th>المشرف</th><th>التخصص</th><th>المجموعات</th><th>الطلاب</th><th>التفاعل</th><th>آخر تفاعل</th><th>نوع التفاعل</th></tr></thead>
+            <thead><tr><th>المشرف</th><th>التخصص</th><th class="hm-center">المجموعات</th><th>الطلاب</th><th>التفاعل</th><th>آخر تفاعل</th><th>نوع التفاعل</th></tr></thead>
             <tbody>
               <tr v-for="s in supRows" :key="s.id" class="is-link" @click="openProfile('supervisor', s)">
                 <td class="hm-strong">{{ s.name }}</td>
                 <td class="hm-muted">{{ s.spec }}</td>
-                <td>{{ s.groups.length }}</td>
+                <td class="hm-center">{{ s.groups.length }}</td>
                 <td>{{ s.students }}</td>
                 <td>
                   <span class="gr-progress"><span :class="level(s.activity)" :style="{ width: s.activity + '%' }" /></span>
@@ -122,11 +144,10 @@
           </table>
       </div>
       <p class="hm-count">{{ tab === 'sup' ? `${supRows.length} مشرف` : `${grpRows.length} مجموعة` }}</p>
-      <p v-if="tab === 'grp'" class="hm-hint">اضغط على المجموعة لعرض طلابها، وعلى الطالب لعرض البروفايل.</p>
     </section>
 
     <!-- المهام والتكليفات لكل مجموعة + الرسم البياني -->
-    <div class="hm-grid">
+    <div class="hm-grid is-stretch">
       <section class="dash-card">
         <div class="dash-card-head">
           <h3>المهام والتكليفات</h3>
@@ -145,11 +166,12 @@
         </div>
         <div class="hm-table-wrap hm-scroll">
             <table class="hm-table">
-              <thead><tr><th>المهمة / التكليف</th><th>المجموعة</th><th>المشرف</th><th>المكلّفون</th><th>تاريخ الإصدار</th><th>موعد التسليم</th><th>الحالة</th></tr></thead>
+              <thead><tr><th>المهمة / التكليف</th><th class="hm-center">المجموعة</th><th>المشرف</th><th>المكلّفون</th><th>تاريخ الإصدار</th><th>موعد التسليم</th><th>الحالة</th></tr></thead>
               <tbody>
-                <tr v-for="t in taskRows" :key="t.id" class="is-link" @click="taskGroup = t.groupId">
+                <tr v-for="t in taskRows" :key="t.id">
                   <td class="hm-strong">{{ t.title }}</td>
-                  <td class="hm-muted">{{ t.group }}</td>
+                  <!-- الشعبة: زر يعرض كل مهام المجموعة ويحدّث الرسم البياني -->
+                  <td class="hm-center"><button type="button" :class="['hm-group-link', taskGroup === t.groupId && 'is-active']" :title="'عرض كل مهام ' + t.group" @click="taskGroup = taskGroup === t.groupId ? '' : t.groupId">{{ t.group }}</button></td>
                   <td class="hm-muted">{{ t.sup }}</td>
                   <td class="hm-muted">{{ t.assignees }}</td>
                   <td><span class="mono">{{ t.issued }}</span></td>
@@ -161,7 +183,6 @@
             </table>
         </div>
         <p class="hm-count">{{ taskRows.length }} مهمة</p>
-        <p class="hm-hint">اضغط على أي مهمة لعرض مهام مجموعتها وتحديث الرسم البياني.</p>
       </section>
 
       <section class="dash-card">
@@ -169,15 +190,48 @@
           <h3>حالة المهام</h3>
           <span class="dash-chip">{{ chartTitle }}</span>
         </div>
-        <div class="hm-donut" role="img" :aria-label="chart.map((c) => `${c.label} ${c.count}`).join('، ')" :style="{ background: donutBg }">
-          <span><b>{{ chartPct }}%</b>مكتملة</span>
+        <!-- مخطط التقدّم بنمط أنظمة إدارة المشاريع: نسبة الإنجاز كرقم رئيسي، شريط مقسّم حسب الحالة،
+             مفتاح بالعدد والنسبة، ثم تقدّم كل مجموعة (أعلى 5 بعدد المهام) — المرور على أي جزء يظهر تفاصيله -->
+        <div class="hm-prog">
+          <div class="hm-prog-head">
+            <b>{{ chartPct }}<small>%</small></b>
+            <span>{{ chart[0].count }} من {{ chartTotal }} مهمة مكتملة</span>
+          </div>
+          <div class="hm-stack" role="img" :aria-label="chart.map((c) => `${c.label} ${c.count}`).join('، ')">
+            <span
+              v-for="c in chart" v-show="c.count" :key="c.key"
+              :class="['hm-seg', 'hm-c-' + c.key]" :style="{ flexGrow: c.count }"
+              :data-tip="`${c.label}: ${c.count} (${pctOf(c.count)}%)`" tabindex="0"
+            />
+            <span v-if="!chartTotal" class="hm-seg is-empty" data-tip="لا توجد مهام" />
+          </div>
+          <ul class="hm-key">
+            <li v-for="c in chart" :key="c.key">
+              <span :class="['dash-dot', 'hm-c-' + c.key]" />
+              <span>{{ c.label }}</span>
+              <b>{{ c.count }}</b>
+              <small>{{ pctOf(c.count) }}%</small>
+            </li>
+          </ul>
         </div>
-        <ul class="hm-legend">
-          <li v-for="c in chart" :key="c.key">
-            <span :class="['dash-dot', 'hm-c-' + c.key]" />{{ c.label }}
-            <b>{{ c.count }}</b>
-          </li>
-        </ul>
+
+        <div v-if="!taskGroup && groupProgress.length" class="hm-gprog">
+          <h4>تقدّم المجموعات <small>{{ groupProgress.length }}</small></h4>
+          <div class="hm-gprog-list">
+          <button v-for="g in groupProgress" :key="g.id" type="button" class="hm-gprog-row" :title="`عرض مهام ${g.name}`" @click="taskGroup = g.id">
+            <span class="hm-gprog-name">{{ g.name }}</span>
+            <span class="hm-gprog-bar"><span :style="{ width: g.pct + '%' }" /></span>
+            <span class="hm-gprog-val">{{ g.done }} من {{ g.total }} مهمة مكتملة</span>
+          </button>
+          </div>
+        </div>
+        <!-- ملخّص الفصل: يملأ البطاقة بطول بطاقة المهام المجاورة -->
+        <dl class="hm-summary">
+          <div><dt>المجموعات</dt><dd>{{ groups.length }}</dd></div>
+          <div><dt>المهام</dt><dd>{{ chart.reduce((n, c) => n + c.count, 0) }}</dd></div>
+          <div><dt>الطلاب</dt><dd>{{ genderCount.male }}</dd></div>
+          <div><dt>الطالبات</dt><dd>{{ genderCount.female }}</dd></div>
+        </dl>
       </section>
     </div>
 
@@ -186,7 +240,16 @@
 </template>
 
 <script>
+import { ref } from 'vue'
+import { mapState } from 'pinia'
 import { ChevronDown, Search, Printer } from 'lucide-vue-next'
+import CountUp from '@/components/ui/CountUp.vue'
+import DataRain from '@/components/landing/DataRain.vue'
+import MasarWordmark from '@/components/landing/MasarWordmark.vue'
+import { useAuthStore } from '@/stores/auth.store'
+import { ROLES } from '@/utils/constants'
+import { gsap, useScrollMotion } from '@/composables/useScrollMotion'
+import '@/styles/ucas-site.css'
 import api from '@/services/api'
 import { exportSupervisorsPdf } from '@/utils/ucasReports'
 import ProfileModal from '@/components/shared/ProfileModal.vue'
@@ -205,7 +268,24 @@ const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0)
 export default {
   name: 'PortalDashboard',
 
-  components: { ChevronDown, Search, Printer, ProfileModal },
+  components: { ChevronDown, CountUp, DataRain, MasarWordmark, Search, Printer, ProfileModal },
+
+  /** حركة الصفحة (الإدارة العامة): البانر يدخل عند الفتح، البطاقات تصعد عند الوصول إليها، والصفوف تتوالى بعد وصول البيانات */
+  setup() {
+    const root = ref(null)
+    const auth = useAuthStore()
+    if (auth.userRole === ROLES.SUPER_ADMIN) {
+      useScrollMotion(root, (el) => {
+        gsap.timeline({ delay: 0.15 })
+          .from(el.querySelectorAll('.sa-hero-text > *'), { y: 24, autoAlpha: 0, duration: 0.7, ease: 'power3.out', stagger: 0.12 })
+          .from(el.querySelectorAll('.sa-stat'), { y: 20, autoAlpha: 0, duration: 0.6, ease: 'power2.out', stagger: 0.08 }, '-=0.3')
+        el.querySelectorAll('.dash-card').forEach((card) => {
+          gsap.from(card, { y: 40, autoAlpha: 0, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: card, start: 'top 88%' } })
+        })
+      })
+    }
+    return { root }
+  },
 
   data() {
     return {
@@ -227,11 +307,22 @@ export default {
       profileKind: 'student',
       profileId: null,
       profileName: '',
-      exporting: false
+      exporting: false,
+      studentGenders: { male: 0, female: 0 }
     }
   },
 
   computed: {
+    ...mapState(useAuthStore, ['userRole', 'userName']),
+
+    isSA() {
+      return this.userRole === ROLES.SUPER_ADMIN
+    },
+
+    firstName() {
+      return (this.userName || '').split(' ')[0] || 'بك'
+    },
+
     /** آخر المهام الموكلة (GET /committee/dashboard-stats → latest_tasks) */
     tasks() {
       return normalizeTasks(this.raw.latest_tasks)
@@ -247,13 +338,18 @@ export default {
       })
     },
 
+    /** طلاب/طالبات: من الخادم إن توفّر، وإلا من حقل gender في قائمة الطلاب */
+    genderCount() {
+      const g = this.raw.students_by_gender || {}
+      return { male: g.male || this.studentGenders.male, female: g.female || this.studentGenders.female }
+    },
+
     stats() {
       const assigned = this.groups.reduce((n, g) => n + g.members.length, 0)
       const total = Math.max(this.raw.students_count ?? assigned, assigned)
-      const g = this.raw.students_by_gender || {}
       return [
         { label: 'المجموعات', value: this.groups.length, split: [{ label: 'المشاريع', value: this.raw.total_projects_this_term ?? this.groups.filter((x) => x.projectId).length }] },
-        { label: 'الطلاب الكلي', value: total, split: [{ label: 'طلاب', value: g.male ?? 0 }, { label: 'طالبات', value: g.female ?? 0 }] },
+        { label: 'الطلاب الكلي', value: total, split: [{ label: 'طلاب', value: this.genderCount.male }, { label: 'طالبات', value: this.genderCount.female }] },
         { label: 'المصنّفون على مجموعات', value: assigned, split: [{ label: 'غير مصنّفين', value: total - assigned }] },
         { label: 'المشرفون', value: this.supervisors.length, split: [{ label: 'التخصصات', value: this.specOptions.length }] }
       ]
@@ -304,20 +400,24 @@ export default {
       return this.taskGroup ? this.groups.find((g) => g.id === this.taskGroup)?.name : 'كل المجموعات'
     },
 
+    chartTotal() {
+      return this.chart.reduce((n, c) => n + c.count, 0)
+    },
+
+    /** تقدّم كل مجموعة لها مهام (الأكثر مهامًا أولًا) — القائمة تمرَّر داخليًا */
+    groupProgress() {
+      return this.taskGroups
+        .map((g) => {
+          const list = this.tasks.filter((t) => t.groupId === g.id)
+          const done = list.filter((t) => t.state === 'done').length
+          return { id: g.id, name: g.name, done, total: list.length, pct: pct(done, list.length) }
+        })
+        .sort((a, b) => b.total - a.total)
+    },
+
     chartPct() {
       const total = this.chart.reduce((n, c) => n + c.count, 0)
       return pct(this.chart[0].count, total)
-    },
-
-    donutBg() {
-      const total = this.chart.reduce((n, c) => n + c.count, 0) || 1
-      let at = 0
-      const stops = this.chart.map((c) => {
-        const from = at
-        at += (c.count / total) * 100
-        return `var(--hm-c-${c.key}) ${from}% ${at}%`
-      })
-      return `conic-gradient(${stops.join(', ')})`
     }
   },
 
@@ -326,7 +426,15 @@ export default {
     this.groups = groups.value || []
     this.raw = raw.value || {}
     this.supList = await loadSupervisors(this.groups)
+    api.get('/users', { params: { role: 'student', per_page: 1000 } }).then(({ data }) => {
+      const rows = Array.isArray(data) ? data : data.data || []
+      this.studentGenders = { male: rows.filter((u) => u.gender === 'male').length, female: rows.filter((u) => u.gender === 'female').length }
+    }).catch(() => {})
     this.loading = false
+    // الإدارة العامة: صفوف الجداول تتوالى بعد وصول البيانات
+    if (this.isSA && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.$nextTick(() => gsap.from(this.$refs.root.querySelectorAll('.hm-table tbody tr'), { x: 18, autoAlpha: 0, duration: 0.4, ease: 'power2.out', stagger: 0.03, clearProps: 'all' }))
+    }
     // متوسط تفاعل كل مشرف — طلب لكل مشرف بالتوازي
     this.supList.forEach(async (s) => {
       try {
@@ -340,6 +448,15 @@ export default {
 
   methods: {
     formatDateTime,
+
+    pctOf(n) {
+      return pct(n, this.chartTotal)
+    },
+
+    // مطر البيانات يلتف حول كلمة مسار أثناء ظهورها
+    wordRect() {
+      return this.$refs.word?.$el?.getBoundingClientRect() ?? null
+    },
 
     /**
      * آخر تفاعل للمشرف: last_active_at (آخر استخدام للمنصة) + آخر مهمة أضافها لمجموعاته من latest_tasks.

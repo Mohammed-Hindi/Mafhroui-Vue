@@ -1,134 +1,131 @@
 <template>
-  <div class="max-w-content mx-auto px-6 py-12">
-    <router-link
-      :to="{ name: 'projects-archive' }"
-      class="inline-flex items-center gap-1.5 mb-6 text-body-sm font-bold text-text-600 hover:text-primary-600 transition-colors duration-fast"
-    >
-      <AppIcon name="chevronEnd" :size="15" :stroke-width="2.2" />
-      رجوع
-    </router-link>
+  <!-- صفحة المشروع بنمط موقع الكلية: شريط عنوان متدرّج (مسار التنقل + التخصص + العنوان)،
+       ثم عمودان: نبذة المشروع وفيديو العرض، وبطاقة بيانات المشروع والفريق -->
+  <div>
+    <header class="us-pagehead">
+      <DataRain :gain="2.4" />
+      <div class="us-wrap">
+        <span v-if="project?.spec" class="us-pagehead-tag">{{ project.spec }}</span>
+        <h1>{{ loading ? 'جارٍ التحميل…' : project?.title || 'لم يتم العثور على المشروع' }}</h1>
+        <p v-if="project">{{ [project.dept_name, project.semester].filter(Boolean).join(' · ') }}</p>
+        <nav class="us-crumbs" aria-label="مسار التنقل">
+          <router-link :to="{ name: 'landing' }">الرئيسية</router-link><span>/</span>
+          <router-link :to="{ name: 'projects-archive' }">أرشيف المشاريع</router-link><span>/</span>
+          <span>{{ project?.title || '…' }}</span>
+        </nav>
+      </div>
+    </header>
 
-    <div v-if="loading" class="grid sm:grid-cols-2 gap-4">
-      <div v-for="n in 6" :key="n" class="h-16 rounded-lg bg-border-soft animate-pulse" />
-    </div>
+    <section class="us-section">
+      <div class="us-wrap">
+        <p v-if="!loading && !project" class="us-empty">ربما حُذف هذا المشروع أو الرابط غير صحيح.</p>
 
-    <EmptyState v-else-if="!project" title="لم يتم العثور على المشروع" description="ربما تم حذف هذا المشروع أو الرابط غير صحيح." />
+        <div v-else-if="project" class="us-detail">
+          <div class="us-detail-main">
+            <!-- صورة المشروع هي غلاف الفيديو: الضغط على التشغيل يخفيها ويشغّل الفيديو مكانها (يوتيوب مضمّن، وغيره في تبويب جديد) -->
+            <figure class="us-detail-cover us-pf-media">
+              <iframe
+                v-if="playing && embedUrl" :src="embedUrl" :title="`فيديو ${project.title}`"
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen
+              />
+              <template v-else>
+                <img v-if="project.cover" :src="project.cover" :alt="project.title">
+                <span v-else class="us-pf-fallback" aria-hidden="true"><b>{{ project.title?.charAt(0) }}</b></span>
+                <button v-if="project.video_url" type="button" class="us-cover-play" aria-label="تشغيل فيديو المشروع" @click="play">
+                  <span class="us-play"><Play :size="30" /></span>
+                  <span>تشغيل فيديو العرض</span>
+                </button>
+              </template>
+            </figure>
 
-    <template v-else>
-      <span class="reveal inline-block px-4 py-1.5 rounded-pill bg-warning-bg text-warning-text text-label font-bold mb-4">
-        {{ project.spec }}
-      </span>
-      <h1 class="reveal font-cairo font-extrabold text-sec-title-sm sm:text-sec-title text-text-900 mb-2">
-        {{ project.title }}
-      </h1>
-      <p class="reveal text-body text-text-600 max-w-2xl mb-8">{{ project.description }}</p>
+            <article class="us-card">
+              <h3>نبذة عن المشروع</h3>
+              <p class="us-detail-text">{{ project.description || 'لا يوجد وصف لهذا المشروع.' }}</p>
+            </article>
+          </div>
 
-      <!-- بطاقة الفيديو — واجهة فيديو احترافية على هويتنا البصرية، بلا تضمين خارجي -->
-      <div class="reveal max-w-3xl mx-auto bg-surface rounded-lg border border-border shadow-card overflow-hidden mb-8">
-        <div class="flex items-center gap-2 px-4 py-3 bg-bg border-b border-border-soft">
-          <span class="w-[10px] h-[10px] rounded-pill bg-error" />
-          <span class="w-[10px] h-[10px] rounded-pill bg-warning" />
-          <span class="w-[10px] h-[10px] rounded-pill bg-success" />
-          <span class="ms-3 mono text-[11px] text-text-400">مسار / معاينة المشروع</span>
+          <aside class="us-card us-detail-side">
+            <h3>بيانات المشروع</h3>
+            <dl class="us-data">
+              <div v-for="row in infoRows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value || '—' }}</dd></div>
+            </dl>
+            <h3 class="us-detail-sub">فريق المشروع</h3>
+            <ul class="us-team">
+              <li v-for="m in team" :key="m"><span>{{ m.charAt(0) }}</span>{{ m }}</li>
+              <li v-if="!team.length" class="pt-muted">—</li>
+            </ul>
+          </aside>
         </div>
 
-        <button
-          type="button"
-          class="relative w-full aspect-video grid place-items-center overflow-hidden group bg-gradient-to-bl from-primary-900 via-primary-600 to-accent-500"
-          :aria-label="`تشغيل فيديو عرض مشروع ${project.title}`"
-          @click="openPlaceholderVideo"
-        >
-          <span class="absolute inset-0 opacity-[0.12] pointer-events-none" style="background-image:radial-gradient(#fff 1px, transparent 1px); background-size:22px 22px;" />
-          <span class="absolute inset-0 bg-gradient-to-b from-[rgba(11,18,32,.1)] via-transparent to-[rgba(11,18,32,.65)] pointer-events-none" />
-
-          <span class="absolute top-5 end-5 z-[2] grid place-items-center w-10 h-10 rounded-pill bg-white/15 text-white backdrop-blur-sm">
-            <AppIcon name="graduation" :size="18" />
-          </span>
-
-          <span class="relative z-[1] grid place-items-center w-16 h-16 rounded-pill bg-white text-primary-600 shadow-[0_12px_30px_rgba(0,0,0,.35)] transition-transform duration-fast group-hover:scale-110">
-            <AppIcon name="play" :size="24" class="ms-1" />
-          </span>
-
-          <div class="absolute bottom-5 start-5 z-[2] text-white text-start">
-            <p class="text-body font-bold">{{ project.title }}</p>
-            <p class="text-caption opacity-80 mt-0.5">فيديو العرض النهائي للمشروع</p>
-          </div>
-        </button>
-      </div>
-
-      <!-- شبكة معلومات المشروع -->
-      <div class="grid sm:grid-cols-2 gap-4">
-        <div
-          v-for="info in infoRows" :key="info.label"
-          class="reveal group flex items-center justify-between gap-3 p-4 rounded-lg bg-surface border border-border shadow-card transition-all duration-base hover:-translate-y-0.5 hover:shadow-card-hover hover:border-primary-200"
-        >
-          <div class="min-w-0">
-            <div class="text-label text-text-400 mb-1">{{ info.label }}</div>
-            <div class="text-body-sm font-bold text-text-900 break-words">{{ info.value }}</div>
-          </div>
-          <span class="grid place-items-center w-10 h-10 rounded-pill shrink-0 text-white transition-transform duration-base group-hover:scale-110" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-accent-500))">
-            <AppIcon :name="info.icon" :size="17" />
-          </span>
+        <div class="us-more">
+          <router-link :to="{ name: 'projects-archive' }" class="us-btn">العودة إلى أرشيف المشاريع</router-link>
         </div>
       </div>
-    </template>
+    </section>
   </div>
 </template>
 
 <script>
+import DataRain from '@/components/landing/DataRain.vue'
 import { mapState, mapActions } from 'pinia'
+import { Play } from 'lucide-vue-next'
 import { useLandingStore } from '@/stores/landing.store'
-import AppIcon from '@/components/icons/AppIcon.vue'
-import EmptyState from '@/components/ui/EmptyState.vue'
-import { openPlaceholderVideo } from '@/utils/filePreview'
 
 export default {
   name: 'ProjectShowcasePage',
 
-  components: { AppIcon, EmptyState },
+  components: { DataRain, Play },
 
   props: {
     id: { type: [String, Number], required: true }
   },
 
+  data() {
+    return { playing: false }
+  },
+
   computed: {
+    /** رابط التضمين ليوتيوب (watch / youtu.be / shorts) */
+    embedUrl() {
+      const m = (this.project?.video_url || '').match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/)
+      return m ? `https://www.youtube.com/embed/${m[1]}?autoplay=1&rel=0` : ''
+    },
+
     ...mapState(useLandingStore, ['currentProject', 'currentProjectLoading']),
 
     project() {
       return this.currentProject
     },
-
     loading() {
       return this.currentProjectLoading
     },
-
+    team() {
+      return (this.project?.members || '').split('، ').filter(Boolean)
+    },
     infoRows() {
-      if (!this.project) return []
       const p = this.project
       return [
-        { label: 'التخصص', value: p.program_name + (p.degree ? ` "${p.degree}"` : ''), icon: 'book' },
-        { label: 'القسم', value: p.dept_name, icon: 'monitor' },
-        { label: 'أعضاء الفريق', value: p.members, icon: 'users' },
-        { label: 'المشرف', value: p.supervisor_name, icon: 'user' },
-        { label: 'تاريخ الإنجاز', value: p.date, icon: 'calendar' },
-        { label: 'الفصل الدراسي', value: p.semester, icon: 'clock' }
+        { label: 'التخصص', value: p.program_name },
+        { label: 'الدرجة', value: p.degree },
+        { label: 'القسم', value: p.dept_name },
+        { label: 'المشرف', value: p.supervisor_name },
+        { label: 'تاريخ الإنجاز', value: p.date },
+        { label: 'الفصل الدراسي', value: p.semester }
       ]
     }
   },
 
-  created() {
-    this.fetchProjectById(this.id).catch(() => {
-      // الخطأ يُعرض بالواجهة عبر EmptyState لما project يبقى null
-    })
+  watch: {
+    id: { immediate: true, handler(id) { this.playing = false; this.fetchProjectById(id).catch(() => {}) } }
   },
 
   methods: {
     ...mapActions(useLandingStore, ['fetchProjectById']),
-    openPlaceholderVideo
+
+    play() {
+      if (this.embedUrl) this.playing = true
+      else window.open(this.project.video_url, '_blank', 'noopener')
+    }
   }
 }
 </script>
-
-<style scoped>
-.mono { direction: ltr; }
-</style>

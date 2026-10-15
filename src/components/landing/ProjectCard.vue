@@ -1,36 +1,30 @@
 <template>
-  <!-- بطاقة مشروع في معرض الأعمال: البطاقة كلها رابط لصفحة المشروع.
-       مساحة بصرية بتدرّج الهوية (التخصص + الدرجة)، ثم القسم والعنوان الأزرق والوصف والمشرف والفريق -->
-  <router-link :to="{ name: 'project-showcase', params: { id: project.id } }" class="us-proj">
-    <span class="us-proj-media" aria-hidden="true">
-      <span v-if="project.program_name" class="us-news-tag">{{ project.program_name }}</span>
-      <span class="us-proj-mark"><UcasLogo :size="64" /></span>
-      <span v-if="project.degree" class="us-proj-degree">{{ project.degree }}</span>
+  <!-- بطاقة مشروع بنمط معارض الأعمال الأكاديمية: صورة المشروع 16:10 (أو غلاف بهوية المنصة بالحرف الأول)،
+       عند المرور تغمق الصورة ويظهر "عرض المشروع"، ثم سطر القسم والدرجة، العنوان، الفريق والمشرف. البطاقة كلها رابط -->
+  <router-link :to="{ name: 'project-showcase', params: { id: project.id } }" class="us-pf">
+    <span class="us-pf-media">
+      <img v-if="project.cover" :src="project.cover" :alt="project.title" loading="lazy">
+      <span v-else class="us-pf-fallback" aria-hidden="true"><b>{{ project.title?.charAt(0) }}</b><UcasLogo :size="34" /></span>
+      <span v-if="project.program_name" class="us-pf-tag">{{ project.program_name }}</span>
+      <span class="us-pf-hover"><span>عرض المشروع <ArrowLeft :size="16" /></span></span>
     </span>
-    <span class="us-proj-body">
-      <small v-if="project.dept_name" class="us-proj-dept">{{ project.dept_name }}</small>
+    <span class="us-pf-body">
+      <small class="us-pf-eyebrow">{{ [project.dept_name, project.degree, project.semester].filter(Boolean).join(' · ') }}</small>
       <h3>{{ project.title }}</h3>
-      <p>{{ project.description || 'مشروع تخرج متميّز من مشاريع الكلية.' }}</p>
-      <span class="us-proj-meta">
-        <span><UserRound :size="15" /> {{ project.supervisor_name }}</span>
+      <p>{{ project.description || 'مشروع تخرج من مشاريع الكلية.' }}</p>
+      <span class="us-pf-meta">
         <span v-if="project.members"><Users :size="15" /> {{ project.members }}</span>
+        <span><UserRound :size="15" /> {{ project.supervisor_name }}</span>
       </span>
-      <span class="us-proj-go">عرض المشروع <ArrowLeft :size="16" /></span>
     </span>
   </router-link>
 </template>
 
-<script>
+<script setup>
 import { ArrowLeft, UserRound, Users } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
 
-export default {
-  name: 'ProjectCard',
-
-  components: { ArrowLeft, UcasLogo, UserRound, Users },
-
-  props: {
-    project: { type: Object, required: true }
-  }
-}
+defineProps({
+  project: { type: Object, required: true }
+})
 </script>

@@ -1,68 +1,56 @@
 <template>
-  <!-- تسجيل الدخول بنمط بوابة الكلية (200336): بطاقة الدخول يمينًا وبطاقة "تعليمات هامة" يسارًا -->
-  <div>
-    <div v-if="authError" class="palert is-error au-alert"><AlertCircle :size="20" class="shrink-0" /> {{ authError }}</div>
+  <!-- تسجيل الدخول داخل قالب AuthSplit: البريد وكلمة المرور بأيقونات، "نسيت كلمة المرور؟"، زر الدخول المتوهّج -->
+  <AuthSplit title="تسجيل الدخول" subtitle="أهلًا بك، أدخل بريدك الإلكتروني وكلمة المرور للمتابعة">
+    <div v-if="authError" class="au-split-alert" role="alert"><AlertCircle :size="18" /> {{ authError }}</div>
 
-    <div class="au-grid">
-      <section class="au-card au-login">
-        <h1 class="au-login-title">تسجيل الدخول</h1>
+    <form novalidate @submit.prevent="handleSubmit">
+      <label class="au-split-field">
+        <span>البريد الإلكتروني</span>
+        <span :class="['au-split-input', errors.email && 'is-invalid']">
+          <Mail :size="18" />
+          <input v-model.trim="form.email" type="email" autocomplete="username" placeholder="name@ucas.edu.ps" dir="ltr" @blur="validateEmail">
+        </span>
+        <small v-if="errors.email" class="au-split-error">{{ errors.email }}</small>
+      </label>
 
-        <form novalidate @submit.prevent="handleSubmit">
-          <label class="au-field">
-            <span>البريد الإلكتروني</span>
-            <input
-              v-model.trim="form.email" type="email" autocomplete="username" placeholder="name@ucas.edu.ps"
-              :class="['portal-input', errors.email && 'is-invalid']" @blur="validateEmail"
-            >
-            <small v-if="errors.email" class="portal-field-error">{{ errors.email }}</small>
-          </label>
-
-          <label class="au-field">
-            <span>كلمة المرور</span>
-            <input
-              v-model="form.password" type="password" autocomplete="current-password" placeholder="••••••••"
-              :class="['portal-input', errors.password && 'is-invalid']" @blur="validatePassword"
-            >
-            <small v-if="errors.password" class="portal-field-error">{{ errors.password }}</small>
-          </label>
-
-          <button type="submit" class="pbtn is-sky au-submit" :disabled="isLoading">
-            {{ isLoading ? 'جارٍ الدخول…' : 'تسجيل دخول' }}
+      <label class="au-split-field">
+        <span>كلمة المرور</span>
+        <span :class="['au-split-input', errors.password && 'is-invalid']">
+          <Lock :size="18" />
+          <input v-model="form.password" :type="showPassword ? 'text' : 'password'" autocomplete="current-password" placeholder="••••••••" dir="ltr" @blur="validatePassword">
+          <button type="button" class="au-split-eye" :aria-label="showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'" @click="showPassword = !showPassword">
+            <EyeOff v-if="showPassword" :size="18" /><Eye v-else :size="18" />
           </button>
-        </form>
+        </span>
+        <small v-if="errors.password" class="au-split-error">{{ errors.password }}</small>
+      </label>
 
-        <div class="au-links">
-          <router-link :to="{ name: 'forgot-password' }"><KeyRound :size="16" /> فقدت كلمة المرور</router-link>
-          <router-link :to="{ name: 'landing' }"><Home :size="16" /> الصفحة الرئيسية</router-link>
-        </div>
-      </section>
+      <div class="au-split-row">
+        <router-link :to="{ name: 'forgot-password' }">نسيت كلمة المرور؟</router-link>
+      </div>
 
-      <section class="au-card">
-        <h2 class="au-card-title">تعليمات هامة</h2>
-        <ul class="portal-bullets">
-          <li>تأكد من إدخال بريدك الإلكتروني المسجّل بشكل صحيح</li>
-          <li>تأكد من كلمة المرور وحالة الأحرف</li>
-          <li>انتبه لزر الحروف الكبيرة</li>
-          <li>المنصة لأعضاء لجنة الإشراف والمشرفين الأكاديميين والطلاب</li>
-        </ul>
-      </section>
-    </div>
-  </div>
+      <button type="submit" class="us-btn us-glow-btn au-split-submit" :disabled="isLoading">
+        {{ isLoading ? 'جارٍ الدخول…' : 'تسجيل الدخول' }} <LogIn v-if="!isLoading" :size="19" class="us-flip" />
+      </button>
+    </form>
+  </AuthSplit>
 </template>
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { AlertCircle, Home, KeyRound } from 'lucide-vue-next'
+import { AlertCircle, Eye, EyeOff, Lock, LogIn, Mail } from 'lucide-vue-next'
+import AuthSplit from '@/components/auth/AuthSplit.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { required, email as emailRule } from '@/utils/validators'
 
 export default {
   name: 'LoginPage',
 
-  components: { AlertCircle, Home, KeyRound },
+  components: { AlertCircle, AuthSplit, Eye, EyeOff, Lock, LogIn, Mail },
 
   data() {
     return {
+      showPassword: false,
       form: {
         email: '',
         password: '',

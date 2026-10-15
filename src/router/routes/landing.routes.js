@@ -18,6 +18,12 @@ export default [
         meta: { title: 'أرشيف المشاريع' }
       },
       {
+        path: 'about',
+        name: 'about',
+        component: () => import('@/views/landing/AboutPage.vue'),
+        meta: { title: 'من نحن' }
+      },
+      {
         path: 'projects/:id(\\d+)',
         name: 'project-showcase',
         component: () => import('@/views/landing/ProjectShowcasePage.vue'),

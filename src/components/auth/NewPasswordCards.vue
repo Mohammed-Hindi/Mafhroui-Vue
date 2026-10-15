@@ -1,76 +1,64 @@
 <template>
-  <!-- نموذج كلمة مرور جديدة بنمط بوابة الكلية (201137): "≡ سجل بياناتك" + تنبيه معلومة + صفوف تسمية/حقل + زر أخضر،
-       وبطاقة "عزيزي المستخدم" بالتعليمات. تستخدمه صفحتا تغيير كلمة المرور الإجبارية وتعيينها من رابط الدعوة -->
-  <div>
-    <div v-if="error" class="palert is-error au-alert"><AlertCircle :size="20" class="shrink-0" /> {{ error }}</div>
+  <!-- نموذج كلمة مرور جديدة داخل قالب AuthSplit: تلميح الشروط، الحقلان بأيقونات وزر إظهار، مقياس القوة، زر الحفظ.
+       تستخدمه صفحتا تغيير كلمة المرور الإجبارية وتعيينها من رابط الدعوة (done = نجاح التعيين) -->
+  <AuthSplit :title="title" :subtitle="subtitle" :back="back">
+    <div v-if="error" class="au-split-alert" role="alert"><AlertCircle :size="18" /> {{ error }}</div>
 
-    <div class="au-grid is-wide">
-      <section class="au-card">
-        <div class="au-head-row">
-          <h2 class="portal-title">سجل بياناتك</h2>
-          <span>{{ subtitle }}</span>
-        </div>
+    <template v-if="done">
+      <div class="au-split-alert is-success" role="status"><CheckCircle2 :size="18" /> تم تحديث كلمة المرور، يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.</div>
+      <router-link :to="{ name: 'login' }" class="us-btn us-glow-btn au-split-submit">تسجيل الدخول <LogIn :size="19" class="us-flip" /></router-link>
+    </template>
 
-        <div class="portal-alert portal-alert-info au-info">
-          <AlertCircle :size="20" class="shrink-0" />
-          يجب أن تحتوي كلمة المرور على حروف خاصة ( @ , % , # ) وأرقام
-        </div>
+    <form v-else novalidate @submit.prevent="submit">
+      <p class="au-split-hint"><Info :size="17" /> يجب ألا تقل عن ثمانية أحرف، وأن تحتوي على أرقام ورموز خاصة مثل <bdi dir="ltr">@ % #</bdi></p>
 
-        <form class="au-rows" novalidate @submit.prevent="submit">
-          <div class="portal-form-row">
-            <label for="np-password">كلمة المرور الجديدة</label>
-            <div>
-              <input
-                id="np-password" v-model="form.password" type="password" autocomplete="new-password" placeholder="كلمة المرور الجديدة"
-                :class="['portal-input', errors.password && 'is-invalid']" @blur="validatePassword"
-              >
-              <PasswordStrengthMeter :password="form.password" />
-              <p v-if="errors.password" class="portal-field-error">{{ errors.password }}</p>
-            </div>
-          </div>
+      <label class="au-split-field">
+        <span>كلمة المرور الجديدة</span>
+        <span :class="['au-split-input', errors.password && 'is-invalid']">
+          <Lock :size="18" />
+          <input v-model="form.password" :type="show ? 'text' : 'password'" autocomplete="new-password" placeholder="••••••••" dir="ltr" @blur="validatePassword">
+          <button type="button" class="au-split-eye" :aria-label="show ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'" @click="show = !show">
+            <EyeOff v-if="show" :size="18" /><Eye v-else :size="18" />
+          </button>
+        </span>
+        <PasswordStrengthMeter :password="form.password" />
+        <small v-if="errors.password" class="au-split-error">{{ errors.password }}</small>
+      </label>
 
-          <div class="portal-form-row">
-            <label for="np-confirm">تأكيد كلمة المرور</label>
-            <div>
-              <input
-                id="np-confirm" v-model="form.password_confirmation" type="password" autocomplete="new-password" placeholder="تأكيد كلمة المرور"
-                :class="['portal-input', errors.password_confirmation && 'is-invalid']" @blur="validateConfirmation"
-              >
-              <p v-if="errors.password_confirmation" class="portal-field-error">{{ errors.password_confirmation }}</p>
-            </div>
-          </div>
+      <label class="au-split-field">
+        <span>تأكيد كلمة المرور</span>
+        <span :class="['au-split-input', errors.password_confirmation && 'is-invalid']">
+          <ShieldCheck :size="18" />
+          <input v-model="form.password_confirmation" :type="show ? 'text' : 'password'" autocomplete="new-password" placeholder="••••••••" dir="ltr" @blur="validateConfirmation">
+        </span>
+        <small v-if="errors.password_confirmation" class="au-split-error">{{ errors.password_confirmation }}</small>
+      </label>
 
-          <div class="au-actions">
-            <button type="submit" class="pbtn is-green" :disabled="loading">{{ loading ? 'جارٍ الحفظ…' : 'تغيير كلمة المرور' }}</button>
-          </div>
-        </form>
-      </section>
-
-      <section class="au-card">
-        <h2 class="portal-title au-head">عزيزي المستخدم</h2>
-        <ul class="portal-bullets">
-          <li>يمكنك تغيير كلمة المرور الخاصة بك من خلال هذه الصفحة</li>
-          <li>أنت الوحيد المسؤول عن سرية كلمة المرور الخاصة بك</li>
-          <li>ننصحك بتغيير كلمة المرور من فترة لأخرى</li>
-          <li>يجب ألا تقل كلمة المرور الجديدة عن ثمانية أحرف</li>
-        </ul>
-      </section>
-    </div>
-  </div>
+      <button type="submit" class="us-btn us-glow-btn au-split-submit" :disabled="loading">
+        {{ loading ? 'جارٍ الحفظ…' : 'حفظ كلمة المرور' }} <Check v-if="!loading" :size="19" />
+      </button>
+    </form>
+  </AuthSplit>
 </template>
 
 <script>
-import { AlertCircle } from 'lucide-vue-next'
+import { AlertCircle, Check, CheckCircle2, Eye, EyeOff, Info, Lock, LogIn, ShieldCheck } from 'lucide-vue-next'
+import AuthSplit from '@/components/auth/AuthSplit.vue'
 import PasswordStrengthMeter from '@/components/shared/PasswordStrengthMeter.vue'
 import { required, strongPassword, matches } from '@/utils/validators'
 
 export default {
   name: 'NewPasswordCards',
 
-  components: { AlertCircle, PasswordStrengthMeter },
+  components: { AlertCircle, AuthSplit, Check, CheckCircle2, Eye, EyeOff, Info, Lock, LogIn, PasswordStrengthMeter, ShieldCheck },
 
   props: {
-    subtitle: { type: String, default: 'تغيير كلمة المرور' },
+    title: { type: String, default: 'تغيير كلمة المرور' },
+    subtitle: { type: String, default: '' },
+    /** رابط العودة أسفل الفورم */
+    back: { type: Object, default: () => ({ to: { name: 'login' }, label: 'العودة إلى تسجيل الدخول' }) },
+    /** نجاح التعيين: يُستبدل الفورم برسالة وزر الدخول */
+    done: { type: Boolean, default: false },
     loading: { type: Boolean, default: false },
     error: { type: String, default: '' },
     /** أخطاء حقول الخادم بعد الإرسال */
@@ -81,6 +69,7 @@ export default {
 
   data() {
     return {
+      show: false,
       form: { password: '', password_confirmation: '' },
       errors: { password: '', password_confirmation: '' }
     }
