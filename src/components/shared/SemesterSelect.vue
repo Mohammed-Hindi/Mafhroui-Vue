@@ -25,13 +25,14 @@ export default {
     ...mapState(useUiStore, ['semesters', 'activeSemesterId', 'semestersLoading']),
 
     semesterOptions() {
-      return this.semesters.map((semester) => ({ value: semester.id, label: semester.name }))
+      // الفصل الحالي يُميَّز في القائمة
+      return this.semesters.map((semester) => ({ value: semester.id, label: semester.is_current ? `${semester.name} — الحالي` : semester.name }))
     },
 
     selectPlaceholder() {
       if (this.semestersLoading) return 'جارٍ التحميل…'
       if (!this.semesters.length) return 'لا توجد فصول'
-      return 'اختاري الفصل'
+      return 'اختر الفصل الدراسي'
     }
   },
 

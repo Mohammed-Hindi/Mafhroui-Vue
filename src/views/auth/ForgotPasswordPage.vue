@@ -1,57 +1,37 @@
 <template>
-  <!-- استرجاع كلمة المرور بنمط البوابة (200407، 200430): بطاقة النموذج بوسم سماوي بالزاوية + بطاقة "عزيزي المستخدم" -->
-  <div class="au-narrow">
-    <div v-if="error" class="palert is-error au-alert"><AlertCircle :size="20" class="shrink-0" /> {{ error }}</div>
-    <div v-if="submitted" class="palert is-success au-alert"><CheckCircle2 :size="20" class="shrink-0" /> أرسلنا رابط تعيين كلمة مرور جديدة إلى {{ form.email }}. تحقق من بريدك (ومن الرسائل غير المرغوب فيها).</div>
+  <!-- استرجاع كلمة المرور داخل قالب AuthSplit: حقل البريد، زر إرسال الرابط، ثم العودة لتسجيل الدخول -->
+  <AuthSplit title="استرجاع كلمة المرور" subtitle="أدخل بريدك الإلكتروني المسجّل وسنرسل لك رابط تعيين كلمة مرور جديدة" :back="{ to: { name: 'login' }, label: 'العودة إلى تسجيل الدخول' }">
+    <div v-if="error" class="au-split-alert" role="alert"><AlertCircle :size="18" /> {{ error }}</div>
+    <div v-if="submitted" class="au-split-alert is-success" role="status"><CheckCircle2 :size="18" /> أرسلنا رابط تعيين كلمة مرور جديدة إلى {{ form.email }}. تحقق من بريدك (ومن الرسائل غير المرغوب فيها).</div>
 
-    <div class="au-grid au-center">
-      <section class="au-card">
-        <router-link :to="{ name: 'login' }" class="au-corner">تسجيل الدخول</router-link>
-        <h2 class="portal-title au-head">استرجاع كلمة المرور</h2>
+    <form novalidate @submit.prevent="handleSubmit">
+      <label class="au-split-field">
+        <span>البريد الإلكتروني</span>
+        <span :class="['au-split-input', fieldError && 'is-invalid']">
+          <Mail :size="18" />
+          <input v-model.trim="form.email" type="email" autocomplete="username" placeholder="name@ucas.edu.ps" dir="ltr" @blur="validateEmail">
+        </span>
+        <small v-if="fieldError" class="au-split-error">{{ fieldError }}</small>
+      </label>
 
-        <form class="au-rows au-fp" novalidate @submit.prevent="handleSubmit">
-          <div class="portal-form-row">
-            <label for="fp-email">البريد الإلكتروني</label>
-            <div>
-              <input
-                id="fp-email" v-model.trim="form.email" type="email" autocomplete="username" placeholder="البريد الإلكتروني"
-                :class="['portal-input', fieldError && 'is-invalid']" @blur="validateEmail"
-              >
-              <p v-if="fieldError" class="portal-field-error">{{ fieldError }}</p>
-            </div>
-          </div>
-
-          <div class="au-actions">
-            <button type="submit" class="pbtn is-cyan" :disabled="isLoading">
-              {{ isLoading ? 'جارٍ الإرسال…' : submitted ? 'إعادة إرسال الرابط' : 'استرجاع كلمة المرور' }}
-            </button>
-          </div>
-        </form>
-      </section>
-
-      <section class="au-card">
-        <h2 class="portal-title au-head">عزيزي المستخدم</h2>
-        <ul class="portal-bullets">
-          <li>يمكنك استرداد كلمة المرور الخاصة بك من خلال هذه الصفحة.</li>
-          <li>سيصلك رابط تعيين كلمة مرور جديدة على بريدك المسجّل.</li>
-          <li>أنت الوحيد المسؤول عن سرية كلمة المرور الخاصة بك.</li>
-          <li>ننصحك بتغيير كلمة المرور من فترة لأخرى.</li>
-        </ul>
-      </section>
-    </div>
-  </div>
+      <button type="submit" class="us-btn us-glow-btn au-split-submit" :disabled="isLoading">
+        {{ isLoading ? 'جارٍ الإرسال…' : submitted ? 'إعادة إرسال الرابط' : 'إرسال رابط الاسترجاع' }} <Send v-if="!isLoading" :size="18" class="us-flip" />
+      </button>
+    </form>
+  </AuthSplit>
 </template>
 
 <script>
 import { mapActions } from 'pinia'
-import { AlertCircle, CheckCircle2 } from 'lucide-vue-next'
+import { AlertCircle, CheckCircle2, Mail, Send } from 'lucide-vue-next'
+import AuthSplit from '@/components/auth/AuthSplit.vue'
 import { required, email as emailRule } from '@/utils/validators'
 import { useAuthStore } from '@/stores/auth.store'
 
 export default {
   name: 'ForgotPasswordPage',
 
-  components: { AlertCircle, CheckCircle2 },
+  components: { AlertCircle, AuthSplit, CheckCircle2, Mail, Send },
 
   data() {
     return {

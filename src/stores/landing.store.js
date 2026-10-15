@@ -26,7 +26,10 @@ function mapProject(p) {
     members: Array.isArray(p.members) ? p.members.join('، ') : '',
     supervisor_name: p.supervisor_name || 'غير محدد',
     date: p.completed_at || '',
-    semester: p.term || ''
+    semester: p.term || '',
+    video_url: p.video_url || '',
+    // صورة المشروع يرفعها الطالب مع التقرير النهائي (تظهر عند توفير الخادم للحقل، وإلا غلاف بهوية المنصة)
+    cover: p.cover_url || p.cover_image_url || ''
   }
 }
 

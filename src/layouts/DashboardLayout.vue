@@ -1,5 +1,6 @@
 <template>
-  <div :class="['min-h-screen bg-bg flex relative', isSuperAdmin && 'ucas-portal']">
+  <!-- sa-skin: هوية صفحة الهبوط (تدرّج، خطوط، حركة) للشريط العلوي والسايد بار والفوتر في كل لوحات التحكم -->
+  <div :class="['min-h-screen bg-bg flex relative', isSuperAdmin && 'ucas-portal sa-skin']">
     <!-- خلفية متحركة زخرفية — قطرات ماء + فقاعات، خلف كل المحتوى، لا تتفاعل مع الفأرة.
          هوية الكلية (السوبر أدمن) مسطّحة بلا خلفيات متحركة -->
     <template v-if="!isSuperAdmin">
@@ -32,7 +33,7 @@
 
       <main class="flex-1 px-4 lg:px-6 py-6">
         <!-- بطاقة بيانات الحساب — تقابل بطاقة "بيانات المرشد" الثابتة أعلى صفحات بوابة الكلية -->
-        <section v-if="isSuperAdmin && $route.name !== `${portalPrefix}-profile` && !$route.meta.hideIdentity" class="portal-identity mb-6">
+        <section v-if="isSuperAdmin && $route.name !== `${portalPrefix}-profile` && !$route.meta.hideIdentity && !(userRole === ROLES.SUPER_ADMIN && $route.name === 'committee-dashboard')" class="portal-identity mb-6">
           <div class="flex items-center gap-4 min-w-0">
             <img v-if="avatarSrc" :src="avatarSrc" alt="الصورة الشخصية" class="portal-identity-photo portal-identity-logo shrink-0">
             <UcasLogo v-else :size="60" class="portal-identity-logo shrink-0" />
@@ -62,8 +63,7 @@
       <!-- فوتر بوابة الكلية (201014): شريط رمادي فاتح بسطر الحقوق فقط — فوتر صفحة الهبوط لا يدخل لوحات التحكم -->
       <footer v-if="isSuperAdmin" class="portal-footer">
         <div class="portal-footer-in px-4 lg:px-6">
-          <span>{{ year }} © جميع الحقوق محفوظة لـ <a href="https://www.ucas.edu.ps" target="_blank" rel="noopener">الكلية الجامعية للعلوم التطبيقية</a></span>
-          <router-link :to="homeRoute">منصة {{ appName }}</router-link>
+          <span>{{ year }} © جميع الحقوق محفوظة لـ <router-link :to="homeRoute">منصة {{ appName }}</router-link> في <a href="https://www.ucas.edu.ps" target="_blank" rel="noopener">الكلية الجامعية للعلوم التطبيقية</a></span>
         </div>
       </footer>
     </div>
@@ -105,6 +105,7 @@ export default {
   data() {
     return {
       showBackToTop: false,
+      ROLES,
       year: new Date().getFullYear(),
       appName: APP_NAME
     }

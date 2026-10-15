@@ -1,36 +1,46 @@
 <template>
-  <!-- معرض أفضل مشاريع التخرج (نمط معارض أعمال الجامعات): عنوان بالخطين الجانبيين، فلترا التخصص والدرجة،
-       سلايدر بطاقات (تمرير أصلي scroll-snap + أسهم + عدّاد)، وزر "المزيد" المحدّد -->
-  <section id="projects" class="us-section scroll-mt-24">
+  <!-- معرض أفضل مشاريع التخرج: عنوان بالخطين الجانبيين، فلترا التخصص والدرجة، ثم شريط بطاقات منحنٍ متحرك
+       (TiltedGallery) — الوقوف يوقفه، السحب/العجلة/الأسهم تحرّكه يمينًا ويسارًا، والضغط يفتح المشروع، مع قائمة روابط مخفية بصريًا لقارئات الشاشة ولوحة المفاتيح -->
+  <section id="projects" class="us-section us-projects scroll-mt-24">
     <div class="us-wrap">
-      <h2 class="us-title reveal">أفضل مشاريع التخرج</h2>
+      <!-- قبل أول تمرير: العنوان يلمع وخطاه ينسابان وسهم يدعو للنزول، لجذب الزائر لبداية القسم -->
+      <a v-if="beckon" href="#projects" class="us-beckon-cue" aria-label="انزل إلى أفضل مشاريع التخرج"><ChevronsDown :size="22" /></a>
+      <h2 :class="['us-title reveal', beckon && 'is-beckon']">أفضل مشاريع التخرج</h2>
 
       <p v-if="!projects.length" class="us-empty">لم تُعيَّن مشاريع مميزة بعد — تعيّنها لجنة الإشراف من أرشيف المشاريع.</p>
       <template v-else>
-        <div class="us-filters" aria-label="تصفية المشاريع">
-          <div class="us-chips" role="radiogroup" aria-label="التخصص">
-            <span class="us-chips-label">التخصص</span>
-            <button v-for="o in specOptions" :key="o.value" type="button" role="radio" :aria-checked="spec === o.value" :class="['us-chip', spec === o.value && 'is-active']" @click="spec = o.value">
-              {{ o.label }} <b>{{ o.count }}</b>
-            </button>
-          </div>
-          <div class="us-chips" role="radiogroup" aria-label="الدرجة">
-            <span class="us-chips-label">الدرجة</span>
-            <button v-for="o in degreeOptions" :key="o.value" type="button" role="radio" :aria-checked="degree === o.value" :class="['us-chip', degree === o.value && 'is-active']" @click="degree = o.value">
-              {{ o.label }} <b>{{ o.count }}</b>
-            </button>
-          </div>
+        <div class="us-filterbar is-center is-compact" aria-label="تصفية المشاريع">
+          <label class="us-field">
+            <span>التخصص</span>
+            <select v-model="spec" class="us-select">
+              <option v-for="o in specOptions" :key="o.value" :value="o.value">{{ o.value ? o.label : 'كل التخصصات' }}</option>
+            </select>
+          </label>
+          <label class="us-field">
+            <span>الدرجة</span>
+            <select v-model="degree" class="us-select">
+              <option v-for="o in degreeOptions" :key="o.value" :value="o.value">{{ o.value ? o.label : 'دبلوم وبكالوريوس' }}</option>
+            </select>
+          </label>
         </div>
 
         <p v-if="!shown.length" class="us-empty">لا توجد مشاريع مطابقة للفلاتر</p>
-        <div v-else class="us-slider">
-          <button type="button" class="us-arrow" aria-label="السابق" @click="slide(1)"><ChevronRight :size="24" /></button>
-          <div ref="track" class="us-track" @scroll.passive="onScroll">
-            <ProjectCard v-for="project in shown" :key="project.id" :project="project" />
-          </div>
-          <button type="button" class="us-arrow" aria-label="التالي" @click="slide(-1)"><ChevronLeft :size="24" /></button>
-        </div>
-        <p v-if="shown.length" class="us-slider-count">{{ position }} من {{ shown.length }} مشروعًا</p>
+        <template v-else>
+          <TiltedGallery class="us-gallery" :items="shown" :tile-height="66" :curve="50" :axis="50" :speed="3.5" @select="openProject">
+            <template #default="{ item }">
+              <div v-if="item" :class="['us-tg-card', item.cover && 'has-cover']" :style="item.cover ? { backgroundImage: `linear-gradient(to top, rgba(4,30,60,.85), rgba(4,30,60,.15) 65%), url(${item.cover})` } : null">
+                <span v-if="item.program_name" class="us-tg-tag">{{ item.program_name }}</span>
+                <span class="us-tg-mark"><UcasLogo :size="40" /></span>
+                <strong>{{ item.title }}</strong>
+                <small>{{ [item.degree, item.supervisor_name].filter(Boolean).join(' · ') }}</small>
+                <span v-if="item.members" class="us-tg-team"><Users :size="13" /> {{ item.members }}</span>
+              </div>
+            </template>
+          </TiltedGallery>
+          <ul class="sr-only">
+            <li v-for="p in shown" :key="p.id"><router-link :to="{ name: 'project-showcase', params: { id: p.id } }">{{ p.title }}</router-link></li>
+          </ul>
+        </template>
       </template>
 
       <div class="us-more">
@@ -41,57 +51,51 @@
 </template>
 
 <script>
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
-import ProjectCard from './ProjectCard.vue'
+import { ChevronsDown, Users } from 'lucide-vue-next'
+import UcasLogo from '@/components/icons/UcasLogo.vue'
+import TiltedGallery from './TiltedGallery.vue'
 
 export default {
   name: 'FeaturedProjects',
 
-  components: { ChevronLeft, ChevronRight, ProjectCard },
+  components: { ChevronsDown, TiltedGallery, UcasLogo, Users },
 
   props: {
     projects: { type: Array, default: () => [] }
   },
 
   data() {
-    return { spec: '', degree: '', position: 1 }
+    return { spec: '', degree: '', beckon: window.scrollY < 40 }
   },
 
   computed: {
     specOptions() {
-      const byDegree = this.projects.filter((p) => !this.degree || p.degree === this.degree)
-      const names = [...new Set(this.projects.map((p) => p.program_name).filter(Boolean))]
-      return [{ value: '', label: 'الكل', count: byDegree.length }, ...names.map((n) => ({ value: n, label: n, count: byDegree.filter((p) => p.program_name === n).length }))]
+      return [{ value: '' }, ...[...new Set(this.projects.map((p) => p.program_name).filter(Boolean))].map((n) => ({ value: n, label: n }))]
     },
     degreeOptions() {
-      const bySpec = this.projects.filter((p) => !this.spec || p.program_name === this.spec)
-      const names = [...new Set(this.projects.map((p) => p.degree).filter(Boolean))]
-      return [{ value: '', label: 'الكل', count: bySpec.length }, ...names.map((n) => ({ value: n, label: n, count: bySpec.filter((p) => p.degree === n).length }))]
+      return [{ value: '' }, ...[...new Set(this.projects.map((p) => p.degree).filter(Boolean))].map((n) => ({ value: n, label: n }))]
     },
     shown() {
       return this.projects.filter((p) => (!this.spec || p.program_name === this.spec) && (!this.degree || p.degree === this.degree))
     }
   },
 
-  watch: {
-    // فلتر جديد: السلايدر يعود لأول بطاقة
-    shown() {
-      this.position = 1
-      this.$nextTick(() => this.$refs.track?.scrollTo({ left: 0 }))
-    }
+  mounted() {
+    if (this.beckon) window.addEventListener('scroll', this.stopBeckon, { passive: true })
+  },
+
+  beforeUnmount() {
+    window.removeEventListener('scroll', this.stopBeckon)
   },
 
   methods: {
-    /** بطاقة واحدة لكل ضغطة (dir: 1 للسابق، -1 للتالي في اتجاه RTL) */
-    slide(dir) {
-      const t = this.$refs.track
-      const step = (t?.firstElementChild?.offsetWidth || 300) + 28
-      t?.scrollBy({ left: dir * step, behavior: 'smooth' })
+    stopBeckon() {
+      if (window.scrollY < 40) return
+      this.beckon = false
+      window.removeEventListener('scroll', this.stopBeckon)
     },
-    onScroll() {
-      const t = this.$refs.track
-      const step = (t.firstElementChild?.offsetWidth || 300) + 28
-      this.position = Math.min(this.shown.length, Math.round(Math.abs(t.scrollLeft) / step) + 1)
+    openProject(p) {
+      this.$router.push({ name: 'project-showcase', params: { id: p.id } })
     }
   }
 }

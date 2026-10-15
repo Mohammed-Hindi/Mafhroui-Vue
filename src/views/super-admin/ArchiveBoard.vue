@@ -101,6 +101,10 @@
         <div class="dash-card-head">
           <h3>{{ views.find((v) => v.key === view).label }}</h3>
           <span class="dash-chip">{{ visible.length }} مشروع</span>
+          <nav class="ab-toggle" aria-label="طريقة العرض">
+            <button type="button" :class="layout === 'gallery' && 'is-active'" @click="layout = 'gallery'"><LayoutGrid :size="16" /> معرض الأعمال</button>
+            <button type="button" :class="layout === 'table' && 'is-active'" @click="layout = 'table'"><List :size="16" /> جدول</button>
+          </nav>
         </div>
 
         <div class="gr-filters" aria-label="تصفية المشاريع">
@@ -133,6 +137,39 @@
 
         <p v-if="loading" class="pt-muted tk-loading">جارٍ التحميل…</p>
         <!-- جدول المشاريع بالسلايدر والشريط الأخضر: موافقة المشرف + موافقة لجنة الإشراف ← أرشفة -->
+        <!-- معرض الأعمال: بطاقة لكل مشروع (الشعبة، التخصص، الطلبة، المشرف، حالة الاعتماد)، الضغط يفتح مجلد المشروع -->
+        <template v-else-if="layout === 'gallery'">
+          <p v-if="!visible.length" class="gr-empty">لا توجد مشاريع مطابقة</p>
+          <div v-else class="ab-gallery">
+            <article v-for="p in visible" :key="p.id" class="ab-card" tabindex="0" @click="openProject(p)" @keydown.enter="openProject(p)">
+              <div class="ab-card-media">
+                <span class="ab-card-sec">شعبة {{ p.section }}</span>
+                <span :class="['rv-pill', REVIEW[stageOf(p)].tone, 'ab-card-state']">{{ REVIEW[stageOf(p)].short }}</span>
+                <span class="ab-card-mark" aria-hidden="true"><UcasLogo :size="46" /></span>
+                <span v-if="p.featured" class="ab-card-star"><Star :size="14" fill="currentColor" /> في الرئيسية</span>
+              </div>
+              <div class="ab-card-body">
+                <small>{{ p.spec }} · {{ DEGREES[p.degree] }}</small>
+                <h4>{{ p.project }}</h4>
+                <span class="ab-card-meta"><UserRound :size="14" /> {{ p.supName }}</span>
+                <span class="ab-card-meta"><Users :size="14" /> {{ p.members.map((m) => m.name).join('، ') || '—' }}</span>
+              </div>
+              <footer class="ab-card-foot" @click.stop>
+                <button v-if="isSup && stageOf(p) === 'pending_supervisor'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click="review(p, true)"><CheckCircle2 :size="14" /> موافقة</button>
+                <button v-else-if="!isSup && stageOf(p) === 'pending_committee'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click="review(p, true)"><CheckCircle2 :size="14" /> موافقة اللجنة</button>
+                <button v-if="!isSup" type="button" :class="['pbtn is-sm ar-feature', p.featured ? 'is-green' : 'is-outline']" :aria-pressed="p.featured" @click="toggleFeatured(p)">
+                  <Star :size="14" :fill="p.featured ? 'currentColor' : 'none'" /> {{ p.featured ? 'في الرئيسية' : 'تعيين للرئيسية' }}
+                </button>
+                <button type="button" class="pbtn is-cyan is-sm" @click="openProject(p)"><FolderOpen :size="14" /> فتح المشروع</button>
+              </footer>
+            </article>
+          </div>
+          <div class="gr-sumbar">
+            <span>عدد المشاريع: {{ visible.length }}</span>
+            <span v-for="(l, k) in REVIEW" :key="k">{{ l.short }}: {{ visible.filter((p) => stageOf(p) === k).length }}</span>
+          </div>
+        </template>
+
         <SlideTable v-else :rows="visible" label="المشاريع">
           <template #default="{ rows: pageRows }">
             <div class="pt-wrap">
@@ -194,7 +231,8 @@
 <script>
 import { mapActions, mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
-import { ArrowRight, Check, CheckCircle2, Clock, FileText, FileType2, Folder, FolderOpen, GraduationCap, Hourglass, Minus, PlayCircle, Search, Star, UserRound, Users, X } from 'lucide-vue-next'
+import { ArrowRight, Check, CheckCircle2, Clock, FileText, FileType2, Folder, FolderOpen, GraduationCap, Hourglass, LayoutGrid, List, Minus, PlayCircle, Search, Star, UserRound, Users, X } from 'lucide-vue-next'
+import UcasLogo from '@/components/icons/UcasLogo.vue'
 import FileViewer from '@/components/shared/FileViewer.vue'
 import SlideTable from '@/components/ui/SlideTable.vue'
 import api from '@/services/api'
@@ -211,7 +249,7 @@ const seeded = (n) => () => { n = (n * 9301 + 49297) % 233280; return n / 233280
 export default {
   name: 'ArchiveBoard',
 
-  components: { ArrowRight, Check, CheckCircle2, FileViewer, SlideTable, Folder, GraduationCap, Search, Star, UserRound, Users, X },
+  components: { ArrowRight, Check, CheckCircle2, FileViewer, SlideTable, Folder, FolderOpen, GraduationCap, LayoutGrid, List, Search, Star, UcasLogo, UserRound, Users, X },
 
   data() {
     return {
@@ -223,6 +261,7 @@ export default {
       rejectNote: '',
       q: '',
       view: 'all',
+      layout: 'gallery',
       f: { spec: '', degree: '', gender: '' },
       current: null,
       loading: true,

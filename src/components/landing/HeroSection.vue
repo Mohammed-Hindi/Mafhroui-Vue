@@ -1,29 +1,22 @@
 <template>
-  <!-- الهيرو بنمط موقع الكلية (195704): خلفية التدرج بشبكة نقاط، شريط تبويبات متدرّج بزوايا علوية، ثم شريط الإحصائيات بأرقام بيضاء كبيرة -->
-  <section>
+  <!-- الهيرو بنمط موقع الكلية (195704): خلفية التدرج بشبكة نقاط ومطر البيانات، النص وكلمة مسار، ثم شريط الإحصائيات بأرقام بيضاء كبيرة -->
+  <!-- مطر البيانات على مستوى القسم كله فيصل إلى شريط الإحصائيات -->
+  <section class="us-hero-wrap">
+    <DataRain :focus="wordRect" :gain="2.6" />
     <div class="us-hero">
       <div class="us-wrap us-hero-in">
-        <div class="reveal">
+        <div class="us-hero-text reveal">
           <h1>منصة {{ APP_NAME }} لمشاريع التخرج</h1>
           <p>
             منصة موحّدة تربط الطلاب بالمشرفين ولجنة الإشراف لإدارة المقترحات والمهام والاجتماعات
             والمناقشات وأرشفة أفضل مشاريع التخرج في الكلية الجامعية للعلوم التطبيقية.
           </p>
           <div class="us-hero-actions">
-            <router-link :to="{ name: 'login' }" class="us-btn is-white is-solid">تسجيل الدخول</router-link>
-            <a href="#projects" class="us-btn is-white">أفضل مشاريع التخرج</a>
+            <router-link :to="{ name: 'login' }" class="us-btn us-glow-btn">تسجيل الدخول <LogIn :size="19" class="us-flip" /></router-link>
+            <a href="#projects" class="us-btn is-glass">أفضل مشاريع التخرج <ArrowDown :size="18" /></a>
           </div>
         </div>
-        <div class="us-hero-mark reveal reveal-delay-2" aria-hidden="true"><UcasLogo :size="190" /></div>
-      </div>
-
-      <div class="us-tabs">
-        <nav aria-label="أقسام الصفحة">
-          <a href="#projects">أفضل المشاريع</a>
-          <a href="#features">ميزات المنصة</a>
-          <a href="#how">كيف تعمل</a>
-          <a href="#departments">الأقسام</a>
-        </nav>
+        <MasarWordmark ref="word" />
       </div>
     </div>
 
@@ -43,13 +36,19 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useLandingStore } from '@/stores/landing.store'
 import { formatNumber } from '@/utils/formatters'
 import { APP_NAME } from '@/utils/constants'
-import UcasLogo from '@/components/icons/UcasLogo.vue'
 import CountUp from '@/components/ui/CountUp.vue'
+import DataRain from './DataRain.vue'
+import MasarWordmark from './MasarWordmark.vue'
+import { ArrowDown, LogIn } from 'lucide-vue-next'
+
+// مطر البيانات يلتف حول كلمة مسار أثناء ظهورها
+const word = ref(null)
+const wordRect = () => word.value?.$el?.getBoundingClientRect() ?? null
 
 const landingStore = useLandingStore()
 const { bannerStats, statsLoading } = storeToRefs(landingStore)
