@@ -34,7 +34,8 @@
                 <span v-else class="pt-muted">—</span>
               </td>
             </tr>
-            <tr v-if="!rows.length"><td colspan="7" class="gr-empty">{{ view === 'upcoming' ? 'لا توجد اجتماعات قادمة حاليًا' : 'لا توجد اجتماعات منتهية بعد' }}</td></tr>
+            <SkeletonLoader v-if="loading" variant="table" :cols="7" :rows="4" />
+            <tr v-else-if="!rows.length"><td colspan="7" class="gr-empty">{{ view === 'upcoming' ? 'لا توجد اجتماعات قادمة حاليًا' : 'لا توجد اجتماعات منتهية بعد' }}</td></tr>
           </tbody>
         </table>
       </div>
@@ -92,7 +93,7 @@ export default {
   components: { BaseModal, CalendarClock, PortalStepper, Plus, Video },
 
   data() {
-    return { view: 'upcoming', createOpen: false, saving: false, form: { title: '', at: '', link: '', notes: '' } }
+    return { loading: true, view: 'upcoming', createOpen: false, saving: false, form: { title: '', at: '', link: '', notes: '' } }
   },
 
   computed: {
@@ -155,8 +156,9 @@ export default {
   },
 
   async created() {
-    await this.fetchTeams()
-    if (this.myTeam) await this.fetchMeetings(this.myTeam.id)
+    await this.fetchTeams().catch(() => {})
+    if (this.myTeam) await this.fetchMeetings(this.myTeam.id).catch(() => {})
+    this.loading = false
   },
 
   methods: {

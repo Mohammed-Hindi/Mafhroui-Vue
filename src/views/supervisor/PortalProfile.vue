@@ -38,7 +38,7 @@
     <!-- التفاعل الجزئي: بطاقة لكل مجموعة باسمها ورقم شعبتها -->
     <section v-else class="profile-card">
       <h3 class="portal-title mb-4">التفاعل مع كل مجموعة <span class="profile-card-sub">{{ teams.length }} مجموعة</span></h3>
-      <p v-if="loading" class="pt-muted">جارٍ التحميل…</p>
+      <SkeletonLoader v-if="loading" :rows="4" height="40px" />
       <p v-else-if="!teams.length" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لا توجد مجموعات مسندة لك</p>
       <div v-else class="sp-groups">
         <article
@@ -78,7 +78,7 @@
         </dl>
 
         <h4 class="portal-title hd-props-title sp-modal-sub">طلاب المجموعة</h4>
-        <p v-if="groupsLoading" class="pt-muted">جارٍ التحميل…</p>
+        <SkeletonLoader v-if="groupsLoading" :rows="3" height="40px" />
         <div v-else class="pt-wrap">
           <table class="pt">
             <thead><tr><th>الطالب</th><th>الرقم الجامعي</th><th>الجنس</th><th>مكان التواجد</th><th>المهام</th><th>الإنجاز</th></tr></thead>

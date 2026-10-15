@@ -18,7 +18,7 @@
           </div>
         </div>
       </div>
-      <p v-if="loading" class="pt-muted tk-loading">جارٍ التحميل…</p>
+      <SkeletonLoader v-if="loading" :rows="5" height="44px" />
       <p v-else-if="!draft" class="pt-muted tk-loading">لا يوجد نموذج لهذا الاختيار</p>
     </section>
 

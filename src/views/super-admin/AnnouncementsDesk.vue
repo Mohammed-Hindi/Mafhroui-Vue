@@ -44,7 +44,7 @@
           <button v-if="tab !== 'file'" type="button" class="hd-corner" @click="tab = 'file'"><Paperclip :size="16" /> الملفات</button>
           <button v-else type="button" class="hd-corner" @click="tab = ''"><Inbox :size="16" /> كل الوارد</button>
         </header>
-        <p v-if="loading" class="dash-empty">جارٍ التحميل…</p>
+        <SkeletonLoader v-if="loading" variant="cards" :rows="4" />
         <p v-else-if="!shown.length" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لا توجد مراسلات في «{{ tabLabel }}»</p>
         <button
           v-for="a in shown" :key="a.id" type="button"
@@ -143,7 +143,7 @@ import api from '@/services/api'
 import { downloadAttachment } from '@/services/announcements'
 import { ROLE_LABELS } from '@/utils/constants'
 import { formatFileSize } from '@/utils/formatters'
-import { isPlaceholder, placeholderAnnouncements } from '@/utils/studentPlaceholders'
+import { isPlaceholder } from '@/utils/studentPlaceholders'
 import { mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
 import { useTeamsStore } from '@/stores/teams.store'
@@ -182,16 +182,15 @@ export default {
   computed: {
     ...mapState(useAuthStore, ['userRole', 'user']),
     ...mapState(useTeamsStore, ['teams']),
-    // الطالب: بلا تقييمات، وبدلها مهام الفريق المرسلة من المشرف أو اللجنة أو الإدارة
+    // نفس تبويبات الطالب للجميع (الوارد، الإعلانات، الملفات، المهام)؛ لجنة الإشراف والإدارة تحتفظان بالتقييمات
     tabs() {
-      const student = this.userRole === 'student'
-      // المشرف: بلا تبويب التقييمات
-      const third = student ? { value: 'task', label: 'المهام', icon: markRaw(ListTodo) } : this.userRole !== 'supervisor' && { value: 'rating', label: 'التقييمات', icon: markRaw(Star) }
+      const ratings = !['student', 'supervisor'].includes(this.userRole)
       return [
         { value: '', label: 'كل الوارد', icon: markRaw(Layers) },
         { value: 'announcement', label: 'الإعلانات', icon: markRaw(Megaphone) },
         { value: 'file', label: 'الملفات', icon: markRaw(FileText) },
-        ...(third ? [third] : [])
+        { value: 'task', label: 'المهام', icon: markRaw(ListTodo) },
+        ...(ratings ? [{ value: 'rating', label: 'التقييمات', icon: markRaw(Star) }] : [])
       ]
     },
     tabLabel() {
@@ -225,10 +224,10 @@ export default {
         // المشرف بلا تقييمات
         if (this.userRole === 'supervisor') this.items = this.items.filter((a) => this.kind(a) !== 'rating')
         if (this.userRole === 'student') {
-          // الطالب بلا إعلانات بعد: بيانات تجريبية (placeholder)
           this.items = this.items.filter((a) => this.kind(a) !== 'rating')
-          if (!this.items.length) this.items = placeholderAnnouncements()
           this.items = [...this.items, ...(await this.staffTasks())]
+        } else if (['supervisor', 'committee'].includes(this.userRole)) {
+          this.items = [...this.items, ...(await this.myTasks())]
         }
         // على الشاشات العريضة يُفتح أول عنصر تلقائيًا (كصناديق البريد)؛ على الجوال التفاصيل صفحة كاملة فلا تُفتح وحدها
         this.current = this.items.find((a) => a.id === this.current?.id) || (window.innerWidth >= 1024 ? this.shown[0] : null) || null
@@ -250,6 +249,17 @@ export default {
         return (data.data || data)
           .filter((t) => STAFF.includes(t.created_by?.role))
           .map((t) => ({ ...t, id: `t${t.id}`, type: 'task', body: t.description || '', author: t.created_by, attachments: [] }))
+      } catch {
+        return []
+      }
+    },
+
+    /** المشرف/اللجنة: المهام المسندة لهم (GET /tasks?audience=…&assignee_id=me) بشكل المراسلة */
+    async myTasks() {
+      try {
+        const audience = this.userRole === 'supervisor' ? 'supervisors' : 'committee'
+        const { data } = await api.get('/tasks', { params: { audience, assignee_id: this.user?.id } })
+        return (data.data || []).map((t) => ({ ...t, id: `t${t.id}`, type: 'task', body: t.description || '', author: t.created_by, attachments: [] }))
       } catch {
         return []
       }

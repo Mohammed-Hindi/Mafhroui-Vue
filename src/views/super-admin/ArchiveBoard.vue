@@ -134,7 +134,7 @@
           </label>
         </div>
 
-        <p v-if="loading" class="pt-muted tk-loading">جارٍ التحميل…</p>
+        <SkeletonLoader v-if="loading" :rows="5" height="44px" />
         <!-- جدول المشاريع بالسلايدر والشريط الأخضر: موافقة المشرف + موافقة لجنة الإشراف ← أرشفة -->
         <!-- معرض الأعمال: بطاقة لكل مشروع (الشعبة، التخصص، الطلبة، المشرف، حالة الاعتماد)، الضغط يفتح مجلد المشروع -->
         <template v-else-if="layout === 'gallery'">
@@ -142,7 +142,14 @@
           <template v-if="!f.spec && !q">
             <p v-if="!folders.length" class="gr-empty">لا توجد مشاريع</p>
             <div v-else class="ab-folders">
-              <button v-for="fd in folders" :key="fd.spec" type="button" class="ab-folder" @click="f.spec = fd.spec">
+              <div v-for="fd in folders" :key="fd.spec" class="ab-folder" role="button" tabindex="0" @click="f.spec = fd.spec" @keydown.enter="f.spec = fd.spec">
+                <!-- عند المرور: صور مشاريع التخصص تخرج من المجلد على شكل قوس (غلاف التقرير، وإلا بطاقة بهوية مسار) -->
+                <span class="ab-fan" aria-hidden="true">
+                  <span v-for="(it, i) in fd.items" :key="it.id" class="ab-fan-card" :style="{ '--i': i, '--n': fd.items.length }">
+                    <img v-if="it.cover" :src="it.cover" alt="" loading="lazy">
+                    <span v-else class="ab-fan-ph"><UcasLogo :size="26" /><b>{{ it.title }}</b></span>
+                  </span>
+                </span>
                 <span class="ab-folder-ic"><Folder :size="30" /><b>{{ fd.count }}</b></span>
                 <span class="ab-folder-body">
                   <strong>{{ fd.spec }}</strong>
@@ -153,7 +160,8 @@
                   </span>
                 </span>
                 <span class="ab-folder-bar" aria-hidden="true"><span :style="{ width: `${fd.count ? (fd.archived / fd.count) * 100 : 0}%` }" /></span>
-              </button>
+                <button type="button" class="ab-newtab" title="فتح في نافذة جديدة" @click.stop="openInNewTab({ spec: fd.spec })"><ExternalLink :size="15" /> فتح في نافذة جديدة</button>
+              </div>
             </div>
           </template>
 
@@ -188,6 +196,7 @@
                         <Star :size="14" :fill="p.featured ? 'currentColor' : 'none'" /> {{ p.featured ? 'في الرئيسية' : 'تعيين للرئيسية' }}
                       </button>
                       <button type="button" class="pbtn is-cyan is-sm" @click="openProject(p)"><FolderOpen :size="14" /> فتح المشروع</button>
+                      <button type="button" class="pbtn is-outline is-sm" title="فتح في نافذة جديدة" aria-label="فتح في نافذة جديدة" @click="openInNewTab({ project: p.id })"><ExternalLink :size="14" /></button>
                     </footer>
                   </article>
                 </div>
@@ -261,7 +270,7 @@
 <script>
 import { mapActions, mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
-import { ArrowRight, Check, CheckCircle2, Clock, FileText, FileType2, Folder, FolderOpen, GraduationCap, Hourglass, LayoutGrid, List, Minus, PlayCircle, Search, Star, UserRound, Users, X } from 'lucide-vue-next'
+import { ArrowRight, Check, CheckCircle2, Clock, FileText, FileType2, Folder, FolderOpen, GraduationCap, Hourglass, LayoutGrid, List, Minus, PlayCircle, Search, Star, UserRound, Users, X, ExternalLink } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
 import FileViewer from '@/components/shared/FileViewer.vue'
 import SlideTable from '@/components/ui/SlideTable.vue'
@@ -279,7 +288,7 @@ const seeded = (n) => () => { n = (n * 9301 + 49297) % 233280; return n / 233280
 export default {
   name: 'ArchiveBoard',
 
-  components: { ArrowRight, Check, CheckCircle2, FileViewer, SlideTable, Folder, FolderOpen, GraduationCap, LayoutGrid, List, Search, Star, UcasLogo, UserRound, Users, X },
+  components: { ArrowRight, Check, CheckCircle2, FileViewer, SlideTable, Folder, FolderOpen, GraduationCap, LayoutGrid, List, Search, Star, UcasLogo, UserRound, Users, X, ExternalLink },
 
   data() {
     return {
@@ -364,7 +373,9 @@ export default {
           count: list.length,
           archived: list.filter((p) => p.archived).length,
           featured: list.filter((p) => p.featured).length,
-          degrees: [...new Set(list.map((p) => DEGREES[p.degree]).filter(Boolean))].join(' · ') || '—'
+          degrees: [...new Set(list.map((p) => DEGREES[p.degree]).filter(Boolean))].join(' · ') || '—',
+          // حتى 4 مشاريع لقوس الصور عند المرور
+          items: list.slice(0, 4).map((p) => ({ id: p.id, title: p.project, cover: p.report?.cover_url || '' }))
         }
       }).filter((x) => x.count)
     },
@@ -417,6 +428,11 @@ export default {
       const [groups, teams] = await Promise.all([loadGroups(), api.get('/teams').then(({ data }) => data.data || data).catch(() => [])])
       const reports = Object.fromEntries(teams.filter((t) => t.project).map((t) => [t.project.id, latestReport(t.project)]))
       this.projects = groups.filter((g) => g.projectId).map((g) => ({ ...g, archived: g.projectStatus === 'completed', report: reports[g.projectId] || null }))
+      // فتح مباشر من رابط "نافذة جديدة"
+      const { spec, project } = this.$route.query
+      if (spec) this.f.spec = String(spec)
+      const target = project && this.projects.find((x) => String(x.id) === String(project))
+      if (target) this.openProject(target)
     } catch {
       this.$toast?.error('تعذّر تحميل المشاريع')
     } finally {
@@ -428,6 +444,11 @@ export default {
     setView(v) {
       this.view = v
       this.current = null
+    },
+
+    /** نافذة جديدة لنفس الصفحة مفتوحة على تخصص أو مشروع (?spec= / ?project=) */
+    openInNewTab(query) {
+      window.open(this.$router.resolve({ path: this.$route.path, query }).href, '_blank', 'noopener')
     },
 
     openProject(p) {

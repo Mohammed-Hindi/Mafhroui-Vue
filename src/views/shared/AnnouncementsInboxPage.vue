@@ -17,7 +17,7 @@
       </div>
     </div>
 
-    <LoadingSpinner v-if="loading" />
+    <SkeletonLoader v-if="loading" variant="cards" :rows="4" />
     <EmptyState v-else-if="!shown.length" :title="tab === 'file' ? 'لا توجد ملفات' : 'لا توجد إعلانات'" description="ما ترسله لك الإدارة العامة أو لجنة الإشراف أو مشرفك يظهر هنا." />
     <ul v-else class="flex flex-col gap-3">
       <li v-for="a in shown" :key="a.id" class="bg-surface rounded-lg border border-border shadow-card p-4 flex gap-3">
@@ -58,7 +58,6 @@
 <script>
 import { Download, FileText, Megaphone, Star } from 'lucide-vue-next'
 import EmptyState from '@/components/ui/EmptyState.vue'
-import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 import api from '@/services/api'
 import { downloadAttachment } from '@/services/announcements'
 import { ROLE_LABELS } from '@/utils/constants'
@@ -67,7 +66,7 @@ import { formatDateTime, formatFileSize } from '@/utils/formatters'
 export default {
   name: 'AnnouncementsInboxPage',
 
-  components: { Download, FileText, Megaphone, Star, EmptyState, LoadingSpinner },
+  components: { Download, FileText, Megaphone, Star, EmptyState },
 
   data() {
     return {

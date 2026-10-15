@@ -22,7 +22,8 @@
 
     <section v-else class="profile-card">
       <h3 class="portal-title pf-title">مجموعتي</h3>
-      <p v-if="tab === 'team' && !myTeam" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لم تُنسب لمجموعة بعد</p>
+      <SkeletonLoader v-if="!loaded" :rows="5" height="22px" />
+      <p v-else-if="tab === 'team' && !myTeam" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لم تُنسب لمجموعة بعد</p>
       <div v-for="sec in sections" v-else :key="sec.title" class="pf-row">
         <h4 class="pf-row-title">{{ sec.title }}</h4>
         <div class="pf-row-fields">

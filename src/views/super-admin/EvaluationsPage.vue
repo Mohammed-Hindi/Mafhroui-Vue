@@ -16,7 +16,7 @@
       </ol>
     </div>
 
-    <section v-if="tab === 'groups' || tab === 'results'" class="hm-stats" aria-label="ملخص التقييمات">
+    <section v-if="tab === 'groups' || tab === 'results'" class="hm-stats tk-stats" aria-label="ملخص التقييمات">
       <div class="hm-stat"><span class="hm-stat-label">المجموعات</span><span class="hm-stat-value">{{ groupsWithStatus.length }}</span><span class="hm-stat-split">مكتملة التقييم <b>{{ statusCount('done') }}</b></span></div>
       <div class="hm-stat"><span class="hm-stat-label">قيد التقييم</span><span class="hm-stat-value">{{ statusCount('partial') }}</span><span class="hm-stat-split">لم تُقيَّم <b>{{ statusCount('none') }}</b></span></div>
       <div class="hm-stat"><span class="hm-stat-label">متوسط الدرجات</span><span class="hm-stat-value">{{ avg }}</span><span class="hm-stat-split">من 100 · {{ results.length }} طالبًا</span></div>
@@ -56,21 +56,21 @@
         </label>
       </div>
 
-      <p v-if="loading" class="pt-muted tk-loading">جارٍ التحميل…</p>
+      <SkeletonLoader v-if="loading" :rows="5" height="44px" />
       <SlideTable v-else :rows="groupRows" label="المجموعات">
         <template #default="{ rows: pageRows }">
           <div class="pt-wrap">
             <table class="pt ev-groups">
               <thead>
                 <tr>
-                  <th>الشعبة</th><th>المشروع والطلبة</th><th v-if="isStaff">المشرف</th><th>الدرجة</th>
+                  <th data-rt-title>الشعبة</th><th data-rt-show>المشروع والطلبة</th><th v-if="isStaff">المشرف</th><th>الدرجة</th>
                   <th class="ev-c">تقييم المشرف</th><th class="ev-c">لجنة المناقشة</th><th class="ev-c">الحالة</th><th />
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="g in pageRows" :key="g.id" class="is-link" @click="openSheet(g.id)">
                   <td class="pt-strong ev-nowrap">
-                    {{ g.section ? `شعبة ${g.section}` : g.name }}
+                    <span class="ev-sec-chip">{{ g.section ? `شعبة ${g.section}` : g.name }}</span>
                     <span v-if="g.examining" class="ef-kind is-examiner ev-exam-tag">مناقش</span>
                   </td>
                   <td class="ev-proj">
@@ -175,7 +175,8 @@
                   </td>
                   <td class="ev-c"><span :class="['rv-pill', isDone(r) ? gradeTone(r.score) : 'is-pending']">{{ gradeOf(r) }}</span></td>
                 </tr>
-                <tr v-if="!resultRows.length"><td colspan="8" class="gr-empty">{{ loading ? 'جارٍ التحميل…' : 'لا توجد نتائج مطابقة' }}</td></tr>
+                <SkeletonLoader v-if="loading && !resultRows.length" variant="table" :cols="8" :rows="6" />
+                <tr v-else-if="!resultRows.length"><td colspan="8" class="gr-empty">لا توجد نتائج مطابقة</td></tr>
               </tbody>
             </table>
           </div>
@@ -385,7 +386,9 @@ export default {
     },
 
     avgOf(rows) {
-      return rows.length ? Math.round(rows.reduce((n, r) => n + r.score, 0) / rows.length) : '—'
+      // الخادم يرسل الدرجة نصًا عشريًا ("94.00") — تُحوَّل لرقم قبل الجمع وإلا تُلصق النصوص (NaN)
+      const scored = rows.filter((r) => r.score !== null && r.score !== '' && !Number.isNaN(Number(r.score)))
+      return scored.length ? Math.round(scored.reduce((n, r) => n + Number(r.score), 0) / scored.length) : '—'
     }
   }
 }

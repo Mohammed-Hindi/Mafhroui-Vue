@@ -1,10 +1,29 @@
 <template>
-  <div class="animate-pulse space-y-3" role="status" aria-label="جارٍ التحميل">
-    <div
+  <!-- صفوف جدول وهمية: تُوضع داخل <tbody> مكان صف "جارٍ التحميل" -->
+  <template v-if="variant === 'table'">
+    <tr v-for="n in rows" :key="n" class="sk-tr" aria-hidden="true">
+      <td v-for="c in cols" :key="c"><span class="sk" :style="{ width: cellWidth(n, c) }" /></td>
+    </tr>
+  </template>
+
+  <!-- بطاقات وهمية: أيقونة + سطران -->
+  <div v-else-if="variant === 'cards'" class="sk-cards" role="status" aria-label="جارٍ التحميل">
+    <div v-for="n in rows" :key="n" class="sk-card">
+      <span class="sk sk-circle" />
+      <div class="sk-card-body">
+        <span class="sk" style="width: 60%" />
+        <span class="sk" style="width: 90%" />
+        <span class="sk" style="width: 40%" />
+      </div>
+    </div>
+  </div>
+
+  <div v-else class="sk-lines" role="status" aria-label="جارٍ التحميل">
+    <span
       v-for="n in rows"
       :key="n"
-      class="bg-border-soft rounded-sm"
-      :style="{ height: height, width: n === rows && rows > 1 ? '70%' : '100%' }"
+      class="sk"
+      :style="{ height, width: n === rows && rows > 1 ? '70%' : '100%' }"
     />
   </div>
 </template>
@@ -14,7 +33,16 @@ export default {
   name: 'SkeletonLoader',
   props: {
     rows: { type: Number, default: 3 },
-    height: { type: String, default: '16px' }
+    height: { type: String, default: '16px' },
+    // lines | cards | table
+    variant: { type: String, default: 'lines' },
+    cols: { type: Number, default: 4 }
+  },
+  methods: {
+    // أطوال متفاوتة ثابتة حتى لا تبدو الصفوف متطابقة
+    cellWidth(n, c) {
+      return `${45 + ((n * 7 + c * 13) % 45)}%`
+    }
   }
 }
 </script>

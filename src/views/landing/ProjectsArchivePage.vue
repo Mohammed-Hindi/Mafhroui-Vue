@@ -36,7 +36,7 @@
           </label>
         </div>
 
-        <p v-if="projectsLoading" class="us-empty">جارٍ تحميل المشاريع…</p>
+        <SkeletonLoader v-if="projectsLoading" variant="cards" :rows="6" />
         <div v-else-if="projectsError" class="us-empty">
           <p>{{ projectsError }}</p>
           <button type="button" class="us-btn is-sm" @click="loadProjects()">إعادة المحاولة</button>

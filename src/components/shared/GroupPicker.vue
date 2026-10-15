@@ -4,13 +4,14 @@
     <div class="gp-filters">
       <label class="gr-search">
         <Search :size="16" />
-        <input v-model.trim="q" type="search" placeholder="بحث بالمجموعة أو الشعبة أو المشرف…">
+        <input v-model.trim="q" type="search" :placeholder="isSup ? 'بحث بالمجموعة أو الشعبة…' : 'بحث بالمجموعة أو الشعبة أو المشرف…'">
       </label>
       <select v-model="f.spec" class="gr-select" aria-label="التخصص">
         <option value="">كل التخصصات</option>
         <option v-for="s in specs" :key="s" :value="s">{{ s }}</option>
       </select>
-      <select v-model="f.degree" class="gr-select" aria-label="الدرجة">
+      <!-- المشرف: فلتر التخصص وطلاب/طالبات فقط -->
+      <select v-if="!isSup" v-model="f.degree" class="gr-select" aria-label="الدرجة">
         <option value="">كل الدرجات</option>
         <option v-for="(l, k) in DEGREES" :key="k" :value="k">{{ l }}</option>
       </select>
@@ -19,11 +20,11 @@
         <option value="male">طلاب</option>
         <option value="female">طالبات</option>
       </select>
-      <select v-model="f.region" class="gr-select" aria-label="مكان التواجد">
+      <select v-if="!isSup" v-model="f.region" class="gr-select" aria-label="مكان التواجد">
         <option value="">كل المناطق</option>
         <option v-for="(l, k) in REGIONS" :key="k" :value="k">{{ l }}</option>
       </select>
-      <select v-model="f.sup" class="gr-select" aria-label="المشرف">
+      <select v-if="!isSup" v-model="f.sup" class="gr-select" aria-label="المشرف">
         <option value="">كل المشرفين</option>
         <option v-for="s in sups" :key="s" :value="s">{{ s }}</option>
       </select>
@@ -56,6 +57,7 @@
 <script>
 import { Search } from 'lucide-vue-next'
 import { DEGREES, REGIONS } from '@/utils/progressData'
+import { useAuthStore } from '@/stores/auth.store'
 
 export default {
   name: 'GroupPicker',
@@ -74,6 +76,10 @@ export default {
   },
 
   computed: {
+    isSup() {
+      return useAuthStore().userRole === 'supervisor'
+    },
+
     specs() {
       return [...new Set(this.groups.map((g) => g.spec).filter(Boolean))]
     },

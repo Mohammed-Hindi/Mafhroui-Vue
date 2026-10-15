@@ -5,7 +5,7 @@
       <div>
         <h2 class="dash-title">تقدّم المشاريع</h2>
       </div>
-      <button v-if="!isSup" type="button" class="pbtn is-cyan" :disabled="loading || exporting" @click="exportPdf"><FileDown :size="16" /> {{ exporting ? 'جارٍ التصدير…' : 'تصدير PDF' }}</button>
+      <button type="button" class="pbtn is-cyan" :disabled="loading || exporting" @click="exportPdf"><FileDown :size="16" /> {{ exporting ? 'جارٍ التصدير…' : 'تصدير PDF' }}</button>
     </header>
 
     <nav class="rv-tabs" aria-label="العرض">
@@ -17,7 +17,7 @@
       <div class="hm-filters">
         <label class="gr-search">
           <Search :size="16" />
-          <input v-model.trim="q" type="search" :placeholder="tab === 'sup' ? 'بحث باسم المشرف…' : 'بحث بالمجموعة أو الطالب أو المشرف…'">
+          <input v-model.trim="q" type="search" :placeholder="tab === 'sup' ? 'بحث باسم المشرف…' : isSup ? 'بحث بالمجموعة أو الطالب…' : 'بحث بالمجموعة أو الطالب أو المشرف…'">
         </label>
         <select v-if="tab === 'grp' && !isSup" v-model="supFilter" class="gr-select" aria-label="المشرف">
           <option value="">كل المشرفين</option>
@@ -46,7 +46,7 @@
         </select>
       </div>
 
-      <p v-if="loading" class="pt-muted">جارٍ التحميل…</p>
+      <SkeletonLoader v-if="loading" :rows="4" height="40px" />
 
       <!-- المشرفون -->
       <SlideTable v-else-if="tab === 'sup'" :rows="supRows" :label="'المشرفون'">
@@ -116,7 +116,7 @@
         <template #default="{ rows: shown }">
           <div class="pt-wrap">
             <table class="pt">
-              <thead><tr><th>المجموعة</th><th>المشرف</th><th>المهام (منجزة/موكلة)</th><th>المتأخرة</th><th>الإنجاز</th></tr></thead>
+              <thead><tr><th>المجموعة</th><th v-if="!isSup">المشرف</th><th>المهام (منجزة/موكلة)</th><th>المتأخرة</th><th>الإنجاز</th></tr></thead>
               <tbody>
                 <template v-for="g in shown" :key="g.id">
                   <tr :class="['is-link', openGrp === g.id && 'is-open']" @click="toggleGrp(g)">
@@ -128,7 +128,7 @@
                         <span class="pb-grp-text"><b>{{ g.name }}</b><small>{{ g.project?.name || 'بلا مشروع' }}</small></span>
                       </span>
                     </td>
-                    <td>{{ g.sup.name }}</td>
+                    <td v-if="!isSup">{{ g.sup.name }}</td>
                     <td><span class="mono">{{ g.tasksDone }}/{{ g.tasksTotal }}</span></td>
                     <td><span :class="lateClass(lateOf(g.id))">{{ lateOf(g.id) ?? '—' }}</span></td>
                     <td>
@@ -137,7 +137,7 @@
                     </td>
                   </tr>
                   <tr v-if="openGrp === g.id" class="pt-sub">
-                    <td colspan="5">
+                    <td :colspan="isSup ? 4 : 5">
                       <!-- تفاصيل المجموعة: الطلاب ثم المهام، داخل لوحة منسدلة تمرَّر داخليًا -->
                       <div class="pb-drop">
                       <h5 class="pb-drop-title"><Users :size="15" /> الطلاب <small>{{ g.members.length }}</small></h5>
@@ -158,7 +158,7 @@
                         </tbody>
                       </table>
                       <h5 class="pb-drop-title"><ListTodo :size="15" /> المهام <small>{{ tasks[g.id]?.length ?? '…' }}</small></h5>
-                      <p v-if="!tasks[g.id]" class="pt-muted">جارٍ التحميل…</p>
+                      <SkeletonLoader v-if="!tasks[g.id]" :rows="2" />
                       <p v-else-if="!tasks[g.id].length" class="pt-muted">لا توجد مهام لهذه المجموعة</p>
                       <ul v-else class="pb-tasks">
                         <li v-for="t in tasks[g.id]" :key="t.id">
@@ -171,7 +171,7 @@
                     </td>
                   </tr>
                 </template>
-                <tr v-if="!grpRows.length"><td colspan="5" class="gr-empty">لا توجد مجموعات مطابقة</td></tr>
+                <tr v-if="!grpRows.length"><td :colspan="isSup ? 4 : 5" class="gr-empty">لا توجد مجموعات مطابقة</td></tr>
               </tbody>
             </table>
           </div>
@@ -183,7 +183,6 @@
             <span>المهام المنجزة: {{ grpRows.reduce((n, g) => n + g.tasksDone, 0) }} / {{ grpRows.reduce((n, g) => n + g.tasksTotal, 0) }}</span>
             <span>متوسط الإنجاز: {{ avgOf(grpRows.map((g) => g.percentage)) }}%</span>
             <!-- المشرف: تصدير PDF داخل الشريط الأخضر أسفل الجدول -->
-            <button v-if="isSup" type="button" class="pbtn is-sm gr-sumbar-btn" :disabled="loading || exporting" @click="exportPdf"><FileDown :size="15" /> {{ exporting ? 'جارٍ التصدير…' : 'تصدير PDF' }}</button>
           </div>
         </template>
       </SlideTable>

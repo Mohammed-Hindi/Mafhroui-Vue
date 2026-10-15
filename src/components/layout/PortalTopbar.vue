@@ -7,7 +7,13 @@
       <span class="w-11 shrink-0 lg:hidden" aria-hidden="true" />
 
       <div class="min-w-0 flex-1">
-        <h1 class="portal-topbar-title truncate">{{ pageTitle }}</h1>
+        <!-- على الجوال: الكلمة الأولى + … والضغط يكشف باقي العنوان بحركة انزلاق -->
+        <h1
+          :class="['portal-topbar-title truncate', titleRest && 'has-rest', titleOpen && 'is-open']"
+          :title="pageTitle" @click="titleOpen = !titleOpen"
+        >
+          <span class="tt">{{ titleFirst }}<span v-if="titleRest" class="tt-dots" aria-hidden="true">…</span><span v-if="titleRest" class="tt-rest">&nbsp;{{ titleRest }}</span></span>
+        </h1>
       </div>
 
       <SemesterSelect class="portal-semester hidden md:block" />
@@ -72,7 +78,7 @@ export default {
   components: { ChevronDown, Lock, LogOut, Sun, UserCircle, UcasLogo, NotificationBell, SemesterSelect },
 
   data() {
-    return { menuOpen: false }
+    return { menuOpen: false, titleOpen: false }
   },
 
   computed: {
@@ -84,12 +90,21 @@ export default {
       const nav = NAV_ITEMS_BY_ROLE[this.userRole] || []
       const item = nav.flatMap((g) => g.items || [g]).find((i) => i.to === this.$route.path)
       return item?.label || this.$route.meta?.title || ''
+    },
+
+    titleFirst() {
+      return this.pageTitle.split(' ')[0]
+    },
+
+    titleRest() {
+      return this.pageTitle.split(' ').slice(1).join(' ')
     }
   },
 
   watch: {
     $route() {
       this.menuOpen = false
+      this.titleOpen = false
     }
   },
 

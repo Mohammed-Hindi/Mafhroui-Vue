@@ -1,4 +1,5 @@
 import api from '@/services/api'
+import { STORAGE_KEYS } from '@/utils/constants'
 
 /** تسميات موحّدة لصفحات الإدارة العامة */
 export const DEGREES = { diploma: 'دبلوم', bachelor: 'بكالوريوس' }
@@ -23,7 +24,21 @@ export const level = (pct) => (pct >= 70 ? 'is-high' : pct >= 35 ? 'is-mid' : 'i
  * GET /progress → مجموعات الفصل بشكل موحّد:
  * { id, name, section, sup: {id,name,whatsapp}, spec, degree, dept, project, members[], tasksTotal, tasksDone, percentage }
  */
-export async function fetchGroups() {
+// طلب /progress بطيء (~1–2 ث) وتطلبه صفحات عدة: الطلبات المتزامنة تشترك في طلب واحد، والنتيجة تُعاد لـ 20 ث
+// ponytail: كاش زمني بسيط حسب الفصل؛ تعديلات المجموعات تظهر بعد انتهائه أو عند تغيير الفصل
+let progressCache = null
+const PROGRESS_TTL = 20000
+
+export function fetchGroups(fresh = false) {
+  const term = localStorage.getItem(STORAGE_KEYS.SEMESTER) || ''
+  if (!fresh && progressCache && progressCache.term === term && Date.now() - progressCache.at < PROGRESS_TTL) return progressCache.promise
+  const promise = loadProgressGroups()
+  progressCache = { term, at: Date.now(), promise }
+  promise.catch(() => { progressCache = null })
+  return promise
+}
+
+async function loadProgressGroups() {
   const { data } = await api.get('/progress')
   return (data.data || data).map(({ team, progress }) => {
     const byId = Object.fromEntries((progress?.students || []).map((s) => [s.id, s]))

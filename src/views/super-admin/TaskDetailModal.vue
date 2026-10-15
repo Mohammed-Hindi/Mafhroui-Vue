@@ -54,7 +54,8 @@
           </form>
         </section>
 
-        <section class="tk-detail-block">
+        <!-- سجل الحركة: من يراه يحدده الأب (صفحة التكليفات حسب الدور) -->
+        <section v-if="showLog" class="tk-detail-block">
           <h4>سجل الحركة</h4>
           <p v-if="!log.length" class="pt-muted">لا توجد حركات مسجّلة بعد.</p>
           <ol v-else class="tl-log">
@@ -120,7 +121,8 @@ export default {
   props: {
     task: { type: Object, default: null },
     members: { type: Array, default: () => [] },
-    statuses: { type: Array, required: true }
+    statuses: { type: Array, required: true },
+    showLog: { type: Boolean, default: false }
   },
 
   emits: ['close', 'updated', 'removed'],

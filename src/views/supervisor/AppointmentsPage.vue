@@ -12,8 +12,8 @@
         <span class="dash-chip">{{ rows.length }} مناقشة</span>
       </div>
 
-      <p v-if="discussionsLoading" class="pt-muted">جارٍ التحميل…</p>
-      <SlideTable v-else :rows="rows" label="المناقشات">
+      <SkeletonLoader v-if="discussionsLoading" :rows="4" height="70px" />
+      <SlideTable v-else :rows="rows" :size="5" label="المناقشات">
         <template #default="{ rows: shown }">
           <div class="gr-table-wrap">
             <table class="gr-table">

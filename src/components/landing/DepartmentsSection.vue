@@ -4,7 +4,7 @@
   <section id="departments" ref="root" class="us-section is-gray scroll-mt-24">
     <div class="us-wrap">
       <h2 class="us-title">الأقسام والتخصصات</h2>
-      <p v-if="loading" class="us-empty">جارٍ التحميل…</p>
+      <SkeletonLoader v-if="loading" variant="cards" :rows="4" />
       <p v-else-if="!departments.length" class="us-empty">لا توجد أقسام بعد</p>
       <div v-else class="us-grid-2">
         <article v-for="department in departments" :key="department.id" class="us-card">

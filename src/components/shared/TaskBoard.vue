@@ -79,7 +79,14 @@
 
               <!-- مصدر المهمة إن جاءت من المشرف أو لجنة الإشراف أو الإدارة العامة -->
               <span v-if="showSource && staffSource(task)" class="tb-source">من {{ staffSource(task) }}</span>
-              <p v-if="task.description" class="text-caption text-text-600 mb-1 leading-relaxed line-clamp-2">{{ task.description }}</p>
+              <p v-if="task.description" class="tb-desc">{{ task.description }}</p>
+              <!-- لمن أُسندت المهمة: دائرة بالحرف الأول + الاسم الأول؛ بلا مكلّفين = كل الفريق -->
+              <div class="tb-assignees">
+                <template v-if="(task.assignees || []).length">
+                  <span v-for="a in task.assignees" :key="a.id" class="tb-assignee" :title="a.name"><i>{{ (a.name || '؟').charAt(0) }}</i>{{ (a.name || '').split(' ')[0] }}</span>
+                </template>
+                <span v-else class="tb-assignee is-team"><i><Users :size="11" /></i>كل الفريق</span>
+              </div>
 
               <div v-if="canDrag && acts(task)" class="mt-2" @click.stop>
                 <BaseSelect
@@ -108,8 +115,24 @@
                 </ul>
               </div>
 
+              <!-- مرفقات المهمة على البطاقة (المشرف/اللجنة): تُجلب عند الفتح GET /tasks/{id}/files -->
+              <div v-if="!uploads && !isPlaceholderTask(task)" class="tb-files-wrap" @click.stop>
+                <button type="button" class="tb-files-btn" :aria-expanded="!!openFiles[task.id]" @click="toggleFiles(task.id)">
+                  <Paperclip :size="13" /> المرفقات
+                  <span v-if="shownFiles[task.id]">{{ shownFiles[task.id].length }}</span>
+                  <ChevronDown :size="12" :class="['tb-files-caret', openFiles[task.id] && 'is-open']" />
+                </button>
+                <template v-if="openFiles[task.id]">
+                  <SkeletonLoader v-if="!shownFiles[task.id]" :rows="1" height="24px" />
+                  <ul v-else-if="shownFiles[task.id].length" class="tk-files tb-files">
+                    <li v-for="sf in shownFiles[task.id]" :key="sf.id" :title="sf.name"><FileText :size="13" /><bdi>{{ sf.name }}</bdi></li>
+                  </ul>
+                  <p v-else class="tk-info-empty">لا توجد مرفقات</p>
+                </template>
+              </div>
+
               <!-- سجل الحركة (GET /tasks/{id}/activity): من نقل المهمة ومن أي حالة لأي حالة، وكل تعديل — يُجلب عند الفتح -->
-              <div v-if="showLog" class="mt-2.5 pt-2.5 border-t border-border-soft" @click.stop>
+              <div v-if="ownsLog(task)" class="mt-2.5 pt-2.5 border-t border-border-soft" @click.stop>
                 <button
                   type="button"
                   class="flex items-center gap-1.5 text-label font-semibold text-primary-600 hover:text-primary-700 transition-colors duration-fast"
@@ -151,7 +174,7 @@
                       <p class="text-caption text-text-600 leading-relaxed">{{ note.note }}</p>
                     </div>
                   </template>
-                  <div v-if="canNote" class="flex items-center gap-1.5">
+                  <div v-if="canNote" class="flex items-center gap-1.5 tb-note-add">
                     <input
                       v-model="noteDrafts[task.id]" type="text" placeholder="اكتب ملاحظة..."
                       class="flex-1 h-8 px-2.5 rounded-sm border border-border bg-surface text-caption text-text-900 focus:border-primary-600 transition-colors duration-fast"
@@ -176,7 +199,7 @@
     </div>
 
     <!-- مهمة جديدة بهوية البوابة: الاسم والوصف والمنتسبون إلزامية، والملاحظات والملفات اختيارية -->
-    <BaseModal v-model="modalOpen" title="مهمة جديدة" size="md">
+    <BaseModal v-model="modalOpen" title="مهمة جديدة" size="lg">
       <form id="tb-create-form" class="sp-form" @submit.prevent="saveTask">
         <label class="pfield">
           <span>اسم المهمة <b class="as-req">*</b></span>
@@ -259,7 +282,7 @@
           </div>
         </section>
 
-        <section v-if="showLog" class="td-sec">
+        <section v-if="ownsLog(detailTask)" class="td-sec">
           <h4><History :size="15" /> سجل الحركة</h4>
           <p v-if="!isPlaceholderTask(detailTask) && (logs[detailTask.id] === 'loading' || !logs[detailTask.id])" class="td-muted">جارٍ التحميل…</p>
           <ol v-else-if="(logs[detailTask.id] || []).length" class="td-log">
@@ -298,7 +321,7 @@
 </template>
 
 <script>
-import { Plus, Archive as ArchiveIcon, Check, RotateCcw, MessageSquare, ChevronDown, Pencil, Trash2, Paperclip, X, History, FileText } from 'lucide-vue-next'
+import { Plus, Archive as ArchiveIcon, Check, RotateCcw, MessageSquare, ChevronDown, Pencil, Trash2, Paperclip, X, History, FileText, Users } from 'lucide-vue-next'
 import api from '@/services/api'
 import { describeTaskEvent } from '@/utils/progressData'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -308,6 +331,7 @@ import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { ROLE_LABELS } from '@/utils/constants'
+import { useAuthStore } from '@/stores/auth.store'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
 import { formatRelativeTime } from '@/utils/formatters'
@@ -322,7 +346,7 @@ const COLUMNS = [
 export default {
   name: 'TaskBoard',
 
-  components: { BaseButton, BaseModal, BaseInput, BaseTextarea, BaseSelect, EmptyState, FileDropzone, SkeletonLoader, Plus, MessageSquare, ChevronDown, Pencil, ArchiveIcon, Paperclip, X, History, FileText },
+  components: { BaseButton, BaseModal, BaseInput, BaseTextarea, BaseSelect, EmptyState, FileDropzone, SkeletonLoader, Plus, MessageSquare, ChevronDown, Pencil, ArchiveIcon, Paperclip, X, History, FileText, Users },
 
   props: {
     tasks: { type: Array, default: () => [] },
@@ -358,6 +382,7 @@ export default {
       files: {},
       logs: {},
       shownFiles: {},
+      openFiles: {},
       Plus,
       ArchiveIcon,
       Check,
@@ -384,6 +409,10 @@ export default {
   },
 
   computed: {
+    myId() {
+      return useAuthStore().user?.id
+    },
+
     /** ملفات المهمة في التفاصيل: المرفوعة سابقًا + ما أُضيف الآن */
     detailFiles() {
       const id = this.detailTask?.id
@@ -405,6 +434,11 @@ export default {
   },
 
   methods: {
+    /** سجل الحركة يظهر فقط لمن أنشأ المهمة */
+    ownsLog(task) {
+      return this.showLog && !!task && task.created_by?.id === this.myId
+    },
+
     staffSource(task) {
       const role = task.created_by?.role
       return role && role !== 'student' ? ROLE_LABELS[role] : ''
@@ -453,6 +487,11 @@ export default {
     },
 
     /** الملفات المرفوعة سابقًا للمهمة (GET /tasks/{id}/files) */
+    toggleFiles(id) {
+      this.openFiles = { ...this.openFiles, [id]: !this.openFiles[id] }
+      if (this.openFiles[id] && !this.shownFiles[id]) this.loadFiles(id)
+    },
+
     async loadFiles(id) {
       try {
         const { data } = await api.get(`/tasks/${id}/files`)
@@ -486,7 +525,7 @@ export default {
       if (this.isPlaceholderTask(task)) return
       if (!this.shownFiles[task.id]) this.loadFiles(task.id)
       if (!this.notesByTask[task.id]) this.$emit('load-notes', task.id)
-      if (this.showLog && !this.logs[task.id]) this.toggleLog(task.id)
+      if (this.ownsLog(task) && !this.logs[task.id]) this.toggleLog(task.id)
     },
 
     columnLabel(status) {

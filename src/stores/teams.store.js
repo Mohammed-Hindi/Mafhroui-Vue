@@ -6,6 +6,7 @@ import { useUiStore } from '@/stores/ui.store'
 export const useTeamsStore = defineStore('teams', () => {
   const teams = ref([])
   const teamsLoading = ref(false)
+  const teamsLoaded = ref(false) // صار عندنا رد واحد على الأقل: قبله تُعرض هياكل التحميل لا "لا توجد فرق"
   const teamsError = ref(null)
 
   const specializations = ref([])
@@ -73,6 +74,7 @@ export const useTeamsStore = defineStore('teams', () => {
       throw err
     } finally {
       teamsLoading.value = false
+      teamsLoaded.value = true
     }
   }
 
@@ -475,6 +477,7 @@ export const useTeamsStore = defineStore('teams', () => {
     fetchTaskNotes,
     addTaskNote,
     teamsLoading,
+    teamsLoaded,
     teamsError,
     specializations,
     specializationsLoading,

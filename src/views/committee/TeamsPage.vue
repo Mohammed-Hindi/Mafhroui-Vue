@@ -46,7 +46,7 @@
       </template>
     </GroupsRegister>
 
-    <SkeletonLoader v-else-if="teamsLoading" :rows="4" height="80px" />
+    <SkeletonLoader v-else-if="!teamsLoaded" variant="cards" :rows="4" />
     <EmptyState v-else-if="!filteredGroups.length" title="لا توجد مجموعات مطابقة" description="جرّبي تعديل البحث أو الفلاتر، أو أنشئي مجموعة جديدة." />
 
     <template v-else>
@@ -357,7 +357,7 @@ export default {
 
   computed: {
     ...mapState(useAuthStore, ['userRole']),
-    ...mapState(useTeamsStore, ['teams', 'teamsLoading', 'specializations', 'trashedTeamsForDisplay', 'trashedTeamsLoading']),
+    ...mapState(useTeamsStore, ['teams', 'teamsLoading', 'teamsLoaded', 'specializations', 'trashedTeamsForDisplay', 'trashedTeamsLoading']),
 
     groups() {
       return this.teams.map((team) => ({

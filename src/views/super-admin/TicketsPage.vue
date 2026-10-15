@@ -38,7 +38,7 @@
           <button v-if="view !== 'archived'" type="button" class="hd-corner" @click="view = 'archived'"><Archive :size="16" /> أرشيف التذاكر</button>
           <button v-else type="button" class="hd-corner" @click="view = 'awaiting'"><Inbox :size="16" /> صندوق الوارد</button>
         </header>
-        <p v-if="loading" class="dash-empty">جارٍ التحميل…</p>
+        <SkeletonLoader v-if="loading" variant="cards" :rows="4" />
         <p v-else-if="!filtered.length" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لا توجد تذاكر في «{{ viewLabel }}»</p>
         <button
           v-for="t in filtered" :key="t.id" type="button"
@@ -89,7 +89,7 @@
         <div class="hd-body">
           <div class="hd-conv">
             <div ref="scroller" class="rv-detail-scroll">
-              <p v-if="threadLoading" class="pt-muted">جارٍ تحميل المحادثة…</p>
+              <SkeletonLoader v-if="threadLoading" :rows="3" height="36px" />
               <ol v-else class="hd-thread">
                 <li v-for="r in thread" :key="r.id" :class="['hd-msg', r.user?.id === current.user_id ? 'is-sender' : 'is-staff']">
                   <!-- فريق الدعم بشعار الكلية في دائرة بيضاء كما في الشريط العلوي للبوابة -->

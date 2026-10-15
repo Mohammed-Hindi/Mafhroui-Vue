@@ -1,18 +1,18 @@
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { ROLES } from '@/utils/constants'
-import ProfilePageStudent from '@/views/student/ProfilePage.vue'
-import ProposalPageStudent from '@/views/student/ProposalPage.vue'
-import TasksPageStudent from '@/views/student/TasksPage.vue'
-import MeetingsPageStudent from '@/views/student/MeetingsPage.vue'
-import AnnouncementsInboxPageStudent from '@/views/super-admin/AnnouncementsDesk.vue'
-import AssistantPageStudent from '@/views/student/AssistantPage.vue'
+const ProfilePageStudent = () => import('@/views/student/ProfilePage.vue')
+const ProposalPageStudent = () => import('@/views/student/ProposalPage.vue')
+const TasksPageStudent = () => import('@/views/student/TasksPage.vue')
+const MeetingsPageStudent = () => import('@/views/student/MeetingsPage.vue')
+const AnnouncementsInboxPageStudent = () => import('@/views/super-admin/AnnouncementsDesk.vue')
+const AssistantPageStudent = () => import('@/views/student/AssistantPage.vue')
 
-// استيراد مباشر (بدون lazy) — تنقّل فوري بين صفحات لوحة التحكم بلا أي تأخير تحميل
-import ProfilePage from '@/views/student/ProfilePage.vue'
-import ProposalPage from '@/views/student/ProposalPage.vue'
-import TasksPage from '@/views/student/TasksPage.vue'
-import MeetingsPage from '@/views/student/MeetingsPage.vue'
-import AssistantPage from '@/views/student/AssistantPage.vue'
+// تحميل كسول + جلب مسبق وقت الفراغ (router/index.js) — حزمة أولى أصغر مع بقاء التنقّل فوريًا
+const ProfilePage = () => import('@/views/student/ProfilePage.vue')
+const ProposalPage = () => import('@/views/student/ProposalPage.vue')
+const TasksPage = () => import('@/views/student/TasksPage.vue')
+const MeetingsPage = () => import('@/views/student/MeetingsPage.vue')
+const AssistantPage = () => import('@/views/student/AssistantPage.vue')
 
 /** مسارات لوحة الطالب — تُضاف صفحة بصفحة حسب الوصف */
 export default [

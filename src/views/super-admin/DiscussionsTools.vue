@@ -141,12 +141,14 @@
       </div>
 
       <!-- عرض القائمة: أعمدة مضغوطة (حقلان فوق بعض) بلا تمرير أفقي، وسبب التعارض تحت الصف مباشرة -->
-      <div v-if="view === 'list'" class="pt-wrap dp-scroll">
+      <!-- أكثر من 5 مناقشات: سلايدر بنفس هوية باقي الصفحات -->
+      <SlideTable v-if="view === 'list'" v-slot="{ rows: planPage }" :rows="visiblePlan" :size="5" label="المناقشات">
+      <div class="pt-wrap dp-scroll">
         <table class="pt dp-table">
           <thead>
             <tr><th>المجموعة</th><th>الفئة والمكان</th><th>الموعد</th><th>القاعة</th><th>المناقشان</th><th>ملاحظات</th></tr>
           </thead>
-          <tbody v-for="r in visiblePlan" :key="r.id" :data-row="r.id" :class="conflicts[r.id] && 'is-conflict'">
+          <tbody v-for="r in planPage" :key="r.id" :data-row="r.id" :class="conflicts[r.id] && 'is-conflict'">
             <tr>
               <td class="dp-group">
                 <button type="button" class="dp-sec" title="تفاصيل المناقشة" @click="detail = r">{{ r.g.section }}</button>
@@ -196,6 +198,7 @@
           <tbody v-if="!visiblePlan.length"><tr><td colspan="6" class="gr-empty">لا توجد مناقشات مطابقة</td></tr></tbody>
         </table>
       </div>
+      </SlideTable>
 
       <!-- عرض حسب القاعات: شبكة (الوقت × القاعة) لليوم المختار -->
       <div v-else class="dp-grid-wrap">
@@ -266,7 +269,7 @@
           <option v-for="sp in supList" :key="sp.id" :value="sp.id">{{ sp.name }}</option>
         </select>
         <!-- نفس قالب سجل المجموعات: سلايدر + شريط الملخص الأخضر -->
-        <SlideTable :rows="supSchedule" :label="'المناقشات'">
+        <SlideTable :rows="supSchedule" :size="5" :label="'المناقشات'">
           <template #default="{ rows: shown }">
           <div class="gr-table-wrap">
             <table class="gr-table">

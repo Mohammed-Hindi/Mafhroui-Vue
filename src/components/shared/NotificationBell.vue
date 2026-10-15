@@ -39,7 +39,7 @@
         </div>
 
         <div class="max-h-[360px] overflow-y-auto scrollbar-thin" @mouseenter="e => e.currentTarget.style.overscrollBehavior = e.currentTarget.scrollHeight > e.currentTarget.clientHeight ? 'contain' : ''">
-          <LoadingSpinner v-if="isLoading" class="py-8" />
+          <SkeletonLoader v-if="isLoading" :rows="4" height="36px" class="p-3" />
 
           <p v-else-if="error" class="px-4 py-6 text-center text-body-sm text-error">
             {{ error }}
@@ -74,7 +74,6 @@ import { Bell } from 'lucide-vue-next'
 import { useClickOutside } from '@/composables/useClickOutside'
 import { useNotificationsStore } from '@/stores/notifications.store'
 import { formatRelativeTime } from '@/utils/formatters'
-import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
 
 const notificationsStore = useNotificationsStore()
 

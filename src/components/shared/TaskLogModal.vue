@@ -1,7 +1,7 @@
 <template>
   <!-- سجل مهام مجموعة وحركتها: كل مهمة مع حالتها، والضغط عليها يعرض سجل الحركة (من نقلها ومن أي عمود لأي عمود) -->
   <BaseModal :model-value="modelValue" :title="`سجل المهام — ${teamName}`" size="xl" @update:model-value="$emit('update:modelValue', $event)">
-    <p v-if="loading" class="pf-muted">جارٍ تحميل المهام…</p>
+    <SkeletonLoader v-if="loading" :rows="4" height="36px" />
     <p v-else-if="!tasks.length" class="pf-muted">لا توجد مهام لهذه المجموعة</p>
     <ul v-else class="tl">
       <li v-for="t in tasks" :key="t.id" :class="['tl-task', openId === t.id && 'is-open']">
