@@ -33,8 +33,8 @@
             <option value="oldest">الأقدم أولًا</option>
           </select>
         </label>
-        <button v-if="(q || sender) && userRole !== 'supervisor'" type="button" class="gr-clear hd-clear" @click="q = ''; sender = ''"><X :size="15" /> مسح الفلاتر</button>
-        <button type="button" class="hd-refresh" :disabled="loading" title="تحديث" aria-label="تحديث" @click="load"><RefreshCw :size="16" /></button>
+        <button v-if="(q || sender) && !['supervisor', 'student'].includes(userRole)" type="button" class="gr-clear hd-clear" @click="q = ''; sender = ''"><X :size="15" /> مسح الفلاتر</button>
+        <button v-if="userRole !== 'student'" type="button" class="hd-refresh" :disabled="loading" title="تحديث" aria-label="تحديث" @click="load"><RefreshCw :size="16" /></button>
       </div>
     </section>
 

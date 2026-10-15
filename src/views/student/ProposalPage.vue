@@ -188,21 +188,25 @@
           <header class="tk-sec-head"><h4>{{ reportSteps[rStep].label }} <b v-if="reportSteps[rStep].req" class="as-req">*</b></h4><span class="pt-muted">الخطوة {{ rStep + 1 }} من {{ reportSteps.length }}</span></header>
           <div class="tk-sec-body">
             <FileDropzone v-if="rStep === 0" v-model="reportForm.files" :max-mb="100" />
-            <label v-else-if="rStep === 1" class="pfield">
-              <span>رابط فيديو العرض (يوتيوب)</span>
-              <input v-model.trim="reportForm.video_url" type="url" dir="ltr" placeholder="https://www.youtube.com/watch?v=…">
-            </label>
-            <!-- صورة المشروع: تظهر في معرض الأعمال وصفحة المشروع بعد الأرشفة -->
-            <template v-else-if="rStep === 2">
-              <label :class="['sp-cover', coverPreview && 'has-image']">
-                <img v-if="coverPreview" :src="coverPreview" alt="معاينة صورة المشروع">
-                <span v-else><ImagePlus :size="30" /><b>اختر صورة تعبّر عن المشروع</b><small class="pt-muted">PNG أو JPG أو WEBP — حتى 5MB، ويفضّل أن تكون عرضية (16:10)</small></span>
-                <input type="file" accept="image/png,image/jpeg,image/webp" hidden @change="pickCover">
+            <!-- الفيديو وصورته معًا: الصورة غلاف الفيديو في معرض المشاريع، والضغط عليها يشغّل الفيديو -->
+            <div v-else-if="rStep === 1" class="sp-video-step">
+              <label class="pfield">
+                <span>رابط فيديو العرض (يوتيوب)</span>
+                <input v-model.trim="reportForm.video_url" type="url" dir="ltr" placeholder="https://www.youtube.com/watch?v=…">
               </label>
-              <p v-if="coverError" class="palert is-error"><XCircle :size="18" /><span>{{ coverError }}</span></p>
-              <button v-if="reportForm.cover" type="button" class="pbtn is-outline is-sm" @click="reportForm.cover = null">إزالة الصورة</button>
-            </template>
-            <template v-else-if="rStep === 3">
+              <div class="pfield">
+                <span>صورة غلاف الفيديو <small class="pt-muted">(اختيارية)</small></span>
+                <label :class="['sp-cover', coverPreview && 'has-image']">
+                  <img v-if="coverPreview" :src="coverPreview" alt="معاينة صورة المشروع">
+                  <span v-else><ImagePlus :size="30" /><b>اختر صورة تعبّر عن المشروع</b><small class="pt-muted">تظهر في معرض المشاريع غلافًا للفيديو — PNG أو JPG أو WEBP حتى 5MB، ويفضّل أن تكون عرضية (16:10)</small></span>
+                  <span v-if="coverPreview" class="sp-cover-play" aria-hidden="true"><PlayCircle :size="44" /></span>
+                  <input type="file" accept="image/png,image/jpeg,image/webp" hidden @change="pickCover">
+                </label>
+                <p v-if="coverError" class="palert is-error"><XCircle :size="18" /><span>{{ coverError }}</span></p>
+                <button v-if="reportForm.cover" type="button" class="pbtn is-outline is-sm" @click="reportForm.cover = null">إزالة الصورة</button>
+              </div>
+            </div>
+            <template v-else-if="rStep === 2">
               <!-- ponytail: الملفات المضغوطة placeholder — لا تُرسل حتى يوفّر الخادم حقلها -->
               <FileDropzone v-model="reportForm.zip" :max-mb="100" />
               <small class="pt-muted">الكود المصدري والمخرجات (ZIP / RAR) — اختياري.</small>
@@ -211,7 +215,7 @@
               <dl class="tk-review">
                 <dt>التقرير النهائي</dt><dd>{{ reportForm.files[0]?.name || '—' }}</dd>
                 <dt>فيديو العرض</dt><dd class="mono sp-link">{{ reportForm.video_url || '—' }}</dd>
-                <dt>صورة المشروع</dt><dd>{{ reportForm.cover?.name || 'لا يوجد' }}</dd>
+                <dt>صورة غلاف الفيديو</dt><dd>{{ reportForm.cover?.name || 'لا يوجد' }}</dd>
                 <dt>الملفات المضغوطة</dt><dd>{{ reportForm.zip.map((f) => f.name).join('، ') || 'لا يوجد' }}</dd>
               </dl>
               <p v-if="reportMissing" class="palert is-error"><XCircle :size="18" /><span>{{ reportMissing }}</span></p>
@@ -423,8 +427,7 @@ export default {
       const f = this.reportForm
       return [
         { label: 'التقرير النهائي (PDF)', req: true, ok: f.files.length > 0 },
-        { label: 'رابط فيديو العرض', req: true, ok: !!f.video_url },
-        { label: 'صورة المشروع', req: false, ok: !!f.cover },
+        { label: 'فيديو العرض وصورته', req: true, ok: !!f.video_url },
         { label: 'الملفات المضغوطة', req: false, ok: f.zip.length > 0 },
         { label: 'التسليم', req: false, ok: false }
       ]

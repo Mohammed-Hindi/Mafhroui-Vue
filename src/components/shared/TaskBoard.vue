@@ -210,10 +210,63 @@
     </BaseModal>
 
     <!-- تفاصيل / تعديل المهمة -->
-    <BaseModal v-model="detailModalOpen" :title="canEditTask ? 'تعديل المهمة' : 'تفاصيل المهمة'" size="md">
-      <div class="flex flex-col gap-4">
-        <BaseInput v-model="detailForm.title" label="عنوان المهمة" :disabled="!canEditTask" required />
-        <BaseTextarea v-model="detailForm.description" label="الوصف" placeholder="لا يوجد وصف" :rows="4" :disabled="!canEditTask" />
+    <!-- تفاصيل المهمة كاملة: الحالة والمكلّفون والمصدر والتواريخ، الوصف، الملفات المرفوعة، الملاحظات، وسجل الحركة.
+         من يملك صلاحية التعديل يعدّل العنوان والوصف من نفس النافذة -->
+    <BaseModal v-model="detailModalOpen" :title="canEditTask ? 'تعديل المهمة' : 'تفاصيل المهمة'" size="lg">
+      <div v-if="detailTask" class="td">
+        <dl class="td-meta">
+          <div><dt>الحالة</dt><dd><span :class="['td-status', `is-${detailTask.status}`]">{{ columnLabel(detailTask.status) }}</span></dd></div>
+          <div><dt>المكلّفون</dt><dd>{{ (detailTask.assignees || []).map((a) => a.name).join('، ') || 'كل الفريق' }}</dd></div>
+          <div><dt>أضافها</dt><dd>{{ detailTask.created_by?.name || '—' }}<small v-if="staffSource(detailTask)"> · {{ staffSource(detailTask) }}</small></dd></div>
+          <div><dt>تاريخ الإضافة</dt><dd class="mono">{{ shortDate(detailTask.created_at) }}</dd></div>
+          <div v-if="detailTask.due_date"><dt>موعد التسليم</dt><dd class="mono">{{ shortDate(detailTask.due_date) }}</dd></div>
+        </dl>
+
+        <section class="td-sec">
+          <h4>{{ canEditTask ? 'العنوان والوصف' : 'وصف المهمة' }}</h4>
+          <template v-if="canEditTask">
+            <BaseInput v-model="detailForm.title" label="عنوان المهمة" required />
+            <BaseTextarea v-model="detailForm.description" label="الوصف" placeholder="لا يوجد وصف" :rows="4" class="mt-3" />
+          </template>
+          <template v-else>
+            <p class="td-title">{{ detailTask.title }}</p>
+            <p class="td-text">{{ detailTask.description || 'لا يوجد وصف لهذه المهمة.' }}</p>
+          </template>
+        </section>
+
+        <section class="td-sec">
+          <h4><Paperclip :size="15" /> الملفات المرفوعة <small v-if="detailFiles.length">({{ detailFiles.length }})</small></h4>
+          <p v-if="!isPlaceholderTask(detailTask) && !shownFiles[detailTask.id]" class="td-muted">جارٍ التحميل…</p>
+          <ul v-else-if="detailFiles.length" class="td-files">
+            <li v-for="sf in detailFiles" :key="sf.id || sf.name"><FileText :size="15" /><bdi>{{ sf.name }}</bdi></li>
+          </ul>
+          <p v-else class="td-muted">لا توجد ملفات مرفوعة</p>
+        </section>
+
+        <section class="td-sec">
+          <h4><MessageSquare :size="15" /> الملاحظات <small v-if="(notesByTask[detailTask.id] || []).length">({{ (notesByTask[detailTask.id] || []).length }})</small></h4>
+          <p v-if="notesLoadingByTask[detailTask.id]" class="td-muted">جارٍ التحميل…</p>
+          <template v-else>
+            <p v-if="!(notesByTask[detailTask.id] || []).length" class="td-muted">لا توجد ملاحظات بعد</p>
+            <div v-for="note in notesByTask[detailTask.id]" :key="note.id" class="td-note">
+              <header><b>{{ note.user?.name || '—' }}</b><span>{{ formatRelativeTime(note.created_at) }}</span></header>
+              <p>{{ note.note }}</p>
+            </div>
+          </template>
+          <div v-if="canNote" class="td-note-add">
+            <input v-model="noteDrafts[detailTask.id]" type="text" placeholder="اكتب ملاحظة…" @keydown.enter="submitNote(detailTask.id)">
+            <BaseButton size="sm" @click="submitNote(detailTask.id)">إضافة</BaseButton>
+          </div>
+        </section>
+
+        <section v-if="showLog" class="td-sec">
+          <h4><History :size="15" /> سجل الحركة</h4>
+          <p v-if="!isPlaceholderTask(detailTask) && (logs[detailTask.id] === 'loading' || !logs[detailTask.id])" class="td-muted">جارٍ التحميل…</p>
+          <ol v-else-if="(logs[detailTask.id] || []).length" class="td-log">
+            <li v-for="(e, i) in logs[detailTask.id]" :key="i"><b>{{ e.user?.name || 'النظام' }}</b> {{ describeTaskEvent(e) }} <span>{{ formatRelativeTime(e.created_at) }}</span></li>
+          </ol>
+          <p v-else class="td-muted">لا توجد حركات مسجّلة بعد</p>
+        </section>
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="detailModalOpen = false">{{ canEditTask ? 'إلغاء' : 'إغلاق' }}</BaseButton>
@@ -321,6 +374,7 @@ export default {
 
       detailModalOpen: false,
       detailForm: { id: null, title: '', description: '' },
+      detailTask: null,
 
       archiveModalOpen: false,
 
@@ -330,6 +384,12 @@ export default {
   },
 
   computed: {
+    /** ملفات المهمة في التفاصيل: المرفوعة سابقًا + ما أُضيف الآن */
+    detailFiles() {
+      const id = this.detailTask?.id
+      return id == null ? [] : [...(this.shownFiles[id] || []), ...(this.files[id] || [])]
+    },
+
     // الاسم والوصف إلزاميان، والمنتسبون إلزاميون حين تتوفر قائمة الطلاب
     canSave() {
       const f = this.form
@@ -418,9 +478,23 @@ export default {
       this.modalOpen = false
     },
 
+    /** فتح التفاصيل: يُجلب للمهمة ملفاتها وملاحظاتها وسجل حركتها إن لم تكن محمّلة */
     openDetail(task) {
+      this.detailTask = task
       this.detailForm = { id: task.id, title: task.title, description: task.description || '' }
       this.detailModalOpen = true
+      if (this.isPlaceholderTask(task)) return
+      if (!this.shownFiles[task.id]) this.loadFiles(task.id)
+      if (!this.notesByTask[task.id]) this.$emit('load-notes', task.id)
+      if (this.showLog && !this.logs[task.id]) this.toggleLog(task.id)
+    },
+
+    columnLabel(status) {
+      return this.columns.find((c) => c.id === status)?.label || status || '—'
+    },
+
+    shortDate(v) {
+      return v ? String(v).slice(0, 10) : '—'
     },
 
     saveDetail() {

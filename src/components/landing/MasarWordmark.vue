@@ -38,4 +38,5 @@
 
 <script setup>
 import { APP_NAME } from '@/utils/constants'
+import '@/styles/ucas-site.css'
 </script>

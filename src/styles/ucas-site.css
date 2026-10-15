@@ -510,3 +510,5 @@ a.au-split-submit { margin-top: 4px; }
 .us-detail-cover { margin: 0; }
 .us-tg-card.has-cover { background-size: cover; background-position: center; }
 .us-tg-card.has-cover::before { display: none; }
+.us-pf-play { position: absolute; top: 50%; left: 50%; z-index: 1; display: grid; place-items: center; width: 62px; height: 62px; margin: -31px 0 0 -31px; border: 2px solid #FFFFFF; border-radius: 50%; background: rgba(4, 30, 60, .35); color: #FFFFFF; backdrop-filter: blur(4px); transition: background-color .4s ease; }
+.us-pf:hover .us-pf-play { background: rgba(98, 187, 70, .75); }

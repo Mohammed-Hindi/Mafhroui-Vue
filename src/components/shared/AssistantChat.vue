@@ -9,9 +9,11 @@
 
     <div ref="body" class="flex-1 overflow-y-auto scrollbar-thin px-5 py-6 flex flex-col gap-4">
       <div v-if="!messages.length" class="m-auto text-center max-w-sm">
-        <span class="ac-empty-icon grid place-items-center w-14 h-14 rounded-md bg-primary-50 text-primary-600 mx-auto mb-4">
-          <Sparkles :size="24" />
-        </span>
+        <!-- هوية المنصة: كلمة مسار بقبعة التخرج واسم المنصة -->
+        <div class="ac-brand">
+          <MasarWordmark class="ac-wordmark" />
+          <p class="ac-brand-name">منصة إدارة مشاريع التخرج</p>
+        </div>
         <p class="text-body-sm text-text-600 mb-5">{{ emptyHint }}</p>
         <div class="flex flex-wrap gap-2.5 justify-center">
           <button
@@ -64,7 +66,8 @@
 </template>
 
 <script>
-import { Bot, Sparkles, Send } from 'lucide-vue-next'
+import { Bot, Send } from 'lucide-vue-next'
+import MasarWordmark from '@/components/landing/MasarWordmark.vue'
 import api from '@/services/api'
 
 let uid = 0
@@ -72,7 +75,7 @@ let uid = 0
 export default {
   name: 'AssistantChat',
 
-  components: { Bot, Sparkles, Send },
+  components: { Bot, MasarWordmark, Send },
 
   props: {
     title: { type: String, default: 'المساعد الآلي' },
