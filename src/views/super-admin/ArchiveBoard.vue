@@ -19,27 +19,47 @@
     <section class="dash-card ad-card">
       <!-- مجلد المشروع -->
       <template v-if="current">
-        <div class="ad-back">
-          <button type="button" class="pbtn is-cyan" @click="current = null"><ArrowRight :size="16" /> رجوع</button>
-        </div>
+        <!-- معرض أعمال المشروع: شريط تنقّل (رجوع / السابق والتالي / نافذة جديدة)، مسرح الغلاف أو الفيديو، وبطاقة بيانات المشروع -->
+        <nav class="ab-sbar" aria-label="تنقّل المشاريع">
+          <button type="button" class="pbtn is-cyan" @click="current = null"><ArrowRight :size="16" /> كل المشاريع</button>
+          <span v-if="curIndex >= 0" class="ab-sbar-pos">{{ curIndex + 1 }} / {{ visible.length }}</span>
+          <span class="ab-sbar-nav">
+            <button type="button" class="pbtn is-outline is-sm" :disabled="curIndex <= 0" @click="step(-1)"><ChevronRight :size="15" /> السابق</button>
+            <button type="button" class="pbtn is-outline is-sm" :disabled="curIndex < 0 || curIndex >= visible.length - 1" @click="step(1)">التالي <ChevronLeft :size="15" /></button>
+            <button type="button" class="pbtn is-outline is-sm" title="فتح في نافذة جديدة" aria-label="فتح في نافذة جديدة" @click="openInNewTab({ project: current.id })"><ExternalLink :size="15" /></button>
+          </span>
+        </nav>
 
-        <div class="ad-proj-head">
-          <span class="ad-sec-badge"><small>شعبة</small><b>{{ current.section }}</b></span>
-          <div class="ad-proj-text">
+        <div class="ab-show">
+          <figure :class="['ab-stage', report?.video_url && 'has-video']">
+            <img v-if="report?.cover_url" :src="report.cover_url" :alt="current.project">
+            <span v-else class="ab-stage-ph" aria-hidden="true"><UcasLogo :size="74" /></span>
+            <span class="ab-stage-sec">شعبة {{ current.section }}</span>
+            <span v-if="current.featured" class="ab-card-star"><Star :size="14" fill="currentColor" /> في الرئيسية</span>
+            <button v-if="report?.video_url" type="button" class="ab-play" aria-label="تشغيل فيديو البرومو" @click="viewing = files[1]"><PlayCircle :size="58" /></button>
+            <figcaption>{{ report?.video_url ? 'فيديو البرومو — اضغط للتشغيل' : report?.cover_url ? 'غلاف المشروع' : 'لم يُرفع غلاف بعد' }}</figcaption>
+          </figure>
+
+          <aside class="ab-info">
+            <small class="ab-info-spec">{{ current.spec }} · {{ DEGREES[current.degree] }}</small>
             <h3>{{ current.project }}</h3>
-            <span class="ad-proj-meta">
-              <span><GraduationCap :size="15" /> {{ current.spec }} · {{ DEGREES[current.degree] }}</span>
-              <span><UserRound :size="15" /> {{ current.supName }}</span>
-              <span><Users :size="15" /> {{ current.members.map((m) => m.name).join('، ') }}</span>
+            <span class="ab-info-tags">
+              <span :class="['rv-pill', REVIEW[stageOf(current)].tone]">{{ REVIEW[stageOf(current)].short }}</span>
+              <span class="ab-info-done">{{ doneCount }} من {{ files.length }} تسليمات</span>
             </span>
-          </div>
-          <span class="ad-proj-tools">
-            <span class="ad-done">{{ doneCount }} من {{ files.length }} تسليمات</span>
-            <span :class="['rv-pill', REVIEW[stageOf(current)].tone]">{{ REVIEW[stageOf(current)].short }}</span>
-            <button v-if="!isSup" type="button" :class="['pbtn is-sm ar-feature', current.featured ? 'is-green' : 'is-outline']" :aria-pressed="current.featured" @click="toggleFeatured(current)">
+            <dl class="ab-info-data">
+              <div><dt><UserRound :size="14" /> المشرف</dt><dd>{{ current.supName }}</dd></div>
+              <div><dt><CalendarDays :size="14" /> تسليم التقرير</dt><dd>{{ report ? formatDate(report.created_at) : '—' }}</dd></div>
+            </dl>
+            <h5 class="ab-info-h"><Users :size="15" /> فريق المشروع <small>{{ current.members.length }}</small></h5>
+            <ul class="ab-team">
+              <li v-for="m in current.members" :key="m.id || m.name"><span class="ab-ava">{{ m.name.trim().charAt(0) }}</span>{{ m.name }}</li>
+              <li v-if="!current.members.length" class="pt-muted">لا يوجد طلاب</li>
+            </ul>
+            <button v-if="!isSup" type="button" :class="['pbtn ar-feature', current.featured ? 'is-green' : 'is-outline']" :aria-pressed="current.featured" @click="toggleFeatured(current)">
               <Star :size="15" :fill="current.featured ? 'currentColor' : 'none'" /> {{ current.featured ? 'معروض كأفضل مشروع في الرئيسية' : 'تعيين كأفضل مشروع في الرئيسية' }}
             </button>
-          </span>
+          </aside>
         </div>
 
         <!-- مسار الاعتماد: رفع التقرير ← موافقة المشرف ← اعتماد لجنة الإشراف ← الأرشفة -->
@@ -94,6 +114,19 @@
             </div>
           </article>
         </div>
+
+        <template v-if="related.length">
+          <h4 class="ad-sub">مشاريع أخرى في {{ current.spec }}</h4>
+          <div class="ab-related">
+            <button v-for="r in related" :key="r.id" type="button" class="ab-rel" @click="openProject(r)">
+              <span class="ab-rel-media">
+                <img v-if="r.report?.cover_url" :src="r.report.cover_url" alt="" loading="lazy">
+                <UcasLogo v-else :size="34" />
+              </span>
+              <span class="ab-rel-text"><b>{{ r.project }}</b><small>شعبة {{ r.section }} · {{ r.supName }}</small></span>
+            </button>
+          </div>
+        </template>
       </template>
 
       <!-- مجلدات المشاريع -->
@@ -141,7 +174,9 @@
           <!-- مجلد لكل تخصص (كأنظمة إدارة الملفات): العدد، المؤرشفة، المميّزة، والدرجات — الضغط يفتح مشاريع التخصص -->
           <template v-if="!f.spec && !q">
             <p v-if="!folders.length" class="gr-empty">لا توجد مشاريع</p>
-            <div v-else class="ab-folders">
+            <div v-else class="ab-rail">
+            <button type="button" class="ab-rail-btn is-prev" aria-label="المجلدات السابقة" @click="slideFolders(1)"><ChevronRight :size="20" /></button>
+            <div ref="folders" class="ab-folders">
               <div v-for="fd in folders" :key="fd.spec" class="ab-folder" role="button" tabindex="0" @click="f.spec = fd.spec" @keydown.enter="f.spec = fd.spec">
                 <!-- عند المرور: صور مشاريع التخصص تخرج من المجلد على شكل قوس (غلاف التقرير، وإلا بطاقة بهوية مسار) -->
                 <span class="ab-fan" aria-hidden="true">
@@ -163,6 +198,8 @@
                 <button type="button" class="ab-newtab" title="فتح في نافذة جديدة" @click.stop="openInNewTab({ spec: fd.spec })"><ExternalLink :size="15" /> فتح في نافذة جديدة</button>
               </div>
             </div>
+            <button type="button" class="ab-rail-btn is-next" aria-label="المجلدات التالية" @click="slideFolders(-1)"><ChevronLeft :size="20" /></button>
+            </div>
           </template>
 
           <template v-else>
@@ -180,7 +217,9 @@
                     <div class="ab-card-media">
                       <span class="ab-card-sec">شعبة {{ p.section }}</span>
                       <span :class="['rv-pill', REVIEW[stageOf(p)].tone, 'ab-card-state']">{{ REVIEW[stageOf(p)].short }}</span>
-                      <span class="ab-card-mark" aria-hidden="true"><UcasLogo :size="46" /></span>
+                      <img v-if="p.report?.cover_url" :src="p.report.cover_url" alt="" class="ab-card-cover" loading="lazy">
+                      <span v-else class="ab-card-mark" aria-hidden="true"><UcasLogo :size="46" /></span>
+                      <span v-if="p.report?.video_url" class="ab-card-video"><PlayCircle :size="14" /> فيديو</span>
                       <span v-if="p.featured" class="ab-card-star"><Star :size="14" fill="currentColor" /> في الرئيسية</span>
                     </div>
                     <div class="ab-card-body">
@@ -215,8 +254,8 @@
               <table class="pt ad-table">
                 <thead>
                   <tr>
-                    <th>الشعبة</th><th>المشروع والطلبة</th><th>المشرف</th><th class="ad-c">موعد التسليم</th>
-                    <th class="ad-c">موافقة المشرف</th><th class="ad-c">لجنة الإشراف</th><th class="ad-c">الحالة</th><th v-if="!isSup" class="ad-c">الصفحة الرئيسية</th>
+                    <th>الشعبة</th><th data-rt-title>المشروع والطلبة</th><th>المشرف</th><th class="ad-c">تسليم التقرير</th>
+                    <th class="ad-c">مسار الاعتماد</th><th class="ad-c" data-rt-show>الحالة</th><th v-if="!isSup" class="ad-c">الصفحة الرئيسية</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -224,21 +263,19 @@
                     <td class="ad-nowrap"><span class="ev-sec">شعبة {{ p.section }}</span><Star v-if="p.featured" :size="14" fill="currentColor" class="ad-row-star" /></td>
                     <td class="ad-proj-cell">
                       <b>{{ p.project }}</b>
-                      <span class="pt-muted">{{ p.spec }} · {{ DEGREES[p.degree] }} · {{ p.members.map((m) => m.name).join('، ') }}</span>
+                      <span class="ad-proj-spec">{{ p.spec }} · {{ DEGREES[p.degree] }}</span>
+                      <span class="pt-muted"><Users :size="13" /> {{ p.members.map((m) => m.name).join('، ') || '—' }}</span>
                     </td>
                     <td class="ad-nowrap">{{ p.supName }}</td>
                     <td class="ad-c ad-nowrap">{{ p.report ? formatDate(p.report.created_at) : '—' }}</td>
+                    <!-- موافقة المشرف ثم لجنة الإشراف في خانة واحدة (زر الموافقة لصاحب الدور) -->
                     <td class="ad-c">
-                      <button v-if="isSup && stageOf(p) === 'pending_supervisor'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click.stop="review(p, true)">
-                        <CheckCircle2 :size="14" /> موافقة
-                      </button>
-                      <span v-else :class="['ad-check', supState(p).cls]"><component :is="supState(p).icon" :size="15" /> {{ supState(p).text }}</span>
-                    </td>
-                    <td class="ad-c">
-                      <button v-if="!isSup && stageOf(p) === 'pending_committee'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click.stop="review(p, true)">
-                        <CheckCircle2 :size="14" /> موافقة اللجنة
-                      </button>
-                      <span v-else :class="['ad-check', comState(p).cls]"><component :is="comState(p).icon" :size="15" /> {{ comState(p).text }}</span>
+                      <span class="ad-approvals">
+                        <button v-if="isSup && stageOf(p) === 'pending_supervisor'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click.stop="review(p, true)"><CheckCircle2 :size="14" /> موافقة</button>
+                        <span v-else :class="['ad-check', supState(p).cls]"><component :is="supState(p).icon" :size="15" /> المشرف: {{ supState(p).text }}</span>
+                        <button v-if="!isSup && stageOf(p) === 'pending_committee'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click.stop="review(p, true)"><CheckCircle2 :size="14" /> موافقة اللجنة</button>
+                        <span v-else :class="['ad-check', comState(p).cls]"><component :is="comState(p).icon" :size="15" /> اللجنة: {{ comState(p).text }}</span>
+                      </span>
                     </td>
                     <td class="ad-c"><span :class="['rv-pill', REVIEW[stageOf(p)].tone]">{{ REVIEW[stageOf(p)].short }}</span></td>
                     <!-- أفضل مشاريع التخرج في الصفحة الرئيسية: لجنة الإشراف والإدارة العامة فقط -->
@@ -248,7 +285,7 @@
                       </button>
                     </td>
                   </tr>
-                  <tr v-if="!visible.length"><td :colspan="isSup ? 7 : 8" class="gr-empty">لا توجد مشاريع مطابقة</td></tr>
+                  <tr v-if="!visible.length"><td :colspan="isSup ? 6 : 7" class="gr-empty">لا توجد مشاريع مطابقة</td></tr>
                 </tbody>
               </table>
             </div>
@@ -270,7 +307,7 @@
 <script>
 import { mapActions, mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
-import { ArrowRight, Check, CheckCircle2, Clock, FileText, FileType2, Folder, FolderOpen, GraduationCap, Hourglass, LayoutGrid, List, Minus, PlayCircle, Search, Star, UserRound, Users, X, ExternalLink } from 'lucide-vue-next'
+import { ArrowRight, CalendarDays, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, FileText, FileType2, Folder, FolderOpen, GraduationCap, Hourglass, LayoutGrid, List, Minus, PlayCircle, Search, Star, UserRound, Users, X, ExternalLink } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
 import FileViewer from '@/components/shared/FileViewer.vue'
 import SlideTable from '@/components/ui/SlideTable.vue'
@@ -288,7 +325,7 @@ const seeded = (n) => () => { n = (n * 9301 + 49297) % 233280; return n / 233280
 export default {
   name: 'ArchiveBoard',
 
-  components: { ArrowRight, Check, CheckCircle2, FileViewer, SlideTable, Folder, FolderOpen, GraduationCap, LayoutGrid, List, Search, Star, UcasLogo, UserRound, Users, X, ExternalLink },
+  components: { ArrowRight, CalendarDays, Check, CheckCircle2, ChevronLeft, ChevronRight, PlayCircle, FileViewer, SlideTable, Folder, FolderOpen, GraduationCap, LayoutGrid, List, Search, Star, UcasLogo, UserRound, Users, X, ExternalLink },
 
   data() {
     return {
@@ -323,6 +360,15 @@ export default {
     },
     report() {
       return this.current?.report || null
+    },
+    /** موقع المشروع المفتوح داخل القائمة الظاهرة (للسابق/التالي) */
+    curIndex() {
+      return this.current ? this.visible.findIndex((p) => p.id === this.current.id) : -1
+    },
+    /** حتى 4 مشاريع أخرى من نفس التخصص أسفل صفحة المشروع */
+    related() {
+      const c = this.current
+      return c ? this.projects.filter((p) => p.spec === c.spec && p.id !== c.id).slice(0, 4) : []
     },
     /** مراحل مسار الاعتماد للمشروع المفتوح: done / current / bad / todo */
     flow() {
@@ -451,8 +497,20 @@ export default {
       window.open(this.$router.resolve({ path: this.$route.path, query }).href, '_blank', 'noopener')
     },
 
+    step(d) {
+      const p = this.visible[this.curIndex + d]
+      if (p) this.openProject(p)
+    },
+
+    /** سلايدر المجلدات: تمرير بعرض الشريط (RTL: التالي = يسار) */
+    slideFolders(d) {
+      const el = this.$refs.folders
+      el?.scrollBy({ left: d * el.clientWidth * 0.9, behavior: 'smooth' })
+    },
+
     openProject(p) {
       this.current = p
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       this.rejecting = false
       this.rejectNote = ''
     },

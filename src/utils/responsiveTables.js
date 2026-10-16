@@ -32,6 +32,8 @@ function label(table) {
       if (isTitle) titled = true
       td.toggleAttribute('data-rt-title', isTitle)
       td.toggleAttribute('data-rt-show', !isTitle && !!ths[i]?.hasAttribute('data-rt-show'))
+      // data-rt-keep: عمود ملخّص رقمي يحتفظ بتسميته (مثل "المجموعات: 5")
+      td.toggleAttribute('data-rt-keep', !!ths[i]?.hasAttribute('data-rt-keep'))
     })
   })
 }

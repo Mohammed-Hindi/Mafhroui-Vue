@@ -8,7 +8,7 @@
       <button type="button" class="pbtn is-cyan" :disabled="loading || exporting" @click="exportPdf"><FileDown :size="16" /> {{ exporting ? 'جارٍ التصدير…' : 'تصدير PDF' }}</button>
     </header>
 
-    <nav class="rv-tabs" aria-label="العرض">
+    <nav v-if="!isSup" class="rv-tabs" aria-label="العرض">
       <button v-if="!isSup" type="button" :class="['rv-tab', tab === 'sup' && 'is-active']" @click="tab = 'sup'">المشرفون <span class="rv-count">{{ supervisors.length }}</span></button>
       <button type="button" :class="['rv-tab', tab === 'grp' && 'is-active']" @click="tab = 'grp'">المجموعات والطلاب <span class="rv-count">{{ groups.length }}</span></button>
     </nav>
@@ -53,19 +53,20 @@
         <template #default="{ rows: shown }">
           <div class="pt-wrap">
             <table class="pt">
-              <thead><tr><th>المشرف</th><th>المجموعات</th><th>الطلاب</th><th>المهام الموكلة</th><th>المنجزة</th><th>المتأخرة</th><th>الاجتماعات</th><th>الملاحظات</th><th>الملفات</th><th>التفاعل</th></tr></thead>
+              <!-- الأساسي ظاهر، وباقي التفاصيل (المتأخرة، الاجتماعات، الملاحظات، الملفات، المجموعات) في القائمة المنسدلة -->
+              <thead><tr><th>المشرف</th><th data-rt-show data-rt-keep>المجموعات</th><th>الطلاب</th><th data-rt-show data-rt-keep>المهام (منجزة/موكلة)</th><th data-rt-show data-rt-keep>التفاعل</th><th class="hm-center">التفاصيل</th></tr></thead>
               <tbody>
                 <template v-for="s in shown" :key="s.id">
-                  <tr :class="['is-link', openSup === s.id && 'is-open']" @click="toggleSup(s)">
-                    <td class="pt-strong">{{ s.name }}</td>
+                  <tr :class="['is-link', openSup === s.id && 'is-open']" :aria-expanded="openSup === s.id" @click="toggleSup(s)">
+                    <td>
+                      <span class="pb-grp">
+                        <span class="ab-ava">{{ s.name.replace(/^(د|م|أ)\.\s*/, '').charAt(0) }}</span>
+                        <span class="pb-grp-text"><b>{{ s.name }}</b></span>
+                      </span>
+                    </td>
                     <td>{{ s.groups.length }}</td>
                     <td>{{ s.students }}</td>
-                    <td>{{ s.stats ? s.stats.tasks : '…' }}</td>
-                    <td>{{ s.stats ? s.stats.done : '…' }}</td>
-                    <td><span :class="lateClass(s.late)">{{ s.late ?? '—' }}</span></td>
-                    <td>{{ s.stats ? s.stats.meetings : '…' }}</td>
-                    <td>{{ s.stats ? s.stats.notes : '…' }}</td>
-                    <td>{{ s.stats ? s.stats.files : '…' }}</td>
+                    <td><span class="mono">{{ s.stats ? `${s.stats.done}/${s.stats.tasks}` : '…' }}</span></td>
                     <td>
                       <template v-if="s.stats">
                         <span class="gr-progress"><span :class="level(s.stats.activity)" :style="{ width: s.stats.activity + '%' }" /></span>
@@ -73,9 +74,24 @@
                       </template>
                       <span v-else class="pt-muted">…</span>
                     </td>
+                    <td class="hm-center">
+                      <button type="button" :class="['pb-more', openSup === s.id && 'is-open']" :aria-expanded="openSup === s.id" @click.stop="toggleSup(s)">
+                        {{ openSup === s.id ? 'إخفاء' : 'التفاصيل' }} <ChevronDown :size="15" />
+                      </button>
+                    </td>
                   </tr>
                   <tr v-if="openSup === s.id" class="pt-sub">
-                    <td colspan="10">
+                    <td colspan="6">
+                      <div class="pb-drop">
+                      <ul class="pb-stats">
+                        <li><small>المهام الموكلة</small><b>{{ s.stats ? s.stats.tasks : '…' }}</b></li>
+                        <li><small>المنجزة</small><b>{{ s.stats ? s.stats.done : '…' }}</b></li>
+                        <li :class="s.late && 'is-late'"><small>المتأخرة</small><b>{{ s.late ?? '…' }}</b></li>
+                        <li><small>الاجتماعات</small><b>{{ s.stats ? s.stats.meetings : '…' }}</b></li>
+                        <li><small>الملاحظات</small><b>{{ s.stats ? s.stats.notes : '…' }}</b></li>
+                        <li><small>الملفات</small><b>{{ s.stats ? s.stats.files : '…' }}</b></li>
+                      </ul>
+                      <h5 class="pb-drop-title"><Users :size="15" /> مجموعات المشرف <small>{{ s.profileTeams.length }}</small></h5>
                       <table class="ev-students">
                         <thead><tr><th>المجموعة</th><th>المشروع</th><th>المهام</th><th>المتأخرة</th><th>الاجتماعات</th><th>تفاعل المشرف</th></tr></thead>
                         <tbody>
@@ -93,6 +109,7 @@
                           <tr v-if="!s.profileTeams.length"><td colspan="6" class="pt-muted">{{ s.stats ? 'لا توجد مجموعات' : 'جارٍ التحميل…' }}</td></tr>
                         </tbody>
                       </table>
+                      </div>
                     </td>
                   </tr>
                 </template>
@@ -116,10 +133,10 @@
         <template #default="{ rows: shown }">
           <div class="pt-wrap">
             <table class="pt">
-              <thead><tr><th>المجموعة</th><th v-if="!isSup">المشرف</th><th>المهام (منجزة/موكلة)</th><th>المتأخرة</th><th>الإنجاز</th></tr></thead>
+              <thead><tr><th>المجموعة</th><th v-if="!isSup">المشرف</th><th data-rt-show data-rt-keep>المهام (منجزة/موكلة)</th><th>المتأخرة</th><th data-rt-show data-rt-keep>الإنجاز</th><th class="hm-center">التفاصيل</th></tr></thead>
               <tbody>
                 <template v-for="g in shown" :key="g.id">
-                  <tr :class="['is-link', openGrp === g.id && 'is-open']" @click="toggleGrp(g)">
+                  <tr :class="['is-link', openGrp === g.id && 'is-open']" :aria-expanded="openGrp === g.id" @click="toggleGrp(g)">
                     <!-- المجموعة: شارة الشعبة متدرّجة + الاسم بلون مميز + سهم الفتح -->
                     <td>
                       <span class="pb-grp">
@@ -135,9 +152,14 @@
                       <span class="gr-progress"><span :class="level(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
                       <span class="gr-pct">{{ g.percentage }}%</span>
                     </td>
+                    <td class="hm-center">
+                      <button type="button" :class="['pb-more', openGrp === g.id && 'is-open']" :aria-expanded="openGrp === g.id" @click.stop="toggleGrp(g)">
+                        {{ openGrp === g.id ? 'إخفاء' : 'التفاصيل' }} <ChevronDown :size="15" />
+                      </button>
+                    </td>
                   </tr>
                   <tr v-if="openGrp === g.id" class="pt-sub">
-                    <td :colspan="isSup ? 4 : 5">
+                    <td :colspan="isSup ? 5 : 6">
                       <!-- تفاصيل المجموعة: الطلاب ثم المهام، داخل لوحة منسدلة تمرَّر داخليًا -->
                       <div class="pb-drop">
                       <h5 class="pb-drop-title"><Users :size="15" /> الطلاب <small>{{ g.members.length }}</small></h5>
@@ -171,7 +193,7 @@
                     </td>
                   </tr>
                 </template>
-                <tr v-if="!grpRows.length"><td :colspan="isSup ? 4 : 5" class="gr-empty">لا توجد مجموعات مطابقة</td></tr>
+                <tr v-if="!grpRows.length"><td :colspan="isSup ? 5 : 6" class="gr-empty">لا توجد مجموعات مطابقة</td></tr>
               </tbody>
             </table>
           </div>

@@ -2,6 +2,8 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import api from '@/services/api'
 import { useUiStore } from '@/stores/ui.store'
+import { useAuthStore } from '@/stores/auth.store'
+import { ROLES } from '@/utils/constants'
 
 export const useTeamsStore = defineStore('teams', () => {
   const teams = ref([])
@@ -100,7 +102,10 @@ export const useTeamsStore = defineStore('teams', () => {
     specializationsError.value = null
     try {
       const { data } = await api.get('/specializations')
-      specializations.value = data.data || data
+      const all = data.data || data
+      // عضو لجنة الإشراف يرى تخصصه فقط في كل القوائم والفلاتر (الخادم يقيّد البيانات بنفس التخصص)
+      const me = useAuthStore().user
+      specializations.value = me?.role === ROLES.COMMITTEE && me.specialization_id ? all.filter((s) => s.id === me.specialization_id) : all
       return specializations.value
     } catch (err) {
       specializationsError.value = err.normalized?.message || 'تعذّر تحميل التخصصات'

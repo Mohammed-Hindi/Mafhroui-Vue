@@ -82,7 +82,7 @@
               <Archive :size="15" /> أرشفة
             </button>
             <button v-else type="button" class="pbtn is-outline is-sm" :disabled="busy" @click="act('unarchive')"><ArchiveRestore :size="15" /> استرجاع من الأرشيف</button>
-            <button type="button" class="pbtn is-red is-sm" :disabled="busy" @click="remove"><Trash2 :size="15" /> حذف</button>
+            <button type="button" class="pbtn is-red is-sm" :disabled="busy" @click="deleteOpen = true"><Trash2 :size="15" /> حذف</button>
           </div>
         </header>
 
@@ -127,13 +127,13 @@
             <h4 class="portal-title hd-props-title">بيانات التذكرة</h4>
             <!-- "التسمية : القيمة" سماوية كبطاقة "بيانات المرشد" (201350) -->
             <dl class="hd-data">
-              <div><dt>رقم التذكرة :</dt><dd><bdi>#{{ current.id }}</bdi></dd></div>
-              <div><dt>الحالة :</dt><dd>{{ stateOf(current).label }}</dd></div>
-              <div><dt>تاريخ الفتح :</dt><dd>{{ when(current.created_at) }}</dd></div>
-              <div><dt>آخر نشاط :</dt><dd>{{ when(current.last_reply_at || current.created_at) }}</dd></div>
-              <div><dt>الرسائل :</dt><dd>{{ thread.length }}</dd></div>
-              <div v-if="current.closed_by?.name"><dt>أغلقها :</dt><dd>{{ current.closed_by.name }}</dd></div>
-              <div v-if="current.archived_at"><dt>أرشفها :</dt><dd>{{ current.archived_by_user || '—' }}</dd></div>
+              <div><dt>رقم التذكرة</dt><dd><bdi>#{{ current.id }}</bdi></dd></div>
+              <div><dt>الحالة</dt><dd>{{ stateOf(current).label }}</dd></div>
+              <div><dt>تاريخ الفتح</dt><dd>{{ when(current.created_at) }}</dd></div>
+              <div><dt>آخر نشاط</dt><dd>{{ when(current.last_reply_at || current.created_at) }}</dd></div>
+              <div><dt>الرسائل</dt><dd>{{ thread.length }}</dd></div>
+              <div v-if="current.closed_by?.name"><dt>أغلقها</dt><dd>{{ current.closed_by.name }}</dd></div>
+              <div v-if="current.archived_at"><dt>أرشفها</dt><dd>{{ current.archived_by_user || '—' }}</dd></div>
             </dl>
           </aside>
         </div>
@@ -144,6 +144,14 @@
         <p>اختر تذكرة من القائمة لعرض المحادثة</p>
       </section>
     </div>
+
+    <BaseModal v-model="deleteOpen" title="حذف التذكرة" size="sm">
+      <p v-if="current" class="palert is-error"><span>ستُحذف التذكرة <b>#{{ current.id }} «{{ current.subject }}»</b> وكل ردودها نهائيًا، ولا يمكن التراجع عن هذا الإجراء.</span></p>
+      <template #footer>
+        <BaseButton variant="ghost" @click="deleteOpen = false">إلغاء</BaseButton>
+        <BaseButton variant="danger" :icon="Trash2Icon" :loading="busy" @click="remove">تأكيد الحذف</BaseButton>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
@@ -151,6 +159,8 @@
 import { markRaw } from 'vue'
 import { Search, Send, ArrowRight, MessageSquare, CheckCircle2, RotateCcw, Archive, ArchiveRestore, Trash2, Inbox, MessageSquareReply, Layers } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
 import api from '@/services/api'
 
 const ROLE_NAMES = { student: 'طالب', supervisor: 'مشرف', committee: 'لجنة الإشراف', super_admin: 'الإدارة العامة' }
@@ -159,11 +169,13 @@ const rtf = new Intl.RelativeTimeFormat('ar', { numeric: 'auto' })
 export default {
   name: 'TicketsPage',
 
-  components: { Search, Send, ArrowRight, MessageSquare, CheckCircle2, RotateCcw, Archive, ArchiveRestore, Trash2, Inbox, UcasLogo },
+  components: { Search, Send, ArrowRight, MessageSquare, CheckCircle2, RotateCcw, Archive, ArchiveRestore, Trash2, Inbox, UcasLogo, BaseModal, BaseButton },
 
   data() {
     return {
       ROLE_NAMES,
+      Trash2Icon: markRaw(Trash2),
+      deleteOpen: false,
       tickets: [],
       loading: true,
       view: 'awaiting',
@@ -299,11 +311,11 @@ export default {
     },
 
     async remove() {
-      if (!window.confirm(`سيتم حذف التذكرة #${this.current.id} «${this.current.subject}» وكل ردودها نهائيًا ولا يمكن التراجع. متابعة؟`)) return
       this.busy = true
       try {
         await api.delete(`/tickets/${this.current.id}`)
         this.$toast?.success('تم حذف التذكرة')
+        this.deleteOpen = false
         this.current = null
         this.mobileOpen = false
         await this.load()

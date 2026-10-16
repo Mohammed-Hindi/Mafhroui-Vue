@@ -19,11 +19,11 @@
 
       <!-- كل الأزرار في صف واحد: التواصل الجماعي يمينًا وإدارة الأعضاء يسارًا -->
       <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div class="flex flex-wrap gap-3">
-          <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-success-bg text-success text-caption font-bold hover:brightness-95 transition-all duration-fast" @click="sendWhatsAll(activeList)">
+        <div class="mb-bulk">
+          <button type="button" class="pbtn is-whats" @click="sendWhatsAll(activeList)">
             <MessageCircle :size="15" /> إرسال واتساب للجميع
           </button>
-          <button type="button" class="flex items-center gap-2 h-10 px-4 rounded-sm bg-primary-50 text-primary-700 text-caption font-bold hover:bg-primary-100 transition-colors duration-fast" @click="sendMailAll(activeEmails)">
+          <button type="button" class="pbtn is-outline" @click="sendMailAll(activeEmails)">
             <Mail :size="15" /> إرسال بريد للجميع (Gmail)
           </button>
         </div>
@@ -79,7 +79,7 @@
       <div class="mb-12">
         <SlideTable :rows="activeFiltered" :label="{ student: 'الطلاب', supervisor: 'المشرفون', committee: 'الأعضاء' }[memberKind]">
           <template #default="{ rows: shown }">
-            <DataTable fixed :class="isSuperAdmin && 'mb-rows-link'" :columns="activeColumns" :rows="shown" row-key="id" :primary-keys="['name', 'actions']" :loading="activeLoading" empty-title="لا توجد نتائج مطابقة" @row-click="isSuperAdmin && openProfile($event)">
+            <DataTable fixed class="mb-table" :class="isSuperAdmin && 'mb-rows-link'" :columns="activeColumns" :rows="shown" row-key="id" :primary-keys="['name', 'actions']" :loading="activeLoading" empty-title="لا توجد نتائج مطابقة" @row-click="isSuperAdmin && openProfile($event)">
               <!-- المجموعة: رقم الشعبة + المشرف تحته -->
               <template #cell-grp="{ row }">
                 <template v-if="row.grp">
@@ -89,6 +89,10 @@
                   <div class="text-caption text-text-400 mt-0.5">{{ row.sup || 'بلا مشرف' }}</div>
                 </template>
                 <span v-else class="text-caption text-text-400">غير منضم لمجموعة</span>
+              </template>
+              <template #cell-spec="{ row }">
+                <span v-if="row.spec" class="rv-pill">{{ specializationName(row.spec) }}</span>
+                <span v-else class="text-caption text-text-400">كل التخصصات</span>
               </template>
               <template #cell-who="{ row }">
                 <div>{{ GENDERS[row.gender] || '—' }}</div>
@@ -224,106 +228,199 @@
       </div>
     </template>
 
-    <!-- ===================== إرسال بيانات الدخول الجماعي (صفحة مستقلة للإدارة العامة) ===================== -->
+    <!-- ===================== إرسال بيانات الدخول الجماعي (صفحة مستقلة للإدارة العامة) =====================
+         المسار: الفئة ← طريقة الإرسال ← تحديد المستلمين (المؤهَّلون فقط) ← مراجعة في نافذة تأكيد ← إرسال، ثم سجل الإرسال -->
     <template v-if="isSuperAdmin && mode === 'credentials'">
-      <div class="bg-surface rounded-lg border border-border shadow-card p-5">
-        <div class="flex flex-wrap items-start justify-between gap-4 mb-5">
-          <div>
-            <h3 class="portal-title font-cairo font-bold text-h4 text-text-900">إرسال بيانات الدخول جماعيًا</h3>
-            <p class="text-caption text-text-600 mt-0.5">اختاري الدور، حدّدي الأعضاء، وأرسلي رابط الدعوة عبر البريد أو واتساب دفعة وحدة</p>
+      <ol class="sp-steps cr-steps" aria-label="خطوات الإرسال">
+        <li :class="notifySelectedIds.length ? 'is-done' : 'is-current'"><b>1</b><span>الفئة وطريقة الإرسال</span></li>
+        <li :class="notifySelectedIds.length ? (crConfirmOpen ? 'is-done' : 'is-current') : ''"><b>2</b><span>تحديد المستلمين</span></li>
+        <li :class="crConfirmOpen && 'is-current'"><b>3</b><span>المراجعة والإرسال</span></li>
+      </ol>
+
+      <section class="dash-card cr-card">
+        <div class="dash-card-head">
+          <h3>إرسال بيانات الدخول جماعيًا</h3>
+          <span class="dash-chip">{{ notifyDirectoryLoading ? 'جارٍ التحميل…' : `${notifyDirectory.length} ${notifyRoleLabel}` }}</span>
+        </div>
+
+        <!-- 1. الفئة + طريقة الإرسال -->
+        <div class="cr-setup">
+          <div class="cr-field">
+            <span class="cr-label">الفئة</span>
+            <nav class="hm-tabs" aria-label="الفئة">
+              <button v-for="r in crRoles" :key="r.value" type="button" :class="notifyRoleFilter === r.value && 'is-active'" @click="setNotifyRole(r.value)">
+                <component :is="r.icon" :size="15" /> {{ r.label }}
+              </button>
+            </nav>
+          </div>
+          <div class="cr-field">
+            <span class="cr-label">طريقة الإرسال</span>
+            <div class="bc-channel-pick cr-channels">
+              <label v-for="c in crChannels" :key="c.value" :class="['bc-channel-opt', notifyChannel === c.value && 'is-on']">
+                <input type="radio" name="cr-channel" :value="c.value" :checked="notifyChannel === c.value" @change="setNotifyChannel(c.value)">
+                <component :is="c.icon" :size="18" />
+                <span><b>{{ c.label }}</b><small>{{ c.hint }}</small></span>
+              </label>
+            </div>
           </div>
         </div>
 
-        <div class="flex flex-wrap items-end gap-3 mb-4">
-          <div class="min-w-[180px]">
-            <BaseSelect v-model="notifyRoleFilter" label="الدور" :options="notifyRoleOptions" @update:model-value="loadNotifyDirectory" />
-          </div>
-          <div class="min-w-[160px]">
-            <BaseSelect v-model="notifyChannel" label="طريقة الإرسال" :options="channelOptions" />
-          </div>
-          <div class="min-w-[170px]">
-            <BaseSelect v-model="notifySpecFilter" label="التخصص" placeholder="جميع التخصصات" include-placeholder-option :options="specializationOptions" />
-          </div>
-          <div class="min-w-[200px]">
-            <BaseInput v-model="notifySearch" label="بحث بالاسم" placeholder="اكتبي اسم العضو..." :icon="Search" />
-          </div>
-          <BaseButton variant="outline" :disabled="!notifySelectedIds.length" @click="previewNotify">معاينة</BaseButton>
-          <BaseButton :icon="Send" :loading="notifySending" :disabled="!notifyPreviewResult || notifySending" @click="confirmSendNotify">إرسال ({{ notifySelectedIds.length }})</BaseButton>
-        </div>
-
-        <SkeletonLoader v-if="notifyDirectoryLoading" :rows="5" height="28px" />
-        <EmptyState v-else-if="!notifyDirectory.length" title="لا يوجد أعضاء" description="لا يوجد أعضاء بهذا الدور حاليًا." />
-        <EmptyState v-else-if="!filteredNotifyDirectory.length" title="لا نتائج" description="لا يوجد عضو مطابق للبحث." />
-        <template v-else>
-          <label class="flex items-center gap-3 px-3 py-2 mb-1.5 cursor-pointer text-caption font-bold text-text-700">
-            <input type="checkbox" :checked="allNotifyFilteredSelected" @change="toggleNotifySelectAll">
-            تحديد الكل ({{ filteredNotifyDirectory.length }})
+        <!-- 2. البحث والتخصص + شريط التحديد -->
+        <div class="gr-filters cr-filters" aria-label="تصفية المستلمين">
+          <label class="gr-search">
+            <Search :size="16" />
+            <input v-model.trim="notifySearch" type="search" placeholder="بحث بالاسم أو البريد أو الواتساب…">
           </label>
-          <div class="border border-border rounded-sm divide-y divide-border-soft max-h-72 overflow-y-auto">
-            <label v-for="u in filteredNotifyDirectory" :key="u.id" class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-border-soft">
-              <input v-model="notifySelectedIds" type="checkbox" :value="u.id" @change="notifyPreviewResult = null">
-              <span class="flex-1 min-w-0">
-                <span class="text-body-sm font-bold text-text-900">{{ u.name }}</span>
-                <span class="text-caption text-text-400 ms-2">{{ notifyChannel === 'email' ? (u.email || 'بلا بريد') : (u.whatsapp || 'بلا واتساب') }}</span>
+          <label class="gr-pick">
+            <span>التخصص</span>
+            <select v-model="notifySpecFilter" class="gr-select">
+              <option value="">كل التخصصات</option>
+              <option v-for="o in specializationOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="cr-selbar">
+          <label class="gp-check">
+            <input type="checkbox" :checked="allNotifyFilteredSelected" :indeterminate.prop="someNotifyFilteredSelected" :disabled="!eligibleFiltered.length" @change="toggleNotifySelectAll">
+            تحديد كل المؤهَّلين ({{ eligibleFiltered.length }})
+          </label>
+          <span class="cr-count"><b>{{ notifySelectedIds.length }}</b> محدَّد</span>
+          <span v-if="ineligibleCount" class="cr-warn">{{ ineligibleCount }} بلا {{ notifyChannel === 'email' ? 'بريد' : 'واتساب' }} — غير قابل للتحديد</span>
+          <button v-if="notifySelectedIds.length" type="button" class="cr-clear" @click="notifySelectedIds = []">إلغاء التحديد</button>
+        </div>
+
+        <SkeletonLoader v-if="notifyDirectoryLoading" variant="cards" />
+        <EmptyState v-else-if="!filteredNotifyDirectory.length" :title="notifyDirectory.length ? 'لا يوجد عضو مطابق للبحث' : 'لا يوجد ' + notifyRoleLabel + ' حاليًا'" description="غيّر الفئة أو البحث أو التخصص" />
+        <ul v-else class="cr-people" aria-label="المستلمون">
+          <li v-for="u in filteredNotifyDirectory" :key="u.id">
+            <label :class="['cr-person', notifySelectedIds.includes(u.id) && 'is-on', !contactOf(u) && 'is-off']">
+              <input v-model="notifySelectedIds" type="checkbox" :value="u.id" :disabled="!contactOf(u)">
+              <span class="hm-avatar cr-av" aria-hidden="true">{{ (u.name || '؟').charAt(0) }}</span>
+              <span class="cr-who">
+                <b>{{ u.name }}</b>
+                <small v-if="contactOf(u)" class="mono">{{ contactOf(u) }}</small>
+                <small v-else class="cr-missing">بلا {{ notifyChannel === 'email' ? 'بريد إلكتروني' : 'رقم واتساب' }}</small>
+                <span v-if="u.specialization_id" class="cr-spec">{{ specializationName(u.specialization_id) }}</span>
               </span>
+              <span class="cr-tick" aria-hidden="true"><Check :size="14" /></span>
             </label>
+          </li>
+        </ul>
+
+        <!-- 3. شريط الإجراء الثابت أسفل البطاقة -->
+        <div class="cr-actionbar">
+          <p>
+            <template v-if="notifySelectedIds.length">سيصل رابط الدعوة إلى <b>{{ notifySelectedIds.length }}</b> {{ notifyRoleLabel }} عبر <b>{{ notifyChannel === 'email' ? 'البريد الإلكتروني' : 'واتساب' }}</b></template>
+            <template v-else>حدّد المستلمين من القائمة للمتابعة</template>
+          </p>
+          <button type="button" class="pbtn is-green" :disabled="!notifySelectedIds.length || crPreviewing" @click="openNotifyConfirm">
+            <Send :size="16" /> {{ crPreviewing ? 'جارٍ التجهيز…' : 'مراجعة وإرسال' }}
+          </button>
+        </div>
+      </section>
+
+      <!-- سجل الإرسال -->
+      <section class="dash-card cr-card mt-6">
+        <div class="dash-card-head">
+          <h3>سجلّ الإرسال</h3>
+          <nav class="hm-tabs" aria-label="حالة الإرسال">
+            <button v-for="s in crStatusTabs" :key="s.value" type="button" :class="deliveryStatusFilter === s.value && 'is-active'" @click="deliveryStatusFilter = s.value; loadDeliveries()">{{ s.label }}</button>
+          </nav>
+        </div>
+
+        <SlideTable :rows="deliveryRows" label="الرسائل">
+          <template #default="{ rows: shown }">
+            <DataTable fixed :columns="deliveryColumns" :rows="shown" row-key="id" :primary-keys="['name', 'status']" :loading="deliveriesLoading" empty-title="لا توجد محاولات إرسال بعد">
+              <template #cell-name="{ row }">
+                <span class="cr-row-name"><span class="hm-avatar cr-av is-sm" aria-hidden="true">{{ row.name.charAt(0) }}</span><b>{{ row.name }}</b></span>
+              </template>
+              <template #cell-channel="{ value }">
+                <span :class="['cr-chan', value === 'email' ? 'is-mail' : 'is-whats']"><component :is="value === 'email' ? 'Mail' : 'MessageCircle'" :size="13" /> {{ value === 'email' ? 'بريد' : 'واتساب' }}</span>
+              </template>
+              <template #cell-status="{ row }">
+                <span :class="['rv-pill', `cr-st-${row.status}`]">{{ statusLabel(row.status) }}</span>
+              </template>
+              <template #cell-sentAt="{ value }"><span class="mono">{{ value }}</span></template>
+              <template #cell-actions="{ row }">
+                <button v-if="row.status === 'failed'" type="button" class="pbtn is-outline is-sm" :disabled="retryingDeliveryId === row.id" @click="retryDeliveryRow(row)">
+                  <RotateCcw :size="14" /> {{ retryingDeliveryId === row.id ? 'جارٍ…' : 'إعادة المحاولة' }}
+                </button>
+              </template>
+            </DataTable>
+          </template>
+          <template v-if="deliveryRows.length" #after>
+            <div class="gr-sumbar">
+              <span>المحاولات: {{ deliveryRows.length }}</span>
+              <span>تم الإرسال: {{ deliveryRows.filter((d) => d.status === 'sent').length }}</span>
+              <span>قيد الإرسال: {{ deliveryRows.filter((d) => d.status === 'pending').length }}</span>
+              <span>فشل: {{ deliveryRows.filter((d) => d.status === 'failed').length }}</span>
+            </div>
+          </template>
+        </SlideTable>
+      </section>
+
+      <!-- نافذة المراجعة والتأكيد -->
+      <BaseModal v-model="crConfirmOpen" title="مراجعة الإرسال" :description="`رابط دعوة عبر ${notifyChannel === 'email' ? 'البريد الإلكتروني' : 'واتساب'} — ${notifyRoleLabel}`" size="sm">
+        <template v-if="notifyPreviewResult">
+          <div class="cr-review">
+            <div class="is-ok"><b>{{ notifyPreviewResult.valid_count }}</b><span>جاهز للإرسال</span></div>
+            <div :class="notifyPreviewResult.invalid_count ? 'is-bad' : 'is-muted'"><b>{{ notifyPreviewResult.invalid_count }}</b><span>غير مؤهَّل</span></div>
+          </div>
+          <div v-if="crNoInvite.length" class="palert is-info cr-fix">
+            <span><b>{{ crNoInvite.length }}</b> بلا رابط دعوة نشط — أنشئ لهم روابط جديدة ثم تُعاد المراجعة تلقائيًا.</span>
+            <button type="button" class="pbtn is-outline is-sm" :disabled="crInviting" @click="crCreateInvites"><Link2 :size="14" /> {{ crInviting ? `جارٍ الإنشاء… ${crInviteDone}/${crNoInvite.length}` : 'إنشاء روابط الدعوة' }}</button>
+          </div>
+          <p v-else-if="!notifyPreviewResult.valid_count" class="palert is-warning">لا يوجد مستلم مؤهَّل للإرسال.</p>
+          <div v-if="notifyPreviewResult.invalid?.length" class="cr-invalid">
+            <h4>لن يُرسَل إلى</h4>
+            <ul>
+              <li v-for="item in notifyPreviewResult.invalid" :key="item.user_id"><b>{{ item.name }}</b><span>{{ item.reason }}</span></li>
+            </ul>
           </div>
         </template>
-
-        <div v-if="notifyPreviewResult" class="mt-5 p-4 rounded-md bg-bg border border-border-soft">
-          <div class="flex flex-wrap gap-4 mb-3">
-            <BaseBadge variant="success">جاهز للإرسال: {{ notifyPreviewResult.valid_count }}</BaseBadge>
-            <BaseBadge v-if="notifyPreviewResult.invalid_count" variant="error">غير مؤهّل: {{ notifyPreviewResult.invalid_count }}</BaseBadge>
-          </div>
-          <ul v-if="notifyPreviewResult.invalid?.length" class="flex flex-col gap-1.5">
-            <li v-for="item in notifyPreviewResult.invalid" :key="item.user_id" class="text-caption text-text-600">
-              <span class="font-bold text-text-800">{{ item.name }}</span> — {{ item.reason }}
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden mt-8">
-        <div class="flex flex-wrap items-center justify-between gap-4 p-5 pb-4">
-          <h3 class="portal-title font-cairo font-bold text-h4 text-text-900">سجلّ الإرسال</h3>
-          <div class="min-w-[160px]">
-            <BaseSelect v-model="deliveryStatusFilter" placeholder="جميع الحالات" include-placeholder-option :options="statusOptions" @update:model-value="loadDeliveries" />
-          </div>
-        </div>
-
-        <SlideTable v-slot="{ rows: shown }" :rows="deliveryRows" label="الرسائل">
-          <DataTable
-            :columns="deliveryColumns" :rows="shown" row-key="id" :primary-keys="['name', 'status']"
-            :loading="deliveriesLoading"
-            empty-title="لا توجد محاولات إرسال بعد"
-          >
-            <template #cell-status="{ row }">
-              <BaseBadge :variant="statusVariant(row.status)">{{ statusLabel(row.status) }}</BaseBadge>
-            </template>
-            <template #cell-channel="{ value }">{{ value === 'email' ? 'بريد' : 'واتساب' }}</template>
-            <template #cell-actions="{ row }">
-              <BaseButton v-if="row.status === 'failed'" size="sm" variant="outline" :loading="retryingDeliveryId === row.id" @click="retryDeliveryRow(row)">إعادة المحاولة</BaseButton>
-            </template>
-          </DataTable>
-        </SlideTable>
-      </div>
+        <template #footer>
+          <BaseButton variant="ghost" @click="crConfirmOpen = false">رجوع</BaseButton>
+          <BaseButton :icon="Send" :loading="notifySending" :disabled="!notifyPreviewResult?.valid_count" @click="confirmSendNotify">تأكيد الإرسال ({{ notifyPreviewResult?.valid_count || 0 }})</BaseButton>
+        </template>
+      </BaseModal>
     </template>
 
     <!-- إضافة عضو -->
-    <BaseModal v-model="addModalOpen" title="إضافة عضو جديد">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <BaseSelect v-model="addForm.role" label="الدور" :options="addRoleOptions" class="sm:col-span-2" />
-        <BaseInput v-model="addForm.name" label="الاسم" placeholder="مثال: د. نورة العتيبي" class="sm:col-span-2" />
-        <BaseInput v-if="addForm.role === 'student'" v-model="addForm.university_number" label="الرقم الجامعي" placeholder="اختياري" />
-        <BaseInput v-else v-model="addForm.employee_number" label="الرقم الوظيفي" placeholder="اختياري" />
-        <BaseInput v-model="addForm.email" type="email" label="البريد الإلكتروني" placeholder="name@mashroui.local" class="sm:col-span-2" />
-        <BaseInput v-model="addForm.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" class="sm:col-span-2" />
-        <!-- عضو لجنة الإشراف يُربط بتخصصه ويرى بيانات هذا التخصص فقط -->
-        <BaseSelect v-if="addForm.role === 'committee'" v-model="addForm.specialization_id" label="التخصص الذي ينتمي له *" placeholder="اختر التخصص" :options="specializationOptions" class="sm:col-span-2" />
+    <BaseModal v-model="addModalOpen" title="إضافة عضو جديد" description="يُنشأ الحساب وتُرسل بيانات الدخول للعضو عبر واتساب والبريد">
+      <div class="mf-form">
+        <!-- 1. نوع العضو -->
+        <div class="mf-sec">
+          <h4>نوع العضو</h4>
+          <div class="mf-roles" role="radiogroup" aria-label="نوع العضو">
+            <button v-for="r in addRoleCards" :key="r.value" type="button" role="radio" :aria-checked="addForm.role === r.value" :class="['mf-role', addForm.role === r.value && 'is-on']" @click="addForm.role = r.value">
+              <component :is="r.icon" :size="20" />
+              <b>{{ r.label }}</b>
+              <small>{{ r.hint }}</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. البيانات الأساسية -->
+        <div class="mf-sec">
+          <h4>البيانات الأساسية</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <BaseInput v-model="addForm.name" label="الاسم الكامل" :placeholder="addForm.role === 'student' ? 'مثال: أحمد خالد' : 'مثال: د. نورة العتيبي'" required class="sm:col-span-2" />
+            <BaseInput v-if="addForm.role === 'student'" v-model="addForm.university_number" label="الرقم الجامعي" placeholder="اختياري" />
+            <BaseInput v-else v-model="addForm.employee_number" label="الرقم الوظيفي" placeholder="اختياري" />
+            <BaseInput v-model="addForm.whatsapp" label="رقم الواتساب" placeholder="970591234567" />
+            <BaseInput v-model="addForm.email" type="email" label="البريد الإلكتروني" placeholder="name@ucas.edu.ps" class="sm:col-span-2" />
+          </div>
+        </div>
+
+        <!-- 3. تخصص عضو لجنة الإشراف: يرى بيانات هذا التخصص فقط -->
+        <div v-if="addForm.role === 'committee'" class="mf-sec">
+          <SpecializationPicker v-model="addForm.specialization_id" :specializations="specializations" label="التخصص الذي ينتمي له" required hint="عضو اللجنة يرى المجموعات والمشاريع والمقترحات الخاصة بهذا التخصص فقط" />
+        </div>
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="addModalOpen = false">إلغاء</BaseButton>
-        <BaseButton :icon="Send" :loading="adding" @click="submitAdd">إضافة وإرسال البيانات (واتس + بريد)</BaseButton>
+        <BaseButton :icon="Send" :loading="adding" :disabled="!addForm.name.trim() || (addForm.role === 'committee' && !addForm.specialization_id)" @click="submitAdd">إضافة وإرسال بيانات الدخول</BaseButton>
       </template>
     </BaseModal>
 
@@ -359,7 +456,7 @@
           <BaseInput v-model="editForm.name" label="اسم الموظف" class="sm:col-span-2" />
           <BaseInput v-model="editForm.empId" label="الرقم الوظيفي" />
           <BaseInput v-model="editForm.whats" label="رقم الواتس" />
-          <BaseSelect v-if="editKind === 'committee'" v-model="editForm.spec" label="التخصص الذي ينتمي له" placeholder="كل التخصصات" include-placeholder-option :options="specializationOptions" class="sm:col-span-2" />
+          <SpecializationPicker v-if="editKind === 'committee'" v-model="editForm.spec" :specializations="specializations" label="التخصص الذي ينتمي له" allow-all class="sm:col-span-2" />
         </template>
       </div>
       <template #footer>
@@ -406,11 +503,10 @@
 
     <!-- الأعضاء المحذوفون -->
     <BaseModal v-model="trashedModal" title="الأعضاء المحذوفون" description="استرجعي أي عضو حُذف بالخطأ" size="lg">
-      <div v-if="trashedTabs.length > 1" class="flex items-center gap-1 bg-bg border border-border rounded-md p-1 mb-4 w-fit">
+      <div v-if="trashedTabs.length > 1" class="hm-tabs mb-4">
         <button
           v-for="tab in trashedTabs" :key="tab.value" type="button"
-          class="h-9 px-4 rounded-sm text-caption font-bold transition-colors duration-fast"
-          :class="trashedTab === tab.value ? 'bg-primary-600 text-white shadow-card' : 'text-text-600 hover:text-primary-700'"
+          :class="trashedTab === tab.value && 'is-active'"
           @click="switchTrashedTab(tab.value)"
         >
           {{ tab.label }}
@@ -441,7 +537,7 @@
 </template>
 
 <script>
-import { GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Check, Trash2, Archive, RotateCcw, RefreshCw, Eye, UserPlus, Send, Copy, SlidersHorizontal, Link2, ChevronDown, ChevronLeft } from 'lucide-vue-next'
+import { GraduationCap, Users, UserCog, ShieldCheck, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Check, Trash2, Archive, RotateCcw, RefreshCw, Eye, UserPlus, Send, Copy, SlidersHorizontal, Link2, ChevronDown, ChevronLeft } from 'lucide-vue-next'
 import { mapState, mapActions } from 'pinia'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -461,6 +557,7 @@ import { formatDateTime } from '@/utils/formatters'
 import { sendEmail } from '@/services/api'
 import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
 import ProfileModal from '@/components/shared/ProfileModal.vue'
+import SpecializationPicker from '@/components/shared/SpecializationPicker.vue'
 import { GENDERS, REGIONS } from '@/utils/progressData'
 
 function digitsOnly(value) {
@@ -481,13 +578,23 @@ const LEVEL_OPTIONS = [
   { value: 'blocked', label: 'محظور' }
 ]
 
+/** إرسال بيانات الدخول: الفئات وطرق الإرسال (ثابتة — خارج data حتى لا تُغلَّف الأيقونات تفاعليًا) */
+const CR_ROLES = [
+  { value: 'student', label: 'الطلاب', icon: GraduationCap },
+  { value: 'supervisor', label: 'المشرفون', icon: UserCog },
+  { value: 'committee', label: 'لجنة الإشراف', icon: ShieldCheck }
+]
+const CR_CHANNELS = [
+  { value: 'email', label: 'البريد الإلكتروني', hint: 'رابط دعوة على بريد كل عضو', icon: Mail },
+  { value: 'whatsapp', label: 'واتساب', hint: 'رابط دعوة برسالة واتساب', icon: MessageCircle }
+]
 const STATUS_LABELS = { pending: 'قيد الإرسال', sent: 'تم الإرسال', failed: 'فشل' }
 const STATUS_VARIANTS = { pending: 'warning', sent: 'success', failed: 'error' }
 
 export default {
   name: 'CommitteeMembersPage',
 
-  components: { Copy, GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, SlidersHorizontal, Link2, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, SlideTable, SkeletonLoader, EmptyState, EmailComposeModal, ProfileModal, ChevronDown, ChevronLeft },
+  components: { SpecializationPicker, Check, RotateCcw, Send, Copy, GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, SlidersHorizontal, Link2, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, SlideTable, SkeletonLoader, EmptyState, EmailComposeModal, ProfileModal, ChevronDown, ChevronLeft },
 
   props: {
     /** 'members' = إدارة الأعضاء (افتراضي) · 'credentials' = صفحة إرسال بيانات الدخول (الإدارة العامة) */
@@ -581,26 +688,24 @@ export default {
       notifyDirectoryLoading: false,
       deliveryStatusFilter: '',
       retryingDeliveryId: null,
-      notifyRoleOptions: [
-        { value: 'supervisor', label: 'المشرفون' },
-        { value: 'committee', label: 'لجنة الإشراف' },
-        { value: 'student', label: 'الطلاب' }
-      ],
-      channelOptions: [
-        { value: 'email', label: 'البريد الإلكتروني' },
-        { value: 'whatsapp', label: 'واتساب' }
-      ],
-      statusOptions: [
-        { value: 'pending', label: 'قيد الإرسال' },
+      crConfirmOpen: false,
+      crPreviewing: false,
+      crInviting: false,
+      crInviteDone: 0,
+      crRoles: CR_ROLES,
+      crChannels: CR_CHANNELS,
+      crStatusTabs: [
+        { value: '', label: 'الكل' },
         { value: 'sent', label: 'تم الإرسال' },
+        { value: 'pending', label: 'قيد الإرسال' },
         { value: 'failed', label: 'فشل' }
       ],
       deliveryColumns: [
         { key: 'name', label: 'العضو' },
-        { key: 'channel', label: 'الطريقة' },
-        { key: 'status', label: 'الحالة' },
-        { key: 'sentAt', label: 'وقت الإرسال' },
-        { key: 'actions', label: '' }
+        { key: 'channel', label: 'الطريقة', className: 'w-[150px]' },
+        { key: 'status', label: 'الحالة', className: 'w-[150px]' },
+        { key: 'sentAt', label: 'وقت الإرسال', className: 'w-[200px]' },
+        { key: 'actions', label: 'إجراء', className: 'w-[180px]' }
       ]
     }
   },
@@ -615,6 +720,10 @@ export default {
       return this.userRole === ROLES.SUPER_ADMIN
     },
 
+    addRoleCards() {
+      const hints = { student: 'ينضم لمجموعة مشروع', supervisor: 'يشرف على المجموعات', committee: 'مرتبط بتخصص واحد' }
+      return this.addRoleOptions.map((o) => ({ ...o, icon: CR_ROLES.find((r) => r.value === o.value)?.icon, hint: hints[o.value] }))
+    },
     addRoleOptions() {
       return [
         { value: 'student', label: 'الطلاب' },
@@ -710,17 +819,18 @@ export default {
     /** ترتيب الأعمدة: الهوية ← الانتماء ← النشاط ← التواصل ← الحساب ← الإجراءات */
     activeColumns() {
       const actions = { key: 'actions', label: 'إجراءات', className: (this.isSuperAdmin ? 'w-[268px]' : 'w-[196px]') + ' !text-center' }
-      const tail = [{ key: 'contact', label: 'التواصل', className: 'w-[250px]' }, { key: 'pw', label: 'كلمة السر', className: 'w-[210px] !text-center' }, actions]
+      const tail = [{ key: 'contact', label: 'التواصل', className: 'min-w-[220px]' }, { key: 'pw', label: 'كلمة السر', className: 'w-[190px] !text-center' }, actions]
       if (this.memberKind === 'student') {
         return [
-          { key: 'name', label: 'الطالب / الرقم الجامعي' },
-          { key: 'grp', label: 'المجموعة / المشرف' },
-          { key: 'who', label: 'الفئة / مكان التواجد', className: 'w-[140px]' },
+          { key: 'name', label: 'الطالب / الرقم الجامعي', className: 'w-[190px]' },
+          { key: 'grp', label: 'المجموعة / المشرف', className: 'w-[150px]' },
+          { key: 'who', label: 'الفئة / مكان التواجد', className: 'w-[120px]' },
           ...tail
         ]
       }
-      const name = { key: 'name', label: this.memberKind === 'committee' ? 'العضو / الرقم الوظيفي' : 'المشرف / الرقم الوظيفي' }
-      if (this.memberKind === 'committee' || !this.isSuperAdmin) return [name, ...tail]
+      const name = { key: 'name', label: this.memberKind === 'committee' ? 'العضو / الرقم الوظيفي' : 'المشرف / الرقم الوظيفي', className: 'w-[230px]' }
+      if (this.memberKind === 'committee') return [name, { key: 'spec', label: 'التخصص', className: 'w-[200px]' }, ...tail]
+      if (!this.isSuperAdmin) return [name, ...tail]
       return [
         name,
         { key: 'groups', label: 'المجموعات', className: 'w-[130px]' },
@@ -758,15 +868,32 @@ export default {
       }))
     },
     filteredNotifyDirectory() {
-      const q = this.notifySearch.trim()
+      const q = this.notifySearch.trim().toLowerCase()
       return this.notifyDirectory.filter((u) => {
-        const matchQ = !q || u.name.includes(q)
+        const matchQ = !q || [u.name, u.email, u.whatsapp].some((v) => String(v || '').toLowerCase().includes(q))
         const matchSpec = !this.notifySpecFilter || u.specialization_id === this.notifySpecFilter
         return matchQ && matchSpec
       })
     },
+    /** المؤهَّلون فقط (لديهم بريد/واتساب حسب طريقة الإرسال) قابلون للتحديد */
+    eligibleFiltered() {
+      return this.filteredNotifyDirectory.filter((u) => this.contactOf(u))
+    },
+    ineligibleCount() {
+      return this.filteredNotifyDirectory.length - this.eligibleFiltered.length
+    },
     allNotifyFilteredSelected() {
-      return this.filteredNotifyDirectory.length > 0 && this.filteredNotifyDirectory.every((u) => this.notifySelectedIds.includes(u.id))
+      return this.eligibleFiltered.length > 0 && this.eligibleFiltered.every((u) => this.notifySelectedIds.includes(u.id))
+    },
+    someNotifyFilteredSelected() {
+      return !this.allNotifyFilteredSelected && this.eligibleFiltered.some((u) => this.notifySelectedIds.includes(u.id))
+    },
+    /** غير المؤهَّلين لأن رابط دعوتهم غير نشط — يمكن إصلاحهم من هنا */
+    crNoInvite() {
+      return (this.notifyPreviewResult?.invalid || []).filter((i) => String(i.reason || '').includes('دعوة'))
+    },
+    notifyRoleLabel() {
+      return { student: 'طالب', supervisor: 'مشرف', committee: 'عضو لجنة' }[this.notifyRoleFilter]
     }
   },
 
@@ -1176,17 +1303,54 @@ export default {
       }
     },
     toggleNotifySelectAll() {
-      const filteredIds = this.filteredNotifyDirectory.map((u) => u.id)
+      const filteredIds = this.eligibleFiltered.map((u) => u.id)
       this.notifySelectedIds = this.allNotifyFilteredSelected
         ? this.notifySelectedIds.filter((id) => !filteredIds.includes(id))
         : [...new Set([...this.notifySelectedIds, ...filteredIds])]
       this.notifyPreviewResult = null
     },
-    async previewNotify() {
+    async crCreateInvites() {
+      this.crInviting = true
+      this.crInviteDone = 0
+      let failed = 0
+      for (const item of this.crNoInvite) {
+        try { await this.reinviteUser(item.user_id) } catch (_) { failed++ }
+        this.crInviteDone++
+      }
       try {
         this.notifyPreviewResult = await this.previewBulkNotify(this.notifySelectedIds, this.notifyChannel)
+        this.$toast?.[failed ? 'warning' : 'success'](failed ? `تعذّر إنشاء ${failed} رابط` : 'تم إنشاء روابط الدعوة')
       } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر تجهيز المعاينة')
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث المراجعة')
+      } finally {
+        this.crInviting = false
+      }
+    },
+    contactOf(u) {
+      return this.notifyChannel === 'email' ? u.email : u.whatsapp
+    },
+    setNotifyRole(role) {
+      if (role === this.notifyRoleFilter) return
+      this.notifyRoleFilter = role
+      this.loadNotifyDirectory()
+    },
+    /** تغيير طريقة الإرسال يُسقط من التحديد من لا يملك وسيلتها */
+    setNotifyChannel(channel) {
+      this.notifyChannel = channel
+      const ok = new Set(this.notifyDirectory.filter((u) => this.contactOf(u)).map((u) => u.id))
+      this.notifySelectedIds = this.notifySelectedIds.filter((id) => ok.has(id))
+      this.notifyPreviewResult = null
+    },
+    /** المراجعة من الخادم ثم نافذة التأكيد (جاهز/غير مؤهَّل مع السبب) */
+    async openNotifyConfirm() {
+      this.crPreviewing = true
+      try {
+        this.notifyPreviewResult = await this.previewBulkNotify(this.notifySelectedIds, this.notifyChannel)
+        this.crConfirmOpen = true
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تجهيز المراجعة')
+      } finally {
+        this.crPreviewing = false
       }
     },
     async confirmSendNotify() {
@@ -1194,6 +1358,7 @@ export default {
       try {
         const result = await this.sendBulkNotify(this.notifySelectedIds, this.notifyChannel)
         this.$toast?.success(`تم إرسال ${result.dispatched.length} رسالة${result.skipped.length ? ` (تخطّي ${result.skipped.length})` : ''}`)
+        this.crConfirmOpen = false
         this.notifyPreviewResult = null
         this.notifySelectedIds = []
         await this.loadDeliveries()
