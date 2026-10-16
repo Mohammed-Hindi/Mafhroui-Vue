@@ -20,3 +20,15 @@ export async function reviewReport(id, approve, note = null) {
   const { data } = await api.post(`/final-reports/${id}/review`, { decision: approve ? 'approve' : 'reject', note })
   return data.data || data
 }
+
+/** فتح ملف التقرير في نافذة جديدة عبر رابط موقّع مؤقت — النافذة تُفتح فورًا (قبل الطلب) حتى لا يحجبها المتصفح */
+export async function openReportInNewTab(id) {
+  const w = window.open('', '_blank')
+  try {
+    const { data } = await api.get(`/final-reports/${id}/download-link`)
+    if (w) { w.opener = null; w.location.href = data.url } else window.open(data.url, '_blank', 'noopener')
+  } catch {
+    w?.close()
+    throw new Error('تعذّر فتح التقرير')
+  }
+}

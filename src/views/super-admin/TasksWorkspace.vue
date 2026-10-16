@@ -36,7 +36,7 @@
           <option value="">كل المشرفين</option>
           <option v-for="s in supervisors" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
-        <select v-if="!isStaff && !isSupervisor" v-model="fGroup" class="gr-select" aria-label="المجموعة">
+        <select v-if="!isStaff" v-model="fGroup" class="gr-select" aria-label="المجموعة">
           <option value="">كل المجموعات</option>
           <option v-for="g in groupOptions" :key="g.id" :value="g.id">{{ g.label }}</option>
         </select>
@@ -161,11 +161,11 @@
       <section v-if="!isSupervisor" v-show="step === 0" class="tk-sec">
         <header class="tk-sec-head"><h4>القوالب</h4></header>
         <div class="tk-sec-body">
-          <TemplatePicker kind="task" :title="form.title" :body="form.description" @apply="(t) => { Object.assign(form, { title: t.title || '', description: t.body || '' }); step = off }" />
+          <TemplatePicker kind="task" :title="form.title" :body="form.description" @apply="(t) => useTemplate({ title: t.title || '', description: t.body || '' })" />
         </div>
       </section>
 
-      <section v-show="step === off" class="tk-sec">
+      <section v-show="step === off" :class="['tk-sec', filled && 'is-filled']">
         <header class="tk-sec-head"><h4>تفاصيل المهمة</h4></header>
         <div class="tk-sec-body">
           <label class="pfield">
@@ -333,6 +333,7 @@ export default {
 
   data() {
     return {
+      filled: false,
       STATUSES,
       today: localDay(),
       dueChips: [{ label: 'اليوم', days: 0 }, { label: 'غدًا', days: 1 }, { label: 'بعد أسبوع', days: 7 }, { label: 'بعد أسبوعين', days: 14 }],
@@ -515,6 +516,16 @@ export default {
   },
 
   methods: {
+    /** القالب: تعبئة العنوان والنص، الانتقال لخطوة التفاصيل، ولمعة قصيرة على الحقول المعبّأة */
+    useTemplate(fields) {
+      Object.assign(this.form, fields)
+      this.step = this.off
+      this.filled = false
+      requestAnimationFrame(() => { this.filled = true })
+      clearTimeout(this.filledTimer)
+      this.filledTimer = setTimeout(() => { this.filled = false }, 1600)
+    },
+
     /**
      * سجل حركة المهام في صفحة التكليفات حسب الدور:
      * الإدارة العامة: كل المهام (لجنة الإشراف والمشرفون والمجموعات) · لجنة الإشراف: مهام المشرفين والمجموعات (لا مهام اللجنة نفسها)

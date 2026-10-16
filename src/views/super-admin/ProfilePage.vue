@@ -62,13 +62,19 @@
       </form>
     </template>
 
-    <!-- إحصائيات المنصة — صفوف "التسمية : القيمة" كبطاقة "بيانات أكاديمية" (200515) بعمودين -->
-    <section v-else-if="tab === 'stats'" class="profile-card">
-      <h3 class="portal-title mb-4">إحصائيات المنصة <span class="profile-card-sub">{{ activeSemesterName }}</span></h3>
-      <dl class="profile-stats">
-        <div v-for="s in platformStats" :key="s.label">
+    <!-- إحصائيات المنصة بهوية مسار: رأس بتدرّج خفيف، ثم شبكة 3×2 — أيقونة بدائرة متدرّجة، رقم يعدّ، تسمية خضراء،
+         ومتوسط الإنجاز بشريط تقدّم -->
+    <section v-else-if="tab === 'stats'" class="profile-card pf-stats-card">
+      <h3 class="portal-title">إحصائيات المنصة <span class="profile-card-sub">{{ activeSemesterName }}</span></h3>
+      <dl class="pf-stats">
+        <div v-for="(s, i) in platformStats" :key="s.label" :style="{ animationDelay: `${i * 60}ms` }">
+          <span class="pf-stat-ic"><component :is="s.icon" :size="22" /></span>
           <dt>{{ s.label }}</dt>
-          <dd>{{ s.value ?? '—' }}<template v-if="s.value != null && s.suffix">{{ s.suffix }}</template></dd>
+          <dd>
+            <CountUp v-if="s.value != null" :value="s.value" />
+            <template v-else>—</template><small v-if="s.value != null && s.suffix">{{ s.suffix }}</small>
+          </dd>
+          <span v-if="s.suffix === '%'" class="gr-progress"><span :class="level(s.value || 0)" :style="{ width: `${s.value || 0}%` }" /></span>
         </div>
       </dl>
     </section>
@@ -88,7 +94,9 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Lock, IdCard, BarChart3, LayoutGrid, Pencil, Camera, Check } from 'lucide-vue-next'
+import { Lock, IdCard, BarChart3, LayoutGrid, Pencil, Camera, Check, Building2, UsersRound, FolderKanban, UserRound, GraduationCap, TrendingUp } from 'lucide-vue-next'
+import CountUp from '@/components/ui/CountUp.vue'
+import { level } from '@/utils/progressData'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 import { useLandingStore } from '@/stores/landing.store'
@@ -99,7 +107,7 @@ import { formatDate } from '@/utils/formatters'
 export default {
   name: 'SuperAdminProfilePage',
 
-  components: { Lock, Pencil, Camera, Check },
+  components: { Lock, Pencil, Camera, Check, CountUp },
 
   data() {
     return {
@@ -132,12 +140,12 @@ export default {
     platformStats() {
       const s = this.stats || {}
       return [
-        { label: 'الأقسام الأكاديمية', value: s.departments ?? null },
-        { label: 'فرق المشاريع', value: s.teams ?? null },
-        { label: 'مشاريع التخرج', value: s.projects ?? null },
-        { label: 'المشرفون', value: s.supervisors ?? null },
-        { label: 'الطلاب', value: s.students ?? null },
-        { label: 'متوسط الإنجاز', value: s.avg_completion != null ? Math.round(s.avg_completion) : null, suffix: '%' }
+        { label: 'الأقسام الأكاديمية', value: s.departments ?? null, icon: Building2 },
+        { label: 'فرق المشاريع', value: s.teams ?? null, icon: UsersRound },
+        { label: 'مشاريع التخرج', value: s.projects ?? null, icon: FolderKanban },
+        { label: 'المشرفون', value: s.supervisors ?? null, icon: UserRound },
+        { label: 'الطلاب', value: s.students ?? null, icon: GraduationCap },
+        { label: 'متوسط الإنجاز', value: s.avg_completion != null ? Math.round(s.avg_completion) : null, suffix: '%', icon: TrendingUp }
       ]
     },
 
@@ -173,6 +181,8 @@ export default {
   },
 
   methods: {
+    level,
+
     ...mapActions(useAuthStore, ['fetchCurrentUser', 'updateProfile', 'uploadAvatar']),
     ...mapActions(useLandingStore, ['fetchStats']),
 

@@ -20,7 +20,7 @@
       <div v-else class="fv-empty">
         <component :is="file.icon" :size="64" class="fv-empty-icon" />
         <b>{{ file.name }}</b>
-        <span>{{ file.placeholder ? 'معاينة تجريبية — يُعرض الملف الفعلي بعد ربط التخزين.' : 'تعذّر عرض الملف داخل الصفحة — استخدم التنزيل.' }}</span>
+        <span>{{ file.placeholder ? 'معاينة تجريبية — يُعرض الملف الفعلي بعد ربط التخزين.' : (file.download ? 'تعذّر عرض الملف داخل الصفحة — استخدم التنزيل.' : 'تعذّر عرض الملف داخل الصفحة — افتحه في نافذة جديدة.') }}</span>
         <ul v-if="file.contents?.length" class="fv-tree" dir="ltr">
           <li v-for="c in file.contents" :key="c"><component :is="c.endsWith('/') ? Folder : FileText" :size="15" /> {{ c }}</li>
         </ul>
@@ -28,8 +28,9 @@
     </div>
 
     <template #footer>
-      <button v-if="pdfUrl || file?.url" type="button" class="pbtn is-outline" @click="openNew"><ExternalLink :size="15" /> فتح في نافذة جديدة</button>
-      <button v-if="file?.download" type="button" class="pbtn is-cyan" @click="file.download()"><Download :size="15" /> تنزيل</button>
+      <!-- التقرير PDF والفيديو: فتح في نافذة جديدة فقط · الملفات التجريبية (المجلد، الوورد): تنزيل + فتح في نافذة جديدة -->
+      <button v-if="file && (pdfUrl || file.url || file.reportId || file.placeholder)" type="button" class="pbtn is-outline" @click="openNew"><ExternalLink :size="15" /> فتح في نافذة جديدة</button>
+      <button v-if="file?.download || file?.placeholder" type="button" class="pbtn is-cyan" @click="file.download ? file.download() : downloadDemo()"><Download :size="15" /> تنزيل</button>
       <button type="button" class="pbtn is-outline" @click="$emit('close')">إغلاق</button>
     </template>
   </BaseModal>
@@ -39,6 +40,7 @@
 import { Download, ExternalLink, FileText, Folder } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import api from '@/services/api'
+import { openReportInNewTab } from '@/utils/finalReport'
 
 export default {
   name: 'FileViewer',
@@ -88,8 +90,28 @@ export default {
       }
     },
 
+    /** ملف تجريبي (بلا تخزين بعد): صفحة HTML بمحتوياته — تُفتح في نافذة أو تُنزَّل (الوورد بصيغة .doc يفتحها Word) */
+    demoBlob() {
+      const f = this.file
+      const items = (f.contents || []).map((c) => `<li>${c}</li>`).join('')
+      const html = `<!doctype html><html dir="rtl" lang="ar"><meta charset="utf-8"><title>${f.name}</title>
+<body style="font-family:Tahoma,sans-serif;margin:40px;color:#0B2545"><h2 style="color:#005BAA">${f.name}</h2>
+<p style="color:#50A16E">${f.meta || ''}</p><p>ملف تجريبي — يُستبدل بالملف الفعلي بعد ربط التخزين.</p>${items ? `<ul dir="ltr">${items}</ul>` : ''}</body></html>`
+      return new Blob([html], { type: 'text/html' })
+    },
+
+    downloadDemo() {
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(this.demoBlob())
+      a.download = this.file.kind === 'folder' ? `${this.file.name}.html` : this.file.name.replace(/\.docx$/, '.doc')
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+    },
+
     openNew() {
-      window.open(this.pdfUrl || this.file.url, '_blank', 'noopener')
+      if (this.file.placeholder && !this.file.url) window.open(URL.createObjectURL(this.demoBlob()), '_blank', 'noopener')
+      else if (this.pdfUrl || this.file.url) window.open(this.pdfUrl || this.file.url, '_blank', 'noopener')
+      else openReportInNewTab(this.file.reportId).catch((e) => this.$toast?.error(e.message))
     }
   }
 }

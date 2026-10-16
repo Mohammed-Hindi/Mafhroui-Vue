@@ -7,12 +7,16 @@
       <h2 class="dash-title">التقييمات</h2>
     </header>
 
-    <!-- الإعداد بخطوات: إعداد النماذج ← تقييم المجموعات ← النتائج -->
-    <ol class="sp-steps cr-steps ev-flow" aria-label="مراحل التقييم">
-      <li v-for="(t, i) in steps" :key="t.value" :class="tab === t.value ? 'is-current' : i < stepIndex && 'is-done'">
-        <button type="button" :aria-current="tab === t.value ? 'step' : null" @click="tab = t.value"><b>{{ i + 1 }}</b><span>{{ t.label }}</span></button>
-      </li>
-    </ol>
+    <!-- أقسام التقييمات بتبويبات العرض المعتمدة (خانات كاملة بيضاء، النشط بخلفية تدرّج خفيفة وخط تدرّج) -->
+    <div class="ev-steps-bar ev-tabs-bar">
+      <ol class="tk-stepper ev-steps" aria-label="أقسام التقييمات">
+        <li v-for="t in steps" :key="t.value" :class="tab === t.value && 'is-active'">
+          <button type="button" :aria-current="tab === t.value && 'page'" @click="tab = t.value">
+            <b v-if="t.count != null">{{ t.count }}</b> <component :is="t.icon" :size="16" /> {{ t.label }}
+          </button>
+        </li>
+      </ol>
+    </div>
 
     <section v-if="tab === 'groups' || tab === 'results'" class="hm-stats tk-stats" aria-label="ملخص التقييمات">
       <div class="hm-stat"><span class="hm-stat-label">المجموعات</span><span class="hm-stat-value">{{ groupsWithStatus.length }}</span><span class="hm-stat-split">مكتملة التقييم <b>{{ statusCount('done') }}</b></span></div>
@@ -147,19 +151,20 @@
             <table class="pt ev-results">
               <thead>
                 <tr>
-                  <th class="ev-c">#</th><th>الطالب</th><th>الشعبة والمشروع</th><th>الدرجة</th>
+                  <th class="ev-c">الترتيب</th><th>الطالب</th><th class="ev-c">الشعبة</th><th>المشروع</th><th>الدرجة</th>
                   <th class="ev-c">المشرف</th><th class="ev-c">المناقشة</th><th class="ev-c">المجموع</th><th class="ev-c">التقدير</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="r in pageRows" :key="r.id" class="is-link" @click="openSheet(r.team?.id)">
-                  <td class="ev-c"><span :class="['ev-rank', rank[r.id] <= 3 && 'is-top']">{{ rank[r.id] }}</span></td>
+                  <td class="ev-c"><span :class="['ev-rank', rank[r.id] <= 3 && `is-r${rank[r.id]}`]" :title="`الترتيب ${rank[r.id]}`">{{ rank[r.id] }}</span></td>
                   <td class="ev-student">
                     <b>{{ r.student?.name }}</b>
                     <small><span class="mono">{{ r.student?.university_number || '—' }}</span> · {{ r.student?.gender === 'female' ? 'طالبة' : 'طالب' }}<template v-if="REGIONS[r.student?.region]"> · {{ REGIONS[r.student.region] }}</template></small>
                   </td>
+                  <td class="ev-c"><span class="ev-sec-chip">{{ r.team?.section ? `شعبة ${r.team.section}` : r.team?.name }}</span></td>
                   <td class="ev-proj">
-                    <b><span class="ev-sec">{{ r.team?.section ? `شعبة ${r.team.section}` : r.team?.name }}</span>{{ r.project?.name || '—' }}<Star v-if="r.project?.is_featured" :size="13" fill="currentColor" class="ev-star" /></b>
+                    <b>{{ r.project?.name || '—' }}<Star v-if="r.project?.is_featured" :size="13" fill="currentColor" class="ev-star" /></b>
                     <span class="pt-muted">{{ r.supervisor?.name || '' }}</span>
                   </td>
                   <td class="ev-nowrap">{{ DEGREES[r.degree] }}</td>
@@ -173,8 +178,8 @@
                   </td>
                   <td class="ev-c"><span :class="['rv-pill', isDone(r) ? gradeTone(r.score) : 'is-pending']">{{ gradeOf(r) }}</span></td>
                 </tr>
-                <SkeletonLoader v-if="loading && !resultRows.length" variant="table" :cols="8" :rows="6" />
-                <tr v-else-if="!resultRows.length"><td colspan="8" class="gr-empty">لا توجد نتائج مطابقة</td></tr>
+                <SkeletonLoader v-if="loading && !resultRows.length" variant="table" :cols="9" :rows="6" />
+                <tr v-else-if="!resultRows.length"><td colspan="9" class="gr-empty">لا توجد نتائج مطابقة</td></tr>
               </tbody>
             </table>
           </div>
@@ -193,7 +198,12 @@
 
 <script>
 import { mapState } from 'pinia'
-import { Check, ClipboardPen, Search, Star } from 'lucide-vue-next'
+import { markRaw } from 'vue'
+import { Award, Check, ClipboardPen, Search, Settings2, Star } from 'lucide-vue-next'
+
+const Settings2Icon = markRaw(Settings2)
+const ClipboardIcon = markRaw(ClipboardPen)
+const AwardIcon = markRaw(Award)
 import SlideTable from '@/components/ui/SlideTable.vue'
 import EvaluationFormEditor from './EvaluationFormEditor.vue'
 import api from '@/services/api'
@@ -237,13 +247,10 @@ export default {
     /** مراحل التقييم: الإدارة واللجنة تبدآن بإعداد النماذج، والمشرف بتقييم مجموعاته */
     steps() {
       return [
-        ...(this.isStaff ? [{ value: 'forms', label: 'إعداد نماذج التقييم' }] : []),
-        { value: 'groups', label: 'تقييم المجموعات' },
-        { value: 'results', label: 'النتائج' }
+        ...(this.isStaff ? [{ value: 'forms', label: 'إعداد نماذج التقييم', icon: Settings2Icon, count: null }] : []),
+        { value: 'groups', label: 'تقييم المجموعات', icon: ClipboardIcon, count: this.groupsWithStatus.length },
+        { value: 'results', label: 'نتائج الطلاب', icon: AwardIcon, count: this.results.length }
       ]
-    },
-    stepIndex() {
-      return this.steps.findIndex((t) => t.value === this.tab)
     },
     /** تصنيف سريع بنمط صفحة المجموعات، بأعداد من كل المجموعات */
     gClasses() {
@@ -297,9 +304,11 @@ export default {
       return Object.fromEntries(this.groups.map((g) => [g.id, g.spec]))
     },
     /** ترتيب الطالب بين كل النتائج (الخادم يرتّبها تنازليًا بالدرجة؛ المتساوون بنفس الترتيب) */
+    /** ترتيب متقارب (Dense): المتعادلون بنفس المركز، والمركز التالي يليه مباشرة (1، 1، 2، 3) — فتظهر المراكز الثلاثة الأولى دائمًا */
     rank() {
       const out = {}
-      this.results.forEach((r, i) => { out[r.id] = i && r.score === this.results[i - 1].score ? out[this.results[i - 1].id] : i + 1 })
+      let place = 0
+      this.results.forEach((r, i) => { if (!i || r.score !== this.results[i - 1].score) place++; out[r.id] = place })
       return out
     },
     rClasses() {
@@ -309,7 +318,7 @@ export default {
       return [
         { key: 'degree', label: 'الدرجة', options: [opt('', 'الكل', all.length), ...Object.entries(DEGREES).map(([k, l]) => opt(k, l, all.filter((r) => r.degree === k).length))] },
         ...(this.isStaff ? [gender] : []),
-        { key: 'grade', label: 'التقدير', options: [opt('', 'الكل', all.length), ...this.GRADE_NAMES.map((g) => opt(g, g, all.filter((r) => this.gradeOf(r) === g).length))] }
+        { key: 'grade', label: 'التقدير', options: [opt('', 'الكل', all.length), ...[['ممتاز', 'متميز'], ['جيد جدًا', 'جيد جدًا'], ['مقبول', 'مقبول']].map(([g, l]) => opt(g, l, all.filter((r) => this.gradeOf(r) === g).length))] }
       ]
     },
     resultRows() {

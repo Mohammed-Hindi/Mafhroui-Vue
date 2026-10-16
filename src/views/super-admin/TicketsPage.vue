@@ -6,7 +6,7 @@
     </header>
 
     <nav class="rv-tabs" aria-label="طوابير التذاكر">
-      <button v-for="v in views" :key="v.value" type="button" :class="['rv-tab', view === v.value && 'is-active']" @click="view = v.value">
+      <button v-for="v in views.filter((x) => !x.hidden)" :key="v.value" type="button" :class="['rv-tab', view === v.value && 'is-active']" @click="view = v.value">
         {{ v.label }} <span class="rv-count">{{ counts[v.value] }}</span>
       </button>
     </nav>
@@ -35,13 +35,20 @@
         <header class="hd-card-head">
           <h3 class="portal-title">{{ viewLabel }}</h3>
           <span class="hd-card-sub">{{ filtered.length }} تذكرة</span>
-          <button v-if="view !== 'archived'" type="button" class="hd-corner" @click="view = 'archived'"><Archive :size="16" /> أرشيف التذاكر</button>
-          <button v-else type="button" class="hd-corner" @click="view = 'awaiting'"><Inbox :size="16" /> صندوق الوارد</button>
+          <span class="hd-corners">
+            <!-- كل الرسائل: كل التذاكر مصنّفة إلى "بانتظار الرد" و"تم الرد" -->
+            <button type="button" :class="['hd-corner', view === 'replies' && 'is-on']" @click="view = view === 'replies' ? 'awaiting' : 'replies'"><MessagesSquare :size="16" /> كل الرسائل</button>
+            <button v-if="view !== 'archived'" type="button" class="hd-corner" @click="view = 'archived'"><Archive :size="16" /> أرشيف التذاكر</button>
+            <button v-else type="button" class="hd-corner" @click="view = 'awaiting'"><Inbox :size="16" /> صندوق الوارد</button>
+          </span>
         </header>
         <SkeletonLoader v-if="loading" variant="cards" :rows="4" />
         <p v-else-if="!filtered.length" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لا توجد تذاكر في «{{ viewLabel }}»</p>
+        <template v-for="g in groups" v-else :key="g.key">
+        <h4 v-if="g.label" :class="['hd-group', `is-${g.key}`]">{{ g.label }} <span class="rv-count">{{ g.items.length }}</span></h4>
+        <p v-if="g.label && !g.items.length" class="hd-group-empty">لا توجد رسائل</p>
         <button
-          v-for="t in filtered" :key="t.id" type="button"
+          v-for="t in g.items" :key="t.id" type="button"
           :class="['rv-item hd-item', current?.id === t.id && 'is-selected', awaiting(t) && 'is-unread']" @click="open(t)"
         >
           <span class="hd-avatar" aria-hidden="true">{{ initials(t.user?.name) }}</span>
@@ -59,6 +66,7 @@
             </span>
           </span>
         </button>
+        </template>
       </section>
 
       <section v-if="current" :class="['rv-detail hd-detail', mobileOpen && 'is-open']">
@@ -157,7 +165,7 @@
 
 <script>
 import { markRaw } from 'vue'
-import { Search, Send, ArrowRight, MessageSquare, CheckCircle2, RotateCcw, Archive, ArchiveRestore, Trash2, Inbox, MessageSquareReply, Layers } from 'lucide-vue-next'
+import { Search, Send, ArrowRight, MessageSquare, CheckCircle2, RotateCcw, Archive, ArchiveRestore, Trash2, Inbox, MessageSquareReply, Layers, MessagesSquare } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -169,7 +177,7 @@ const rtf = new Intl.RelativeTimeFormat('ar', { numeric: 'auto' })
 export default {
   name: 'TicketsPage',
 
-  components: { Search, Send, ArrowRight, MessageSquare, CheckCircle2, RotateCcw, Archive, ArchiveRestore, Trash2, Inbox, UcasLogo, BaseModal, BaseButton },
+  components: { Search, Send, ArrowRight, MessageSquare, CheckCircle2, RotateCcw, Archive, ArchiveRestore, Trash2, Inbox, MessagesSquare, UcasLogo, BaseModal, BaseButton },
 
   data() {
     return {
@@ -187,7 +195,8 @@ export default {
         { value: 'answered', label: 'تم الرد', icon: markRaw(MessageSquareReply) },
         { value: 'closed', label: 'مغلقة', icon: markRaw(CheckCircle2) },
         { value: 'archived', label: 'الأرشيف', icon: markRaw(Archive) },
-        { value: 'all', label: 'كل النشطة', icon: markRaw(Layers) }
+        { value: 'all', label: 'كل النشطة', icon: markRaw(Layers) },
+        { value: 'replies', label: 'كل الرسائل', icon: markRaw(MessagesSquare), hidden: true }
       ],
       current: null,
       thread: [],
@@ -201,6 +210,15 @@ export default {
   computed: {
     counts() {
       return Object.fromEntries(this.views.map((v) => [v.value, this.tickets.filter((t) => this.inView(t, v.value)).length]))
+    },
+    /** كل الرسائل: مجموعتان بانتظار الرد / تم الرد (رد الإدارة = آخر رسالة من غير صاحب التذكرة)؛ وباقي العروض قائمة واحدة */
+    groups() {
+      if (this.view !== 'replies') return [{ key: 'list', label: '', items: this.filtered }]
+      const answered = (t) => t.last_reply_user_id && t.last_reply_user_id !== t.user_id
+      return [
+        { key: 'awaiting', label: 'بانتظار الرد', items: this.filtered.filter((t) => !answered(t)) },
+        { key: 'answered', label: 'تم الرد', items: this.filtered.filter(answered) }
+      ]
     },
     viewLabel() {
       return this.views.find((v) => v.value === this.view)?.label
@@ -242,6 +260,7 @@ export default {
 
     inView(t, v) {
       if (v === 'archived') return !!t.archived_at
+      if (v === 'replies') return true
       if (t.archived_at) return false
       if (v === 'awaiting') return this.awaiting(t)
       if (v === 'answered') return t.status === 'open' && !this.awaiting(t)
