@@ -8,9 +8,9 @@
     </header>
 
     <!-- مراحل العمل -->
-    <ol class="tk-stepper dp-steps" aria-label="مراحل جدولة المناقشات">
-      <li v-for="(st, i) in steps" :key="st.label" :class="[step === i && 'is-active', st.done && step !== i && 'is-done']">
-        <button type="button" :disabled="i > 0 && !plan.length" @click="step = i"><b>{{ i + 1 }}</b> {{ st.label }}</button>
+    <ol class="sp-steps cr-steps dp-steps" aria-label="مراحل جدولة المناقشات">
+      <li v-for="(st, i) in steps" :key="st.label" :class="step === i ? 'is-current' : (st.done || i < step) && 'is-done'">
+        <button type="button" :disabled="i > 0 && !plan.length" :aria-current="step === i ? 'step' : null" @click="step = i"><b>{{ i + 1 }}</b><span>{{ st.label }}</span></button>
       </li>
     </ol>
 

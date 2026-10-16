@@ -8,13 +8,11 @@
     </header>
 
     <!-- الإعداد بخطوات: إعداد النماذج ← تقييم المجموعات ← النتائج -->
-    <div class="ev-steps-bar">
-      <ol class="tk-stepper ev-steps" aria-label="مراحل التقييم">
-        <li v-for="(t, i) in steps" :key="t.value" :class="[tab === t.value && 'is-active']">
-          <button type="button" @click="tab = t.value"><b>{{ i + 1 }}</b> {{ t.label }}</button>
-        </li>
-      </ol>
-    </div>
+    <ol class="sp-steps cr-steps ev-flow" aria-label="مراحل التقييم">
+      <li v-for="(t, i) in steps" :key="t.value" :class="tab === t.value ? 'is-current' : i < stepIndex && 'is-done'">
+        <button type="button" :aria-current="tab === t.value ? 'step' : null" @click="tab = t.value"><b>{{ i + 1 }}</b><span>{{ t.label }}</span></button>
+      </li>
+    </ol>
 
     <section v-if="tab === 'groups' || tab === 'results'" class="hm-stats tk-stats" aria-label="ملخص التقييمات">
       <div class="hm-stat"><span class="hm-stat-label">المجموعات</span><span class="hm-stat-value">{{ groupsWithStatus.length }}</span><span class="hm-stat-split">مكتملة التقييم <b>{{ statusCount('done') }}</b></span></div>
@@ -243,6 +241,9 @@ export default {
         { value: 'groups', label: 'تقييم المجموعات' },
         { value: 'results', label: 'النتائج' }
       ]
+    },
+    stepIndex() {
+      return this.steps.findIndex((t) => t.value === this.tab)
     },
     /** تصنيف سريع بنمط صفحة المجموعات، بأعداد من كل المجموعات */
     gClasses() {
