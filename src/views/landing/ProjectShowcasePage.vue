@@ -1,7 +1,7 @@
 <template>
   <!-- صفحة المشروع بنمط موقع الكلية: شريط عنوان متدرّج (مسار التنقل + التخصص + العنوان)،
        ثم عمودان: نبذة المشروع وفيديو العرض، وبطاقة بيانات المشروع والفريق -->
-  <div>
+  <div class="us-proj">
     <header class="us-pagehead">
       <DataRain :gain="2.4" />
       <div class="us-wrap">
@@ -10,8 +10,7 @@
         <p v-if="project">{{ [project.dept_name, project.semester].filter(Boolean).join(' · ') }}</p>
         <nav class="us-crumbs" aria-label="مسار التنقل">
           <router-link :to="{ name: 'landing' }">الرئيسية</router-link><span>/</span>
-          <router-link :to="{ name: 'projects-archive' }">أرشيف المشاريع</router-link><span>/</span>
-          <span>{{ project?.title || '…' }}</span>
+          <router-link :to="{ name: 'projects-archive' }">أرشيف المشاريع</router-link>
         </nav>
       </div>
     </header>

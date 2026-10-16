@@ -28,12 +28,12 @@
           <option value="">كل المشرفين</option>
           <option v-for="s in supervisors" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
-        <select v-if="!isSupervisor" v-model="fGroup" class="gr-select" aria-label="المجموعة">
+        <select v-model="fGroup" class="gr-select" aria-label="المجموعة">
           <option value="">كل المجموعات</option>
           <option v-for="g in groupOptions" :key="g.id" :value="g.id">{{ g.label }}</option>
         </select>
-        <!-- المشرف: فلترا التخصص والفئة فقط -->
-        <template v-else>
+        <!-- المشرف: المجموعة + التخصص والفئة -->
+        <template v-if="isSupervisor">
           <select v-model="fSpec" class="gr-select" aria-label="التخصص">
             <option value="">كل التخصصات</option>
             <option v-for="s in specNames" :key="s" :value="s">{{ s }}</option>
@@ -127,12 +127,12 @@
       <section v-if="!isSupervisor" v-show="step === 0" class="tk-sec">
         <header class="tk-sec-head"><h4>القوالب</h4></header>
         <div class="tk-sec-body">
-          <TemplatePicker :kind="type" :title="form.title" :body="form.body" @apply="(t) => { Object.assign(form, { title: t.title || '', body: t.body || '' }); step = off }" />
+          <TemplatePicker :kind="type" :title="form.title" :body="form.body" @apply="(t) => useTemplate({ title: t.title || '', body: t.body || '' })" />
         </div>
       </section>
 
       <!-- 1. التفاصيل -->
-      <section v-show="step === off" class="tk-sec">
+      <section v-show="step === off" :class="['tk-sec', filled && 'is-filled']">
         <header class="tk-sec-head"><h4>{{ steps[off] }}</h4></header>
         <div class="tk-sec-body">
           <label class="pfield">
@@ -260,6 +260,7 @@ export default {
 
   data() {
     return {
+      filled: false,
       AUDIENCE,
       CHANNELS,
       items: [],
@@ -401,6 +402,16 @@ export default {
   },
 
   methods: {
+    /** القالب: تعبئة العنوان والنص، الانتقال لخطوة التفاصيل، ولمعة قصيرة على الحقول المعبّأة */
+    useTemplate(fields) {
+      Object.assign(this.form, fields)
+      this.step = this.off
+      this.filled = false
+      requestAnimationFrame(() => { this.filled = true })
+      clearTimeout(this.filledTimer)
+      this.filledTimer = setTimeout(() => { this.filled = false }, 1600)
+    },
+
     formatDateTime,
     formatFileSize,
 

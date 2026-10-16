@@ -65,14 +65,15 @@
           <table class="gr-table pr-table">
             <thead>
               <tr>
-                <th data-rt-show>المشروع</th><th data-rt-title>الفريق / الشعبة</th><th v-if="!isSupervisor">المشرف</th><th>الدرجة</th><th>تاريخ التقديم</th>
+                <th class="hm-center">الشعبة</th><th data-rt-title>المشروع</th><th data-rt-show>الفريق</th><th v-if="!isSupervisor">المشرف</th><th>الدرجة</th><th>تاريخ التقديم</th>
                 <th>الحالة</th><th>مرات الرفض</th><th>التقارير</th><th aria-label="عرض" />
               </tr>
             </thead>
             <tbody>
               <tr v-for="p in slideRows" :key="p.id" class="gr-row" @click="open(p)">
+                <td class="hm-center"><span class="ev-sec-chip">{{ p.team?.section ? `شعبة ${p.team.section}` : '—' }}</span></td>
                 <td><span class="gr-name">{{ p.name }}</span></td>
-                <td><span v-if="p.team?.section" class="rt-section">شعبة {{ p.team.section }}</span><span class="d-block">{{ p.team?.name || '—' }}</span></td>
+                <td>{{ p.team?.name || '—' }}</td>
                 <td v-if="!isSupervisor">{{ p.supervisor?.name || '—' }}</td>
                 <td>{{ DEGREES[p.degree] || '—' }}</td>
                 <td><span class="mono">{{ day(p.created_at) }}</span></td>
@@ -81,8 +82,8 @@
                 <td><span class="pr-count">{{ p.final_reports.length }}</span></td>
                 <td @click.stop><button type="button" class="pbtn is-cyan is-sm" @click="open(p)"><Eye :size="15" /> عرض المقترح</button></td>
               </tr>
-              <SkeletonLoader v-if="loading && !rows.length" variant="table" :cols="isSupervisor ? 8 : 9" :rows="5" />
-              <tr v-else-if="!rows.length"><td :colspan="isSupervisor ? 8 : 9" class="gr-empty">لا توجد مقترحات مطابقة</td></tr>
+              <SkeletonLoader v-if="loading && !rows.length" variant="table" :cols="isSupervisor ? 9 : 10" :rows="5" />
+              <tr v-else-if="!rows.length"><td :colspan="isSupervisor ? 9 : 10" class="gr-empty">لا توجد مقترحات مطابقة</td></tr>
             </tbody>
           </table>
         </div>
@@ -102,13 +103,19 @@
     <!-- عرض المقترح: نافذة منبثقة (رأس بالحالة والتنقّل ← المحتوى + لوحة جانبية بالقرار) -->
     <BaseModal :model-value="!!view.p" :title="view.p?.name || ''" size="xl" @update:model-value="!$event && close()">
       <div v-if="view.p" class="prd prd-modal">
-        <header class="prd-head">
+        <!-- رأس المقترح: الشعبة في خانة مستقلة، ثم الفريق والحالة والمشرف والدرجة ونوع المشروع، والأدوات (التنقّل + ملف المقترح) -->
+        <header class="prd-head prd-hero">
+          <span class="prd-hero-sec"><small>الشعبة</small><b>{{ view.p.team?.section || '—' }}</b></span>
           <div class="prd-title">
-            <span :class="['rv-pill', STATUS[view.p.status].pill]">{{ STATUS[view.p.status].label }}</span>
-            <p class="pt-muted">
-              {{ view.p.team?.name || '—' }}<template v-if="view.p.team?.section"> · المجموعة {{ view.p.team.section }}</template>
-              · المشرف {{ view.p.supervisor?.name || '—' }}
-            </p>
+            <span class="prd-hero-line">
+              <b>{{ view.p.team?.name || '—' }}</b>
+              <span :class="['rv-pill', STATUS[view.p.status].pill]">{{ STATUS[view.p.status].label }}</span>
+            </span>
+            <span class="prd-hero-chips">
+              <span><UserRound :size="13" /> {{ view.p.supervisor?.name || '—' }}</span>
+              <span><GraduationCap :size="13" /> {{ DEGREES[view.p.degree] || '—' }}</span>
+              <span v-for="t in view.p.types || []" :key="t" class="is-type">{{ t }}</span>
+            </span>
           </div>
           <div class="prd-head-tools">
             <div v-if="rows.length > 1 && viewIndex > -1" class="prd-nav">
@@ -131,20 +138,43 @@
 
         <div class="prd-body">
           <div class="prd-main">
-            <nav class="hm-tabs pr-tabs" aria-label="أقسام المقترح">
-              <button type="button" :class="view.tab === 'proposal' && 'is-active'" @click="view.tab = 'proposal'">المقترح</button>
-              <button type="button" :class="view.tab === 'rejections' && 'is-active'" @click="view.tab = 'rejections'">محاولات الرفض <span>{{ Math.max(rejectCount(view.p), rejections.length) }}</span></button>
-              <button type="button" :class="view.tab === 'reports' && 'is-active'" @click="view.tab = 'reports'">التقارير <span>{{ view.p.final_reports.length }}</span></button>
-            </nav>
+            <!-- تبويبات بخانات كاملة (هوية تبويبات العرض) -->
+            <div class="ev-steps-bar prd-steps">
+              <ol class="tk-stepper ev-steps" aria-label="أقسام المقترح">
+                <li :class="view.tab === 'proposal' && 'is-active'"><button type="button" @click="view.tab = 'proposal'"><b>{{ attemptsUsed }}</b> <FileText :size="15" /> المقترح</button></li>
+                <li :class="view.tab === 'rejections' && 'is-active'"><button type="button" @click="view.tab = 'rejections'"><b>{{ Math.max(rejectCount(view.p), rejections.length) + rejectedReports.length }}</b> <XCircle :size="15" /> محاولات الرفض</button></li>
+                <li :class="view.tab === 'reports' && 'is-active'"><button type="button" @click="view.tab = 'reports'"><b>{{ shownReports.length }}</b> <Check :size="15" /> التقرير المعتمد</button></li>
+              </ol>
+            </div>
 
-            <!-- المقترح -->
+            <!-- المقترح: القرار فقط (الموافقة أو الرفض أو طلب التعديل وسببه) + زر عرض ملف المقترح -->
             <div v-if="view.tab === 'proposal'" class="pr-pane">
-              <h4 class="pr-h">وصف المشروع</h4>
-              <p class="pr-text">{{ view.p.description || '—' }}</p>
-              <h4 class="pr-h">أعضاء الفريق</h4>
-              <ul class="rv-members">
-                <li v-for="m in view.p.members" :key="m.id"><span class="rv-avatar">{{ (m.name || '?').charAt(0) }}</span><span>{{ m.name }}</span></li>
-              </ul>
+              <!-- تفاصيل القرار: لون الحالة، من بتّ فيه ومتى، والسبب عند الرفض أو طلب التعديل -->
+              <section :class="['prd-verdict', `is-${view.p.status}`]">
+                <header>
+                  <span class="prd-verdict-ic"><component :is="view.p.status === 'approved' ? CheckCircle2 : view.p.status === 'pending' ? Hourglass : view.p.status === 'changes' ? PencilLine : XCircle" :size="20" /></span>
+                  <b>{{ { approved: 'تفاصيل الاعتماد', rejected: 'تفاصيل الرفض', changes: 'تفاصيل طلب التعديل', pending: 'بانتظار القرار' }[view.p.status] }}</b>
+                  <span :class="['rv-pill', STATUS[view.p.status].pill]">{{ STATUS[view.p.status].label }}</span>
+                </header>
+                <dl v-if="view.p.status !== 'pending'">
+                  <div><dt>{{ view.p.status === 'approved' ? 'اعتمده' : 'راجعه' }}</dt><dd>{{ view.p.reviewed_by?.name || '—' }}</dd></div>
+                  <div><dt>تاريخ القرار</dt><dd class="mono">{{ day(view.p.updated_at) }}</dd></div>
+                  <div v-if="view.p.rejection_reason" class="is-wide"><dt>{{ view.p.status === 'changes' ? 'المطلوب تعديله' : 'سبب الرفض' }}</dt><dd>{{ view.p.rejection_reason }}</dd></div>
+                </dl>
+                <!-- لم يُبتّ بعد: خانة القرار (موافقة / طلب تعديل / رفض) بنمط بطاقة القوالب -->
+                <form v-else class="prd-decide" @submit.prevent="decide('approved')">
+                  <label class="pfield">
+                    <span>ملاحظات على المقترح <small>(مطلوبة للرفض وطلب التعديل)</small></span>
+                    <textarea v-model.trim="draft.projectNote" rows="3" placeholder="مثال: وضّحوا نطاق المشروع والفئة المستهدفة" />
+                  </label>
+                  <div class="prd-decide-acts">
+                    <button type="submit" class="pbtn is-green" :disabled="deciding"><Check :size="16" /> {{ deciding ? 'جارٍ الحفظ…' : 'الموافقة على المقترح' }}</button>
+                    <button type="button" class="pbtn is-outline" :disabled="!draft.projectNote || deciding" @click="decide('changes')"><PencilLine :size="16" /> طلب تعديل</button>
+                    <button type="button" class="pbtn is-red" :disabled="!draft.projectNote || deciding" @click="decide('rejected')"><X :size="16" /> رفض المقترح</button>
+                  </div>
+                </form>
+                <button type="button" class="pbtn is-cyan prd-verdict-btn" @click="openFile(`/proposals/${view.p.id}/download`)"><Eye :size="16" /> عرض المقترح</button>
+              </section>
             </div>
 
             <!-- محاولات الرفض: كل رفض بسببه وتاريخه، ضمن سجل التقديم -->
@@ -177,6 +207,26 @@
                     <button v-if="i === rejections.length - 1" type="button" class="pr-report-file is-inline" @click="openFile(`/proposals/${view.p.id}/download`)"><FileText :size="16" /><span>ملف المقترح</span></button>
                   </li>
                 </ol>
+
+                <!-- التقارير النهائية المرفوضة: كل نسخة مرفوضة بملفها وسبب رفضها ومن رفضها -->
+                <template v-if="rejectedReports.length">
+                  <h4 class="pr-h">التقارير المرفوضة</h4>
+                  <ol class="pr-rejects">
+                    <li v-for="r in rejectedReports" :key="r.id">
+                      <header>
+                        <span class="pr-attempt-no">{{ r.no }}</span>
+                        <b>التقرير — نسخة {{ r.no }}</b>
+                        <span class="rv-pill is-rejected">رفض {{ rejectedBy(r.info) }}</span>
+                        <time>{{ day(r.created_at) }}</time>
+                      </header>
+                      <p class="pr-reject-reason">{{ r.info.review_note || 'بدون سبب مذكور' }}</p>
+                      <dl class="pr-reject-meta">
+                        <div><dt>رفعه</dt><dd>{{ r.uploaded_by || '—' }}</dd></div>
+                      </dl>
+                      <button type="button" class="pr-report-file is-inline" @click="openFile(`/final-reports/${r.id}/download`)"><FileText :size="16" /><span>ملف التقرير المرفوض</span></button>
+                    </li>
+                  </ol>
+                </template>
               </template>
               <h4 v-if="view.history.length" class="pr-h">سجل التقديم</h4>
               <ol class="tl-log">
@@ -186,14 +236,14 @@
               </ol>
             </div>
 
-            <!-- التقارير النهائية (قد تكون أكثر من نسخة) -->
+            <!-- التقرير المعتمد فقط (المرفوضة في "محاولات الرفض")؛ والمشرف يرى أيضًا الأحدث بانتظار موافقته ليقرّر فيه -->
             <div v-else class="pr-pane">
-              <p v-if="!view.p.final_reports.length" class="pt-muted">لم يُرفع تقرير نهائي بعد.</p>
+              <p v-if="!shownReports.length" class="pt-muted">{{ view.p.final_reports.length ? 'لا يوجد تقرير معتمد بعد.' : 'لم يُرفع تقرير نهائي بعد.' }}</p>
               <ul v-else class="pr-reports">
-                <li v-for="(r, i) in view.p.final_reports" :key="r.id">
-                  <span class="pr-attempt-no">{{ view.p.final_reports.length - i }}</span>
+                <li v-for="(r, i) in shownReports" :key="r.id">
+                  <span class="pr-attempt-no">{{ r.no }}</span>
                   <div>
-                    <b>{{ i === 0 ? 'أحدث تقرير' : `نسخة ${view.p.final_reports.length - i}` }}</b>
+                    <b>{{ r.status === 'approved' ? 'التقرير المعتمد' : 'بانتظار موافقتك' }} <small class="pt-muted">نسخة {{ r.no }}</small></b>
                     <span class="pt-muted">{{ day(r.created_at) }} · رفعه {{ r.uploaded_by || '—' }}</span>
                     <!-- مسار الاعتماد: من اعتمد التقرير في المرة الأولى (المشرف) والثانية (لجنة الإشراف) — GET /projects/{id}/final-reports -->
                     <span v-if="reportInfo(r)" class="pr-review">
@@ -203,7 +253,7 @@
                       <span v-if="reportInfo(r).review_note" class="pt-muted">الملاحظة: {{ reportInfo(r).review_note }}</span>
                     </span>
                     <!-- المشرف: موافقته ترفع التقرير للجنة الإشراف (POST /final-reports/{id}/review) -->
-                    <span v-if="isSupervisor && i === 0 && reportInfo(r)?.review_status === 'pending_supervisor'" class="pr-review-act">
+                    <span v-if="isSupervisor && reportInfo(r)?.review_status === 'pending_supervisor'" class="pr-review-act">
                       <input v-model.trim="reportNote" type="text" class="ev-input" placeholder="سبب الرفض (مطلوب عند الرفض)">
                       <button type="button" class="pbtn is-red is-sm" :disabled="reviewing || !reportNote" @click="reviewLatest(r, false)">رفض</button>
                       <button type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click="reviewLatest(r, true)">موافقة ورفع للجنة</button>
@@ -231,20 +281,7 @@
               </dl>
             </section>
 
-            <!-- القرار (للمقترح المعلّق فقط) -->
-            <section v-if="view.p.status === 'pending'" class="prd-card prd-decision">
-              <h4>القرار</h4>
-              <label class="pfield">
-                <span>ملاحظات على المشروع (مطلوبة للرفض وطلب التعديل)</span>
-                <textarea v-model.trim="draft.projectNote" rows="4" placeholder="مثال: وضّحوا نطاق المشروع والفئة المستهدفة" />
-              </label>
-              <button type="button" class="pbtn is-green" :disabled="deciding" @click="decide('approved')"><Check :size="16" /> {{ deciding ? 'جارٍ الحفظ…' : 'اعتماد المقترح' }}</button>
-              <div class="prd-decision-row">
-                <button type="button" class="pbtn is-outline" :disabled="!draft.projectNote || deciding" @click="decide('changes')"><PencilLine :size="16" /> طلب تعديل</button>
-                <button type="button" class="pbtn is-red" :disabled="!draft.projectNote || deciding" @click="decide('rejected')"><X :size="16" /> رفض</button>
-              </div>
-            </section>
-            <p v-else class="prd-decided">تم البتّ في هذا المقترح: <b>{{ STATUS[view.p.status].label }}</b></p>
+            <p v-if="view.p.status !== 'pending'" class="prd-decided">تم البتّ في هذا المقترح: <b>{{ STATUS[view.p.status].label }}</b></p>
           </aside>
         </div>
       </div>
@@ -254,13 +291,13 @@
 
 <script>
 import { markRaw } from 'vue'
-import { Search, X, Check, Eye, FileText, PencilLine, ChevronLeft, ChevronRight, Layers, Hourglass, CheckCircle2, XCircle } from 'lucide-vue-next'
+import { Search, X, Check, Eye, FileText, PencilLine, ChevronLeft, ChevronRight, Layers, Hourglass, CheckCircle2, XCircle, UserRound, GraduationCap } from 'lucide-vue-next'
 import SlideTable from '@/components/ui/SlideTable.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import api from '@/services/api'
 import { useTeamsStore } from '@/stores/teams.store'
 import { DEGREES } from '@/utils/progressData'
-import { REVIEW, reviewReport } from '@/utils/finalReport'
+import { REVIEW, rejectedBy, reviewReport } from '@/utils/finalReport'
 import { PROPOSAL_CHANGES_PREFIX } from '@/utils/constants'
 import { mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
@@ -282,11 +319,12 @@ const fmt = (v) => (v ? new Date(v).toLocaleString('ar-EG', { dateStyle: 'medium
 export default {
   name: 'ProposalsReview',
 
-  components: { Search, X, Check, Eye, FileText, PencilLine, ChevronLeft, ChevronRight, XCircle, BaseModal, SlideTable },
+  components: { Search, X, Check, Eye, FileText, PencilLine, ChevronLeft, ChevronRight, XCircle, UserRound, GraduationCap, BaseModal, SlideTable },
 
   data() {
     return {
       DEGREES, STATUS, MAX_ATTEMPTS,
+      CheckCircle2: markRaw(CheckCircle2), Hourglass: markRaw(Hourglass), PencilLine: markRaw(PencilLine), XCircle: markRaw(XCircle),
       all: [],
       rows: [],
       loading: true,
@@ -295,6 +333,7 @@ export default {
       view: { tab: 'proposal', p: null, loading: false, history: [], raw: [] },
       draft: { projectNote: '' },
       REVIEW,
+      rejectedBy,
       reports: [],
       reportNote: '',
       reviewing: false,
@@ -326,7 +365,21 @@ export default {
       this.all.forEach((p) => p.supervisor && map.set(p.supervisor.id, p.supervisor))
       return [...map.values()]
     },
-    /** كل رفض بسببه (من سجل المراجعة) */
+    /** نسخ التقرير النهائي مع رقم النسخة (final_reports الأحدث أولًا) وحالة اعتمادها من GET /projects/{id}/final-reports */
+    reportVersions() {
+      const list = this.view.p?.final_reports || []
+      return list.map((r, i) => {
+        const info = this.reportInfo(r)
+        return { ...r, no: list.length - i, info, status: info?.review_status || 'pending_supervisor' }
+      })
+    },
+    rejectedReports() {
+      return this.reportVersions.filter((r) => r.status === 'rejected')
+    },
+    /** تبويب التقرير: المعتمد فقط، والمشرف يرى معه الأحدث بانتظار موافقته */
+    shownReports() {
+      return this.reportVersions.filter((r, i) => r.status === 'approved' || (this.isSupervisor && i === 0 && r.status === 'pending_supervisor'))
+    },
     /** المحاولات المستخدمة: عدد مرات التقديم (أولي + إعادات)، ولا يقل عن مرات الرفض */
     attemptsUsed() {
       const subs = this.view.raw.filter((h) => ['submit', 'resubmit'].includes(h.action)).length
@@ -447,6 +500,11 @@ export default {
     async open(p) {
       this.view = { tab: 'proposal', p, loading: true, history: [], raw: [] }
       this.loadReports(p)
+      // من راجع المقترح — GET /proposals/{id}؛ القائمة لا تحمله
+      api.get(`/proposals/${p.id}`).then(({ data }) => {
+        const d = data.data || data
+        if (this.view.p?.id === p.id) this.view.p = { ...this.view.p, reviewed_by: d.reviewed_by }
+      }).catch(() => {})
       this.draft = { projectNote: '' }
       // من القائمة: push (زر الرجوع في المتصفح يعيد للقائمة) · بين المقترحات: replace
       if (String(this.$route.query.proposal) !== String(p.id)) this.$router[this.$route.query.proposal ? 'replace' : 'push']({ query: { ...this.$route.query, proposal: p.id } })

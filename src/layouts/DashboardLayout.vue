@@ -68,18 +68,15 @@
       </footer>
     </div>
 
-    <!-- زر العودة للأعلى — مربع برتقالي بالزاوية السفلية اليسرى كما في موقع الكلية -->
-    <transition name="portal-top">
-      <button v-if="isSuperAdmin && showBackToTop" type="button" class="portal-back-top" aria-label="العودة للأعلى" @click="scrollToTop">
-        <ChevronUp :size="26" />
-      </button>
-    </transition>
+    <!-- زر العودة للأعلى بهوية مسار (حلقة تقدّم التمرير) -->
+    <BackToTop v-if="isSuperAdmin" />
   </div>
 </template>
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { CalendarDays, ChevronUp, Mail, ShieldCheck } from 'lucide-vue-next'
+import { CalendarDays, Mail, ShieldCheck } from 'lucide-vue-next'
+import BackToTop from '@/components/shared/BackToTop.vue'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 import PortalTopbar from '@/components/layout/PortalTopbar.vue'
@@ -100,11 +97,10 @@ import { ROLE_LABELS, ROLES, APP_NAME } from '@/utils/constants'
 export default {
   name: 'DashboardLayout',
 
-  components: { AppSidebar, AppTopbar, PortalTopbar, WaterBackground, UcasLogo, CalendarDays, ChevronUp, Mail, ShieldCheck },
+  components: { AppSidebar, AppTopbar, BackToTop, PortalTopbar, WaterBackground, UcasLogo, CalendarDays, Mail, ShieldCheck },
 
   data() {
     return {
-      showBackToTop: false,
       ROLES,
       year: new Date().getFullYear(),
       appName: APP_NAME
@@ -142,13 +138,9 @@ export default {
     }
   },
 
-  mounted() {
-    window.addEventListener('scroll', this.handleScroll, { passive: true })
-  },
 
   beforeUnmount() {
     document.documentElement.removeAttribute('data-brand')
-    window.removeEventListener('scroll', this.handleScroll)
   },
 
   methods: {
@@ -161,14 +153,6 @@ export default {
       } catch {
         this.$toast?.error('تعذّر نسخ البريد الإلكتروني')
       }
-    },
-
-    handleScroll() {
-      this.showBackToTop = window.scrollY > 300
-    },
-
-    scrollToTop() {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }
 }

@@ -7,12 +7,16 @@
       <h2 class="dash-title">مواعيد المناقشات</h2>
     </header>
 
-    <!-- مراحل العمل -->
-    <ol class="sp-steps cr-steps dp-steps" aria-label="مراحل جدولة المناقشات">
-      <li v-for="(st, i) in steps" :key="st.label" :class="step === i ? 'is-current' : (st.done || i < step) && 'is-done'">
-        <button type="button" :disabled="i > 0 && !plan.length" :aria-current="step === i ? 'step' : null" @click="step = i"><b>{{ i + 1 }}</b><span>{{ st.label }}</span></button>
-      </li>
-    </ol>
+    <!-- مراحل العمل بتبويبات العرض المعتمدة (خانات بيضاء، النشط بتدرّج خفيف وخط تدرّج، المكتملة بعلامة ✓) -->
+    <div class="ev-steps-bar dp-tabs-bar">
+      <ol class="tk-stepper ev-steps" aria-label="مراحل جدولة المناقشات">
+        <li v-for="(st, i) in steps" :key="st.label" :class="[step === i && 'is-active', st.done && 'is-done']">
+          <button type="button" :disabled="i > 0 && !plan.length" :aria-current="step === i && 'step'" @click="step = i">
+            <b>{{ st.done && step !== i ? '✓' : i + 1 }}</b> <component :is="st.icon" :size="16" /> {{ st.label }}
+          </button>
+        </li>
+      </ol>
+    </div>
 
     <!-- الإعدادات -->
     <!-- الخطوة 1 -->
@@ -25,7 +29,7 @@
       <div class="dp-blocks">
         <!-- 1. القاعات أولًا: لكل مكان تواجد قاعاته، ونافذة ساعات ملزمة اختيارية (مثل: الجنوب من 10:00 إلى 13:00) -->
         <fieldset class="dp-block dp-block-wide">
-          <legend><DoorOpen :size="16" /> 1. القاعات حسب مكان تواجد المجموعات</legend>
+          <legend><span class="dp-no">1</span><DoorOpen :size="17" /> القاعات حسب مكان تواجد المجموعات<small>قاعات كل منطقة وساعاتها الملزمة</small></legend>
           <div class="dp-rooms">
             <div v-for="(label, key) in REGIONS" :key="key" class="dp-room-row">
               <span class="dp-room-label">{{ label }}<small>{{ regionCount(key) }} مجموعة</small></span>
@@ -46,24 +50,12 @@
               </div>
             </div>
           </div>
-          <!-- ساعات كل قاعة (افتراضيًا ساعات مكانها) — مثل: E504 من 09:00 إلى 12:00 -->
-          <div class="dp-room-hours">
-            <b class="dp-room-hours-title">ساعات كل قاعة</b>
-            <template v-for="(label, key) in REGIONS" :key="key">
-              <div v-for="room in s.rooms[key]" :key="room" :class="['dp-rh', !roomHoursOk(room) && 'is-invalid']">
-                <span class="dp-rh-name" dir="ltr">{{ room }}</span>
-                <small>{{ label }}</small>
-                <span>من</span><input v-model="s.roomHours[room].start" type="time" class="ev-input" :aria-label="`بداية القاعة ${room}`">
-                <span>إلى</span><input v-model="s.roomHours[room].end" type="time" class="ev-input" :aria-label="`نهاية القاعة ${room}`">
-              </div>
-            </template>
-          </div>
           <small v-if="badWindows.length" class="dp-note is-bad">حدّد ساعات صحيحة (من قبل إلى) لـ: {{ badWindows.map((k) => REGIONS[k]).join('، ') }}</small>
         </fieldset>
 
         <!-- 2. مدة المناقشة لكل درجة (الأوقات تُقسَّم تلقائيًا ضمن ساعات كل مكان) + استراحة اختيارية -->
         <fieldset class="dp-block">
-          <legend><Clock :size="16" /> 2. مدة المناقشة والاستراحة</legend>
+          <legend><span class="dp-no">2</span><Clock :size="17" /> مدة المناقشة والاستراحة</legend>
           <div class="dp-form">
             <label class="pfield"><span>مدة الدبلوم (دقيقة)</span><input v-model.number="s.durations.diploma" type="number" min="5" step="5"></label>
             <label class="pfield"><span>مدة البكالوريوس (دقيقة)</span><input v-model.number="s.durations.bachelor" type="number" min="5" step="5"></label>
@@ -77,7 +69,7 @@
 
         <!-- 3. تقسيم الأيام: الطلاب/الطالبات أو الدبلوم/البكالوريوس -->
         <fieldset class="dp-block">
-          <legend><CalendarDays :size="16" /> 3. الأيام</legend>
+          <legend><span class="dp-no">3</span><CalendarDays :size="17" /> الأيام</legend>
           <nav class="hm-tabs dp-split" aria-label="طريقة تقسيم الأيام">
             <button type="button" :class="s.splitBy === 'gender' && 'is-active'" @click="s.splitBy = 'gender'">الطلاب / الطالبات</button>
             <button type="button" :class="s.splitBy === 'degree' && 'is-active'" @click="s.splitBy = 'degree'">الدبلوم / البكالوريوس</button>
@@ -92,8 +84,10 @@
       <div class="dp-capacity">
         <div v-for="c in capacity" :key="c.key" :class="['dp-cap', c.ok ? 'is-ok' : 'is-bad']">
           <div class="dp-cap-head">
+            <span class="dp-cap-ic"><CalendarDays :size="18" /></span>
             <b>يوم {{ c.label }}</b>
             <span class="mono">{{ c.date || '—' }}</span>
+            <span :class="['dp-cap-state', c.ok ? 'is-ok' : 'is-bad']">{{ c.ok ? 'الوقت كافٍ' : 'الوقت غير كافٍ' }}</span>
           </div>
           <div class="dp-cap-num"><b>{{ c.groups }}</b> مجموعة · تحتاج <b>{{ c.need }}</b> من <b>{{ c.have }}</b> دقيقة</div>
           <div class="dp-cap-bar"><span :style="{ width: Math.min(100, c.have ? (c.need / c.have) * 100 : 100) + '%' }" /></div>
@@ -142,13 +136,14 @@
 
       <!-- عرض القائمة: أعمدة مضغوطة (حقلان فوق بعض) بلا تمرير أفقي، وسبب التعارض تحت الصف مباشرة -->
       <!-- أكثر من 5 مناقشات: سلايدر بنفس هوية باقي الصفحات -->
-      <SlideTable v-if="view === 'list'" v-slot="{ rows: planPage }" :rows="visiblePlan" :size="5" label="المناقشات">
-      <div class="pt-wrap dp-scroll">
+      <!-- مراجعة الجدول: كل المناقشات في جدول واحد يُمرَّر داخليًا (رأس ثابت) بدل السلايدر -->
+      <template v-if="view === 'list'">
+      <div class="pt-wrap dp-scroll dp-review-scroll">
         <table class="pt dp-table">
           <thead>
             <tr><th>المجموعة</th><th>الفئة والمكان</th><th>الموعد</th><th>القاعة</th><th>المناقشان</th><th>ملاحظات</th></tr>
           </thead>
-          <tbody v-for="r in planPage" :key="r.id" :data-row="r.id" :class="conflicts[r.id] && 'is-conflict'">
+          <tbody v-for="r in visiblePlan" :key="r.id" :data-row="r.id" :class="conflicts[r.id] && 'is-conflict'">
             <tr>
               <td class="dp-group">
                 <button type="button" class="dp-sec" title="تفاصيل المناقشة" @click="detail = r">{{ r.g.section }}</button>
@@ -198,7 +193,7 @@
           <tbody v-if="!visiblePlan.length"><tr><td colspan="6" class="gr-empty">لا توجد مناقشات مطابقة</td></tr></tbody>
         </table>
       </div>
-      </SlideTable>
+      </template>
 
       <!-- عرض حسب القاعات: شبكة (الوقت × القاعة) لليوم المختار -->
       <div v-else class="dp-grid-wrap">
@@ -265,9 +260,21 @@
         <span class="dash-chip">{{ published ? `آخر نشر: ${published.at}` : 'لم يُنشر بعد' }}</span>
       </div>
       <template v-if="published">
-        <select v-model="supView" class="gr-select dp-sup" aria-label="المشرف">
-          <option v-for="sp in supList" :key="sp.id" :value="sp.id">{{ sp.name }}</option>
-        </select>
+        <div class="gr-filters dp-sup-bar">
+          <label class="gr-pick">
+            <span>المشرف</span>
+            <select v-model="supView" class="gr-select" aria-label="المشرف" @change="supRoom = ''">
+              <option v-for="sp in supList" :key="sp.id" :value="sp.id">{{ sp.name }}</option>
+            </select>
+          </label>
+          <label class="gr-pick">
+            <span>القاعة</span>
+            <select v-model="supRoom" class="gr-select" aria-label="القاعة">
+              <option value="">كل القاعات</option>
+              <option v-for="rm in supRooms" :key="rm" :value="rm">{{ rm }}</option>
+            </select>
+          </label>
+        </div>
         <!-- نفس قالب سجل المجموعات: سلايدر + شريط الملخص الأخضر -->
         <SlideTable :rows="supSchedule" :size="5" :label="'المناقشات'">
           <template #default="{ rows: shown }">
@@ -385,7 +392,7 @@
 <script>
 import SlideTable from '@/components/ui/SlideTable.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
-import { CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil } from 'lucide-vue-next'
+import { CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, Settings2, ListChecks } from 'lucide-vue-next'
 import { exportStyledExcel } from '@/utils/exportReport'
 import { exportPlanPdf, exportRoomsPdf, exportDiscussionsDoc } from '@/utils/ucasReports'
 import { DEGREES, REGIONS } from '@/utils/progressData'
@@ -441,6 +448,7 @@ export default {
       roomFilter: '',
       busy: false,
       published: null,
+      supRoom: '',
       supView: null
     }
   },
@@ -492,9 +500,9 @@ export default {
     /** مراحل الجدولة؛ كل مرحلة تعرض قسمها فقط */
     steps() {
       return [
-        { label: 'الإعدادات والتوليد', done: this.plan.length > 0 },
-        { label: 'مراجعة الجدول ومعالجة التعارضات', done: this.plan.length > 0 && !this.conflictCount },
-        { label: 'الطباعة والنشر', done: !!this.published }
+        { label: 'الإعدادات والتوليد', done: this.plan.length > 0, icon: Settings2 },
+        { label: 'مراجعة الجدول ومعالجة التعارضات', done: this.plan.length > 0 && !this.conflictCount, icon: ListChecks },
+        { label: 'الطباعة والنشر', done: !!this.published, icon: Printer }
       ]
     },
 
@@ -623,8 +631,14 @@ export default {
       if (!this.published) return []
       const id = this.supView
       return this.published.rows
-        .filter((r) => r.supId === id || r.examiners.includes(id))
+        .filter((r) => (r.supId === id || r.examiners.includes(id)) && (!this.supRoom || r.room === this.supRoom))
         .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))
+    },
+    /** قاعات مناقشات المشرف المختار (لفلتر القاعة) */
+    supRooms() {
+      if (!this.published) return []
+      const id = this.supView
+      return [...new Set(this.published.rows.filter((r) => r.supId === id || r.examiners.includes(id)).map((r) => r.room).filter(Boolean))].sort()
     }
   },
 

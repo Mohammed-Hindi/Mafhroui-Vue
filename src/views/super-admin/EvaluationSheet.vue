@@ -2,50 +2,60 @@
   <!-- ورقة تقييم مجموعة (صفحة مستقلة) بنمط نموذج الكلية: بطاقة المجموعة، ثم تبويبات: كل نموذج (جدول البنود بمجاميع حيّة وتعبئة سريعة
        وملاحظات) + "نتيجة التقييم" (الدرجة النهائية لكل طالب والتقييمات المحفوظة لكل نموذج) -->
   <div class="dash es-page">
-    <!-- زر رجوع أساسي مستقل (بلا بطاقة عنوان) -->
-    <div class="es-back">
-      <button type="button" class="pbtn is-cyan" @click="back"><ArrowRight :size="16" /> رجوع</button>
+    <!-- أثناء التحميل: زر الرجوع وحده -->
+    <div v-if="loading || !sheet" class="es-back">
+      <button type="button" class="pbtn is-cyan" @click="back"><ArrowRight :size="16" /> رجوع إلى التقييمات</button>
     </div>
 
     <SkeletonLoader v-if="loading" :rows="6" height="40px" />
     <div v-else-if="sheet" class="es">
-      <!-- 1) بطاقة المجموعة -->
-      <section class="es-card es-group">
-        <div class="es-group-main">
-          <!-- شارة الشعبة (رقم تعريفي لا علامة): أزرق الشعار بعنوان "شعبة" -->
-          <span class="es-group-no"><small>شعبة</small><b>{{ sheet.team.section || sheet.team.name }}</b></span>
-          <div class="es-group-text">
-            <h3>{{ sheet.team.project || 'لم يُسجَّل مشروع' }}</h3>
-            <span class="es-group-meta">
-              <span><GraduationCap :size="15" /> {{ sheet.team.specialization || '—' }} · {{ DEGREES[sheet.team.degree] || '' }}</span>
-              <span><UserRound :size="15" /> المشرف: {{ sheet.team.supervisor?.name || '—' }}</span>
-              <span><Users :size="15" /> {{ sheet.team.members.length }} طلاب</span>
+      <!-- 1) بانر المجموعة بالتدرّج: الرجوع والتمييز أعلاه، ثم الشعبة في خانة مستقلة، ثم المشروع وبياناته، ثم الفريق -->
+      <section class="es-hero">
+        <div class="es-hero-top">
+          <button type="button" class="es-hero-btn" @click="back"><ArrowRight :size="16" /> رجوع إلى التقييمات</button>
+          <label v-if="sheet.team.project_id" :class="['es-hero-btn es-hero-star', sheet.team.featured && 'is-on']">
+            <input type="checkbox" class="sr-only" :checked="sheet.team.featured" :disabled="!sheet.team.can_feature || featuring" @change="toggleFeatured($event.target.checked)">
+            <Star :size="16" :fill="sheet.team.featured ? 'currentColor' : 'none'" />
+            {{ sheet.team.featured ? 'مشروع مميّز' : 'تمييز كمشروع مميّز' }}
+          </label>
+        </div>
+        <div class="es-hero-main">
+          <span class="es-hero-sec"><small>الشعبة</small><b>{{ sheet.team.section || sheet.team.name }}</b></span>
+          <div class="es-hero-text">
+            <small><GraduationCap :size="15" /> {{ sheet.team.specialization || '—' }} · {{ DEGREES[sheet.team.degree] || '' }}</small>
+            <h2>{{ sheet.team.project || 'لم يُسجَّل مشروع' }}</h2>
+            <span class="es-hero-chips">
+              <span><UserRound :size="14" /> المشرف: {{ sheet.team.supervisor?.name || '—' }}</span>
+              <span><Users :size="14" /> {{ sheet.team.members.length }} طلاب</span>
             </span>
           </div>
         </div>
-        <label v-if="sheet.team.project_id" :class="['es-featured', sheet.team.featured && 'is-on']">
-          <input type="checkbox" :checked="sheet.team.featured" :disabled="!sheet.team.can_feature || featuring" @change="toggleFeatured($event.target.checked)">
-          <Star :size="16" :fill="sheet.team.featured ? 'currentColor' : 'none'" />
-          {{ sheet.team.featured ? 'مشروع مميّز' : 'تمييز كمشروع مميّز' }}
-        </label>
+        <ul class="es-hero-team" aria-label="فريق المشروع">
+          <li v-for="m in sheet.team.members" :key="m.id"><span class="es-avatar">{{ (m.name || '؟').trim().charAt(0) }}</span>{{ m.name }}</li>
+        </ul>
       </section>
 
-      <!-- 2) النماذج + نتيجة التقييم -->
-      <section class="es-card es-form">
-        <nav class="gr-seg es-tabs" aria-label="النموذج">
-          <button v-for="f in sheet.forms" :key="f.id" type="button" :class="formId === f.id && 'is-active'" @click="switchForm(f.id)">
-            نموذج {{ FORM_KINDS[f.kind] }}
-            <b>{{ f.kind === 'examiner' ? `${filled(f.id)} مناقش` : (filled(f.id) ? 'تم' : 'لم يتم') }}</b>
-          </button>
-          <button type="button" :class="formId === RESULT && 'is-active'" @click="switchForm(RESULT)">
-            <Award :size="15" /> نتيجة التقييم
-          </button>
-        </nav>
+      <!-- 2) النماذج + نتائج الطلاب: تبويبات بخانات كاملة (هوية تبويبات العرض) -->
+      <div class="ev-steps-bar es-steps">
+        <ol class="tk-stepper ev-steps" aria-label="النموذج">
+          <li v-for="f in sheet.forms" :key="f.id" :class="formId === f.id && 'is-active'">
+            <button type="button" :aria-current="formId === f.id && 'page'" @click="switchForm(f.id)">
+              <b>{{ f.kind === 'examiner' ? filled(f.id) : (filled(f.id) ? '✓' : '0') }}</b> <ClipboardList :size="16" /> نموذج {{ FORM_KINDS[f.kind] }}
+            </button>
+          </li>
+          <li :class="formId === RESULT && 'is-active'">
+            <button type="button" :aria-current="formId === RESULT && 'page'" @click="switchForm(RESULT)">
+              <b>{{ sheet.team.members.length }}</b> <Award :size="16" /> نتائج الطلاب
+            </button>
+          </li>
+        </ol>
+      </div>
 
-        <!-- نتيجة التقييم: الدرجة النهائية لكل طالب + التقييمات المحفوظة لكل نموذج -->
+      <section class="es-card es-form">
+        <!-- نتائج الطلاب: الدرجة النهائية لكل طالب في جدول + التقييمات المحفوظة لكل نموذج -->
         <template v-if="formId === RESULT">
           <div class="es-form-head">
-            <h4>الدرجة النهائية للطلبة</h4>
+            <h4>نتائج الطلاب</h4>
             <span class="es-scope">{{ examinerOnly ? 'علامة لجنة المناقشة' : `المشرف ${weights.supervisor} + لجنة المناقشة ${weights.examiner} = 100` }}</span>
           </div>
           <div class="pt-wrap">
@@ -114,31 +124,38 @@
         <template v-if="form">
           <div class="es-form-head">
             <h4>{{ form.title }}</h4>
+            <!-- تقدّم تعبئة الخانات -->
             <span v-if="!viewOnly" class="es-progress">
               <span class="es-progress-bar"><span :style="{ width: (cells.total ? (cells.filled / cells.total) * 100 : 0) + '%' }" /></span>
-              {{ cells.filled }} من {{ cells.total }} درجة
+              {{ cells.filled }} من {{ cells.total }} خانة
             </span>
           </div>
 
-          <p v-if="viewOnly" class="es-viewonly">
-            للاطلاع فقط — علامة لجنة المناقشة يضعها المناقشون، ولا يمكنك تعديلها.
-            <span v-if="!others.length">لم يُقيّم المناقشون هذه المجموعة بعد.</span>
-          </p>
-
-          <!-- نموذج لجنة المشاريع (للاطلاع): نتيجة تقييم المشرف المباشر لكل طالب (من 50) بجانب علامة اللجنة -->
-          <section v-if="viewOnly && !examinerOnly" class="es-supres">
-            <header>
-              <h5>نتيجة تقييم المشرف المباشر</h5>
-              <span class="es-scope">من {{ weights.supervisor }} درجة لكل طالب</span>
-            </header>
-            <ul>
-              <li v-for="m in sheet.team.members" :key="m.id">
-                <span class="es-avatar">{{ (m.name || '؟').charAt(0) }}</span>
-                <b>{{ m.name }}</b>
-                <span class="es-supres-score"><b class="mono">{{ result(m.id)?.supervisor_score ?? '—' }}</b> / {{ weights.supervisor }}</span>
-              </li>
-            </ul>
-          </section>
+          <!-- نموذج لجنة المناقشة (للاطلاع): درجات المناقشين لكل طالب في جدول، ثم المتوسط -->
+          <div v-if="viewOnly" class="pt-wrap">
+            <table class="pt es-others-table">
+              <thead>
+                <tr>
+                  <th class="es-o-who">المناقش</th>
+                  <th v-for="m in sheet.team.members" :key="m.id" class="es-o-score">{{ m.name }}<small>من {{ max }}</small></th>
+                  <th class="es-o-date">آخر تحديث</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="o in others" :key="o.id">
+                  <td class="pt-strong es-o-who">{{ o.evaluator?.name }}</td>
+                  <td v-for="m in sheet.team.members" :key="m.id" class="es-o-score mono">{{ totalIn(form, o.answers, m.id) }}</td>
+                  <td class="es-o-date">{{ formatDateTime(o.updated_at) }}</td>
+                </tr>
+                <tr v-if="others.length" class="es-sum">
+                  <td>علامة لجنة المناقشة (المتوسط)</td>
+                  <td v-for="m in sheet.team.members" :key="m.id" class="es-o-score mono">{{ others.length > 1 ? avgIn(form, m.id) : totalIn(form, others[0].answers, m.id) }}</td>
+                  <td />
+                </tr>
+                <tr v-else><td :colspan="sheet.team.members.length + 2" class="gr-empty">—</td></tr>
+              </tbody>
+            </table>
+          </div>
 
           <template v-else>
             <p v-if="mine" class="es-status is-saved">
@@ -159,14 +176,14 @@
                     <tr v-else>
                       <th class="es-n">#</th><th data-rt-title>البند</th><th class="es-max">القصوى</th>
                       <th v-for="m in sheet.team.members" :key="m.id" class="es-col">
-                        {{ m.name }}
+                        <span class="es-col-name"><span class="es-col-ava">{{ (m.name || '؟').trim().charAt(0) }}</span>{{ m.name }}</span>
                         <button v-if="!readonly" type="button" class="es-fill" :title="`الدرجة الكاملة لـ ${m.name} في هذا القسم`" @click="fillMax(s, m.id)">الدرجة الكاملة</button>
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="(item, i) in s.items" :key="item.id">
-                      <td class="es-n">{{ i + 1 }}</td>
+                      <td class="es-n"><span class="es-num">{{ i + 1 }}</span></td>
                       <td class="es-text">{{ item.text }}</td>
                       <td class="es-max mono">{{ item.max }}</td>
                       <template v-if="s.scope === 'project'">
@@ -216,7 +233,7 @@
 
 <script>
 import { mapState } from 'pinia'
-import { ArrowRight, Award, CheckCircle2, GraduationCap, Save, Star, UserRound, Users } from 'lucide-vue-next'
+import { ArrowRight, Award, CheckCircle2, ClipboardList, GraduationCap, Save, Star, UserRound, Users } from 'lucide-vue-next'
 import ScoreInput from '@/components/shared/ScoreInput.vue'
 import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth.store'
@@ -227,7 +244,7 @@ import { formatDateTime } from '@/utils/formatters'
 export default {
   name: 'EvaluationSheet',
 
-  components: { ScoreInput, ArrowRight, Award, CheckCircle2, GraduationCap, Save, Star, UserRound, Users },
+  components: { ScoreInput, ArrowRight, Award, CheckCircle2, ClipboardList, GraduationCap, Save, Star, UserRound, Users },
 
   // تنبيه قبل مغادرة الصفحة بتعديلات غير محفوظة
   beforeRouteLeave() {

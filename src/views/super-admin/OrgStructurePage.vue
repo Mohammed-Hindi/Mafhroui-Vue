@@ -5,7 +5,6 @@
     <header class="dash-head">
       <div>
         <h2 class="dash-title">الأقسام والتخصصات والفصول الدراسية</h2>
-        <p class="os-sub">الهيكل الأكاديمي الذي تُبنى عليه المجموعات والمشاريع ولجان الإشراف</p>
       </div>
     </header>
 
@@ -91,13 +90,28 @@
             </div>
           </li>
         </ul>
-        <p class="os-note">الفصل الحالي هو الذي تُعرض بياناته افتراضيًا في كل اللوحات، ويمكن لكل مستخدم التنقّل بين الفصول من الشريط العلوي.</p>
       </section>
     </div>
 
-    <!-- إضافة/تعديل قسم -->
-    <BaseModal v-model="departmentModalOpen" :title="departmentEditId ? 'تعديل القسم' : 'إضافة قسم جديد'" size="sm">
-      <BaseInput v-model="departmentForm.name" label="اسم القسم" placeholder="مثال: قسم البرمجيات" required @keydown.enter="submitDepartment" />
+    <!-- إضافة/تعديل قسم: اسم القسم، وعند الإضافة تخصصاته مباشرة (اسم + درجة لكل تخصص) فتُنشأ معه دفعة واحدة -->
+    <BaseModal v-model="departmentModalOpen" :title="departmentEditId ? 'تعديل القسم' : 'إضافة قسم جديد'" :size="departmentEditId ? 'sm' : 'md'">
+      <div class="flex flex-col gap-4">
+        <BaseInput v-model="departmentForm.name" label="اسم القسم" placeholder="مثال: قسم البرمجيات" required @keydown.enter="submitDepartment" />
+        <div v-if="!departmentEditId" class="os-new-specs">
+          <span class="os-field-label">تخصصات القسم <small>(اختياري — يمكن إضافتها لاحقًا)</small></span>
+          <ul v-if="departmentForm.specs.length">
+            <li v-for="(s, i) in departmentForm.specs" :key="i">
+              <span class="os-new-no">{{ i + 1 }}</span>
+              <input v-model.trim="s.name" type="text" class="portal-input" maxlength="150" :aria-label="`اسم التخصص ${i + 1}`" placeholder="اسم التخصص">
+              <span class="os-new-deg" role="radiogroup" aria-label="الدرجة العلمية">
+                <button v-for="o in degreeOptions" :key="o.value" type="button" role="radio" :aria-checked="s.degree === o.value" :class="s.degree === o.value && 'is-on'" @click="s.degree = o.value">{{ o.label }}</button>
+              </span>
+              <button type="button" class="os-act is-danger" title="إزالة" aria-label="إزالة التخصص" @click="departmentForm.specs.splice(i, 1)"><Trash2 :size="14" /></button>
+            </li>
+          </ul>
+          <button type="button" class="os-add-spec" @click="departmentForm.specs.push({ name: '', degree: 'bachelor' })"><Plus :size="15" /> إضافة تخصص</button>
+        </div>
+      </div>
       <template #footer>
         <BaseButton variant="ghost" @click="departmentModalOpen = false">إلغاء</BaseButton>
         <BaseButton :icon="Check" :loading="submitting" :disabled="!departmentForm.name.trim()" @click="submitDepartment">{{ departmentEditId ? 'حفظ التعديلات' : 'إضافة القسم' }}</BaseButton>
@@ -163,7 +177,7 @@ import { useTeamsStore } from '@/stores/teams.store'
 import { useUiStore } from '@/stores/ui.store'
 import { DEGREE_LABELS, DEGREE_OPTIONS } from '@/stores/landing.store'
 
-const emptyDepartmentForm = () => ({ name: '' })
+const emptyDepartmentForm = () => ({ name: '', specs: [] })
 const emptySpecializationForm = () => ({ department_id: '', name: '', degree: 'bachelor' })
 const emptyTermForm = () => ({ name: '', is_current: false })
 
@@ -258,11 +272,18 @@ export default {
       this.submitting = true
       try {
         if (this.departmentEditId) {
-          await this.updateDepartment(this.departmentEditId, this.departmentForm)
+          await this.updateDepartment(this.departmentEditId, { name: this.departmentForm.name })
           this.$toast?.success('تم حفظ التعديلات')
         } else {
-          await this.createDepartment(this.departmentForm)
-          this.$toast?.success('تمت إضافة القسم')
+          const dept = await this.createDepartment({ name: this.departmentForm.name })
+          // تخصصات القسم المضافة في نفس النافذة: تُنشأ بعده بالتتابع، وما يفشل منها يُذكر بالاسم
+          const specs = this.departmentForm.specs.filter((s) => s.name)
+          const failed = []
+          for (const s of specs) {
+            await this.createSpecialization({ department_id: dept.id, name: s.name, degree: s.degree }).catch(() => failed.push(s.name))
+          }
+          if (failed.length) this.$toast?.error(`أُضيف القسم، وتعذّرت إضافة: ${failed.join('، ')}`)
+          else this.$toast?.success(specs.length ? `تمت إضافة القسم و${specs.length} تخصص` : 'تمت إضافة القسم')
         }
         this.departmentModalOpen = false
       } catch (err) {

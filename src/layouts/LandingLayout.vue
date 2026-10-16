@@ -16,29 +16,23 @@
       </router-view>
     </main>
     <LandingFooter />
-    <!-- زر العودة للأعلى البرتقالي (195704) -->
-    <button v-show="showTop" type="button" class="us-top-btn" aria-label="العودة للأعلى" @click="toTop"><ChevronUp :size="26" /></button>
+    <BackToTop />
   </div>
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
-import { ChevronUp } from 'lucide-vue-next'
+import { onMounted, onUnmounted } from 'vue'
+import BackToTop from '@/components/shared/BackToTop.vue'
 import LandingNavBar from '@/components/landing/LandingNavBar.vue'
 import LandingFooter from '@/components/landing/LandingFooter.vue'
 import '@/styles/ucas-site.css'
 
-const showTop = ref(false)
-const onScroll = () => { showTop.value = window.scrollY > 400 }
-const toTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
 
 // التوكنز (الخط Cairo وألوان الهوية) تعمل تحت data-brand="ucas" كباقي صفحات المنصة
 onMounted(() => {
   document.documentElement.setAttribute('data-brand', 'ucas')
-  window.addEventListener('scroll', onScroll, { passive: true })
 })
 onUnmounted(() => {
   document.documentElement.removeAttribute('data-brand')
-  window.removeEventListener('scroll', onScroll)
 })
 </script>
