@@ -1,8 +1,7 @@
 <template>
-  <!-- الهيرو بنمط موقع الكلية (195704): خلفية التدرج بشبكة نقاط ومطر البيانات، النص وكلمة مسار، ثم شريط الإحصائيات بأرقام بيضاء كبيرة -->
-  <!-- مطر البيانات على مستوى القسم كله فيصل إلى شريط الإحصائيات -->
-  <section class="us-hero-wrap">
-    <DataRain :focus="wordRect" :gain="2.6" />
+  <!-- الهيرو بنمط موقع الكلية: صورة رسمية من موقع UCAS كخلفية مع طبقة تدرّج الهوية فوقها، النص وكلمة مسار، ثم شريط الإحصائيات بأرقام بيضاء كبيرة -->
+  <section class="us-hero-wrap us-hero-wrap--photo">
+    <div class="us-hero-bg" aria-hidden="true" :style="{ backgroundImage: `url(${HERO_IMAGE})` }"></div>
     <div class="us-hero">
       <div class="us-wrap us-hero-in">
         <div class="us-hero-text reveal">
@@ -12,11 +11,11 @@
             والمناقشات وأرشفة أفضل مشاريع التخرج في الكلية الجامعية للعلوم التطبيقية.
           </p>
           <div class="us-hero-actions">
-            <router-link :to="{ name: 'login' }" class="us-btn us-glow-btn">تسجيل الدخول <LogIn :size="19" class="us-flip" /></router-link>
+            <router-link :to="{ name: 'login' }" class="us-btn is-solid is-white">تسجيل الدخول <LogIn :size="19" class="us-flip" /></router-link>
             <a href="#projects" class="us-btn is-glass">أفضل مشاريع التخرج <ArrowDown :size="18" /></a>
           </div>
         </div>
-        <MasarWordmark ref="word" />
+        <MasarWordmark />
       </div>
     </div>
 
@@ -36,19 +35,17 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useLandingStore } from '@/stores/landing.store'
 import { formatNumber } from '@/utils/formatters'
 import { APP_NAME } from '@/utils/constants'
 import CountUp from '@/components/ui/CountUp.vue'
-import DataRain from './DataRain.vue'
 import MasarWordmark from './MasarWordmark.vue'
 import { ArrowDown, LogIn } from 'lucide-vue-next'
 
-// مطر البيانات يلتف حول كلمة مسار أثناء ظهورها
-const word = ref(null)
-const wordRect = () => word.value?.$el?.getBoundingClientRect() ?? null
+// صورة الغلاف الرسمية من موقع الكلية (خلفية الهيرو بدل مؤثّر مطر البيانات)
+const HERO_IMAGE = 'https://www.ucas.edu.ps/Gallery/site_images/slider/2026/09/22/coverc%20(3).jpg'
 
 const landingStore = useLandingStore()
 const { bannerStats, statsLoading } = storeToRefs(landingStore)
