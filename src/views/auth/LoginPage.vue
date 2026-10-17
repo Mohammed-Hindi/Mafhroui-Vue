@@ -29,7 +29,7 @@
         <router-link :to="{ name: 'forgot-password' }">نسيت كلمة المرور؟</router-link>
       </div>
 
-      <button type="submit" class="us-btn us-glow-btn au-split-submit" :disabled="isLoading">
+      <button type="submit" class="us-btn is-solid au-split-submit" :disabled="isLoading">
         {{ isLoading ? 'جارٍ الدخول…' : 'تسجيل الدخول' }} <LogIn v-if="!isLoading" :size="19" class="us-flip" />
       </button>
     </form>
