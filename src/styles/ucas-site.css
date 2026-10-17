@@ -357,14 +357,25 @@
 .us-hero-wrap .us-hero, .us-hero-wrap .us-stats { position: relative; z-index: 1; background: transparent; }
 .us-hero-wrap .us-stats { border-top: 1px solid rgba(255, 255, 255, .14); }
 
-/* خلفية الهيرو بصورة الكلية الرسمية مع طبقة تدرّج الهوية فوقها لإبقاء النص واضحًا (بديل مطر البيانات) */
-.us-hero-wrap--photo .us-hero-bg { position: absolute; inset: 0; z-index: 0; background-size: cover; background-position: center; background-repeat: no-repeat; }
+/* خلفية الهيرو بصورة حفل التخرّج الرسمية + طبقة تظليل تُغمّق جهة النص (يمين) وتُبقي الصورة واضحة يسارًا */
+.us-hero-wrap--photo .us-hero-bg { position: absolute; inset: 0; z-index: 0; background-size: cover; background-position: center 42%; background-repeat: no-repeat; }
 .us-hero-wrap--photo .us-hero-bg::after {
   content: ''; position: absolute; inset: 0;
   background:
-    linear-gradient(90deg, rgba(98, 187, 70, .22) 0%, rgba(14, 105, 156, .3) 50%, rgba(2, 93, 169, .32) 100%),
-    linear-gradient(90deg, rgba(2, 30, 55, .42) 0%, rgba(2, 30, 55, .82) 100%);
+    linear-gradient(90deg, rgba(4, 26, 48, .22) 0%, rgba(4, 26, 48, .62) 52%, rgba(4, 26, 48, .90) 100%),
+    linear-gradient(180deg, rgba(4, 26, 48, 0) 55%, rgba(4, 26, 48, .55) 100%),
+    linear-gradient(90deg, rgba(98, 187, 70, .14), rgba(14, 105, 156, .16) 55%, rgba(2, 93, 169, .18));
 }
+/* النص واضح فوق الصورة + ظل خفيف للأمان، والأرقام على خلفية هوية صلبة */
+.us-hero-wrap--photo .us-hero h1, .us-hero-wrap--photo .us-hero p { text-shadow: 0 2px 14px rgba(0, 0, 0, .45); }
+.us-hero-wrap--photo .us-stats { background: var(--us-grad); }
+.us-hero-eyebrow {
+  display: inline-block; margin-bottom: 16px; padding: 7px 15px;
+  border: 1px solid rgba(255, 255, 255, .38); border-radius: 4px;
+  background: rgba(255, 255, 255, .1); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+  font-size: 13.5px; font-weight: 700; letter-spacing: .2px; color: #FFFFFF;
+}
+@media (max-width: 1023.98px) { .us-hero-eyebrow { margin-bottom: 12px; } }
 /* النص ينزل قليلًا ليتوازن مع كلمة مسار */
 .us-hero-text { padding-top: 40px; }
 @media (max-width: 1023.98px) { .us-hero-text { padding-top: 0; } }
