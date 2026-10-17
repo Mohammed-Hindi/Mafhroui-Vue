@@ -1,10 +1,12 @@
 <template>
-  <!-- الهيرو بنمط موقع الكلية: صورة رسمية من موقع UCAS كخلفية مع طبقة تدرّج الهوية فوقها، النص وكلمة مسار، ثم شريط الإحصائيات بأرقام بيضاء كبيرة -->
+  <!-- الهيرو: صورة حفل تخرّج الكلية الرسمية كخلفية كاملة، مع طبقة تظليل بتدرّج الهوية
+       تُغمّق جهة النص (يمين) وتُبقي الصورة واضحة، ثم شريط الإحصائيات بأرقام بيضاء كبيرة -->
   <section class="us-hero-wrap us-hero-wrap--photo">
-    <div class="us-hero-bg" aria-hidden="true" :style="{ backgroundImage: `url(${HERO_IMAGE})` }"></div>
+    <div class="us-hero-bg" aria-hidden="true" :style="{ backgroundImage: `url(${heroCover})` }"></div>
     <div class="us-hero">
       <div class="us-wrap us-hero-in">
         <div class="us-hero-text reveal">
+          <span class="us-hero-eyebrow">الكلية الجامعية للعلوم التطبيقية</span>
           <h1>منصة {{ APP_NAME }} لمشاريع التخرج</h1>
           <p>
             منصة موحّدة تربط الطلاب بالمشرفين ولجنة الإشراف لإدارة المقترحات والمهام والاجتماعات
@@ -15,7 +17,6 @@
             <a href="#projects" class="us-btn is-glass">أفضل مشاريع التخرج <ArrowDown :size="18" /></a>
           </div>
         </div>
-        <MasarWordmark />
       </div>
     </div>
 
@@ -41,11 +42,9 @@ import { useLandingStore } from '@/stores/landing.store'
 import { formatNumber } from '@/utils/formatters'
 import { APP_NAME } from '@/utils/constants'
 import CountUp from '@/components/ui/CountUp.vue'
-import MasarWordmark from './MasarWordmark.vue'
 import { ArrowDown, LogIn } from 'lucide-vue-next'
-
-// صورة الغلاف الرسمية من موقع الكلية (خلفية الهيرو بدل مؤثّر مطر البيانات)
-const HERO_IMAGE = 'https://www.ucas.edu.ps/Gallery/site_images/slider/2026/09/22/coverc%20(3).jpg'
+// صورة الغلاف الرسمية (حفل تخرّج الكلية) — مُجمّعة محليًا بدل مؤثّر مطر البيانات
+import heroCover from '@/assets/hero/ucas-cover.jpg'
 
 const landingStore = useLandingStore()
 const { bannerStats, statsLoading } = storeToRefs(landingStore)
