@@ -471,8 +471,14 @@
 :root[data-theme="dark"] .au-split-brand strong { color: #71B6F9; }
 /* اللوحة المتحركة */
 .au-split-art { position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 48px 32px; background: var(--us-grad); background-size: 200% 100%; color: #FFFFFF; text-align: center; animation: us-grad-drift 14s ease-in-out infinite alternate; }
-.au-split-art::before { content: ''; position: absolute; inset: 0; opacity: .14; background-image: radial-gradient(#FFFFFF 1.2px, transparent 1.2px); background-size: 26px 26px; pointer-events: none; }
-.au-split-art-in { position: relative; z-index: 1; max-width: 520px; }
+.au-split-art::before { content: ''; position: absolute; inset: 0; z-index: 1; opacity: .12; background-image: radial-gradient(#FFFFFF 1.2px, transparent 1.2px); background-size: 26px 26px; pointer-events: none; }
+/* خلفية الصورة الرسمية تحت طبقة تدرّج الهوية — هادئة بدل مؤثّر مطر البيانات، مع إبقاء الشعار واضحًا */
+.au-split-art-bg { position: absolute; inset: 0; z-index: 0; background-size: cover; background-position: center; background-repeat: no-repeat; }
+.au-split-art-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(160deg, rgba(98, 187, 70, .84) 0%, rgba(14, 105, 156, .82) 55%, rgba(2, 93, 169, .88) 100%);
+}
+.au-split-art-in { position: relative; z-index: 2; max-width: 520px; }
 .au-split-art .us-hero-word { width: clamp(260px, 30vw, 440px); }
 .au-split-art h2 { margin: 18px 0 10px; font-size: clamp(24px, 2.2vw, 32px); font-weight: 800; opacity: 0; animation: au-art-in .8s ease 2.4s forwards; }
 .au-split-art p { margin: 0; font-size: 16.5px; line-height: 1.9; color: rgba(255, 255, 255, .88); opacity: 0; animation: au-art-in .8s ease 2.7s forwards; }

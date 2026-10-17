@@ -26,9 +26,9 @@
     </section>
 
     <aside class="au-split-art" aria-hidden="true">
-      <DataRain :focus="wordRect" :gain="2.6" />
+      <div class="au-split-art-bg" :style="{ backgroundImage: `url(${heroCover})` }"></div>
       <div class="au-split-art-in">
-        <MasarWordmark ref="word" />
+        <MasarWordmark />
         <h2>منصة {{ APP_NAME }} لمشاريع التخرج</h2>
       </div>
     </aside>
@@ -36,12 +36,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import { ArrowRight } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
-import DataRain from '@/components/landing/DataRain.vue'
 import MasarWordmark from '@/components/landing/MasarWordmark.vue'
 import { APP_NAME, APP_DESCRIPTION } from '@/utils/constants'
+// صورة حفل التخرّج الرسمية: خلفية هادئة للوحة بدل مؤثّر مطر البيانات
+import heroCover from '@/assets/hero/ucas-cover.jpg'
 import '@/styles/ucas-site.css'
 
 defineProps({
@@ -50,8 +50,4 @@ defineProps({
   /** رابط العودة أسفل الفورم بعد الخط الفاصل */
   back: { type: Object, default: () => ({ to: { name: 'landing' }, label: 'العودة إلى الصفحة الرئيسية' }) }
 })
-
-// مطر البيانات يلتف حول كلمة مسار أثناء ظهورها
-const word = ref(null)
-const wordRect = () => word.value?.$el?.getBoundingClientRect() ?? null
 </script>
