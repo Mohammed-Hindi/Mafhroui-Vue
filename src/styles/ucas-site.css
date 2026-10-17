@@ -82,7 +82,7 @@
 .us-hero h1 { margin: 0 0 16px; font-size: clamp(34px, 3.3vw, 52px); font-weight: 800; line-height: 1.3; }
 .us-hero p { max-width: 600px; margin: 0 0 32px; font-size: clamp(16px, 1.2vw, 19px); line-height: 1.95; color: rgba(255, 255, 255, .9); }
 .us-hero-actions { display: flex; flex-wrap: wrap; gap: 14px; }
-.us-hero-actions .us-btn { height: 54px; padding-inline: 30px; border-radius: 999px; font-size: 16.5px; }
+.us-hero-actions .us-btn { height: 54px; padding-inline: 30px; border-radius: 4px; font-size: 16.5px; }
 .us-hero-word { justify-self: center; width: clamp(280px, 30vw, 460px); height: auto; overflow: visible; }
 /* زر "أفضل المشاريع": كبسولة زجاجية بإطار أبيض وسهم للأسفل */
 .us-btn.is-glass { border: 1.5px solid rgba(255, 255, 255, .8); background: rgba(255, 255, 255, .1); color: #FFFFFF; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
@@ -354,8 +354,17 @@
 .us-flip { transform: scaleX(-1); }
 /* الهيرو والإحصائيات خلفية واحدة، ومطر البيانات يغطي الاثنين */
 .us-hero-wrap { position: relative; overflow: hidden; background: var(--us-grad); }
-.us-hero-wrap .us-hero, .us-hero-wrap .us-stats { position: relative; background: transparent; }
+.us-hero-wrap .us-hero, .us-hero-wrap .us-stats { position: relative; z-index: 1; background: transparent; }
 .us-hero-wrap .us-stats { border-top: 1px solid rgba(255, 255, 255, .14); }
+
+/* خلفية الهيرو بصورة الكلية الرسمية مع طبقة تدرّج الهوية فوقها لإبقاء النص واضحًا (بديل مطر البيانات) */
+.us-hero-wrap--photo .us-hero-bg { position: absolute; inset: 0; z-index: 0; background-size: cover; background-position: center; background-repeat: no-repeat; }
+.us-hero-wrap--photo .us-hero-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    linear-gradient(90deg, rgba(98, 187, 70, .22) 0%, rgba(14, 105, 156, .3) 50%, rgba(2, 93, 169, .32) 100%),
+    linear-gradient(90deg, rgba(2, 30, 55, .42) 0%, rgba(2, 30, 55, .82) 100%);
+}
 /* النص ينزل قليلًا ليتوازن مع كلمة مسار */
 .us-hero-text { padding-top: 40px; }
 @media (max-width: 1023.98px) { .us-hero-text { padding-top: 0; } }
