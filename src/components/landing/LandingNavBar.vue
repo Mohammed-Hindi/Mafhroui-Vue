@@ -22,7 +22,7 @@
         <button type="button" class="us-icon-btn" :aria-label="isDark ? 'التبديل إلى الوضع النهاري' : 'التبديل إلى الوضع الليلي'" @click="uiStore.toggleTheme()">
           <Sun v-if="isDark" :size="18" /><Moon v-else :size="18" />
         </button>
-        <router-link :to="isAuthenticated ? authStore.homeRoute : { name: 'login' }" class="us-btn is-sm us-auth us-glow-btn">
+        <router-link :to="isAuthenticated ? authStore.homeRoute : { name: 'login' }" class="us-btn is-sm us-auth is-solid">
           {{ isAuthenticated ? 'لوحة التحكم' : 'تسجيل الدخول' }}
         </router-link>
         <button type="button" class="us-icon-btn us-menu-btn" :aria-expanded="open" aria-label="القائمة" @click="open = !open">

@@ -73,6 +73,9 @@
 .us-btn.is-white { border-color: #FFFFFF; color: #FFFFFF; }
 .us-btn.is-white:hover { background: #FFFFFF; color: var(--ucas-blue); }
 .us-btn.is-white.is-solid { background: #FFFFFF; color: var(--ucas-blue); }
+/* زر الدخول في الهيدر: رسمي صلب بلا توهّج، حواف حادة قليلًا وظل خفيف ألطف */
+.us-tools .us-auth { border-radius: 6px; box-shadow: 0 2px 8px rgba(2, 45, 80, .16); }
+.us-tools .us-auth:hover { box-shadow: 0 3px 12px rgba(2, 45, 80, .24); }
 
 /* ---------- الهيرو: خلفية التدرج بشبكة نقاط + مطر البيانات، النص يمينًا وكلمة مسار يسارًا، ثم شريط الإحصائيات.
    الارتفاع يتبع الشاشة (يترك الإحصائيات وبداية القسم التالي ظاهرة) ---------- */
