@@ -371,6 +371,10 @@
             <BaseInput v-else v-model="addForm.employee_number" label="الرقم الوظيفي" placeholder="اختياري" />
             <BaseInput v-model="addForm.whatsapp" label="رقم الواتساب" placeholder="970591234567" />
             <BaseInput v-model="addForm.email" type="email" label="البريد الإلكتروني" placeholder="name@ucas.edu.ps" class="sm:col-span-2" />
+            <template v-if="addForm.role === 'student'">
+              <BaseSelect v-model="addForm.gender" label="الجنس" placeholder="اختر الجنس" :options="addGenderOptions" required />
+              <BaseSelect v-model="addForm.region" label="مكان التواجد" placeholder="اختياري" include-placeholder-option :options="addRegionOptions" />
+            </template>
           </div>
         </div>
 
@@ -528,7 +532,7 @@ function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
 }
 
-const emptyAddForm = () => ({ role: 'student', name: '', employee_number: '', university_number: '', email: '', whatsapp: '', specialization_id: '', specialization_ids: [] })
+const emptyAddForm = () => ({ role: 'student', name: '', employee_number: '', university_number: '', email: '', whatsapp: '', gender: '', region: '', specialization_id: '', specialization_ids: [] })
 
 const MODULES = [
   { value: 'projects', label: 'المشاريع' },
@@ -763,6 +767,12 @@ export default {
 
     specializationOptions() {
       return this.specializations.map((s) => ({ value: s.id, label: s.name }))
+    },
+    addGenderOptions() {
+      return Object.entries(GENDERS).map(([value, label]) => ({ value, label }))
+    },
+    addRegionOptions() {
+      return Object.entries(REGIONS).map(([value, label]) => ({ value, label }))
     },
     /** التخصصات المتاحة فعليًا: المشتقّة من طلاب المشرف المختار (أو كل الطلاب) */
     studentSpecOptions() {
@@ -1002,6 +1012,10 @@ export default {
         this.addError = 'اختر تخصصًا واحدًا على الأقل لعضو اللجنة'
         return
       }
+      if (this.addForm.role === 'student' && !this.addForm.gender) {
+        this.addError = 'اختر جنس الطالب (طالب/طالبة) حتى يظهر في القائمة الصحيحة'
+        return
+      }
       if (!this.addForm.name || !this.addForm.email) {
         this.addError = 'يرجى تعبئة الاسم والبريد الإلكتروني على الأقل'
         return
@@ -1012,10 +1026,12 @@ export default {
         const payload = this.addForm.role === 'committee'
           ? { ...rest, specialization_ids }
           : rest
+        Object.keys(payload).forEach((k) => { if (payload[k] === '') delete payload[k] })
         const result = await this.createUser(payload)
         const password = await this.setUserPassword(result.user.id)
         const created = { name: this.addForm.name, mail: this.addForm.email, whats: this.addForm.whatsapp, password, user_id: result.user.id }
         const role = this.addForm.role
+        const addedGender = this.addForm.gender
         this.inviteTarget = created
         this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
         this.sendInviteWhats()
@@ -1023,7 +1039,17 @@ export default {
         this.addModalOpen = false
         this.addForm = emptyAddForm()
         this.$toast?.success(`تم إنشاء حساب ${created.name} وإرسال بيانات الدخول`)
-        await this.reloadKind(role)
+        if (role === 'student') {
+          this.memberKind = 'student'
+          this.specFilter = ''
+          this.studentSupFilter = ''
+          this.regionFilter = ''
+          this.assignedFilter = ''
+          if (addedGender && this.genderFilter && this.genderFilter !== addedGender) this.genderFilter = addedGender
+          else await this.reloadKind(role)
+        } else {
+          await this.reloadKind(role)
+        }
       } catch (err) {
         this.addError = err.normalized?.message || 'تعذّر إنشاء الحساب — راجع البيانات وحاول مجددًا'
       } finally {
