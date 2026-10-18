@@ -145,12 +145,10 @@
                   <button v-if="!passwords[row.id]" type="button" class="inline-flex items-center gap-2 h-9 px-4 rounded-sm border border-border text-body-sm font-bold text-text-600 hover:border-primary-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast whitespace-nowrap" :disabled="generatingPwFor === row.id" @click="generatePw(row)">
                     <RefreshCw :size="15" /> {{ generatingPwFor === row.id ? 'جارٍ التوليد…' : 'توليد كلمة سر' }}
                   </button>
-                  <div v-else class="inline-flex items-center h-9 rounded-sm border border-border bg-bg overflow-hidden">
-                    <span class="mono px-2.5 text-caption tracking-wider min-w-[84px]">{{ visiblePw.includes(row.id) ? passwords[row.id] : maskPw(passwords[row.id]) }}</span>
-                    <button type="button" class="grid place-items-center w-8 h-full border-s border-border text-text-400 hover:text-primary-600 transition-colors duration-fast" :title="visiblePw.includes(row.id) ? 'إخفاء' : 'إظهار'" @click="togglePw(row.id)"><Eye :size="13" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-full border-s border-border text-text-400 hover:text-primary-600 transition-colors duration-fast" title="نسخ" @click="copyPw(row.id)"><Copy :size="13" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-full border-s border-border text-text-400 hover:text-primary-600 transition-colors duration-fast" title="توليد كلمة سر جديدة" :disabled="generatingPwFor === row.id" @click="generatePw(row)"><RefreshCw :size="13" /></button>
-                  </div>
+                  <button v-else type="button" class="inline-flex items-center gap-2 h-9 px-3.5 rounded-sm border border-border bg-bg mono text-body-sm tracking-wider text-text-900 hover:border-primary-600 hover:text-primary-600 transition-colors duration-fast whitespace-nowrap" title="انقر لنسخ كلمة السر" @click="copyPw(row.id)">
+                    {{ passwords[row.id] }}
+                    <Copy :size="14" class="opacity-60" />
+                  </button>
                 </div>
               </template>
               <template #cell-actions="{ row }">
