@@ -373,7 +373,7 @@
             <BaseInput v-model="addForm.email" type="email" label="البريد الإلكتروني" placeholder="name@ucas.edu.ps" class="sm:col-span-2" />
             <template v-if="addForm.role === 'student'">
               <BaseSelect v-model="addForm.gender" label="الجنس" placeholder="اختر الجنس" :options="addGenderOptions" required />
-              <BaseSelect v-model="addForm.region" label="مكان التواجد" placeholder="اختياري" include-placeholder-option :options="addRegionOptions" />
+              <BaseSelect v-model="addForm.region" label="مكان التواجد" placeholder="اختر مكان التواجد" :options="addRegionOptions" required />
             </template>
           </div>
         </div>
@@ -1014,6 +1014,10 @@ export default {
       }
       if (this.addForm.role === 'student' && !this.addForm.gender) {
         this.addError = 'اختر جنس الطالب (طالب/طالبة) حتى يظهر في القائمة الصحيحة'
+        return
+      }
+      if (this.addForm.role === 'student' && !this.addForm.region) {
+        this.addError = 'اختر مكان تواجد الطالب'
         return
       }
       if (!this.addForm.name || !this.addForm.email) {
