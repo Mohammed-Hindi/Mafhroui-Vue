@@ -51,19 +51,9 @@
           <Search :size="16" />
           <input v-model.trim="q" type="search" :placeholder="tab === 'sup' ? 'بحث باسم المشرف…' : 'بحث باسم المجموعة أو الطالب…'">
         </label>
-        <select v-if="tab === 'sup'" v-model="specFilter" class="gr-select" aria-label="التخصص">
-          <option value="">كل التخصصات</option>
-          <option v-for="s in specOptions" :key="s" :value="s">{{ s }}</option>
-        </select>
-        <select v-else-if="!isSup" v-model="supFilter" class="gr-select" aria-label="المشرف">
-          <option value="">كل المشرفين</option>
-          <option v-for="s in supervisors" :key="s.id" :value="s.id">{{ s.name }}</option>
-        </select>
-        <select v-if="tab === 'grp'" v-model="genderFilter" class="gr-select" aria-label="طلاب / طالبات">
-          <option value="">طلاب وطالبات</option>
-          <option value="male">طلاب</option>
-          <option value="female">طالبات</option>
-        </select>
+        <BaseSelect v-if="tab === 'sup'" v-model="specFilter" class="min-w-[170px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specOptions" />
+        <BaseSelect v-else-if="!isSup" v-model="supFilter" class="min-w-[180px]" aria-label="المشرف" placeholder="كل المشرفين" include-placeholder-option value-key="id" label-key="name" :options="supervisors" />
+        <BaseSelect v-if="tab === 'grp'" v-model="genderFilter" class="min-w-[160px]" aria-label="طلاب / طالبات" placeholder="طلاب وطالبات" include-placeholder-option :options="genderOptions" />
         <button v-if="tab === 'sup'" type="button" class="pbtn hm-report" :disabled="exporting || !supRows.length" @click="exportSupReport">
           <Printer :size="17" /> {{ exporting ? 'جارٍ التجهيز…' : 'تقرير المشرفين PDF' }}
         </button>
@@ -152,16 +142,8 @@
       <div class="dash-card-head">
         <h3>حالة المشاريع والمهام</h3>
         <div class="hm-filters hm-filters-inline">
-          <select v-model="taskGroup" class="gr-select" aria-label="المجموعة">
-            <option value="">كل المجموعات</option>
-            <option v-for="g in taskGroups" :key="g.id" :value="g.id">{{ g.name }}</option>
-          </select>
-          <select v-model="taskState" class="gr-select" aria-label="حالة المهمة">
-            <option value="">كل الحالات</option>
-            <option value="done">مكتملة</option>
-            <option value="open">غير مكتملة</option>
-            <option value="late">متأخرة</option>
-          </select>
+          <BaseSelect v-model="taskGroup" class="min-w-[170px]" aria-label="المجموعة" placeholder="كل المجموعات" include-placeholder-option value-key="id" label-key="name" :options="taskGroups" />
+          <BaseSelect v-model="taskState" class="min-w-[150px]" aria-label="حالة المهمة" placeholder="كل الحالات" include-placeholder-option :options="taskStateOptions" />
         </div>
       </div>
       <div class="hm-health-grid">
@@ -254,7 +236,11 @@ import '@/styles/ucas-site.css'
 import api from '@/services/api'
 import { exportSupervisorsPdf } from '@/utils/ucasReports'
 import ProfileModal from '@/components/shared/ProfileModal.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import SlideTable from '@/components/ui/SlideTable.vue'
+
+const GENDER_OPTIONS = [{ value: 'male', label: 'طلاب' }, { value: 'female', label: 'طالبات' }]
+const TASK_STATE_OPTIONS = [{ value: 'done', label: 'مكتملة' }, { value: 'open', label: 'غير مكتملة' }, { value: 'late', label: 'متأخرة' }]
 import { DEGREES, REGIONS } from '@/utils/progressData'
 import { formatDateTime } from '@/utils/formatters'
 import { loadGroups, loadSupervisors, loadDashboardStats, normalizeTasks } from '@/services/adminData'
@@ -270,7 +256,7 @@ const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0)
 export default {
   name: 'PortalDashboard',
 
-  components: { ChevronDown, CountUp, Search, Printer, ProfileModal, SlideTable },
+  components: { ChevronDown, CountUp, Search, Printer, ProfileModal, BaseSelect, SlideTable },
 
   /** حركة الصفحة (الإدارة العامة): البانر يدخل عند الفتح، البطاقات تصعد عند الوصول إليها، والصفوف تتوالى بعد وصول البيانات */
   setup() {
@@ -291,6 +277,8 @@ export default {
   data() {
     return {
       STATE, DEGREES, REGIONS,
+      genderOptions: GENDER_OPTIONS,
+      taskStateOptions: TASK_STATE_OPTIONS,
       loading: true,
       tasksLoading: useAuthStore().userRole === ROLES.SUPERVISOR,
       groups: [],
