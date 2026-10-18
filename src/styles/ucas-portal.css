@@ -3876,6 +3876,13 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 }
 .sa-skin .hm-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .sa-skin .hm-table { min-width: 640px; }
+
+.ucas-portal :is(.hm-table-wrap, .gr-table-wrap, .pt-wrap, .dp-grid-wrap, .pt-scroll) { scrollbar-width: thin; scrollbar-color: var(--ucas-blue) var(--portal-thead-bg); }
+.ucas-portal :is(.hm-table-wrap, .gr-table-wrap, .pt-wrap, .dp-grid-wrap, .pt-scroll)::-webkit-scrollbar { width: 10px; height: 10px; }
+.ucas-portal :is(.hm-table-wrap, .gr-table-wrap, .pt-wrap, .dp-grid-wrap, .pt-scroll)::-webkit-scrollbar-track { background: var(--portal-thead-bg); border-radius: 0; }
+.ucas-portal :is(.hm-table-wrap, .gr-table-wrap, .pt-wrap, .dp-grid-wrap, .pt-scroll)::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ucas-blue) 55%, transparent); border-radius: 0; border: 2px solid var(--portal-thead-bg); }
+.ucas-portal :is(.hm-table-wrap, .gr-table-wrap, .pt-wrap, .dp-grid-wrap, .pt-scroll)::-webkit-scrollbar-thumb:hover { background: var(--ucas-blue); }
+.ucas-portal :is(.hm-table-wrap, .gr-table-wrap, .pt-wrap, .dp-grid-wrap, .pt-scroll)::-webkit-scrollbar-corner { background: var(--portal-thead-bg); }
 :root[data-brand="ucas"] .ucas-portal main { min-width: 0; }
 
 /* صفحة المشروع: صورة المشروع غلاف للفيديو بزر تشغيل في وسطها */
