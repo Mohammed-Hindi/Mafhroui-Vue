@@ -119,6 +119,7 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 import PortalStepper from '@/components/shared/PortalStepper.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
+import { sendWhatsapp } from '@/services/api'
 
 const DAY = 864e5
 
@@ -254,9 +255,17 @@ export default {
       }
     },
 
-    sendReminder(m) {
+    async sendReminder(m) {
+      const leader = this.teams.find((t) => t.id === this.selectedTeamId)?.leader
+      if (!leader?.whatsapp) return
       const text = [`تذكير باجتماع: ${m.title}`, `التاريخ: ${m.date}`, `الوقت: ${m.time}`, m.link && `الرابط: ${m.link}`, m.notes && `الملاحظات: ${m.notes}`].filter(Boolean).join('\n')
-      window.open(`https://wa.me/${this.remindNumber}?text=${encodeURIComponent(text)}`, '_blank')
+      try {
+        const res = await sendWhatsapp({ whats: leader.whatsapp, name: leader.name, user_id: leader.id }, text, 'meeting')
+        if (res.queued) this.$toast?.success('تم إرسال التذكير عبر واتساب')
+        else this.$toast?.error('رقم الواتساب غير صالح للإرسال')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال التذكير')
+      }
     }
   }
 }

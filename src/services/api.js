@@ -61,4 +61,23 @@ api.interceptors.response.use(
 
 export const sendEmail = ({ to, subject, message }) => api.post('/email/send', { to, subject, message })
 
+// تطبيع رقم الواتساب لصيغة الـ API (970/972 + رقم المحمول). يُرجِع '' إن تعذّر.
+export const normalizeWhats = (raw) => {
+  const digits = String(raw || '').replace(/\D/g, '')
+  if (!digits) return ''
+  const full = digits.startsWith('970') || digits.startsWith('972') ? digits : `970${digits.replace(/^0+/, '')}`
+  return /^(970|972)5\d{8}$/.test(full) ? full : ''
+}
+
+// إرسال رسالة واتساب عبر الويب هوك (القناة التلقائية) — مستلم واحد أو قائمة.
+// يتجاهل الأرقام غير الصالحة ويرسل الباقي؛ يُرجِع عدد الرسائل المُدرَجة بالطابور.
+export const sendWhatsapp = async (recipients, message, context = 'reminder') => {
+  const list = (Array.isArray(recipients) ? recipients : [recipients])
+    .map((r) => ({ phone: normalizeWhats(r.phone ?? r.whats ?? r.whatsapp), name: r.name || undefined, user_id: r.user_id ?? r.id ?? undefined }))
+    .filter((r) => r.phone)
+  if (!list.length) return { queued: 0, delivery_ids: [] }
+  const { data } = await api.post('/whatsapp/send', { recipients: list, message, context })
+  return data
+}
+
 export default api
