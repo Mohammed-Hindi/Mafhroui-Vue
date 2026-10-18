@@ -271,7 +271,7 @@ import { useTeamsStore } from '@/stores/teams.store'
 import { useUsersStore } from '@/stores/users.store'
 import { exportStyledExcel, exportGroupsPdf } from '@/utils/exportReport'
 import { APP_NAME, PORTAL_ROLES } from '@/utils/constants'
-import { sendEmail } from '@/services/api'
+import { sendEmail, sendWhatsapp } from '@/services/api'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
 import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
 import TeamMembersPanel from '@/components/shared/TeamMembersPanel.vue'
@@ -484,11 +484,11 @@ export default {
         }
         this.addStudentModal = false
         this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
-        this.inviteTarget = { name: f.name, mail: f.email, whats: f.whatsapp, password }
+        this.inviteTarget = { name: f.name, mail: f.email, whats: f.whatsapp, password, user_id: result.user.id }
         this.inviteModal = true
         this.sendInviteWhats()
         this.sendInviteMail()
-        this.$toast?.success('تم إنشاء حساب الطالب وإرسال بياناته')
+        this.$toast?.success('تم إنشاء حساب الطالب')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء حساب الطالب')
       } finally {
@@ -511,11 +511,11 @@ export default {
         const password = await this.setUserPassword(result.user.id)
         this.addSupervisorModal = false
         this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
-        this.inviteTarget = { name: this.addSupervisorForm.name, mail: this.addSupervisorForm.email, whats: this.addSupervisorForm.whatsapp, password }
+        this.inviteTarget = { name: this.addSupervisorForm.name, mail: this.addSupervisorForm.email, whats: this.addSupervisorForm.whatsapp, password, user_id: result.user.id }
         this.inviteModal = true
         this.sendInviteWhats()
         this.sendInviteMail()
-        this.$toast?.success('تم إنشاء حساب المشرف وإرسال بياناته')
+        this.$toast?.success('تم إنشاء حساب المشرف')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء حساب المشرف')
       } finally {
@@ -526,11 +526,19 @@ export default {
     inviteMessage() {
       return `مرحبًا ${this.inviteTarget?.name || ''}،\nتم إنشاء حسابك على منصة ${APP_NAME}.\nالبريد الإلكتروني: ${this.inviteTarget?.mail || ''}\nكلمة المرور: ${this.inviteTarget?.password || ''}\nرابط الدخول: ${window.location.origin}/login`
     },
-    sendInviteWhats() {
+    async sendInviteWhats() {
       if (!this.inviteTarget?.whats) return
-      const num = digitsOnly(this.inviteTarget.whats)
-      const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
-      window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.inviteMessage())}`, '_blank')
+      try {
+        const res = await sendWhatsapp(
+          { whats: this.inviteTarget.whats, name: this.inviteTarget.name, user_id: this.inviteTarget.user_id },
+          this.inviteMessage(),
+          'credentials'
+        )
+        if (res.queued) this.$toast?.success('تم إرسال بيانات الدخول عبر واتساب')
+        else this.$toast?.error('رقم الواتساب غير صالح للإرسال')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال رسالة واتساب')
+      }
     },
     async sendInviteMail() {
       if (!this.inviteTarget?.mail) return

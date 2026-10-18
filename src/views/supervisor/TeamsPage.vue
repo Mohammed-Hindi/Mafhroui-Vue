@@ -211,7 +211,7 @@ import Pagination from '@/components/ui/Pagination.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUsersStore } from '@/stores/users.store'
-import { sendEmail } from '@/services/api'
+import { sendEmail, sendWhatsapp } from '@/services/api'
 import { APP_NAME } from '@/utils/constants'
 
 const GROUPS_PAGE_SIZE = 5
@@ -221,10 +221,6 @@ const LEVEL_OPTIONS = [
   { value: 'view_only', label: 'عرض فقط' },
   { value: 'blocked', label: 'محظور' }
 ]
-
-function digitsOnly(value) {
-  return String(value || '').replace(/\D/g, '').replace(/^0/, '')
-}
 
 export default {
   name: 'SupervisorTeamsPage',
@@ -497,11 +493,15 @@ export default {
       if (!member.whats || !member.id) return
       try {
         const password = await this.setUserPassword(member.id)
-        const num = digitsOnly(member.whats)
-        const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
-        window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.credentialsMessage(member, password))}`, '_blank')
+        const res = await sendWhatsapp(
+          { whats: member.whats, name: member.name, user_id: member.id },
+          this.credentialsMessage(member, password),
+          'credentials'
+        )
+        if (res.queued) this.$toast?.success('تم إرسال بيانات الدخول عبر واتساب')
+        else this.$toast?.error('رقم الواتساب غير صالح للإرسال')
       } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر توليد كلمة سر جديدة')
+        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال رسالة واتساب')
       }
     },
     async sendMail(member) {
@@ -522,17 +522,20 @@ export default {
     async sendWhatsAll() {
       const targets = this.allMembers.filter((m) => m.whats && m.id)
       if (!targets.length) return
-      if (!window.confirm(`سيتم توليد كلمة سر جديدة لكل عضو وفتح ${targets.length} محادثة واتساب. متابعة؟`)) return
+      if (!window.confirm(`سيتم توليد كلمة سر جديدة لكل عضو وإرسال بياناته عبر واتساب (${targets.length}). متابعة؟`)) return
       this.sendingWhatsAll = true
       try {
-        for (const [i, member] of targets.entries()) {
+        let sent = 0
+        for (const member of targets) {
           const password = await this.setUserPassword(member.id)
-          setTimeout(() => {
-            const num = digitsOnly(member.whats)
-            const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
-            window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.credentialsMessage(member, password))}`, '_blank')
-          }, i * 300)
+          const res = await sendWhatsapp(
+            { whats: member.whats, name: member.name, user_id: member.id },
+            this.credentialsMessage(member, password),
+            'credentials'
+          )
+          sent += res.queued || 0
         }
+        this.$toast?.success(`تم إرسال البيانات عبر واتساب (${sent})`)
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إرسال البيانات للجميع')
       } finally {

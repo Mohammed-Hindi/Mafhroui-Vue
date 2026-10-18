@@ -554,7 +554,7 @@ import { useNotifyStore } from '@/stores/notify.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { ROLES, APP_NAME } from '@/utils/constants'
 import { formatDateTime } from '@/utils/formatters'
-import { sendEmail } from '@/services/api'
+import { sendEmail, sendWhatsapp } from '@/services/api'
 import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
 import ProfileModal from '@/components/shared/ProfileModal.vue'
 import SpecializationPicker from '@/components/shared/SpecializationPicker.vue'
@@ -1011,11 +1011,11 @@ export default {
         const password = await this.setUserPassword(result.user.id)
         this.addModalOpen = false
         this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
-        this.inviteTarget = { name: this.addForm.name, mail: this.addForm.email, whats: this.addForm.whatsapp, password }
+        this.inviteTarget = { name: this.addForm.name, mail: this.addForm.email, whats: this.addForm.whatsapp, password, user_id: result.user.id }
         this.inviteModalOpen = true
         this.sendInviteWhats()
         this.sendInviteMail()
-        this.$toast?.success('تم إنشاء الحساب وإرسال بياناته')
+        this.$toast?.success('تم إنشاء الحساب')
         await this.reloadKind(this.addForm.role)
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء الحساب')
@@ -1035,11 +1035,19 @@ export default {
         this.$toast?.error('تعذّر نسخ كلمة السر')
       }
     },
-    sendInviteWhats() {
+    async sendInviteWhats() {
       if (!this.inviteTarget?.whats) return
-      const num = digitsOnly(this.inviteTarget.whats)
-      const full = num.startsWith('970') || num.startsWith('972') ? num : `970${num}`
-      window.open(`https://wa.me/${full}?text=${encodeURIComponent(this.inviteMessage())}`, '_blank')
+      try {
+        const res = await sendWhatsapp(
+          { whats: this.inviteTarget.whats, name: this.inviteTarget.name, user_id: this.inviteTarget.user_id },
+          this.inviteMessage(),
+          'credentials'
+        )
+        if (res.queued) this.$toast?.success('تم إرسال بيانات الدخول عبر واتساب')
+        else this.$toast?.error('رقم الواتساب غير صالح للإرسال')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر إرسال رسالة واتساب')
+      }
     },
     async sendInviteMail() {
       if (!this.inviteTarget?.mail) return
