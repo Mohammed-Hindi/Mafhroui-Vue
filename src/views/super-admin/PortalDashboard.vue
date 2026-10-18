@@ -2,21 +2,18 @@
   <!-- الرئيسية للإدارة العامة وللمشرف (نفس التصميم؛ المشرف يرى مجموعاته فقط):
        الإحصاءات ← نشاط المشرفين والمجموعات (بحث + فلاتر + بروفايل) ← مهام وتكليفات كل مجموعة + الرسم البياني -->
   <div ref="root" class="dash">
-    <!-- الإدارة العامة: بانر بهوية صفحة الهبوط (تدرّج + مطر البيانات + شعار مسار + الإحصاءات بأرقام بيضاء) -->
     <section v-if="hero" class="sa-hero">
       <div class="sa-hero-in">
         <div class="sa-hero-text">
           <span class="sa-hero-eyebrow">{{ isSup ? 'لوحة المشرف' : 'لوحة الإدارة العامة' }}</span>
           <h2 class="sa-hero-title">مرحبًا، {{ firstName }}</h2>
-          <p>{{ isSup ? 'تابع مجموعاتك وطلابك ومهامهم في الفصل الدراسي الحالي من مكان واحد.' : 'تابع المجموعات والمشرفين والمهام في الفصل الدراسي الحالي من مكان واحد.' }}</p>
         </div>
-      </div>
-      <div class="sa-hero-stats" aria-label="إحصاءات عامة">
-        <div v-for="s in stats" :key="s.label" class="sa-stat">
-          <b v-if="loading"><span class="sk sa-stat-sk" /></b>
-          <b v-else><CountUp :value="s.value" /></b>
-          <span>{{ s.label }}</span>
-          <small><template v-for="(p, i) in s.split" :key="p.label"><template v-if="i"> · </template>{{ p.label }} {{ p.value }}</template></small>
+        <div class="sa-hero-stats" aria-label="إحصاءات عامة">
+          <div v-for="s in stats" :key="s.label" class="sa-stat" :title="s.split.map((p) => `${p.label} ${p.value}`).join(' · ')">
+            <b v-if="loading"><span class="sk sa-stat-sk" /></b>
+            <b v-else><CountUp :value="s.value" /></b>
+            <span>{{ s.label }}</span>
+          </div>
         </div>
       </div>
     </section>
