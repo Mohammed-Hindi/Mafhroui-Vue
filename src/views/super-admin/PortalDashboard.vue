@@ -10,7 +10,6 @@
           <h2 class="sa-hero-title">مرحبًا، {{ firstName }}</h2>
           <p>{{ isSup ? 'تابع مجموعاتك وطلابك ومهامهم في الفصل الدراسي الحالي من مكان واحد.' : 'تابع المجموعات والمشرفين والمهام في الفصل الدراسي الحالي من مكان واحد.' }}</p>
         </div>
-        <MasarWordmark class="sa-hero-word" />
       </div>
       <div class="sa-hero-stats" aria-label="إحصاءات عامة">
         <div v-for="s in stats" :key="s.label" class="sa-stat">
@@ -68,7 +67,7 @@
           <option value="male">طلاب</option>
           <option value="female">طالبات</option>
         </select>
-        <button v-if="tab === 'sup'" type="button" class="pbtn is-green hm-report" :disabled="exporting || !supRows.length" @click="exportSupReport">
+        <button v-if="tab === 'sup'" type="button" class="pbtn hm-report" :disabled="exporting || !supRows.length" @click="exportSupReport">
           <Printer :size="17" /> {{ exporting ? 'جارٍ التجهيز…' : 'تقرير المشرفين PDF' }}
         </button>
       </div>
@@ -152,25 +151,25 @@
       <p class="hm-count">{{ tab === 'sup' ? `${supRows.length} مشرف` : `${grpRows.length} مجموعة` }}</p>
     </section>
 
-    <!-- المهام والتكليفات لكل مجموعة + الرسم البياني -->
-    <div class="hm-grid is-stretch">
-      <section class="dash-card">
-        <div class="dash-card-head">
-          <h3>المهام والتكليفات</h3>
-          <div class="hm-filters hm-filters-inline">
-            <select v-model="taskGroup" class="gr-select" aria-label="المجموعة">
-              <option value="">كل المجموعات</option>
-              <option v-for="g in taskGroups" :key="g.id" :value="g.id">{{ g.name }}</option>
-            </select>
-            <select v-model="taskState" class="gr-select" aria-label="حالة المهمة">
-              <option value="">كل الحالات</option>
-              <option value="done">مكتملة</option>
-              <option value="open">غير مكتملة</option>
-              <option value="late">متأخرة</option>
-            </select>
-          </div>
+    <section class="dash-card hm-health">
+      <div class="dash-card-head">
+        <h3>حالة المشاريع والمهام</h3>
+        <div class="hm-filters hm-filters-inline">
+          <select v-model="taskGroup" class="gr-select" aria-label="المجموعة">
+            <option value="">كل المجموعات</option>
+            <option v-for="g in taskGroups" :key="g.id" :value="g.id">{{ g.name }}</option>
+          </select>
+          <select v-model="taskState" class="gr-select" aria-label="حالة المهمة">
+            <option value="">كل الحالات</option>
+            <option value="done">مكتملة</option>
+            <option value="open">غير مكتملة</option>
+            <option value="late">متأخرة</option>
+          </select>
         </div>
-        <div class="hm-table-wrap hm-scroll">
+      </div>
+      <div class="hm-health-grid">
+        <div class="hm-health-tasks">
+          <div class="hm-table-wrap hm-scroll">
             <table class="hm-table">
               <thead><tr><th>المهمة / التكليف</th><th class="hm-center">المجموعة</th><th>{{ isSup ? 'المشروع' : 'المشرف' }}</th><th>المكلّفون</th><th>تاريخ الإصدار</th><th>موعد التسليم</th><th>الحالة</th></tr></thead>
               <tbody>
@@ -188,18 +187,11 @@
                 <tr v-else-if="!taskRows.length"><td colspan="7" class="gr-empty">لا توجد مهام</td></tr>
               </tbody>
             </table>
+          </div>
+          <p class="hm-count">{{ taskRows.length }} مهمة</p>
         </div>
-        <p class="hm-count">{{ taskRows.length }} مهمة</p>
-      </section>
 
-      <section class="dash-card">
-        <div class="dash-card-head">
-          <h3>حالة المهام</h3>
-          <span class="dash-chip">{{ chartTitle }}</span>
-        </div>
-        <!-- مخطط التقدّم بنمط أنظمة إدارة المشاريع: نسبة الإنجاز كرقم رئيسي، شريط مقسّم حسب الحالة،
-             مفتاح بالعدد والنسبة، ثم تقدّم كل مجموعة (أعلى 5 بعدد المهام) — المرور على أي جزء يظهر تفاصيله -->
-        <!-- قسم وهمي أثناء تحميل المهام -->
+        <div class="hm-health-status">
         <div v-if="loading || tasksLoading" class="hm-prog-sk" aria-label="جارٍ التحميل">
           <span class="sk" style="width: 120px; height: 40px" />
           <span class="sk" style="height: 14px" />
@@ -245,8 +237,9 @@
           <div><dt>الطلاب</dt><dd>{{ genderCount.male }}</dd></div>
           <div><dt>الطالبات</dt><dd>{{ genderCount.female }}</dd></div>
         </dl>
-      </section>
-    </div>
+        </div>
+      </div>
+    </section>
 
     <ProfileModal v-model="profileOpen" :kind="profileKind" :person-id="profileId" :name="profileName" />
   </div>
@@ -257,7 +250,6 @@ import { ref } from 'vue'
 import { mapState } from 'pinia'
 import { ChevronDown, Search, Printer } from 'lucide-vue-next'
 import CountUp from '@/components/ui/CountUp.vue'
-import MasarWordmark from '@/components/landing/MasarWordmark.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { ROLES, STORAGE_KEYS } from '@/utils/constants'
 import { gsap, useScrollMotion } from '@/composables/useScrollMotion'
@@ -281,7 +273,7 @@ const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0)
 export default {
   name: 'PortalDashboard',
 
-  components: { ChevronDown, CountUp, MasarWordmark, Search, Printer, ProfileModal, SlideTable },
+  components: { ChevronDown, CountUp, Search, Printer, ProfileModal, SlideTable },
 
   /** حركة الصفحة (الإدارة العامة): البانر يدخل عند الفتح، البطاقات تصعد عند الوصول إليها، والصفوف تتوالى بعد وصول البيانات */
   setup() {
