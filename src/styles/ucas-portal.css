@@ -961,9 +961,15 @@
   .portal-identity-details > div { padding-inline: 0; }
   .portal-identity-details > div + div { border-inline-start: 0; }
 
-  /* الشريط العلوي: مساحة أكبر لعنوان الصفحة — كتلة المستخدم شعار فقط */
-  .portal-user { padding-inline: 6px; gap: 4px; }
-  .portal-user > svg { display: none; }
+  /* الشريط العلوي: كتلة المستخدم زر منسدل مضغوط (الصورة + السهم) ليظهر أن خلفها بياناتي وتغيير كلمة المرور */
+  .portal-user {
+    height: 44px;
+    padding-inline: 3px 8px;
+    gap: 4px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  }
+  .portal-user .portal-avatar { width: 34px; height: 34px; }
   .portal-topbar-title { font-size: 17px; }
 
   /* رؤوس الصفحات والبطاقات: حشوة أصغر */
@@ -3885,7 +3891,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 @media (max-width: 639.98px) {
   .sa-skin .portal-topbar-title { padding: 4px 10px; font-size: 13.5px; gap: 6px; }
   .sa-skin .portal-topbar-title::before { width: 6px; height: 6px; }
-  .sa-skin .portal-user { padding-inline: 6px; }
+  .sa-skin .portal-user { padding-inline: 3px 8px; }
   .sa-hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sa-stat b { font-size: 24px; }
   .sa-skin .hm-filters { flex-direction: column; align-items: stretch; }
@@ -5626,6 +5632,10 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .spk-opt.is-on .spk-tick { background: linear-gradient(135deg, #62BB46, #0E699C); color: #FFFFFF; box-shadow: none; }
 .spk-empty { margin: 0; padding: 14px; border-radius: 12px; background: var(--color-bg); font-size: 13px; color: var(--color-text-600); text-align: center; }
 .spk-hint { display: block; margin-top: 10px; font-size: 12.5px; color: var(--color-text-600); }
+.spk-count { margin-inline-start: 6px; font-size: 12px; font-weight: 700; color: var(--color-text-400); }
+.spk-opt:disabled { opacity: .45; cursor: not-allowed; }
+.spk-hint.is-max { color: var(--ucas-blue); font-weight: 700; }
+.csp { display: flex; flex-direction: column; gap: 14px; }
 @media (max-width: 639.98px) { .spk-group { grid-template-columns: minmax(0, 1fr); } .spk-list { max-height: 320px; } }
 
 /* ======================================================================

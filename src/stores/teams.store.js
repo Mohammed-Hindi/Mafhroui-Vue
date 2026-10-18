@@ -103,9 +103,9 @@ export const useTeamsStore = defineStore('teams', () => {
     try {
       const { data } = await api.get('/specializations')
       const all = data.data || data
-      // عضو لجنة الإشراف يرى تخصصه فقط في كل القوائم والفلاتر (الخادم يقيّد البيانات بنفس التخصص)
+      // عضو لجنة الإشراف يرى تخصصات نطاقه فقط (حتى 5 أو قسم كامل) في كل القوائم والفلاتر (الخادم يقيّد البيانات بنفس التخصص)
       const me = useAuthStore().user
-      specializations.value = me?.role === ROLES.COMMITTEE && me.specialization_id ? all.filter((s) => s.id === me.specialization_id) : all
+      specializations.value = me?.role === ROLES.COMMITTEE && me.committee_scope_ids ? all.filter((s) => me.committee_scope_ids.includes(s.id)) : all
       return specializations.value
     } catch (err) {
       specializationsError.value = err.normalized?.message || 'تعذّر تحميل التخصصات'

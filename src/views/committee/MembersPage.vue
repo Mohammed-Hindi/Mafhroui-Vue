@@ -91,7 +91,8 @@
                 <span v-else class="text-caption text-text-400">غير منضم لمجموعة</span>
               </template>
               <template #cell-spec="{ row }">
-                <span v-if="row.spec" class="rv-pill">{{ specializationName(row.spec) }}</span>
+                <span v-if="row.scopeLabel" class="rv-pill">{{ row.scopeLabel }}</span>
+                <span v-else-if="row.spec" class="rv-pill">{{ specializationName(row.spec) }}</span>
                 <span v-else class="text-caption text-text-400">كل التخصصات</span>
               </template>
               <template #cell-who="{ row }">
@@ -415,12 +416,12 @@
 
         <!-- 3. تخصص عضو لجنة الإشراف: يرى بيانات هذا التخصص فقط -->
         <div v-if="addForm.role === 'committee'" class="mf-sec">
-          <SpecializationPicker v-model="addForm.specialization_id" :specializations="specializations" label="التخصص الذي ينتمي له" required hint="عضو اللجنة يرى المجموعات والمشاريع والمقترحات الخاصة بهذا التخصص فقط" />
+          <CommitteeScopePicker v-model="addForm.scope" :specializations="specializations" required />
         </div>
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="addModalOpen = false">إلغاء</BaseButton>
-        <BaseButton :icon="Send" :loading="adding" :disabled="!addForm.name.trim() || (addForm.role === 'committee' && !addForm.specialization_id)" @click="submitAdd">إضافة وإرسال بيانات الدخول</BaseButton>
+        <BaseButton :icon="Send" :loading="adding" :disabled="!addForm.name.trim() || (addForm.role === 'committee' && !hasScope(addForm.scope))" @click="submitAdd">إضافة وإرسال بيانات الدخول</BaseButton>
       </template>
     </BaseModal>
 
@@ -456,7 +457,7 @@
           <BaseInput v-model="editForm.name" label="اسم الموظف" class="sm:col-span-2" />
           <BaseInput v-model="editForm.empId" label="الرقم الوظيفي" />
           <BaseInput v-model="editForm.whats" label="رقم الواتس" />
-          <SpecializationPicker v-if="editKind === 'committee'" v-model="editForm.spec" :specializations="specializations" label="التخصص الذي ينتمي له" allow-all class="sm:col-span-2" />
+          <CommitteeScopePicker v-if="editKind === 'committee'" :key="editTargetId" v-model="editForm.scope" :specializations="specializations" class="sm:col-span-2" />
         </template>
       </div>
       <template #footer>
@@ -557,14 +558,14 @@ import { formatDateTime } from '@/utils/formatters'
 import { sendEmail, sendWhatsapp } from '@/services/api'
 import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
 import ProfileModal from '@/components/shared/ProfileModal.vue'
-import SpecializationPicker from '@/components/shared/SpecializationPicker.vue'
+import CommitteeScopePicker from '@/components/shared/CommitteeScopePicker.vue'
 import { GENDERS, REGIONS } from '@/utils/progressData'
 
 function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
 }
 
-const emptyAddForm = () => ({ role: 'student', name: '', employee_number: '', university_number: '', email: '', whatsapp: '', specialization_id: '' })
+const emptyAddForm = () => ({ role: 'student', name: '', employee_number: '', university_number: '', email: '', whatsapp: '', scope: { ids: [], dept: '' } })
 
 const MODULES = [
   { value: 'projects', label: 'المشاريع' },
@@ -594,7 +595,7 @@ const STATUS_VARIANTS = { pending: 'warning', sent: 'success', failed: 'error' }
 export default {
   name: 'CommitteeMembersPage',
 
-  components: { SpecializationPicker, Check, RotateCcw, Send, Copy, GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, SlidersHorizontal, Link2, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, SlideTable, SkeletonLoader, EmptyState, EmailComposeModal, ProfileModal, ChevronDown, ChevronLeft },
+  components: { CommitteeScopePicker, Check, RotateCcw, Send, Copy, GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, SlidersHorizontal, Link2, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, SlideTable, SkeletonLoader, EmptyState, EmailComposeModal, ProfileModal, ChevronDown, ChevronLeft },
 
   props: {
     /** 'members' = إدارة الأعضاء (افتراضي) · 'credentials' = صفحة إرسال بيانات الدخول (الإدارة العامة) */
@@ -787,7 +788,12 @@ export default {
         empId: u.employee_number,
         mail: u.email,
         whats: u.whatsapp,
-        spec: u.specialization_id,
+        specIds: u.specialization_ids?.length ? u.specialization_ids : (u.specialization_id ? [u.specialization_id] : []),
+        dept: u.scope_department_id || '',
+        // ملخص النطاق في الجدول: "قسم X كامل" أو أسماء التخصصات
+        scopeLabel: u.scope_department_id
+          ? `قسم ${this.specializations.find((s) => s.department_id === u.scope_department_id)?.department?.name || ''} كامل`
+          : (u.specialization_ids || []).map((id) => this.specializationName(id)).join('، '),
         restricted: u.status === 'restricted',
         restrictedReason: u.restricted_reason
       }))
@@ -996,9 +1002,16 @@ export default {
       this.addForm = { ...emptyAddForm(), role }
       this.addModalOpen = true
     },
+    hasScope(scope) {
+      return !!(scope.dept || scope.ids.length)
+    },
+    /** نطاق عضو اللجنة بصيغة الخادم: حتى 5 تخصصات أو قسم كامل */
+    scopePayload(scope) {
+      return { specialization_ids: scope.dept ? [] : scope.ids, scope_department_id: scope.dept || null }
+    },
     async submitAdd() {
-      if (this.addForm.role === 'committee' && !this.addForm.specialization_id) {
-        this.$toast?.error('اختر التخصص الذي ينتمي له عضو اللجنة')
+      if (this.addForm.role === 'committee' && !this.hasScope(this.addForm.scope)) {
+        this.$toast?.error('اختر تخصصات عضو اللجنة (حتى 5) أو قسمًا كاملًا')
         return
       }
       if (!this.addForm.name || !this.addForm.email) {
@@ -1007,7 +1020,8 @@ export default {
       }
       this.adding = true
       try {
-        const result = await this.createUser(this.addForm)
+        const { scope, ...form } = this.addForm
+        const result = await this.createUser(form.role === 'committee' ? { ...form, ...this.scopePayload(scope) } : form)
         const password = await this.setUserPassword(result.user.id)
         this.addModalOpen = false
         this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
@@ -1091,7 +1105,7 @@ export default {
       this.editTargetId = row.id
       this.editForm = this.editKind === 'student'
         ? { name: row.name, uid: row.uid || '', whats: row.whats || '' }
-        : { name: row.name, empId: row.empId || '', whats: row.whats || '', spec: row.spec || '' }
+        : { name: row.name, empId: row.empId || '', whats: row.whats || '', scope: { ids: [...(row.specIds || [])], dept: row.dept || '' } }
       this.editModalOpen = true
     },
     async saveEdit() {
@@ -1103,7 +1117,7 @@ export default {
       try {
         const payload = this.editKind === 'student'
           ? { name: this.editForm.name, university_number: this.editForm.uid, whatsapp: this.editForm.whats }
-          : { name: this.editForm.name, employee_number: this.editForm.empId, whatsapp: this.editForm.whats, ...(this.editKind === 'committee' ? { specialization_id: this.editForm.spec || null } : {}) }
+          : { name: this.editForm.name, employee_number: this.editForm.empId, whatsapp: this.editForm.whats, ...(this.editKind === 'committee' ? this.scopePayload(this.editForm.scope) : {}) }
         await this.updateUser(this.editTargetId, payload)
         this.editModalOpen = false
         this.$toast?.success('تم حفظ التعديلات')
