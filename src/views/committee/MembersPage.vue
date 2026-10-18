@@ -46,7 +46,7 @@
       <div class="mb-12">
         <SlideTable :rows="activeFiltered" :size="pageSize" :label="{ student: 'الطلاب', supervisor: 'المشرفون', committee: 'الأعضاء' }[memberKind]">
           <template #default="{ rows: shown }">
-            <DataTable fixed class="mb-table" :class="isSuperAdmin && 'mb-rows-link'" :columns="activeColumns" :rows="shown" row-key="id" :primary-keys="['name', 'actions']" :loading="activeLoading" empty-title="لا توجد نتائج مطابقة" @row-click="isSuperAdmin && openProfile($event)">
+            <DataTable fixed class="mb-table" :class="isSuperAdmin && 'mb-rows-link'" :columns="activeColumns" :rows="shown" row-key="id" :primary-keys="['name', 'actions']" :loading="activeLoading" empty-title="لا توجد نتائج مطابقة" :row-extra-when="(row) => openSupId === row.id" @row-click="isSuperAdmin && openProfile($event)">
               <!-- المجموعة: رقم الشعبة + المشرف تحته -->
               <template #cell-grp="{ row }">
                 <template v-if="row.grp">
@@ -928,8 +928,9 @@ export default {
       clearTimeout(this.searchTimer)
       this.searchTimer = setTimeout(() => this.reloadKind(this.memberKind), 350)
     },
-    memberKind() {
+    memberKind(v) {
       this.memberSearch = ''
+      if (this.$route?.query.kind !== v) this.$router.replace({ query: { ...this.$route.query, kind: v } }).catch(() => {})
     }
   },
 

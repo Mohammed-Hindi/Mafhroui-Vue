@@ -47,7 +47,7 @@
                 </slot>
               </td>
             </tr>
-            <tr v-if="$slots['row-extra']">
+            <tr v-if="$slots['row-extra'] && (!rowExtraWhen || rowExtraWhen(row))">
               <td :colspan="columns.length" class="p-0">
                 <slot name="row-extra" :row="row" :index="index" />
               </td>
@@ -133,7 +133,9 @@ export default {
     /** بدون خلفية/حدود/ظل خاصة به — للاستخدام متداخلًا داخل بطاقة أخرى بالفعل لها هذا التنسيق */
     flush: { type: Boolean, default: false },
     /** عرض ثابت بعرض البطاقة: بلا سكرول أفقي، والنصوص الطويلة تنكسر داخل الخلية */
-    fixed: { type: Boolean, default: false }
+    fixed: { type: Boolean, default: false },
+    /** متى يُعرض صف row-extra لكل صف (افتراضيًا دائمًا عند وجود السلوت) — يمنع الصفوف الفارغة */
+    rowExtraWhen: { type: Function, default: null }
   },
 
   emits: ['retry', 'page-change', 'row-click'],
