@@ -114,13 +114,20 @@ const updatePosition = () => {
 
   const rect = button.getBoundingClientRect()
   const gap = 8
-  // القائمة تنسدل للأسفل دائمًا (قرار المستخدم): إن ضاقت المساحة تقصر القائمة وتُمرَّر بدل أن تنقلب للأعلى
+  const header = document.querySelector('.portal-topbar')
+  const headerBottom = header ? header.getBoundingClientRect().bottom : 0
+
+  if (rect.bottom <= headerBottom + 4) {
+    closeDropdown()
+    return
+  }
+
   const spaceBelow = window.innerHeight - rect.bottom - gap * 2
 
   listStyle.value = {
     left: `${rect.left}px`,
     width: `${rect.width}px`,
-    top: `${rect.bottom + gap}px`,
+    top: `${Math.max(rect.bottom + gap, headerBottom + gap)}px`,
     maxHeight: `${Math.max(Math.min(spaceBelow, 288), 140)}px`
   }
 }
