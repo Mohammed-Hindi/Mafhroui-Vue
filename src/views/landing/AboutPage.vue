@@ -5,7 +5,6 @@
        تصعد أو تدخل من الجانبين، الأيقونات تُرسم، خط القصة يمتد مع التمرير، وشريط المشرف ينكشف بمسح ضوئي -->
   <div ref="root">
     <header class="us-pagehead">
-      <DataRain :gain="2.4" />
       <div class="us-wrap">
         <h1>من نحن</h1>
         <p>منصة {{ APP_NAME }} — {{ APP_DESCRIPTION }} في الكلية الجامعية للعلوم التطبيقية</p>
@@ -108,7 +107,6 @@
 </template>
 
 <script setup>
-import DataRain from '@/components/landing/DataRain.vue'
 import { Award, BadgeCheck, Building2, CheckCircle2, GraduationCap, Rocket, UserCheck, Users, UsersRound } from 'lucide-vue-next'
 import { APP_NAME, APP_DESCRIPTION } from '@/utils/constants'
 import { ref } from 'vue'

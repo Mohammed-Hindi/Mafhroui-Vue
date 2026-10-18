@@ -16,43 +16,42 @@
   --ucas-gradient: linear-gradient(to left, #62BB46, #50A16E 45%, #0E699C 80%, #025DA9);
 
   /* ألوان البوابة */
-  --portal-header-bg: #435966;
+  --portal-header-bg: #FFFFFF;
   --portal-nav-bg: #FFFFFF;
-  --portal-nav-text: #6C757D;
-  --portal-nav-active: #71B6F8;
-  --portal-footer-bg: #E3E9ED;
-  --portal-footer-text: #98A6AD;
-  --portal-cyan: #35B8E0;
-  --portal-sky: #71B6F9;
+  --portal-nav-text: #5B6676;
+  --portal-nav-active: #005BAA;
+  --portal-footer-bg: #FFFFFF;
+  --portal-footer-text: #8A94A6;
+  --portal-cyan: #005BAA;
+  --portal-sky: #4C8FCF;
   --portal-gray-btn: #6C757D;
   --portal-pink: #FF8ACC;
-  --portal-thead-bg: #35B8E0;
-  --portal-thead-text: #FFFFFF;
-  --portal-menu-hover: #F3F7F9;
+  --portal-thead-bg: #F4F7FB;
+  --portal-thead-text: #475569;
+  --portal-menu-hover: #F1F5FA;
 
-  /* Primary = سماوي البوابة (أزرار الإجراء، رؤوس الجداول، العناوين المساعدة) */
-  --color-primary-50:  #EBF8FC;
-  --color-primary-100: #D7F1F9;
-  --color-primary-200: #AFE3F3;
-  --color-primary-300: #86D4EC;
-  --color-primary-400: #5EC6E6;
-  --color-primary-500: #71B6F9;
-  --color-primary-600: #35B8E0;
-  --color-primary-700: #2A9DC2;
-  --color-primary-800: #1F7C9A;
-  --color-primary-900: #165C73;
+  --color-primary-50:  #EAF2FB;
+  --color-primary-100: #D4E5F6;
+  --color-primary-200: #A9CBEC;
+  --color-primary-300: #7EB1E3;
+  --color-primary-400: #4C8FCF;
+  --color-primary-500: #1F6FB8;
+  --color-primary-600: #005BAA;
+  --color-primary-700: #004C8E;
+  --color-primary-800: #003C72;
+  --color-primary-900: #002C56;
 
   /* Secondary = أخضر الإجراءات الإيجابية (طباعة الجدول، تقديم الطلب، صف المعدل) */
-  --color-secondary-50:  #E7F9F0;
-  --color-secondary-100: #CFF3E1;
-  --color-secondary-200: #9FE7C3;
-  --color-secondary-300: #6FDBA5;
-  --color-secondary-400: #3FCF87;
-  --color-secondary-500: #10C469;
-  --color-secondary-600: #10C469;
-  --color-secondary-700: #0DA859;
-  --color-secondary-800: #0A8747;
-  --color-secondary-900: #086636;
+  --color-secondary-50:  #EDF7E9;
+  --color-secondary-100: #DAEFD2;
+  --color-secondary-200: #B6DFA6;
+  --color-secondary-300: #91CF79;
+  --color-secondary-400: #77C159;
+  --color-secondary-500: #62BB46;
+  --color-secondary-600: #58A83F;
+  --color-secondary-700: #4C9036;
+  --color-secondary-800: #3D742B;
+  --color-secondary-900: #2E5720;
 
   /* Accent = أزرق الشعار */
   --color-accent-50:  #E6EFF7;
@@ -67,9 +66,9 @@
   --color-accent-900: #002A50;
 
   /* الحالات — كما تظهر تنبيهات البوابة */
-  --color-success: #10C469;
-  --color-success-bg: #E2F8ED;
-  --color-success-border: #C3EFD9;
+  --color-success: #4C9036;
+  --color-success-bg: #EDF7E9;
+  --color-success-border: #CDE8BF;
   --color-warning: #F9C851;
   --color-warning-text: #B47A00;
   --color-warning-bg: #FEF8EA;
@@ -102,14 +101,13 @@
   --fs-caption: 13px;
   --fs-label: 13px;
 
-  /* زوايا Bootstrap (0.25rem) وظل البطاقات الضبابي العريض */
-  --radius-sm: 4px;
-  --radius-md: 4px;
-  --radius-lg: 4px;
-  --shadow-card: 0 0 35px 0 rgba(154, 161, 171, 0.15);
-  --shadow-card-hover: 0 0 35px 0 rgba(154, 161, 171, 0.3);
-  --shadow-modal: 0 0 45px 0 rgba(52, 58, 64, 0.25);
-  --shadow-dropdown: 0 0 35px 0 rgba(154, 161, 171, 0.3);
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-card-hover: 0 2px 8px rgba(16, 24, 40, 0.08);
+  --shadow-modal: 0 24px 48px -12px rgba(16, 24, 40, 0.18);
+  --shadow-dropdown: 0 8px 24px -8px rgba(16, 24, 40, 0.16);
 
   /* الحركة — منحنى Material القياسي */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
@@ -457,11 +455,11 @@
 .ucas-portal :is(button, a).select-none.bg-primary-600,
 :root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-primary-600 { background: #35B8E0; color: #FFFFFF; }
 .ucas-portal :is(button, a).select-none.bg-primary-600:not(:disabled):hover,
-:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-primary-600:not(:disabled):hover { background: #2A9DC2; }
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-primary-600:not(:disabled):hover { background: #004C8E; }
 .ucas-portal :is(button, a).select-none.bg-secondary-600,
-:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-secondary-600 { background: #10C469; color: #FFFFFF; }
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-secondary-600 { background: #62BB46; color: #FFFFFF; }
 .ucas-portal :is(button, a).select-none.bg-secondary-600:not(:disabled):hover,
-:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-secondary-600:not(:disabled):hover { background: #0DA859; }
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-secondary-600:not(:disabled):hover { background: #52A23A; }
 .ucas-portal :is(button, a).select-none.bg-error,
 :root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-error { background: #FF5B5B; color: #FFFFFF; }
 .ucas-portal :is(button, a).select-none.border-border,
@@ -478,10 +476,10 @@
 }
 
 /* أزرار الإرسال الجماعي (واتساب/بريد للجميع) — مسطّحة بألوان البوابة بدل الخلفيات الباهتة */
-.ucas-portal button.h-10.bg-success-bg { background: #10C469; color: #FFFFFF; }
-.ucas-portal button.h-10.bg-success-bg:not(:disabled):hover { background: #0DA859; filter: none; }
+.ucas-portal button.h-10.bg-success-bg { background: #62BB46; color: #FFFFFF; }
+.ucas-portal button.h-10.bg-success-bg:not(:disabled):hover { background: #52A23A; filter: none; }
 .ucas-portal button.h-10.bg-primary-50 { background: #35B8E0; color: #FFFFFF; }
-.ucas-portal button.h-10.bg-primary-50:not(:disabled):hover { background: #2A9DC2; }
+.ucas-portal button.h-10.bg-primary-50:not(:disabled):hover { background: #004C8E; }
 
 /* 8.2 الشريط العلوي: ينزل بلطف عند الدخول */
 .ucas-portal header.sticky {
@@ -605,14 +603,15 @@
 /* ============ 10) الشريط العلوي الداكن (بوابة الكلية — 200515/200540) ============ */
 .portal-topbar {
   background: var(--portal-header-bg);
-  color: #FFFFFF;
+  color: var(--color-text-900);
+  border-bottom: 1px solid var(--color-border);
   transition: background-color 300ms var(--ease-standard);
 }
 .portal-topbar-title {
-  font-size: 19px;
-  font-weight: 800;
+  font-size: 18px;
+  font-weight: 700;
   line-height: 1.4;
-  color: #FFFFFF;
+  color: var(--color-text-900);
 }
 .portal-topbar-sub {
   font-size: 12px;
@@ -622,40 +621,39 @@
 .portal-icon-btn {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 4px;
-  color: #FFFFFF;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-600);
   flex-shrink: 0;
   transition: background-color var(--ucas-color-speed) var(--ease-standard);
 }
-.portal-icon-btn:hover { background: rgba(255, 255, 255, 0.08); }
-.portal-icon-btn:hover svg { animation: ucasSpin 600ms var(--ease-spring); }
+.portal-icon-btn:hover { background: var(--portal-menu-hover); color: var(--color-text-900); }
 
 .portal-user {
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 72px;
-  padding-inline: 14px 12px;
-  color: #FFFFFF;
-  font-size: 15.5px;
+  gap: 10px;
+  height: 46px;
+  padding-inline: 8px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-900);
+  font-size: 15px;
   font-weight: 600;
   transition: background-color var(--ucas-color-speed) var(--ease-standard);
 }
 .portal-user:hover,
-.portal-user.is-open { background: rgba(255, 255, 255, 0.07); }
+.portal-user.is-open { background: var(--portal-menu-hover); }
 .portal-avatar {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: #FFFFFF;
+  background: var(--color-surface);
   flex-shrink: 0;
   overflow: hidden;
-  /* حلقة فاصلة عن خلفية الشريط الداكنة */
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 1px var(--color-border);
 }
 
 /* جرس التنبيهات بنمط بوابة الكلية (200613): خانة بارتفاع الشريط تغمق عند الفتح، والقائمة ملتصقة تحتها مباشرة
@@ -663,15 +661,15 @@
 .portal-bell { align-self: stretch; }
 .portal-bell > div { height: 100%; }
 .portal-bell .nb-btn {
-  width: 60px;
+  width: 52px;
   height: 100%;
   border: 0;
   border-radius: 0;
-  color: #FFFFFF;
+  color: var(--color-text-600);
   background: transparent;
 }
-.portal-bell .nb-btn:hover { background: rgba(255, 255, 255, 0.07); color: #FFFFFF; }
-.portal-bell .nb-btn.is-open { background: rgba(0, 0, 0, 0.16); }
+.portal-bell .nb-btn:hover { background: var(--portal-menu-hover); color: var(--color-text-900); }
+.portal-bell .nb-btn.is-open { background: var(--portal-menu-hover); color: var(--color-text-900); }
 .portal-bell .nb-btn > span { top: 18px; left: 12px; background: #FF5B5B; }
 .portal-bell .nb-panel {
   top: 100%;
@@ -695,12 +693,12 @@
 
 /* محدد الفصل داخل الشريط الداكن */
 .portal-semester button[aria-haspopup="listbox"] {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.22) !important;
-  color: #FFFFFF;
+  background: var(--color-bg);
+  border-color: var(--color-border) !important;
+  color: var(--color-text-700);
 }
 .portal-semester button[aria-haspopup="listbox"] span,
-.portal-semester button[aria-haspopup="listbox"] svg { color: #FFFFFF; }
+.portal-semester button[aria-haspopup="listbox"] svg { color: var(--color-text-700); }
 
 /* القائمة المنسدلة للمستخدم */
 .portal-menu {
@@ -921,13 +919,13 @@
   justify-content: center;
   align-items: center;
   gap: 5px;
-  width: 44px;
-  height: 44px;
-  border-radius: 4px;
-  color: #FFFFFF;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-900);
   transition: background-color var(--ucas-color-speed) var(--ease-standard), color 300ms var(--ease-standard);
 }
-.portal-burger:hover { background: rgba(255, 255, 255, 0.1); }
+.portal-burger:hover { background: var(--portal-menu-hover); }
 .portal-burger:focus-visible { outline: 2px solid var(--portal-cyan); outline-offset: 2px; }
 .portal-burger span {
   display: block;
@@ -1013,7 +1011,7 @@
 }
 .dash-link:hover { border-color: var(--portal-cyan); color: var(--portal-cyan); }
 .dash-link.is-primary { background: var(--portal-cyan); border-color: var(--portal-cyan); color: #FFFFFF; }
-.dash-link.is-primary:hover { background: #2A9DC2; color: #FFFFFF; }
+.dash-link.is-primary:hover { background: #004C8E; color: #FFFFFF; }
 .dash-card {
   padding: 24px;
   background: var(--color-surface);
@@ -1275,7 +1273,7 @@
 }
 .rv-status-dot { width: 10px; height: 10px; margin-top: 7px; border-radius: 50%; flex-shrink: 0; background: var(--color-text-400); }
 .rv-status-dot.is-pending { background: #F9C851; }
-.rv-status-dot.is-approved { background: #10C469; }
+.rv-status-dot.is-approved { background: #62BB46; }
 .rv-status-dot.is-rejected { background: #FF5B5B; }
 .rv-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .rv-item-title {
@@ -1403,8 +1401,8 @@
 .rv-file:hover { background: color-mix(in srgb, var(--portal-cyan) 10%, transparent); }
 .rv-reject { border: 1px solid #FF5B5B; color: #FF5B5B; }
 .rv-reject:hover { background: rgba(255, 91, 91, 0.1); }
-.rv-approve { background: #10C469; color: #FFFFFF; }
-.rv-approve:hover { background: #0DA75A; }
+.rv-approve { background: #62BB46; color: #FFFFFF; }
+.rv-approve:hover { background: #52A23A; }
 .rv-decided { font-size: 13.5px; color: var(--color-text-400); }
 
 @media (max-width: 1023.98px) {
@@ -1577,7 +1575,7 @@
 }
 .gr-progress.is-sm { width: 64px; }
 .gr-progress > span { display: block; height: 100%; transition: width 600ms var(--ease-standard); }
-.gr-progress > .is-high { background: #10C469; }
+.gr-progress > .is-high { background: #62BB46; }
 .gr-progress > .is-mid { background: var(--portal-cyan); }
 .gr-progress > .is-low { background: #F9C851; }
 .gr-pct { margin-inline-start: 8px; font-size: 12.5px; font-weight: 700; color: var(--color-text-700); font-variant-numeric: tabular-nums; }
@@ -1778,7 +1776,7 @@
   font-weight: 600;
   transition: background-color var(--ucas-color-speed) var(--ease-standard);
 }
-.profile-tool:hover { background: #2A9DC2; }
+.profile-tool:hover { background: #004C8E; }
 
 @media (max-width: 640px) {
   .profile-tab { min-height: 92px; font-size: 15px; }
@@ -1950,9 +1948,9 @@
 }
 .pbtn:disabled { opacity: 0.5; cursor: not-allowed; }
 .pbtn.is-cyan { background: var(--portal-cyan); color: #FFFFFF; }
-.pbtn.is-cyan:hover:not(:disabled) { background: #2A9DC2; }
-.pbtn.is-green { background: #10C469; color: #FFFFFF; }
-.pbtn.is-green:hover:not(:disabled) { background: #0DA75A; }
+.pbtn.is-cyan:hover:not(:disabled) { background: #004C8E; }
+.pbtn.is-green { background: #62BB46; color: #FFFFFF; }
+.pbtn.is-green:hover:not(:disabled) { background: #52A23A; }
 .pbtn.is-red { background: #FF5B5B; color: #FFFFFF; }
 .pbtn.is-outline { border: 1px solid var(--portal-cyan); color: var(--portal-cyan); }
 .pbtn.is-outline:hover:not(:disabled) { background: color-mix(in srgb, var(--portal-cyan) 10%, transparent); }
@@ -2008,7 +2006,7 @@
 .fz-ext.is-pdf { background: #FF5B5B; }
 .fz-ext.is-doc { background: #005BAA; }
 .fz-ext.is-ppt { background: #F89E32; }
-.fz-ext.is-xls { background: #10C469; }
+.fz-ext.is-xls { background: #62BB46; }
 .fz-ext.is-img { background: var(--portal-cyan); }
 .fz-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .fz-meta b { font-size: 14px; color: var(--color-text-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -2028,7 +2026,7 @@
 .tk-dot.is-all { background: var(--color-text-700); }
 .tk-dot.is-in_progress { background: var(--portal-cyan); }
 .tk-dot.is-review { background: #F9C851; }
-.tk-dot.is-done { background: #10C469; }
+.tk-dot.is-done { background: #62BB46; }
 .tk-dot.is-late { background: #FF5B5B; }
 .tk-head-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .tk-head-tools .hm-tabs button { display: inline-flex; align-items: center; gap: 6px; }
@@ -2294,7 +2292,7 @@
 :root[data-brand="ucas"] .hd-card-head .portal-title { font-size: 15px; }
 .hd-card-sub { font-size: 12px; font-weight: 600; color: var(--color-text-400); }
 .hd-corner { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; height: 32px; margin-inline-start: auto; padding-inline: 12px; border-radius: 4px 0 0 0; background: var(--portal-cyan); color: #FFFFFF; font-size: 12.5px; font-weight: 700; transition: background-color var(--ucas-color-speed) var(--ease-standard); }
-.hd-corner:hover { background: #2A9DC2; }
+.hd-corner:hover { background: #004C8E; }
 
 .hd-avatar { display: inline-grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: color-mix(in srgb, var(--portal-cyan) 14%, var(--color-surface)); color: var(--color-primary-800); font-size: 12px; font-weight: 800; letter-spacing: -1px; }
 .hd-avatar.is-lg { width: 40px; height: 40px; font-size: 14px; }
@@ -2323,7 +2321,7 @@
 .hd-ic { display: inline-grid; place-items: center; flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; color: #FFFFFF; font-size: 12px; font-weight: 800; line-height: 1; }
 .hd-ic.is-warning { background: #FF9C39; }
 .hd-ic.is-info { background: #03A9F4; }
-.hd-ic.is-success { background: #10C469; }
+.hd-ic.is-success { background: #62BB46; }
 .hd-note { margin: 16px 0 0; }
 
 /* التفاصيل */
@@ -2427,7 +2425,7 @@
 .ucas-portal .portal-page .ac-wrap > div { background: color-mix(in srgb, var(--color-bg) 45%, var(--color-surface)); }
 .ucas-portal .portal-page .ac-input { height: 42px; border-radius: 4px; border-color: #CED4DA; background: var(--color-surface); font-size: 13.5px; }
 .ucas-portal .portal-page .ac-input:focus { border-color: var(--portal-cyan); box-shadow: 0 0 0 3px rgba(53, 184, 224, 0.15); }
-.ucas-portal .portal-page .ac-send { width: 42px; height: 42px; border-radius: 4px; background: #10C469; background-image: none; }
+.ucas-portal .portal-page .ac-send { width: 42px; height: 42px; border-radius: 4px; background: #62BB46; background-image: none; }
 
 /* صفحات المشرف والطالب بهوية البوابة */
 .sv-info { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 24px; margin: 0; }
@@ -2454,7 +2452,7 @@
 .st-slot { display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px dashed var(--color-border); border-radius: 4px; background: var(--color-surface); }
 .st-slot h4 { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--color-text-900); }
 .st-slot .pt-muted { font-size: 12px; }
-.st-slot.is-filled { border-style: solid; border-color: #10C469; }
+.st-slot.is-filled { border-style: solid; border-color: #62BB46; }
 
 /* المقترحات للطالب: مسار التسليم (مراحل مقروءة فقط) + نموذج بحقول البوابة */
 .sp-card { display: flex; flex-direction: column; gap: 18px; }
@@ -2463,8 +2461,8 @@
 .sp-track { display: flex; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .sp-track li { flex: 1; display: flex; align-items: center; gap: 8px; padding: 8px 6px 10px; border-radius: 4px 4px 0 0; border-bottom: 3px solid var(--color-border); font-size: 13.5px; font-weight: 700; color: var(--color-text-400); }
 .sp-track b { display: inline-grid; place-items: center; flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--color-border); color: var(--color-text-600); font-size: 13px; }
-.sp-track .is-done { border-color: #10C469; color: var(--color-text-700); }
-.sp-track .is-done b { background: #10C469; color: #FFFFFF; }
+.sp-track .is-done { border-color: #62BB46; color: var(--color-text-700); }
+.sp-track .is-done b { background: #62BB46; color: #FFFFFF; }
 .sp-track .is-active { border-color: var(--portal-cyan); color: var(--color-text-900); }
 .sp-track .is-active b { background: var(--portal-cyan); color: #FFFFFF; }
 .sp-track .is-rejected { border-color: #FF5B5B; color: #FF5B5B; }
@@ -2531,11 +2529,11 @@
 .sp-steps { display: flex; margin: 0; padding: 4px 0 0; list-style: none; counter-reset: none; }
 .sp-steps li { position: relative; flex: 1; }
 .sp-steps li + li::before { content: ''; position: absolute; top: 19px; inset-inline-end: 50%; width: 100%; height: 3px; background: var(--color-border); transition: background-color .35s var(--ease-standard, ease); }
-.sp-steps li.is-done + li::before, .sp-steps li.is-done + li.is-current::before { background: #10C469; }
+.sp-steps li.is-done + li::before, .sp-steps li.is-done + li.is-current::before { background: #62BB46; }
 .sp-steps button { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; font: inherit; }
 .sp-steps b { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--color-border); background: var(--color-surface); color: var(--color-text-400); font-size: 15px; transition: background-color .35s var(--ease-standard, ease), border-color .35s var(--ease-standard, ease), color .35s var(--ease-standard, ease); }
 .sp-steps span { font-size: 13.5px; font-weight: 700; color: var(--color-text-400); text-align: center; }
-.sp-steps .is-done b { border-color: #10C469; background: #10C469; color: #FFFFFF; }
+.sp-steps .is-done b { border-color: #62BB46; background: #62BB46; color: #FFFFFF; }
 .sp-steps .is-done span { color: var(--color-text-700); }
 .sp-steps .is-current b { border-color: var(--portal-cyan); background: var(--portal-cyan); color: #FFFFFF; box-shadow: 0 0 0 5px rgba(53, 184, 224, 0.18); }
 .sp-steps .is-current span { color: var(--color-text-900); }
@@ -2719,7 +2717,7 @@
 .hm-caret.is-open { transform: rotate(180deg); }
 .hm-table tr.hm-sub td { background: var(--color-bg); font-size: 13.5px; }
 .hm-table tr.hm-sub td:first-child { padding-inline-start: 36px; }
-.dash-card { --hm-c-done: #10C469; --hm-c-open: var(--portal-cyan); --hm-c-late: #FF5B5B; }
+.dash-card { --hm-c-done: #62BB46; --hm-c-open: var(--portal-cyan); --hm-c-late: #FF5B5B; }
 .hm-c-done { background: var(--hm-c-done); }
 .hm-c-open { background: var(--hm-c-open); }
 .hm-c-late { background: var(--hm-c-late); }
@@ -2827,8 +2825,8 @@ button.dp-sec:hover { background: color-mix(in srgb, var(--portal-cyan) 22%, var
 .dp-free { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; color: var(--color-text-700); font-weight: 600; }
 .dp-free > span { font-size: 12.5px; }
 .dp-free em { font-style: normal; font-size: 12.5px; color: var(--color-text-400); }
-.dp-free-opt { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border: 1px solid #10C469; border-radius: 4px; background: #E2F8ED; color: #0B8A4B; font-size: 12.5px; cursor: pointer; }
-.dp-free-opt:hover { background: #10C469; color: #FFFFFF; }
+.dp-free-opt { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border: 1px solid #62BB46; border-radius: 4px; background: #E2F8ED; color: #0B8A4B; font-size: 12.5px; cursor: pointer; }
+.dp-free-opt:hover { background: #62BB46; color: #FFFFFF; }
 @media (max-width: 640px) { .dd-when { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* مواعيد المناقشات — مراحل + إعدادات بكتل + مؤشر السعة + جدول قابل للتعديل + شبكة القاعات */
@@ -2866,13 +2864,13 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .dp-chips:focus-within { border-color: var(--portal-cyan); box-shadow: 0 0 0 3px rgba(53, 184, 224, 0.15); }
 .dp-chip-input { flex: 1 1 140px; min-width: 120px; height: 30px; border: 0; outline: 0; background: transparent; color: var(--color-text-900); font-size: 14px; }
 .dp-capacity { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 4px; }
-.dp-cap { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 1px solid var(--color-border); border-inline-start: 4px solid #10C469; border-radius: 4px; }
+.dp-cap { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 1px solid var(--color-border); border-inline-start: 4px solid #62BB46; border-radius: 4px; }
 .dp-cap.is-bad { border-inline-start-color: #FF5B5B; background: color-mix(in srgb, #FF5B5B 5%, var(--color-surface)); }
 .dp-cap-head { display: flex; justify-content: space-between; font-size: 14px; color: var(--color-text-900); }
 .dp-cap-num { font-size: 14px; color: var(--color-text-700); }
 .dp-cap-num b { font-size: 18px; color: var(--color-text-900); }
 .dp-cap-bar { height: 6px; border-radius: 3px; background: var(--color-bg); overflow: hidden; }
-.dp-cap-bar span { display: block; height: 100%; background: #10C469; transition: width .4s var(--ease-standard, ease); }
+.dp-cap-bar span { display: block; height: 100%; background: #62BB46; transition: width .4s var(--ease-standard, ease); }
 .dp-cap.is-bad .dp-cap-bar span { background: #FF5B5B; }
 .dash-chip.is-good { background: #E2F8ED; color: #0B8A4B; }
 .dp-issues { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: 14px; padding: 10px 14px; border-radius: 4px; background: #FEF8EA; color: #8A5A00; font-size: 13.5px; }
@@ -2903,7 +2901,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .dp-kpi { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 4px; border-top: 3px solid var(--portal-cyan); }
 .dp-kpi b { font-size: 24px; font-weight: 800; line-height: 1.2; color: var(--color-text-900); font-variant-numeric: tabular-nums; }
 .dp-kpi span { font-size: 13px; color: var(--color-text-600); }
-.dp-kpi.is-good { border-top-color: #10C469; }
+.dp-kpi.is-good { border-top-color: #62BB46; }
 .dp-kpi.is-bad { border-top-color: #FF5B5B; }
 .dp-kpi.is-bad b { color: #E81E63; }
 .dp-kpi.is-warn { border-top-color: #FF9C39; }
@@ -2940,7 +2938,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 
 /* أرشيف المشاريع والمعرض */
 /* أرشيف المشاريع بنمط متصفح الملفات (photo_2026-10-10_22-39-58) بهوية البوابة: سماوي/أخضر/أحمر/أزرق الشعار، زوايا 4px */
-.ad-prev.is-video { --c: #10C469; }
+.ad-prev.is-video { --c: #62BB46; }
 .ad-prev.is-pdf { --c: #FF5B5B; }
 /* أرشيف المشاريع بهوية البوابة */
 .ad-steps-bar .tk-stepper b { width: auto; min-width: 30px; padding-inline: 6px; border-radius: 13px; }
@@ -2977,9 +2975,9 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .ad-flow-step { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
 .ad-flow-step::before { content: ''; position: absolute; top: 15px; inset-inline-start: -50%; width: 100%; height: 3px; background: var(--color-border); z-index: 0; }
 .ad-flow-step:first-child::before { display: none; }
-.ad-flow-step.is-done::before, .ad-flow-step.is-current::before, .ad-flow-step.is-bad::before { background: #10C469; }
+.ad-flow-step.is-done::before, .ad-flow-step.is-current::before, .ad-flow-step.is-bad::before { background: #62BB46; }
 .ad-flow-dot { position: relative; z-index: 1; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--color-surface); border: 2px solid var(--color-border); font-size: 13px; font-weight: 800; color: var(--color-text-400); }
-.ad-flow-step.is-done .ad-flow-dot { background: #10C469; border-color: #10C469; color: #FFFFFF; }
+.ad-flow-step.is-done .ad-flow-dot { background: #62BB46; border-color: #62BB46; color: #FFFFFF; }
 .ad-flow-step.is-current .ad-flow-dot { border-color: var(--portal-cyan); color: var(--portal-cyan); box-shadow: 0 0 0 4px color-mix(in srgb, var(--portal-cyan) 18%, transparent); }
 .ad-flow-step.is-bad .ad-flow-dot { background: #FF5B5B; border-color: #FF5B5B; color: #FFFFFF; }
 .ad-flow-step b { font-size: 13.5px; color: var(--color-text-900); }
@@ -3024,7 +3022,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .ad-file-text small { font-size: 12px; color: var(--color-text-400); }
 .ad-file.is-missing .ad-file-text small { color: #E81E63; font-weight: 600; }
 .ad-file-tag { flex-shrink: 0; padding: 2px 10px; border-radius: 10px; background: color-mix(in srgb, var(--c) 14%, var(--color-surface)); color: var(--c); font-size: 12px; font-weight: 700; }
-.ad-file.is-video { --c: #10C469; }
+.ad-file.is-video { --c: #62BB46; }
 .ad-file.is-pdf { --c: #FF5B5B; }
 .ad-file.is-doc { --c: #005BAA; }
 .ad-prev-art { position: relative; }
@@ -3066,7 +3064,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .es-table .es-n { width: 36px; text-align: center; color: var(--color-text-400); }
 .es-table .es-max { width: 64px; text-align: center; }
 .es-table .es-text { font-size: 13.5px; line-height: 1.7; color: var(--color-text-700); }
-.es-table tr.es-sum td { background: color-mix(in srgb, #10C469 10%, var(--color-surface)); font-weight: 800; color: #0A8A4A; text-align: center; }
+.es-table tr.es-sum td { background: color-mix(in srgb, #62BB46 10%, var(--color-surface)); font-weight: 800; color: #0A8A4A; text-align: center; }
 .es-table tr.es-sum td:first-child { text-align: start; }
 .es-totals { margin-top: 0; border-radius: 4px; }
 
@@ -3079,11 +3077,11 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* محرر النموذج: كتل مرقّمة (بيانات النموذج ← الأقسام والبنود)، وكل قسم ببطاقة بشريط جانبي حسب نوع الدرجة */
 .ef-outline { font-size: 13px; font-weight: 700; color: var(--color-text-600); }
 .ef-sec { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border: 1px solid var(--color-border); border-inline-start: 4px solid var(--portal-cyan); border-radius: 4px; background: var(--color-surface); box-shadow: var(--shadow-card); transition: opacity var(--ucas-color-speed) var(--ease-standard); }
-.ef-sec.is-student { border-inline-start-color: #10C469; }
+.ef-sec.is-student { border-inline-start-color: #62BB46; }
 .ef-sec-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--color-border); }
 .ef-sec-title { flex: 1 1 260px; margin: 0; font-size: 15px; font-weight: 800; line-height: 1.6; color: var(--color-text-900); }
 .ef-scope-tag { padding: 4px 10px; border-radius: 4px; font-size: 12.5px; font-weight: 700; color: #FFFFFF; background: var(--portal-cyan); white-space: nowrap; }
-.ef-scope-tag.is-student { background: #10C469; }
+.ef-scope-tag.is-student { background: #62BB46; }
 .ef-sec-max { padding: 4px 10px; border-radius: 4px; background: var(--color-bg); font-size: 12.5px; font-weight: 800; color: var(--color-text-700); white-space: nowrap; }
 .ef-grip { display: grid; place-items: center; width: 26px; height: 30px; border-radius: 4px; color: var(--color-text-400); cursor: grab; }
 .ef-grip:hover, .ef-grip:focus-visible { color: var(--portal-cyan); background: color-mix(in srgb, var(--portal-cyan) 10%, transparent); }
@@ -3100,7 +3098,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .es-featured input { accent-color: #F89E32; }
 .es-featured.is-on { border-color: #F89E32; background: color-mix(in srgb, #F89E32 10%, var(--color-surface)); color: #B26A12; }
 .es-featured:has(input:disabled) { cursor: default; }
-.es-actions { position: sticky; bottom: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; padding: 12px 16px; border-top: 3px solid #10C469; border-radius: 4px; background: var(--color-surface); box-shadow: 0 -4px 14px rgba(0, 0, 0, .06); }
+.es-actions { position: sticky; bottom: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; padding: 12px 16px; border-top: 3px solid #62BB46; border-radius: 4px; background: var(--color-surface); box-shadow: 0 -4px 14px rgba(0, 0, 0, .06); }
 .es-actions .as-summary { margin-inline-end: auto; }
 /* الطباعة: ورقة التقييم وحدها، أيًّا كان الدور (سايد بار/شريط علوي مختلف) */
 @media print {
@@ -3135,19 +3133,19 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .es-group-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13.5px; color: var(--color-text-600); }
 .es-group-meta > span { display: inline-flex; align-items: center; gap: 6px; }
 .es-group-meta svg { color: var(--portal-cyan); }
-.es-avatar { display: grid; place-items: center; width: 42px; height: 42px; flex-shrink: 0; border-radius: 50%; background: color-mix(in srgb, #10C469 14%, var(--color-surface)); color: #0B8A4B; font-size: 17px; font-weight: 800; }
+.es-avatar { display: grid; place-items: center; width: 42px; height: 42px; flex-shrink: 0; border-radius: 50%; background: color-mix(in srgb, #62BB46 14%, var(--color-surface)); color: #0B8A4B; font-size: 17px; font-weight: 800; }
 .es-tabs { align-self: stretch; }
 .es-tabs button { flex: 1; justify-content: center; }
 .es-form-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 20px; }
 .es-form-head h4 { font-size: 17px; font-weight: 800; color: var(--color-text-900); }
 .es-progress { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: var(--color-text-600); white-space: nowrap; }
 .es-progress-bar { width: 160px; height: 8px; border-radius: 4px; background: var(--color-bg); overflow: hidden; }
-.es-progress-bar span { display: block; height: 100%; background: #10C469; transition: width .6s var(--ease-standard); }
+.es-progress-bar span { display: block; height: 100%; background: #62BB46; transition: width .6s var(--ease-standard); }
 .es-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 0; padding: 10px 14px; border-radius: 4px; font-size: 13.5px; font-weight: 600; }
 .es-status.is-saved { background: #E2F8ED; color: #0B8A4B; }
 .es-section { display: flex; flex-direction: column; gap: 10px; }
 .es-section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; padding-inline-start: 12px; border-inline-start: 4px solid var(--portal-cyan); }
-.es-section.is-student .es-section-head { border-inline-start-color: #10C469; }
+.es-section.is-student .es-section-head { border-inline-start-color: #62BB46; }
 .es-section-head h5 { margin: 0; font-size: 15px; font-weight: 800; line-height: 1.6; color: var(--color-text-900); }
 .es-scope { font-size: 12.5px; font-weight: 700; color: var(--color-text-400); }
 .es-table .es-col { width: 128px; text-align: center; white-space: nowrap; }
@@ -3167,7 +3165,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .pt.es-others-table td.es-o-score { font-size: 15px; font-weight: 700; color: var(--color-text-900); }
 .pt.es-others-table .es-o-note { text-align: start; font-size: 13px; color: var(--color-text-600); overflow-wrap: anywhere; }
 .pt.es-others-table .es-o-date { width: 18%; text-align: center; font-size: 13px; white-space: nowrap; }
-.pt.es-others-table tr.es-sum td { background: color-mix(in srgb, #10C469 10%, var(--color-surface)); font-weight: 800; color: var(--color-text-900); }
+.pt.es-others-table tr.es-sum td { background: color-mix(in srgb, #62BB46 10%, var(--color-surface)); font-weight: 800; color: var(--color-text-900); }
 .pt.es-others-table tr.es-sum td:first-child { text-align: start; }
 @media (max-width: 640px) {
   .es-card { padding: 16px; }
@@ -3182,7 +3180,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .es-r-student { display: inline-flex; align-items: center; gap: 12px; }
 .es-r-student b { display: block; font-size: 14.5px; color: var(--color-text-900); }
 .es-r-student small { display: block; font-size: 12px; color: var(--color-text-400); }
-.es-avatar { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; background: color-mix(in srgb, #10C469 14%, var(--color-surface)); color: #0B8A4B; font-size: 16px; font-weight: 800; }
+.es-avatar { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; background: color-mix(in srgb, #62BB46 14%, var(--color-surface)); color: #0B8A4B; font-size: 16px; font-weight: 800; }
 .es-r-total { font-size: 20px; font-weight: 800; color: var(--color-text-900); }
 /* جدول نتائج الطلاب */
 :root[data-brand="ucas"] .pt.ev-results thead th.ev-c { text-align: center; }
@@ -3195,7 +3193,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .ev-total { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 70px; }
 .ev-total b { font-size: 18px; font-weight: 800; color: var(--color-text-900); line-height: 1; }
 .ev-total-bar { width: 64px; height: 5px; border-radius: 3px; background: var(--color-bg); overflow: hidden; }
-.ev-total-bar span { display: block; height: 100%; background: #10C469; }
+.ev-total-bar span { display: block; height: 100%; background: #62BB46; }
 .ev-total-bar span.is-mid { background: #F9C851; }
 .ev-total-bar span.is-low { background: #FF5B5B; }
 .es-viewonly { padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--portal-cyan) 35%, var(--color-border)); border-radius: 4px; background: color-mix(in srgb, var(--portal-cyan) 7%, var(--color-surface)); font-size: 13.5px; color: var(--color-text-700); }
@@ -3236,7 +3234,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .gr-pick { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: var(--color-text-700); white-space: nowrap; }
 .gr-card .gr-table-wrap { box-shadow: none; border-radius: 0; }
 .gr-card .gr-class { background: var(--color-bg); border-color: transparent; }
-.gr-sumbar { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 8px 24px; margin-top: 20px; padding: 18px 20px; border-radius: 4px; background: #10C469; color: #FFFFFF; font-size: 15px; font-weight: 700; }
+.gr-sumbar { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 8px 24px; margin-top: 20px; padding: 18px 20px; border-radius: 4px; background: #62BB46; color: #FFFFFF; font-size: 15px; font-weight: 700; }
 .gr-card .gr-sumbar { margin-top: 16px; border-radius: 4px; }
 .gr-card-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; padding-top: 4px; }
 .hm-report { margin-inline-start: auto; }
@@ -3280,7 +3278,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sp-group header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .sp-group header b { font-size: 15px; color: var(--color-text-900); }
 .sp-score { padding: 2px 8px; border-radius: 4px; font-size: 12.5px; font-weight: 800; color: #FFFFFF; background: var(--portal-cyan); }
-.sp-score.is-high { background: #10C469; }
+.sp-score.is-high { background: #62BB46; }
 .sp-score.is-low { background: #F9C851; color: #5C4400; }
 .sp-group-name { font-size: 14px; font-weight: 700; color: var(--color-text-700); }
 .sp-group .pt-muted { font-size: 12.5px; }
@@ -3361,7 +3359,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 @media (prefers-reduced-motion: reduce) { .prd { animation: none; } }
 .prd-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid var(--color-border); }
 .prd-back { display: inline-flex; align-items: center; gap: 6px; padding: 6px 4px; font-size: 14.5px; font-weight: 700; color: var(--portal-cyan); }
-.prd-back:hover { color: #2A9DC2; }
+.prd-back:hover { color: #004C8E; }
 .prd-nav { display: flex; align-items: center; gap: 8px; font-size: 13.5px; }
 .prd-step { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--color-border); border-radius: 4px; color: var(--color-text-700); background: var(--color-surface); }
 .prd-step:hover:not(:disabled) { border-color: var(--portal-cyan); color: var(--portal-cyan); }
@@ -3454,7 +3452,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .au-head-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin-bottom: 20px; }
 .au-head-row > span { font-size: 13px; font-weight: 600; color: var(--color-text-600); }
 .au-corner { position: absolute; top: 0; inset-inline-end: 0; height: 48px; display: inline-flex; align-items: center; padding-inline: 18px; border-radius: 4px 4px 0 0; background: var(--portal-cyan); color: #FFFFFF; font-size: 14px; font-weight: 700; transition: background-color var(--ucas-color-speed) var(--ease-standard); }
-.au-corner:hover { background: #2A9DC2; }
+.au-corner:hover { background: #004C8E; }
 .au-info { margin-bottom: 24px; }
 .au-rows { display: flex; flex-direction: column; gap: 20px; }
 .au-actions { display: flex; justify-content: flex-end; padding-top: 8px; }
@@ -3486,7 +3484,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .tp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; max-height: 420px; overflow-y: auto; }
 .tp-card { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; background: var(--color-surface); border: 1px solid var(--color-border); border-inline-start: 3px solid var(--portal-cyan); border-radius: 4px; transition: border-color var(--ucas-color-speed) var(--ease-standard); }
 .tp-card:hover { border-color: var(--portal-cyan); }
-.tp-card.is-new { border-color: #10C469; border-inline-start-color: #10C469; }
+.tp-card.is-new { border-color: #62BB46; border-inline-start-color: #62BB46; }
 .tp-card.is-ghost { border-style: dashed; opacity: .75; }
 .tp-card-top { display: flex; align-items: center; justify-content: space-between; }
 .tp-kind { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 4px; background: color-mix(in srgb, var(--portal-cyan) 12%, transparent); color: var(--portal-cyan); font-size: 12px; font-weight: 700; }
@@ -3741,7 +3739,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 }
 
 /* حالة المهام: مخطط تقدّم بنمط أنظمة إدارة المشاريع (رقم رئيسي + شريط مقسّم + مفتاح + تقدّم المجموعات) */
-.dash-card { --hm-c-done: #10C469; --hm-c-open: var(--portal-cyan); --hm-c-late: #FF5B5B; }
+.dash-card { --hm-c-done: #62BB46; --hm-c-open: var(--portal-cyan); --hm-c-late: #FF5B5B; }
 .hm-prog { margin-top: 4px; }
 .hm-prog-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
 .hm-prog-head b { font-size: 40px; font-weight: 800; line-height: 1; color: var(--color-text-900); font-variant-numeric: tabular-nums; }

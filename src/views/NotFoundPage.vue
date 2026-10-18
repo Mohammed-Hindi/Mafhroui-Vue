@@ -1,9 +1,7 @@
 <template>
-  <!-- صفحة غير موجودة بهوية مسار: تدرّج الهوية + مطر البيانات يلتف حول كلمة مسار (نفس حركة صفحة الدخول) -->
   <div class="nf">
-    <DataRain :focus="wordRect" :gain="2.6" />
     <div class="nf-in">
-      <MasarWordmark ref="word" class="nf-word" />
+      <MasarWordmark class="nf-word" />
       <p class="nf-code" aria-hidden="true">404</p>
       <h1 class="nf-title">الصفحة غير موجودة</h1>
       <p class="nf-sub">الرابط الذي فتحته غير صحيح أو أن الصفحة نُقلت.</p>
@@ -16,20 +14,14 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { ArrowRight, Home } from 'lucide-vue-next'
-import DataRain from '@/components/landing/DataRain.vue'
 import MasarWordmark from '@/components/landing/MasarWordmark.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import '@/styles/ucas-site.css'
 
 const auth = useAuthStore()
-// المسجّل يعود للوحته، والزائر للصفحة الرئيسية
 const home = computed(() => (auth.isAuthenticated && auth.user ? auth.homeRoute : { name: 'landing' }))
-
-// مطر البيانات يلتف حول كلمة مسار أثناء ظهورها
-const word = ref(null)
-const wordRect = () => word.value?.$el?.getBoundingClientRect() ?? null
 </script>
 
 <style scoped>

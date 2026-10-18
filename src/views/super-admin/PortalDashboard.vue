@@ -4,14 +4,13 @@
   <div ref="root" class="dash">
     <!-- الإدارة العامة: بانر بهوية صفحة الهبوط (تدرّج + مطر البيانات + شعار مسار + الإحصاءات بأرقام بيضاء) -->
     <section v-if="hero" class="sa-hero">
-      <DataRain :gain="2.4" :focus="wordRect" />
       <div class="sa-hero-in">
         <div class="sa-hero-text">
           <span class="sa-hero-eyebrow">{{ isSup ? 'لوحة المشرف' : 'لوحة الإدارة العامة' }}</span>
           <h2 class="sa-hero-title">مرحبًا، {{ firstName }}</h2>
           <p>{{ isSup ? 'تابع مجموعاتك وطلابك ومهامهم في الفصل الدراسي الحالي من مكان واحد.' : 'تابع المجموعات والمشرفين والمهام في الفصل الدراسي الحالي من مكان واحد.' }}</p>
         </div>
-        <MasarWordmark ref="word" class="sa-hero-word" />
+        <MasarWordmark class="sa-hero-word" />
       </div>
       <div class="sa-hero-stats" aria-label="إحصاءات عامة">
         <div v-for="s in stats" :key="s.label" class="sa-stat">
@@ -258,7 +257,6 @@ import { ref } from 'vue'
 import { mapState } from 'pinia'
 import { ChevronDown, Search, Printer } from 'lucide-vue-next'
 import CountUp from '@/components/ui/CountUp.vue'
-import DataRain from '@/components/landing/DataRain.vue'
 import MasarWordmark from '@/components/landing/MasarWordmark.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { ROLES, STORAGE_KEYS } from '@/utils/constants'
@@ -283,7 +281,7 @@ const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0)
 export default {
   name: 'PortalDashboard',
 
-  components: { ChevronDown, CountUp, DataRain, MasarWordmark, Search, Printer, ProfileModal, SlideTable },
+  components: { ChevronDown, CountUp, MasarWordmark, Search, Printer, ProfileModal, SlideTable },
 
   /** حركة الصفحة (الإدارة العامة): البانر يدخل عند الفتح، البطاقات تصعد عند الوصول إليها، والصفوف تتوالى بعد وصول البيانات */
   setup() {
@@ -525,11 +523,6 @@ export default {
 
     pctOf(n) {
       return pct(n, this.chartTotal)
-    },
-
-    // مطر البيانات يلتف حول كلمة مسار أثناء ظهورها
-    wordRect() {
-      return this.$refs.word?.$el?.getBoundingClientRect() ?? null
     },
 
     /**

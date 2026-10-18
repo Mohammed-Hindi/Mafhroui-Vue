@@ -22,26 +22,35 @@ export const NAV_ITEMS_BY_ROLE = {
   // color: لون الأيقونة الخطية — من ألوان أيقونات عمادات الكلية (هوية UCAS، راجعي docs/design/UCAS_DESIGN_SYSTEM.md)
   [ROLES.SUPER_ADMIN]: [
     {
-      title: 'الإدارة العامة',
       items: [
-        { label: 'إدارة الأعضاء', to: '/super-admin', icon: UserPlus, exact: true, color: '#3A9B4C' },
-        { label: 'إرسال بيانات الدخول', to: '/super-admin/credentials', icon: KeyRound },
-        { label: 'الأقسام والفصول الدراسية', to: '/super-admin/structure', icon: Building2, color: '#229791' }
+        { label: 'الرئيسية', to: '/committee', icon: LayoutDashboard, exact: true }
       ]
     },
     {
-      title: 'أدوات لجنة الإشراف',
+      title: 'الأعضاء والهيكل',
       items: [
-        { label: 'الرئيسية', to: '/committee', icon: LayoutDashboard, exact: true, color: '#005BAA' },
-        { label: 'المجموعات', to: '/committee/teams', icon: Users, color: '#A9375C' },
-        { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList, color: '#F89E32' },
-        { label: 'التكليفات والإعلانات', to: '/super-admin/assignments', icon: Megaphone },
-        { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock, color: '#009ADC' },
-        { label: 'التقييمات', to: '/super-admin/evaluations', icon: ClipboardCheck },
-        { label: 'أرشيف المشاريع', to: '/committee/project-archive', icon: FileCheck, color: '#805C55' },
-        { label: 'تقدّم المشاريع', to: '/committee/progress', icon: TrendingUp, color: '#62BB46' },
-        { label: 'الشكاوى والملاحظات', to: '/super-admin/tickets', icon: LifeBuoy },
-        { label: 'المساعد الآلي', to: '/committee/assistant', icon: Bot, color: '#233B77' }
+        { label: 'إدارة الأعضاء', to: '/committee/members', icon: UserPlus },
+        { label: 'الأقسام والتخصصات والفصول', to: '/super-admin/structure', icon: Building2 },
+        { label: 'إرسال بيانات الدخول', to: '/super-admin/credentials', icon: KeyRound }
+      ]
+    },
+    {
+      title: 'المشاريع والمناقشات',
+      items: [
+        { label: 'المجموعات', to: '/committee/teams', icon: Users },
+        { label: 'المقترحات', to: '/committee/proposals', icon: ClipboardList },
+        { label: 'تقدّم المشاريع', to: '/committee/progress', icon: TrendingUp },
+        { label: 'مواعيد المناقشات', to: '/committee/appointments', icon: CalendarClock },
+        { label: 'التقييمات', to: '/committee/evaluations', icon: ClipboardCheck },
+        { label: 'أرشيف المشاريع', to: '/committee/project-archive', icon: FileCheck }
+      ]
+    },
+    {
+      title: 'التواصل والدعم',
+      items: [
+        { label: 'التكليفات والإعلانات', to: '/committee/assignments', icon: Megaphone },
+        { label: 'الشكاوى والملاحظات', to: '/committee/tickets', icon: LifeBuoy },
+        { label: 'المساعد الآلي', to: '/committee/assistant', icon: Bot }
       ]
     }
   ],

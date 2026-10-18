@@ -3,7 +3,6 @@
        معرض بطاقات المشاريع، وترقيم الصفحات -->
   <div>
     <header class="us-pagehead">
-      <DataRain :gain="2.4" />
       <div class="us-wrap">
         <h1>أرشيف المشاريع المكتملة</h1>
         <p>معرض مشاريع التخرج المعتمدة والمؤرشفة في الكلية<span v-if="projectsMeta?.total"> — {{ formatNumber(projectsMeta.total) }} مشروعًا</span></p>
@@ -57,7 +56,6 @@
 </template>
 
 <script>
-import DataRain from '@/components/landing/DataRain.vue'
 import { mapState, mapActions } from 'pinia'
 import { Search } from 'lucide-vue-next'
 import { useLandingStore, DEGREE_OPTIONS } from '@/stores/landing.store'
@@ -68,7 +66,7 @@ import Pagination from '@/components/ui/Pagination.vue'
 export default {
   name: 'ProjectsArchivePage',
 
-  components: { DataRain, ProjectCard, Pagination, Search },
+  components: { ProjectCard, Pagination, Search },
 
   data() {
     return {

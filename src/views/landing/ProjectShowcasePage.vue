@@ -3,7 +3,6 @@
        ثم عمودان: نبذة المشروع وفيديو العرض، وبطاقة بيانات المشروع والفريق -->
   <div class="us-proj">
     <header class="us-pagehead">
-      <DataRain :gain="2.4" />
       <div class="us-wrap">
         <span v-if="project?.spec" class="us-pagehead-tag">{{ project.spec }}</span>
         <h1>{{ loading ? 'جارٍ التحميل…' : project?.title || 'لم يتم العثور على المشروع' }}</h1>
@@ -65,7 +64,6 @@
 </template>
 
 <script>
-import DataRain from '@/components/landing/DataRain.vue'
 import { mapState, mapActions } from 'pinia'
 import { Play } from 'lucide-vue-next'
 import { useLandingStore } from '@/stores/landing.store'
@@ -73,7 +71,7 @@ import { useLandingStore } from '@/stores/landing.store'
 export default {
   name: 'ProjectShowcasePage',
 
-  components: { DataRain, Play },
+  components: { Play },
 
   props: {
     id: { type: [String, Number], required: true }
