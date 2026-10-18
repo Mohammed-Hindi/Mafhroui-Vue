@@ -50,6 +50,16 @@
       </section>
     </div>
 
+    <!-- عضو اللجنة -->
+    <div v-else-if="kind === 'committee'" class="pf">
+      <dl class="pf-grid">
+        <div><dt>الرقم الوظيفي</dt><dd class="mono">{{ data?.employee_number || '—' }}</dd></div>
+        <div><dt>التخصصات</dt><dd>{{ (data?.specializations || []).join('، ') || '—' }}</dd></div>
+        <div class="pf-wide"><dt>البريد</dt><dd class="mono">{{ data?.email || '—' }}</dd></div>
+        <div class="pf-wide"><dt>الواتساب</dt><dd class="mono">{{ data?.whatsapp || '—' }}</dd></div>
+      </dl>
+    </div>
+
     <!-- المشرف -->
     <div v-else class="pf">
       <dl class="pf-grid">
@@ -62,20 +72,38 @@
       </dl>
 
       <section class="pf-block">
-        <h4>التفاعل مع كل مجموعة</h4>
-        <table class="pf-table">
+        <h4>المجموعات والمشاريع والطلاب <span class="pf-muted">(اضغط المجموعة لعرض أعضائها)</span></h4>
+        <table class="pf-table pf-teams">
           <thead><tr><th>المجموعة</th><th>الشعبة</th><th>المشروع</th><th>المهام</th><th>التفاعل</th></tr></thead>
           <tbody>
-            <tr v-for="t in pagedTeams" :key="t.team.id">
-              <td>{{ t.team.name }} <span class="pf-muted">({{ t.team.members_count }})</span></td>
-              <td>{{ t.team.section || '—' }}</td>
-              <td>{{ t.project?.name || '—' }}</td>
-              <td><span class="mono">{{ t.interaction.tasks_done }}/{{ t.interaction.tasks_total }}</span></td>
-              <td>
-                <span class="gr-progress is-sm"><span :class="level(t.interaction.activity_score)" :style="{ width: t.interaction.activity_score + '%' }" /></span>
-                <span class="gr-pct">{{ t.interaction.activity_score }}%</span>
-              </td>
-            </tr>
+            <template v-for="t in pagedTeams" :key="t.team.id">
+              <tr class="pf-team-row" :class="openTeamIds.includes(t.team.id) && 'is-open'" @click="toggleTeam(t.team.id)">
+                <td>
+                  <button type="button" class="pf-caret" :class="openTeamIds.includes(t.team.id) && 'is-open'" :aria-expanded="openTeamIds.includes(t.team.id)" :aria-label="`أعضاء ${t.team.name}`"><ChevronLeft :size="14" /></button>
+                  {{ t.team.name }} <span class="pf-muted">({{ t.team.members_count }})</span>
+                </td>
+                <td>{{ t.team.section || '—' }}</td>
+                <td>{{ t.project?.name || '—' }}</td>
+                <td><span class="mono">{{ t.interaction.tasks_done }}/{{ t.interaction.tasks_total }}</span></td>
+                <td>
+                  <span class="gr-progress is-sm"><span :class="level(t.interaction.activity_score)" :style="{ width: t.interaction.activity_score + '%' }" /></span>
+                  <span class="gr-pct">{{ t.interaction.activity_score }}%</span>
+                </td>
+              </tr>
+              <tr v-if="openTeamIds.includes(t.team.id)" class="pf-team-sub">
+                <td colspan="5">
+                  <div v-if="(t.team.members || []).length" class="pf-members">
+                    <span v-for="m in t.team.members" :key="m.id" class="pf-member">
+                      <span class="pf-member-av" aria-hidden="true">{{ (m.name || '؟').charAt(0) }}</span>
+                      <span class="pf-member-name">{{ m.name }}</span>
+                      <b v-if="m.is_leader" class="pf-leader">قائد</b>
+                      <small class="pf-muted">{{ REGIONS[m.region] || '—' }}</small>
+                    </span>
+                  </div>
+                  <p v-else class="pf-muted pf-members-empty">لا يوجد طلاب في هذه المجموعة</p>
+                </td>
+              </tr>
+            </template>
             <tr v-if="!teams.length"><td colspan="5" class="pf-muted">لا توجد مجموعات</td></tr>
           </tbody>
         </table>
@@ -86,6 +114,7 @@
 </template>
 
 <script>
+import { ChevronLeft } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import api from '@/services/api'
@@ -101,29 +130,32 @@ const STATUS = { proposed: 'مقترح', in_progress: 'قيد التنفيذ', c
 export default {
   name: 'ProfileModal',
 
-  components: { BaseModal, Pagination, ProjectTypes },
+  components: { BaseModal, Pagination, ProjectTypes, ChevronLeft },
 
   props: {
     modelValue: { type: Boolean, default: false },
-    /** 'student' | 'supervisor' */
+    /** 'student' | 'supervisor' | 'committee' */
     kind: { type: String, default: 'student' },
     personId: { type: [Number, String], default: null },
     /** الاسم المعروض في العنوان قبل وصول البيانات */
     name: { type: String, default: '' },
     /** إتاحة تعديل تفاصيل مشروع الطالب (للمشرف) */
-    editProject: { type: Boolean, default: false }
+    editProject: { type: Boolean, default: false },
+    /** بيانات جاهزة تُعرض مباشرة بلا طلب (عضو اللجنة — لا يوجد مسار بروفايل له) */
+    preset: { type: Object, default: null }
   },
 
   emits: ['update:modelValue'],
 
   data() {
-    return { DEGREES, GENDERS, REGIONS, STATUS, data: null, loading: false, project: null, saving: false, teamsPage: 1 }
+    return { DEGREES, GENDERS, REGIONS, STATUS, data: null, loading: false, project: null, saving: false, teamsPage: 1, openTeamIds: [] }
   },
 
   computed: {
     title() {
       const who = this.data?.name || this.name
-      return `${this.kind === 'student' ? 'الطالب' : 'المشرف'}${who ? ': ' + who : ''}`
+      const label = { student: 'الطالب', committee: 'عضو اللجنة' }[this.kind] || 'المشرف'
+      return `${label}${who ? ': ' + who : ''}`
     },
     teams() {
       return this.data?.interaction?.teams || []
@@ -145,10 +177,16 @@ export default {
 
   methods: {
     async load() {
+      this.teamsPage = 1
+      this.openTeamIds = []
+      if (this.kind === 'committee') {
+        this.data = this.preset
+        this.loading = false
+        return
+      }
       if (!this.personId) return
       this.loading = true
       this.data = null
-      this.teamsPage = 1
       try {
         const path = this.kind === 'student' ? 'students' : 'supervisors'
         const { data } = await api.get(`/${path}/${this.personId}/profile`)
@@ -182,6 +220,12 @@ export default {
       } finally {
         this.saving = false
       }
+    },
+
+    toggleTeam(id) {
+      const at = this.openTeamIds.indexOf(id)
+      if (at > -1) this.openTeamIds.splice(at, 1)
+      else this.openTeamIds.push(id)
     },
 
     level(pct) {

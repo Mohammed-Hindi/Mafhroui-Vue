@@ -82,7 +82,7 @@
                 <div>
                   <button v-if="isSuperAdmin" type="button" class="mb-name font-bold" title="عرض البروفايل" @click.stop="openProfile(row)">{{ row.name }}</button>
                   <span v-else class="font-bold text-text-900">{{ row.name }}</span>
-                  <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-pill">موقوف</span>
+                  <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-sm">موقوف</span>
                 </div>
                 <div class="mt-0.5"><span class="mono text-caption text-text-400">{{ (memberKind === 'student' ? row.uid : row.empId) || '—' }}</span></div>
                 <div v-if="row.restricted && row.restrictedReason" class="text-label text-error mt-0.5">السبب: {{ row.restrictedReason }}</div>
@@ -139,7 +139,11 @@
                   </table>
                 </div>
               </template>
-              <!-- كلمة السر: زر توليد، وبعد التوليد حقل مضغوط (إظهار/نسخ/توليد جديدة) -->
+              <template #cell-lastActive="{ value }">
+                <span v-if="value && value !== 'لم يسجّل دخولًا بعد'" class="inline-flex items-center gap-1.5 text-caption text-text-600"><span class="w-1.5 h-1.5 rounded-sm bg-primary-600" aria-hidden="true" />{{ value }}</span>
+                <span v-else class="text-caption text-text-400">لم يسجّل دخولًا بعد</span>
+              </template>
+              <!-- كلمة السر: نص واحد يُنسخ بالنقر -->
               <template #cell-pw="{ row }">
                 <div class="flex justify-center" @click.stop>
                   <button v-if="!passwords[row.id]" type="button" class="inline-flex items-center gap-2 h-9 px-4 rounded-sm border border-border text-body-sm font-bold text-text-600 hover:border-primary-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast whitespace-nowrap" :disabled="generatingPwFor === row.id" @click="generatePw(row)">
@@ -500,7 +504,7 @@
 
     <EmailComposeModal v-model="emailComposeOpen" :to="emailComposeTarget" />
 
-    <ProfileModal v-if="isSuperAdmin" v-model="profile.open" :kind="profile.kind" :person-id="profile.id" :name="profile.name" />
+    <ProfileModal v-if="isSuperAdmin" v-model="profile.open" :kind="profile.kind" :person-id="profile.id" :name="profile.name" :preset="profile.preset" />
   </div>
 </template>
 
@@ -583,7 +587,7 @@ export default {
       addError: '',
       openSupId: null,
       openGroupId: null,
-      profile: { open: false, kind: 'student', id: null, name: '' },
+      profile: { open: false, kind: 'student', id: null, name: '', preset: null },
       Check, Lock, Trash2, RotateCcw, Archive, UserPlus, Send, Copy, GraduationCap, Users,
       emailComposeOpen: false,
       emailComposeTarget: '',
@@ -956,7 +960,20 @@ export default {
 
     openProfile(row, kind = this.memberKind) {
       if (!row?.id) return
-      this.profile = { open: true, kind: kind === 'student' ? 'student' : 'supervisor', id: row.id, name: row.name }
+      if (kind === 'committee') {
+        this.profile = {
+          open: true, kind: 'committee', id: row.id, name: row.name,
+          preset: {
+            name: row.name,
+            employee_number: row.empId,
+            email: row.mail,
+            whatsapp: row.whats,
+            specializations: (row.specs && row.specs.length ? row.specs : (row.spec ? [row.spec] : [])).map((id) => this.specializationName(id))
+          }
+        }
+        return
+      }
+      this.profile = { open: true, kind: kind === 'student' ? 'student' : 'supervisor', id: row.id, name: row.name, preset: null }
     },
 
     /** الفلاتر تُرسل للخادم (GET /users?role=…&gender=&region=&specialization_id=&search=) — القائمة المعروضة هي نتيجته */
