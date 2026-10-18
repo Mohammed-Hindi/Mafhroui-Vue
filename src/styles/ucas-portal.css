@@ -1604,6 +1604,17 @@
 .gr-actions button.is-on { color: #B7791F; }
 .gr-actions button:disabled { opacity: 0.35; cursor: not-allowed; }
 .gr-empty { padding: 40px 12px !important; text-align: center; color: var(--color-text-400); }
+.ucas-portal .hm-table td.gr-empty, .ucas-portal .gr-table td.gr-empty {
+  height: 220px;
+  vertical-align: middle;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-400);
+  background: transparent !important;
+  background-image: none !important;
+}
+.ucas-portal .hm-table-wrap:has(td.gr-empty), .ucas-portal .gr-table-wrap:has(td.gr-empty) { background: var(--color-bg); }
+.ucas-portal .hm-table:has(td.gr-empty) thead { position: static; }
 
 /* صف التفاصيل */
 :root[data-brand="ucas"] .gr-table .gr-detail-row > td { padding: 0; border-top: 1px solid var(--color-border); background: var(--color-bg); }
