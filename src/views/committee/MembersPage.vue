@@ -58,7 +58,9 @@
                 <span v-else class="text-caption text-text-400">غير منضم لمجموعة</span>
               </template>
               <template #cell-spec="{ row }">
-                <span v-if="row.spec" class="rv-pill">{{ specializationName(row.spec) }}</span>
+                <div v-if="(row.specs && row.specs.length) || row.spec" class="flex flex-wrap gap-1">
+                  <span v-for="sid in (row.specs && row.specs.length ? row.specs : [row.spec])" :key="sid" class="rv-pill">{{ specializationName(sid) }}</span>
+                </div>
                 <span v-else class="text-caption text-text-400">كل التخصصات</span>
               </template>
               <template #cell-who="{ row }">
@@ -377,12 +379,12 @@
 
         <!-- 3. تخصص عضو لجنة الإشراف: يرى بيانات هذا التخصص فقط -->
         <div v-if="addForm.role === 'committee'" class="mf-sec">
-          <SpecializationPicker v-model="addForm.specialization_id" :specializations="specializations" label="التخصص الذي ينتمي له" required hint="عضو اللجنة يرى المجموعات والمشاريع والمقترحات الخاصة بهذا التخصص فقط" />
+          <SpecializationPicker v-model="addForm.specialization_ids" :specializations="specializations" multiple :max="2" label="التخصص الذي ينتمي له" required hint="يمكن ربط عضو اللجنة بتخصص واحد أو تخصصين — يرى مجموعات ومشاريع ومقترحات تخصصاته فقط" />
         </div>
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="addModalOpen = false">إلغاء</BaseButton>
-        <BaseButton :icon="Send" :loading="adding" :disabled="!addForm.name.trim() || (addForm.role === 'committee' && !addForm.specialization_id)" @click="submitAdd">إضافة وإرسال بيانات الدخول</BaseButton>
+        <BaseButton :icon="Send" :loading="adding" :disabled="!addForm.name.trim() || (addForm.role === 'committee' && !addForm.specialization_ids.length)" @click="submitAdd">إضافة وإرسال بيانات الدخول</BaseButton>
       </template>
     </BaseModal>
 
@@ -418,7 +420,7 @@
           <BaseInput v-model="editForm.name" label="اسم الموظف" class="sm:col-span-2" />
           <BaseInput v-model="editForm.empId" label="الرقم الوظيفي" />
           <BaseInput v-model="editForm.whats" label="رقم الواتس" />
-          <SpecializationPicker v-if="editKind === 'committee'" v-model="editForm.spec" :specializations="specializations" label="التخصص الذي ينتمي له" allow-all class="sm:col-span-2" />
+          <SpecializationPicker v-if="editKind === 'committee'" v-model="editForm.specs" :specializations="specializations" multiple :max="2" label="التخصص الذي ينتمي له" hint="تخصص واحد أو تخصصان" class="sm:col-span-2" />
         </template>
       </div>
       <template #footer>
@@ -475,7 +477,7 @@
         </button>
       </div>
       <SkeletonLoader v-if="trashedUsersLoading" :rows="3" height="60px" />
-      <EmptyState v-else-if="!trashedUsers.length" title="لا يوجد أعضاء محذوفون" />
+      <EmptyState v-else-if="!trashedUsers.length" :icon="Trash2" title="لا يوجد أعضاء محذوفون" />
       <SlideTable v-else v-slot="{ rows: shown }" :rows="trashedUsers" label="المحذوفون">
         <div class="flex flex-col gap-2">
           <div v-for="u in shown" :key="u.id" class="tr-row flex items-center justify-between gap-3">
@@ -529,7 +531,7 @@ function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
 }
 
-const emptyAddForm = () => ({ role: 'student', name: '', employee_number: '', university_number: '', email: '', whatsapp: '', specialization_id: '' })
+const emptyAddForm = () => ({ role: 'student', name: '', employee_number: '', university_number: '', email: '', whatsapp: '', specialization_id: '', specialization_ids: [] })
 
 const MODULES = [
   { value: 'projects', label: 'المشاريع' },
@@ -756,6 +758,7 @@ export default {
         mail: u.email,
         whats: u.whatsapp,
         spec: u.specialization_id,
+        specs: (u.specialization_ids && u.specialization_ids.length) ? u.specialization_ids : (u.specialization_id ? [u.specialization_id] : []),
         restricted: u.status === 'restricted',
         restrictedReason: u.restricted_reason
       }))
@@ -986,8 +989,8 @@ export default {
     },
     async submitAdd() {
       this.addError = ''
-      if (this.addForm.role === 'committee' && !this.addForm.specialization_id) {
-        this.addError = 'اختر التخصص الذي ينتمي له عضو اللجنة'
+      if (this.addForm.role === 'committee' && !this.addForm.specialization_ids.length) {
+        this.addError = 'اختر تخصصًا واحدًا على الأقل لعضو اللجنة'
         return
       }
       if (!this.addForm.name || !this.addForm.email) {
@@ -996,7 +999,11 @@ export default {
       }
       this.adding = true
       try {
-        const result = await this.createUser(this.addForm)
+        const { specialization_id, specialization_ids, ...rest } = this.addForm
+        const payload = this.addForm.role === 'committee'
+          ? { ...rest, specialization_ids }
+          : rest
+        const result = await this.createUser(payload)
         const password = await this.setUserPassword(result.user.id)
         const created = { name: this.addForm.name, mail: this.addForm.email, whats: this.addForm.whatsapp, password, user_id: result.user.id }
         const role = this.addForm.role
@@ -1082,7 +1089,7 @@ export default {
       this.editTargetId = row.id
       this.editForm = this.editKind === 'student'
         ? { name: row.name, uid: row.uid || '', whats: row.whats || '' }
-        : { name: row.name, empId: row.empId || '', whats: row.whats || '', spec: row.spec || '' }
+        : { name: row.name, empId: row.empId || '', whats: row.whats || '', specs: (row.specs && row.specs.length ? [...row.specs] : (row.spec ? [row.spec] : [])) }
       this.editModalOpen = true
     },
     async saveEdit() {
@@ -1090,11 +1097,15 @@ export default {
         this.$toast?.error('يرجى إدخال الاسم')
         return
       }
+      if (this.editKind === 'committee' && !(this.editForm.specs && this.editForm.specs.length)) {
+        this.$toast?.error('اختر تخصصًا واحدًا على الأقل لعضو اللجنة')
+        return
+      }
       this.submitting = true
       try {
         const payload = this.editKind === 'student'
           ? { name: this.editForm.name, university_number: this.editForm.uid, whatsapp: this.editForm.whats }
-          : { name: this.editForm.name, employee_number: this.editForm.empId, whatsapp: this.editForm.whats, ...(this.editKind === 'committee' ? { specialization_id: this.editForm.spec || null } : {}) }
+          : { name: this.editForm.name, employee_number: this.editForm.empId, whatsapp: this.editForm.whats, ...(this.editKind === 'committee' ? { specialization_ids: this.editForm.specs || [] } : {}) }
         await this.updateUser(this.editTargetId, payload)
         this.editModalOpen = false
         this.$toast?.success('تم حفظ التعديلات')

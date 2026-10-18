@@ -10,6 +10,7 @@
     scroll-behavior: smooth;
     scrollbar-width: thin;
     scrollbar-color: var(--color-border) transparent;
+    scrollbar-gutter: stable;
   }
 
   /* سكرول رئيسي رفيع ومسطّح — يطابق هوية الموقع بدل شريط المتصفح الافتراضي السميك */

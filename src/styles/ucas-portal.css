@@ -5609,6 +5609,17 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 :root[data-brand="ucas"] [role="dialog"] .tr-row { padding: 12px 14px; border-radius: 4px; background: var(--color-surface); box-shadow: inset 3px 0 0 color-mix(in srgb, var(--ucas-blue) 55%, transparent), 0 0 0 1px var(--color-border); transition: box-shadow .25s ease; }
 :root[data-brand="ucas"] [role="dialog"] .tr-row:hover { box-shadow: inset 3px 0 0 var(--ucas-blue), 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 30%, transparent); }
 :root[data-brand="ucas"] [role="dialog"] .tr-avatar { flex: none; width: 38px; height: 38px; border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 10%, var(--color-surface)); color: var(--ucas-blue); font-weight: 800; font-size: 15px; }
+/* تبويب الأدوار داخل البوب اب (مشرفون/لجنة): سيجمنت مسطّح، النشط أزرق سوليد */
+:root[data-brand="ucas"] [role="dialog"] .hm-tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 4px; background: var(--color-bg); box-shadow: inset 0 0 0 1px var(--color-border); }
+:root[data-brand="ucas"] [role="dialog"] .hm-tabs button { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding-inline: 16px; border-radius: 4px; font-weight: 700; font-size: 13.5px; color: var(--color-text-600); box-shadow: none; transition: background-color .25s ease, color .25s ease; }
+:root[data-brand="ucas"] [role="dialog"] .hm-tabs button:hover:not(.is-active) { color: var(--ucas-blue); }
+:root[data-brand="ucas"] [role="dialog"] .hm-tabs button.is-active { background: var(--ucas-blue); color: #FFFFFF; box-shadow: none; }
+/* الحالة الفارغة داخل البوب اب: مسطّحة بحواف حادة بلا تدرّج (تطابق الثيم) */
+:root[data-brand="ucas"] [role="dialog"] .es { padding: 40px 24px; border-radius: 4px; background: var(--color-bg); box-shadow: inset 0 0 0 1px var(--color-border); animation: none; }
+:root[data-brand="ucas"] [role="dialog"] .es-icon { width: 60px; height: 60px; margin-bottom: 14px; border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 9%, var(--color-surface)); color: var(--ucas-blue); box-shadow: none; }
+:root[data-brand="ucas"] [role="dialog"] .es-title { color: var(--color-text-900); }
+:root[data-brand="ucas"] [role="dialog"] .es-title::after { display: none; }
+:root[data-brand="ucas"] [role="dialog"] .es-desc { color: var(--color-text-600); }
 :root[data-brand="ucas"] [role="dialog"] .mf-role.is-on :is(svg, small) { color: rgba(255, 255, 255, .9); }
 
 /* اختيار التخصص */
@@ -5625,15 +5636,16 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .spk-opt { display: flex; align-items: center; gap: 8px; min-height: 46px; padding: 8px 12px; border-radius: 4px; background: var(--color-surface); text-align: start; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent); transition: background-color .3s ease, box-shadow .3s ease; }
 .spk-opt:hover:not(.is-on) { background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-surface)); }
 .spk-opt:focus-visible { outline: 2px solid var(--ucas-blue); outline-offset: 2px; }
-.spk-opt.is-on { background: linear-gradient(270deg, rgba(98, 187, 70, .14), rgba(0, 91, 170, .08)), var(--color-surface); box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--ucas-blue) 40%, transparent), inset -4px 0 0 #62BB46; }
+.spk-opt.is-on { background: var(--ucas-blue); box-shadow: 0 0 0 1.5px var(--ucas-blue); }
 .spk-opt.is-all { align-self: stretch; }
 .spk-name { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 700; line-height: 1.5; color: var(--color-text-900); }
-.spk-opt.is-on .spk-name { color: var(--ucas-blue); }
+.spk-opt.is-on .spk-name { color: #FFFFFF; }
+.spk-opt.is-on .spk-degree { background: rgba(255, 255, 255, .2); color: #FFFFFF; }
 .spk-degree { flex: none; padding: 2px 10px; border-radius: 4px; font-size: 11.5px; font-weight: 700; }
 .spk-degree.is-diploma { background: color-mix(in srgb, #F89E32 16%, var(--color-surface)); color: #B76A12; }
 .spk-degree.is-bachelor { background: color-mix(in srgb, var(--ucas-blue) 10%, var(--color-surface)); color: var(--ucas-blue); }
-.spk-tick { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%; color: transparent; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ucas-blue) 22%, transparent); transition: background-color .3s ease, color .3s ease, box-shadow .3s ease; }
-.spk-opt.is-on .spk-tick { background: linear-gradient(135deg, #62BB46, #0E699C); color: #FFFFFF; box-shadow: none; }
+.spk-tick { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 4px; color: transparent; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ucas-blue) 22%, transparent); transition: background-color .3s ease, color .3s ease, box-shadow .3s ease; }
+.spk-opt.is-on .spk-tick { background: #FFFFFF; color: var(--ucas-blue); box-shadow: none; }
 .spk-empty { margin: 0; padding: 14px; border-radius: 4px; background: var(--color-bg); font-size: 13px; color: var(--color-text-600); text-align: center; }
 .spk-hint { display: block; margin-top: 10px; font-size: 12.5px; color: var(--color-text-600); }
 @media (max-width: 639.98px) { .spk-group { grid-template-columns: minmax(0, 1fr); } .spk-list { max-height: 320px; } }
