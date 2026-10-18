@@ -1144,7 +1144,8 @@
 }
 
 /* نافذة البروفايل */
-.pf { display: flex; flex-direction: column; gap: 18px; }
+.pf { display: flex; flex-direction: column; gap: 14px; }
+.pf-teams-pager { margin-top: 10px; }
 .pf-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1167,8 +1168,8 @@
 .pf-tag { margin-inline-start: 6px; padding: 1px 6px; border-radius: 4px; background: #FEF3D7; color: #B7791F; font-size: 11px; font-weight: 700; }
 .pf-table { width: 100%; border-collapse: collapse; }
 :root[data-brand="ucas"] [role="dialog"] .pf-table thead tr { background: var(--color-bg); }
-:root[data-brand="ucas"] [role="dialog"] .pf-table thead th { padding: 8px 10px; color: var(--color-text-600); font-size: 12.5px; font-weight: 700; text-align: start; }
-:root[data-brand="ucas"] [role="dialog"] .pf-table tbody td { padding: 9px 10px; font-size: 13.5px; color: var(--color-text-700); border-bottom: 1px solid var(--color-border); }
+:root[data-brand="ucas"] [role="dialog"] .pf-table thead th { padding: 7px 10px; color: var(--color-text-600); font-size: 11.5px; font-weight: 700; text-align: start; }
+:root[data-brand="ucas"] [role="dialog"] .pf-table tbody td { padding: 8px 10px; font-size: 12.5px; color: var(--color-text-700); border-bottom: 1px solid var(--color-border); }
 @media (max-width: 639.98px) {
   .pf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pf-grid > div { border-inline-start: 0 !important; }
@@ -3756,21 +3757,23 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 :root[data-brand="ucas"] .z-modal-overlay { background: rgba(8, 33, 61, .55); backdrop-filter: blur(4px); }
 :root[data-brand="ucas"] [role="dialog"] > div { overflow: hidden; border-radius: 4px; box-shadow: 0 30px 70px rgba(4, 30, 60, .35); }
 :root[data-brand="ucas"] [role="dialog"] > div > header {
-  position: relative; align-items: center; padding-block: 18px; border-bottom: 0;
-  background: linear-gradient(270deg, #62BB46 0%, #50A16E 30%, #0E699C 65%, #025DA9 100%);
+  position: relative; align-items: center; padding-block: 16px; border-bottom: 0;
+  background: var(--ucas-blue);
 }
-:root[data-brand="ucas"] [role="dialog"] > div > header::before { content: ""; position: absolute; inset: 0; opacity: .14; background-image: radial-gradient(#FFFFFF 1.2px, transparent 1.2px); background-size: 22px 22px; pointer-events: none; }
 :root[data-brand="ucas"] [role="dialog"] > div > header :is(h2, p) { position: relative; color: #FFFFFF; }
+:root[data-brand="ucas"] [role="dialog"] > div > header h2 { font-size: 17px; }
 :root[data-brand="ucas"] [role="dialog"] > div > header p { color: rgba(255, 255, 255, .85); }
-:root[data-brand="ucas"] [role="dialog"] > div > header > button[aria-label="إغلاق"] { position: relative; border-radius: 50%; background: rgba(255, 255, 255, .16); color: #FFFFFF; transition: background-color .3s ease; }
+:root[data-brand="ucas"] [role="dialog"] > div > header > button[aria-label="إغلاق"] { position: relative; border-radius: 4px; background: rgba(255, 255, 255, .16); color: #FFFFFF; transition: background-color .3s ease; }
 :root[data-brand="ucas"] [role="dialog"] > div > header > button[aria-label="إغلاق"]:hover { background: rgba(255, 255, 255, .3); color: #FFFFFF; }
 :root[data-brand="ucas"] [role="dialog"] > div > footer { border-top: 1px solid var(--color-border); background: var(--color-bg); }
 
-:root[data-brand="ucas"] [role="dialog"] .pf-grid { gap: 10px; border: 0; background: none; }
-:root[data-brand="ucas"] [role="dialog"] .pf-grid > div { border: 0; border-radius: 4px; background: var(--color-bg); box-shadow: inset 0 0 0 1px var(--color-border); }
-:root[data-brand="ucas"] [role="dialog"] .pf-grid dt { color: var(--color-text-600); font-weight: 600; }
-:root[data-brand="ucas"] [role="dialog"] .pf-grid dd { color: var(--ucas-blue); }
-:root[data-brand="ucas"] [role="dialog"] .pf-block > :is(h3, h4, p.pf-title, header) { position: relative; padding-bottom: 6px; color: var(--ucas-blue); }
+:root[data-brand="ucas"] [role="dialog"] .pf-grid { gap: 8px; border: 0; background: none; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+:root[data-brand="ucas"] [role="dialog"] .pf-grid > div { padding: 8px 12px; border: 0; border-radius: 4px; background: var(--color-bg); box-shadow: inset 0 0 0 1px var(--color-border); }
+:root[data-brand="ucas"] [role="dialog"] .pf-grid > div.pf-wide { grid-column: 1 / -1; }
+:root[data-brand="ucas"] [role="dialog"] .pf-grid dt { font-size: 11px; font-weight: 600; color: var(--color-text-600); }
+:root[data-brand="ucas"] [role="dialog"] .pf-grid dd { margin-top: 2px; font-size: 13px; color: var(--ucas-blue); }
+:root[data-brand="ucas"] [role="dialog"] .pf-grid dd.mono { font-size: 12.5px; letter-spacing: -.1px; }
+:root[data-brand="ucas"] [role="dialog"] .pf-block > :is(h3, h4, p.pf-title, header) { position: relative; padding-bottom: 6px; font-size: 12.5px; color: var(--ucas-blue); }
 :root[data-brand="ucas"] [role="dialog"] table { overflow: hidden; border-radius: 4px; box-shadow: 0 0 0 1px var(--color-border); }
 :root[data-brand="ucas"] [role="dialog"] table thead tr { background: var(--portal-thead-bg); }
 :root[data-brand="ucas"] [role="dialog"] table thead th { background: transparent; color: var(--portal-thead-text); }

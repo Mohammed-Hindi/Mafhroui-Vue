@@ -11,8 +11,8 @@
         <div><dt>الجنس</dt><dd>{{ GENDERS[data.gender] || 'غير محدد' }}</dd></div>
         <div><dt>مكان التواجد</dt><dd>{{ REGIONS[data.region] || 'غير محدد' }}</dd></div>
         <div><dt>الشعبة</dt><dd>{{ data.section || '—' }}</dd></div>
-        <div><dt>البريد</dt><dd class="mono">{{ data.email || '—' }}</dd></div>
-        <div><dt>الواتساب</dt><dd class="mono">{{ data.whatsapp || '—' }}</dd></div>
+        <div class="pf-wide"><dt>البريد</dt><dd class="mono">{{ data.email || '—' }}</dd></div>
+        <div class="pf-wide"><dt>الواتساب</dt><dd class="mono">{{ data.whatsapp || '—' }}</dd></div>
       </dl>
       <section v-if="data.project" class="pf-block">
         <h4>المشروع</h4>
@@ -54,11 +54,11 @@
     <div v-else class="pf">
       <dl class="pf-grid">
         <div><dt>الرقم الوظيفي</dt><dd class="mono">{{ data.employee_number || '—' }}</dd></div>
-        <div><dt>البريد</dt><dd class="mono">{{ data.email || '—' }}</dd></div>
-        <div><dt>الواتساب</dt><dd class="mono">{{ data.whatsapp || '—' }}</dd></div>
         <div><dt>المجموعات</dt><dd>{{ data.interaction?.teams_count ?? 0 }}</dd></div>
         <div><dt>الطلاب</dt><dd>{{ data.interaction?.students_count ?? 0 }}</dd></div>
         <div><dt>متوسط التفاعل</dt><dd>{{ data.interaction?.average_activity ?? 0 }}%</dd></div>
+        <div class="pf-wide"><dt>البريد</dt><dd class="mono">{{ data.email || '—' }}</dd></div>
+        <div class="pf-wide"><dt>الواتساب</dt><dd class="mono">{{ data.whatsapp || '—' }}</dd></div>
       </dl>
 
       <section class="pf-block">
@@ -66,7 +66,7 @@
         <table class="pf-table">
           <thead><tr><th>المجموعة</th><th>الشعبة</th><th>المشروع</th><th>المهام</th><th>التفاعل</th></tr></thead>
           <tbody>
-            <tr v-for="t in data.interaction?.teams || []" :key="t.team.id">
+            <tr v-for="t in pagedTeams" :key="t.team.id">
               <td>{{ t.team.name }} <span class="pf-muted">({{ t.team.members_count }})</span></td>
               <td>{{ t.team.section || '—' }}</td>
               <td>{{ t.project?.name || '—' }}</td>
@@ -76,9 +76,10 @@
                 <span class="gr-pct">{{ t.interaction.activity_score }}%</span>
               </td>
             </tr>
-            <tr v-if="!(data.interaction?.teams || []).length"><td colspan="5" class="pf-muted">لا توجد مجموعات</td></tr>
+            <tr v-if="!teams.length"><td colspan="5" class="pf-muted">لا توجد مجموعات</td></tr>
           </tbody>
         </table>
+        <Pagination v-if="teamsLastPage > 1" class="pf-teams-pager" :current-page="teamsPage" :last-page="teamsLastPage" :total="teams.length" @change="teamsPage = $event" />
       </section>
     </div>
   </BaseModal>
@@ -86,9 +87,12 @@
 
 <script>
 import BaseModal from '@/components/ui/BaseModal.vue'
+import Pagination from '@/components/ui/Pagination.vue'
 import api from '@/services/api'
 import ProjectTypes from '@/components/shared/ProjectTypes.vue'
 import { REGIONS } from '@/utils/progressData'
+
+const TEAMS_PER_PAGE = 6
 
 const DEGREES = { diploma: 'دبلوم', bachelor: 'بكالوريوس' }
 const GENDERS = { male: 'طالب', female: 'طالبة' }
@@ -97,7 +101,7 @@ const STATUS = { proposed: 'مقترح', in_progress: 'قيد التنفيذ', c
 export default {
   name: 'ProfileModal',
 
-  components: { BaseModal, ProjectTypes },
+  components: { BaseModal, Pagination, ProjectTypes },
 
   props: {
     modelValue: { type: Boolean, default: false },
@@ -113,13 +117,23 @@ export default {
   emits: ['update:modelValue'],
 
   data() {
-    return { DEGREES, GENDERS, REGIONS, STATUS, data: null, loading: false, project: null, saving: false }
+    return { DEGREES, GENDERS, REGIONS, STATUS, data: null, loading: false, project: null, saving: false, teamsPage: 1 }
   },
 
   computed: {
     title() {
       const who = this.data?.name || this.name
       return `${this.kind === 'student' ? 'الطالب' : 'المشرف'}${who ? ': ' + who : ''}`
+    },
+    teams() {
+      return this.data?.interaction?.teams || []
+    },
+    teamsLastPage() {
+      return Math.ceil(this.teams.length / TEAMS_PER_PAGE) || 1
+    },
+    pagedTeams() {
+      const start = (this.teamsPage - 1) * TEAMS_PER_PAGE
+      return this.teams.slice(start, start + TEAMS_PER_PAGE)
     }
   },
 
@@ -134,6 +148,7 @@ export default {
       if (!this.personId) return
       this.loading = true
       this.data = null
+      this.teamsPage = 1
       try {
         const path = this.kind === 'student' ? 'students' : 'supervisors'
         const { data } = await api.get(`/${path}/${this.personId}/profile`)
