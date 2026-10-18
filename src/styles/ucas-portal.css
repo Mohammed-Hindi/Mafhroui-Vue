@@ -21,7 +21,7 @@
   --portal-nav-text: #5B6676;
   --portal-nav-active: #005BAA;
   --portal-footer-bg: #FFFFFF;
-  --portal-footer-text: #8A94A6;
+  --portal-footer-text: #5B6676;
   --portal-cyan: #005BAA;
   --portal-sky: #4C8FCF;
   --portal-gray-btn: #6C757D;
@@ -1086,9 +1086,10 @@
   color: var(--color-text-600);
   transition: background-color var(--ucas-color-speed) var(--ease-standard), color var(--ucas-color-speed) var(--ease-standard);
 }
-.hm-tabs button span { display: inline-grid; place-items: center; min-width: 20px; height: 18px; padding-inline: 6px; border-radius: 4px; background: var(--color-primary-50); font-size: 11.5px; font-weight: 800; color: var(--ucas-blue); }
+.hm-tabs button span { display: inline-grid; place-items: center; min-width: 20px; height: 18px; padding-inline: 6px; border-radius: 4px; font-size: 11.5px; font-weight: 800; }
 .hm-tabs button.is-active { background: var(--color-surface); color: var(--color-text-900); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); }
-.sa-skin .hm-tabs button.is-active span { background: rgba(255, 255, 255, .25); color: #FFFFFF; }
+.sa-skin .hm-tabs button span { background: var(--ucas-blue); color: #FFFFFF; }
+.sa-skin .hm-tabs button.is-active span { background: #FFFFFF; color: var(--ucas-blue); }
 .hm-filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
 .hm-table-wrap { overflow-x: auto; max-height: 460px; overflow-y: auto; border: 1px solid var(--color-border); border-radius: 4px; }
 /* الرئيسية: تمرير داخلي لقوائم النشاط والمهام الطويلة برأس جدول ثابت */
@@ -3572,8 +3573,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
    (الشريط العلوي، السايد بار، رئيسية الإدارة العامة)
    ====================================================================== */
 .sa-skin {
-  --us-grad: linear-gradient(90deg, #62BB46 0%, #50A16E 30%, #0E699C 65%, #025DA9 100%);
-  --us-line: linear-gradient(90deg, #62BB46, #005BAA);
+  --us-grad: var(--ucas-blue);
+  --us-line: var(--ucas-blue);
 }
 
 /* الشريط العلوي: أبيض بشريط تدرّج علوي وظل هادئ (كهيدر صفحة الهبوط) */
@@ -3652,8 +3653,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 :root[data-theme="dark"] .sa-skin .portal-topbar-title { color: var(--color-text-900); }
 .sa-skin .portal-footer { border-top: 1px solid var(--color-border); }
 .sa-skin .portal-footer-in { justify-content: center; text-align: center; }
-.sa-skin .portal-footer a { color: var(--ucas-blue); }
-.sa-skin .portal-footer a { color: #FFFFFF; font-weight: 700; }
+.sa-skin .portal-footer a { color: var(--ucas-blue); font-weight: 700; }
 
 /* sa-skin — رئيسية الإدارة العامة: جداول بصفوف متناوبة، أزرار وحقول بزوايا ناعمة، بطاقة "حالة المهام" بطول جارتها */
 .hm-grid.is-stretch { align-items: stretch; }
@@ -3908,7 +3908,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
    محتوى صفحات اللوحات بالهوية الجديدة (الطالب أولًا، ويشمل كل الأدوار لأن المكوّنات مشتركة):
    رأس الصفحة، البطاقات، الأزرار، التبويبات، الجداول، شريط الملخص، لوحة المهام، الأقسام، الملف الشخصي
    ====================================================================== */
-.sa-skin { --sa-grad: linear-gradient(270deg, #62BB46 0%, #50A16E 30%, #0E699C 65%, #025DA9 100%); --sa-soft: linear-gradient(270deg, rgba(98, 187, 70, .12), rgba(0, 91, 170, .07)); }
+.sa-skin { --sa-grad: var(--ucas-blue); --sa-soft: color-mix(in srgb, var(--ucas-blue) 7%, var(--color-surface)); }
 
 /* رأس الصفحة: بطاقة بخلفية تدرّج خفيفة وشريط تدرّج جانبي، والعنوان أزرق بخط تدرّج تحته */
 .sa-skin .dash-head { position: relative; overflow: hidden; border-radius: 4px; background: var(--color-surface); box-shadow: 0 10px 30px rgba(4, 40, 80, .08); animation: saFadeUp .5s ease backwards; }
