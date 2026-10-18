@@ -26,7 +26,7 @@
           <input v-model.trim="memberSearch" type="search" :placeholder="memberKind === 'student' ? 'بحث بالاسم أو الرقم الجامعي…' : 'بحث بالاسم أو الرقم الوظيفي…'">
         </label>
         <template v-if="memberKind === 'student'">
-          <BaseSelect v-model="specFilter" class="min-w-[150px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specializationOptions" />
+          <BaseSelect v-model="specFilter" class="min-w-[150px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="studentSpecOptions" />
           <BaseSelect v-model="studentSupFilter" class="min-w-[160px]" aria-label="المشرف" placeholder="كل المشرفين" include-placeholder-option :options="supervisorOptions" />
           <BaseSelect v-if="isSuperAdmin" v-model="genderFilter" class="min-w-[130px]" aria-label="الفئة" placeholder="طلاب وطالبات" include-placeholder-option :options="genderOptions" />
           <BaseSelect v-if="isSuperAdmin" v-model="regionFilter" class="min-w-[140px]" aria-label="مكان التواجد" placeholder="كل المناطق" include-placeholder-option :options="regionOptions" />
@@ -764,14 +764,22 @@ export default {
     specializationOptions() {
       return this.specializations.map((s) => ({ value: s.id, label: s.name }))
     },
+    /** التخصصات المتاحة فعليًا: المشتقّة من طلاب المشرف المختار (أو كل الطلاب) */
+    studentSpecOptions() {
+      const pool = this.studentSupFilter ? this.students.filter((s) => s.sup === this.studentSupFilter) : this.students
+      const ids = new Set(pool.map((s) => s.spec).filter(Boolean).map(String))
+      const opts = this.specializations.filter((s) => ids.has(String(s.id))).map((s) => ({ value: s.id, label: s.name }))
+      return opts.length ? opts : this.specializationOptions
+    },
+    /** المشرفون المتاحون: المشتقّون من الطلاب المطابقين للتخصص المختار (فقط من لهم طلاب) */
     supervisorOptions() {
-      const list = this.specFilter
-        ? this.supervisors.filter((s) => String(s.spec) === String(this.specFilter))
-        : this.supervisors
-      return [...new Set(list.map((s) => s.name))].map((name) => ({ value: name, label: name }))
+      const pool = this.specFilter ? this.students.filter((s) => String(s.spec) === String(this.specFilter)) : this.students
+      return [...new Set(pool.map((s) => s.sup).filter(Boolean))].map((name) => ({ value: name, label: name }))
     },
     regionOptions() {
-      const src = this.specFilter ? this.students.filter((s) => String(s.spec) === String(this.specFilter)) : this.students
+      let src = this.students
+      if (this.specFilter) src = src.filter((s) => String(s.spec) === String(this.specFilter))
+      if (this.studentSupFilter) src = src.filter((s) => s.sup === this.studentSupFilter)
       const present = new Set(src.map((s) => s.region).filter(Boolean))
       const entries = Object.entries(REGIONS)
       return (present.size ? entries.filter(([v]) => present.has(v)) : entries).map(([value, label]) => ({ value, label }))
@@ -895,6 +903,10 @@ export default {
     },
     specFilter() {
       if (this.studentSupFilter && !this.supervisorOptions.some((o) => o.value === this.studentSupFilter)) this.studentSupFilter = ''
+      if (this.regionFilter && !this.regionOptions.some((o) => o.value === this.regionFilter)) this.regionFilter = ''
+    },
+    studentSupFilter() {
+      if (this.specFilter && !this.studentSpecOptions.some((o) => o.value === this.specFilter)) this.specFilter = ''
       if (this.regionFilter && !this.regionOptions.some((o) => o.value === this.regionFilter)) this.regionFilter = ''
     },
     // البحث يُرسل للخادم بعد توقف الكتابة
