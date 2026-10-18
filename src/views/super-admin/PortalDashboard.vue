@@ -84,7 +84,7 @@
           <!-- المشرف: مجموعاته بسلايدر صفحات المجموعات؛ الإدارة العامة: كل الصفوف في صندوق التمرير -->
           <SlideTable v-else v-slot="{ rows: grpPage }" :rows="grpRows" :size="isSup ? 6 : Math.max(grpRows.length, 1)" label="المجموعات">
           <table class="hm-table">
-            <thead><tr><th>المجموعة / الطالب</th><th data-rt-show>{{ isSup ? 'المشروع' : 'المشرف' }}</th><th>المهام</th><th>مستوى التقدّم</th></tr></thead>
+            <thead><tr><th>الشعبة</th><th data-rt-show>المشروع</th><th>المهام</th><th>مستوى التقدّم</th></tr></thead>
             <tbody>
               <template v-for="g in grpPage" :key="g.id">
                 <tr class="is-link" :aria-expanded="openGroup === g.id" @click="openGroup = openGroup === g.id ? null : g.id">
@@ -92,7 +92,7 @@
                     <ChevronDown :size="14" :class="['hm-caret', openGroup === g.id && 'is-open']" />
                     <span class="rt-section">{{ g.name }}</span> <span class="hm-muted">({{ g.shown.length }})</span>
                   </td>
-                  <td class="hm-muted">{{ isSup ? g.project : supName(g.supId) }}</td>
+                  <td class="hm-muted">{{ g.project }}</td>
                   <td><span class="mono">{{ g.done }}/{{ g.tasksTotal }}</span></td>
                   <td>
                     <span class="gr-progress"><span :class="level(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
