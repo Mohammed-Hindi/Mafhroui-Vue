@@ -8,22 +8,17 @@
     </header>
 
     <template v-else>
-      <header class="dash-head mb-5">
-        <div>
-          <h2 class="dash-title">إدارة الأعضاء</h2>
-          <p class="dash-sub">{{ activeFiltered.length }} من أصل {{ activeList.length }} {{ { student: 'طالبًا', supervisor: 'مشرفًا', committee: 'عضو لجنة' }[memberKind] }}</p>
-        </div>
+      <div class="mb-head-row mb-5">
+        <nav class="hm-tabs w-fit" aria-label="نوع العضو">
+          <button v-for="k in memberKindOptions" :key="k.value" type="button" :class="memberKind === k.value && 'is-active'" @click="memberKind = k.value">
+            {{ k.label }} <span>{{ listOf(k.value).length }}</span>
+          </button>
+        </nav>
         <div class="dash-actions">
           <BaseButton variant="outline" :icon="Archive" @click="openTrashed">المحذوفون</BaseButton>
           <BaseButton :icon="UserPlus" @click="openAddModal">إضافة عضو</BaseButton>
         </div>
-      </header>
-
-      <nav class="hm-tabs mb-4 w-fit" aria-label="نوع العضو">
-        <button v-for="k in memberKindOptions" :key="k.value" type="button" :class="memberKind === k.value && 'is-active'" @click="memberKind = k.value">
-          {{ k.label }} <span>{{ listOf(k.value).length }}</span>
-        </button>
-      </nav>
+      </div>
 
       <div class="mb-toolbar mb-6" aria-label="تصفية الأعضاء">
         <label class="gr-search mb-toolbar-search">
@@ -38,8 +33,12 @@
         </template>
         <BaseSelect v-if="memberKind === 'supervisor'" v-model="supSpecFilter" class="min-w-[150px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specializationOptions" />
         <div class="mb-toolbar-end">
-          <button type="button" class="pbtn is-whats is-sm" @click="sendWhatsAll(activeList)"><MessageCircle :size="15" /> واتساب للكل</button>
-          <button type="button" class="pbtn is-outline is-sm" @click="sendMailAll(activeEmails)"><Mail :size="15" /> بريد للكل</button>
+          <button type="button" class="mb-bulk-btn is-whats" :disabled="!whatsCount" :title="`إرسال رسالة واتساب إلى ${whatsCount} عضو`" @click="sendWhatsAll(activeList)">
+            <MessageCircle :size="15" /> واتساب <b>{{ whatsCount }}</b>
+          </button>
+          <button type="button" class="mb-bulk-btn is-mail" :disabled="!mailCount" :title="`إرسال بريد إلى ${mailCount} عضو`" @click="sendMailAll(activeEmails)">
+            <Mail :size="15" /> بريد <b>{{ mailCount }}</b>
+          </button>
         </div>
       </div>
 
@@ -570,7 +569,6 @@ export default {
       regionFilter: '',
       assignedFilter: '',
       genderOptions: [{ value: 'male', label: 'طلاب' }, { value: 'female', label: 'طالبات' }],
-      regionOptions: Object.entries(REGIONS).map(([value, label]) => ({ value, label })),
       assignedOptions: [{ value: 'yes', label: 'ضمن مجموعة' }, { value: 'no', label: 'بدون مجموعة' }],
       openSupId: null,
       openGroupId: null,
@@ -733,6 +731,7 @@ export default {
         empId: u.employee_number,
         mail: u.email,
         whats: u.whatsapp,
+        spec: u.specialization_id,
         // من الخادم: عدد مهام فرقه وآخر استخدام لجلسة الدخول
         tasks: u.tasks_count ?? 0,
         lastActive: u.last_active_at ? formatDateTime(u.last_active_at) : 'لم يسجّل دخولًا بعد',
@@ -758,7 +757,22 @@ export default {
       return this.specializations.map((s) => ({ value: s.id, label: s.name }))
     },
     supervisorOptions() {
-      return [...new Set(this.supervisors.map((s) => s.name))].map((name) => ({ value: name, label: name }))
+      const list = this.specFilter
+        ? this.supervisors.filter((s) => String(s.spec) === String(this.specFilter))
+        : this.supervisors
+      return [...new Set(list.map((s) => s.name))].map((name) => ({ value: name, label: name }))
+    },
+    regionOptions() {
+      const src = this.specFilter ? this.students.filter((s) => String(s.spec) === String(this.specFilter)) : this.students
+      const present = new Set(src.map((s) => s.region).filter(Boolean))
+      const entries = Object.entries(REGIONS)
+      return (present.size ? entries.filter(([v]) => present.has(v)) : entries).map(([value, label]) => ({ value, label }))
+    },
+    whatsCount() {
+      return this.activeList.filter((m) => m.whats).length
+    },
+    mailCount() {
+      return this.activeList.filter((m) => m.mail).length
     },
     studentEmails() {
       return this.students.map((s) => s.mail)
@@ -870,6 +884,10 @@ export default {
     },
     supSpecFilter() {
       this.loadSupervisors()
+    },
+    specFilter() {
+      if (this.studentSupFilter && !this.supervisorOptions.some((o) => o.value === this.studentSupFilter)) this.studentSupFilter = ''
+      if (this.regionFilter && !this.regionOptions.some((o) => o.value === this.regionFilter)) this.regionFilter = ''
     },
     // البحث يُرسل للخادم بعد توقف الكتابة
     memberSearch() {
@@ -1372,8 +1390,16 @@ export default {
 .mb-rows-link :deep(tbody > tr.row-interactive) { cursor: pointer; }
 .mb-name { color: var(--portal-cyan, var(--color-primary-600)); text-align: start; }
 .mb-name:hover { text-decoration: underline; }
+.mb-head-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .mb-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .mb-toolbar-search { flex: 1 1 240px; min-width: 200px; }
 .mb-toolbar-end { display: flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
-@media (max-width: 639.98px) { .mb-toolbar-end { width: 100%; margin-inline-start: 0; } .mb-toolbar-end .pbtn { flex: 1; justify-content: center; } }
+.mb-bulk-btn { display: inline-flex; align-items: center; gap: 7px; height: 38px; padding-inline: 14px; border-radius: 4px; border: 1px solid; background: var(--color-surface); font-size: 13px; font-weight: 700; cursor: pointer; transition: background-color .2s ease, color .2s ease, border-color .2s ease; }
+.mb-bulk-btn b { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding-inline: 5px; border-radius: 4px; font-size: 12px; font-weight: 800; background: color-mix(in srgb, currentColor 14%, transparent); }
+.mb-bulk-btn.is-whats { border-color: color-mix(in srgb, #25D366 50%, var(--color-border)); color: #1DA851; }
+.mb-bulk-btn.is-whats:not(:disabled):hover { background: #25D366; border-color: #25D366; color: #FFFFFF; }
+.mb-bulk-btn.is-mail { border-color: color-mix(in srgb, var(--ucas-blue) 45%, var(--color-border)); color: var(--ucas-blue); }
+.mb-bulk-btn.is-mail:not(:disabled):hover { background: var(--ucas-blue); border-color: var(--ucas-blue); color: #FFFFFF; }
+.mb-bulk-btn:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 639.98px) { .mb-toolbar-end { width: 100%; margin-inline-start: 0; } .mb-bulk-btn { flex: 1; justify-content: center; } }
 </style>

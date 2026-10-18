@@ -3635,6 +3635,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .hm-tabs button.is-active { background: var(--ucas-blue); color: #FFFFFF; }
 :root[data-brand="ucas"] .sa-skin .hm-table thead tr { background: var(--color-bg); }
 :root[data-brand="ucas"] .sa-skin .hm-table thead th { background: transparent; color: var(--color-text-600); }
+:root[data-brand="ucas"] .sa-skin .mb-table table thead tr { background: var(--portal-thead-bg-flat, var(--color-bg)); }
+:root[data-brand="ucas"] .sa-skin .mb-table table thead th { background: transparent; color: var(--color-text-600); font-weight: 700; }
 .sa-skin .hm-table tbody tr.is-link:hover { background: var(--color-bg); }
 .sa-skin .gr-progress > span.is-high { background: var(--ucas-green); }
 .sa-skin .hm-donut { box-shadow: none; }
@@ -4044,9 +4046,9 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
   --portal-cyan: #0E699C;
 }
 .sa-skin :is(button, a).select-none.bg-primary-600,
-:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-primary-600 { border-radius: 4px; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); color: #FFFFFF; box-shadow: 0 6px 16px rgba(4, 40, 80, .18); }
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-primary-600 { border-radius: 4px; background: var(--ucas-blue); color: #FFFFFF; box-shadow: none; }
 .sa-skin :is(button, a).select-none.bg-primary-600:not(:disabled):hover,
-:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-primary-600:not(:disabled):hover { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); filter: brightness(1.07); }
+:root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.bg-primary-600:not(:disabled):hover { background: #004C8E; filter: none; }
 :root[data-brand="ucas"] [role="dialog"] :is(button, a).select-none.border-border { border-radius: 4px; }
 
 /* بطاقة الهوية أعلى الصفحات (المشرف/اللجنة): بطاقة ناعمة بخلفية تدرّج خفيفة وصورة بحلقة متدرّجة */
