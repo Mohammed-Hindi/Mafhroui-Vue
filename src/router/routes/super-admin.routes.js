@@ -14,7 +14,7 @@ export default [
         path: '',
         name: 'super-admin-members',
         component: MembersPage,
-        meta: { title: 'إدارة الأعضاء' }
+        meta: { title: 'إدارة الأعضاء', hideIdentity: true }
       },
       {
         path: 'committee',
@@ -25,7 +25,7 @@ export default [
         path: 'structure',
         name: 'super-admin-structure',
         component: OrgStructurePage,
-        meta: { title: 'الأقسام والتخصصات والفصول' }
+        meta: { title: 'الأقسام والتخصصات والفصول', hideIdentity: true }
       },
       {
         path: 'profile',
@@ -44,7 +44,7 @@ export default [
         name: 'super-admin-credentials',
         component: MembersPage,
         props: { mode: 'credentials' },
-        meta: { title: 'إرسال بيانات الدخول' }
+        meta: { title: 'إرسال بيانات الدخول', hideIdentity: true }
       },
       {
         path: 'evaluations',

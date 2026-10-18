@@ -8,72 +8,39 @@
     </header>
 
     <template v-else>
-      <div class="portal-head-card flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div class="flex items-center gap-3">
-          <div>
-            <h3 class="portal-title text-h3 font-bold text-text-900">إدارة الأعضاء</h3>
-            <p class="text-caption text-text-600">{{ activeFiltered.length }} من أصل {{ activeList.length }} {{ { student: 'طالبًا', supervisor: 'مشرفًا', committee: 'عضو لجنة' }[memberKind] }}</p>
-          </div>
+      <header class="dash-head mb-5">
+        <div>
+          <h2 class="dash-title">إدارة الأعضاء</h2>
+          <p class="dash-sub">{{ activeFiltered.length }} من أصل {{ activeList.length }} {{ { student: 'طالبًا', supervisor: 'مشرفًا', committee: 'عضو لجنة' }[memberKind] }}</p>
         </div>
-      </div>
-
-      <!-- كل الأزرار في صف واحد: التواصل الجماعي يمينًا وإدارة الأعضاء يسارًا -->
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div class="mb-bulk">
-          <button type="button" class="pbtn is-whats" @click="sendWhatsAll(activeList)">
-            <MessageCircle :size="15" /> إرسال واتساب للجميع
-          </button>
-          <button type="button" class="pbtn is-outline" @click="sendMailAll(activeEmails)">
-            <Mail :size="15" /> إرسال بريد للجميع (Gmail)
-          </button>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <BaseButton variant="outline" :icon="Archive" @click="openTrashed">الأعضاء المحذوفون</BaseButton>
+        <div class="dash-actions">
+          <BaseButton variant="outline" :icon="Archive" @click="openTrashed">المحذوفون</BaseButton>
           <BaseButton :icon="UserPlus" @click="openAddModal">إضافة عضو</BaseButton>
         </div>
-      </div>
+      </header>
 
-      <!-- أقسام الأعضاء -->
       <nav class="hm-tabs mb-4 w-fit" aria-label="نوع العضو">
         <button v-for="k in memberKindOptions" :key="k.value" type="button" :class="memberKind === k.value && 'is-active'" @click="memberKind = k.value">
           {{ k.label }} <span>{{ listOf(k.value).length }}</span>
         </button>
       </nav>
 
-      <!-- الإدارة العامة: فلاتر بنمط سجل المجموعات ("حدد …" بجانب القائمة) -->
-      <div v-if="isSuperAdmin" class="gr-filters mb-6" aria-label="تصفية الأعضاء">
-        <label class="gr-search">
+      <div class="mb-toolbar mb-6" aria-label="تصفية الأعضاء">
+        <label class="gr-search mb-toolbar-search">
           <Search :size="16" />
           <input v-model.trim="memberSearch" type="search" :placeholder="memberKind === 'student' ? 'بحث بالاسم أو الرقم الجامعي…' : 'بحث بالاسم أو الرقم الوظيفي…'">
         </label>
         <template v-if="memberKind === 'student'">
-          <label class="gr-pick">
-            <span>الفئة</span>
-            <select v-model="genderFilter" class="gr-select">
-              <option value="">طلاب وطالبات</option>
-              <option v-for="o in genderOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-          </label>
-          <label class="gr-pick">
-            <span>مكان التواجد</span>
-            <select v-model="regionFilter" class="gr-select">
-              <option value="">كل المناطق</option>
-              <option v-for="o in regionOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-          </label>
+          <BaseSelect v-model="specFilter" class="min-w-[150px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specializationOptions" />
+          <BaseSelect v-model="studentSupFilter" class="min-w-[160px]" aria-label="المشرف" placeholder="كل المشرفين" include-placeholder-option :options="supervisorOptions" />
+          <BaseSelect v-if="isSuperAdmin" v-model="genderFilter" class="min-w-[130px]" aria-label="الفئة" placeholder="طلاب وطالبات" include-placeholder-option :options="genderOptions" />
+          <BaseSelect v-if="isSuperAdmin" v-model="regionFilter" class="min-w-[140px]" aria-label="مكان التواجد" placeholder="كل المناطق" include-placeholder-option :options="regionOptions" />
         </template>
-      </div>
-
-      <div v-else class="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-lg bg-surface border border-border shadow-card">
-        <div class="relative flex-1 min-w-[220px]">
-          <Search :size="16" class="pointer-events-none absolute top-1/2 -translate-y-1/2 start-3 text-text-400" />
-          <input v-model.trim="memberSearch" type="search" :placeholder="memberKind === 'student' ? 'ابحث عن طالب، مشرف أو رقم جامعي...' : 'ابحث عن مشرف بالاسم أو الرقم الوظيفي...'" class="w-full h-icon-btn ps-10 pe-3 rounded-sm border border-border bg-bg text-body text-text-900 focus:border-primary-600 transition-colors duration-fast">
+        <BaseSelect v-if="memberKind === 'supervisor'" v-model="supSpecFilter" class="min-w-[150px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specializationOptions" />
+        <div class="mb-toolbar-end">
+          <button type="button" class="pbtn is-whats is-sm" @click="sendWhatsAll(activeList)"><MessageCircle :size="15" /> واتساب للكل</button>
+          <button type="button" class="pbtn is-outline is-sm" @click="sendMailAll(activeEmails)"><Mail :size="15" /> بريد للكل</button>
         </div>
-        <template v-if="memberKind === 'student'">
-          <BaseSelect v-model="specFilter" class="min-w-[170px]" placeholder="جميع التخصصات" include-placeholder-option :options="specializationOptions" />
-          <BaseSelect v-model="studentSupFilter" class="min-w-[180px]" placeholder="جميع المشرفين" include-placeholder-option :options="supervisorOptions" />
-        </template>
-        <BaseSelect v-if="memberKind === 'supervisor'" v-model="supSpecFilter" class="min-w-[170px]" placeholder="جميع التخصصات" include-placeholder-option :options="specializationOptions" aria-label="التخصص" />
       </div>
 
       <div class="mb-12">
@@ -271,13 +238,7 @@
             <Search :size="16" />
             <input v-model.trim="notifySearch" type="search" placeholder="بحث بالاسم أو البريد أو الواتساب…">
           </label>
-          <label class="gr-pick">
-            <span>التخصص</span>
-            <select v-model="notifySpecFilter" class="gr-select">
-              <option value="">كل التخصصات</option>
-              <option v-for="o in specializationOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-          </label>
+          <BaseSelect v-model="notifySpecFilter" class="min-w-[170px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specializationOptions" />
         </div>
 
         <div class="cr-selbar">
@@ -1411,4 +1372,8 @@ export default {
 .mb-rows-link :deep(tbody > tr.row-interactive) { cursor: pointer; }
 .mb-name { color: var(--portal-cyan, var(--color-primary-600)); text-align: start; }
 .mb-name:hover { text-decoration: underline; }
+.mb-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.mb-toolbar-search { flex: 1 1 240px; min-width: 200px; }
+.mb-toolbar-end { display: flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
+@media (max-width: 639.98px) { .mb-toolbar-end { width: 100%; margin-inline-start: 0; } .mb-toolbar-end .pbtn { flex: 1; justify-content: center; } }
 </style>
