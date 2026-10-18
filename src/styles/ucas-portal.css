@@ -3635,8 +3635,13 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .hm-tabs button.is-active { background: var(--ucas-blue); color: #FFFFFF; }
 :root[data-brand="ucas"] .sa-skin .hm-table thead tr { background: var(--color-bg); }
 :root[data-brand="ucas"] .sa-skin .hm-table thead th { background: transparent; color: var(--color-text-600); }
-:root[data-brand="ucas"] .sa-skin .mb-table table thead tr { background: var(--portal-thead-bg-flat, var(--color-bg)); }
+:root[data-brand="ucas"] .sa-skin .mb-table { box-shadow: none; border-radius: 4px; }
+:root[data-brand="ucas"] .sa-skin .mb-table table thead tr { background: var(--color-bg); border-bottom: 1px solid var(--color-border); }
 :root[data-brand="ucas"] .sa-skin .mb-table table thead th { background: transparent; color: var(--color-text-600); font-weight: 700; }
+:root[data-brand="ucas"] .sa-skin .mb-table table :is(th, td) { border-left: 0 !important; border-right: 0 !important; }
+:root[data-brand="ucas"] .sa-skin .mb-table table tbody td { padding-top: 13px; padding-bottom: 13px; }
+:root[data-brand="ucas"] .sa-skin .mb-table table tbody tr.row-interactive { transition: background-color .2s ease; }
+:root[data-brand="ucas"] .sa-skin .mb-table table tbody tr.row-interactive:hover { background: var(--color-bg); }
 .sa-skin .hm-table tbody tr.is-link:hover { background: var(--color-bg); }
 .sa-skin .gr-progress > span.is-high { background: var(--ucas-green); }
 .sa-skin .hm-donut { box-shadow: none; }
