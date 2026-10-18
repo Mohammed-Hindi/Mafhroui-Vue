@@ -4454,16 +4454,16 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 
 /* سلايدر الجداول والمعارض: شريط تنقّل احترافي بأرقام الشرائح */
 .gr-slider { flex-direction: column; gap: 10px; margin-top: 18px; }
-.gr-pager { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 4px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent), 0 8px 22px rgba(4, 40, 80, .07); }
+.gr-pager { display: flex; align-items: center; gap: 6px; padding: 5px; border-radius: 4px; background: var(--color-surface); border: 1px solid var(--color-border); box-shadow: none; }
 .gr-pages { display: flex; align-items: center; gap: 4px; }
 .gr-page { min-width: 38px; height: 38px; padding-inline: 8px; border-radius: 4px; font-size: 14px; font-weight: 800; color: var(--color-text-600); font-variant-numeric: tabular-nums; transition: background-color .3s ease, color .3s ease; }
 .gr-page:hover:not(.is-active) { background: color-mix(in srgb, var(--ucas-blue) 7%, transparent); color: var(--ucas-blue); }
-.gr-page.is-active { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); color: #FFFFFF; box-shadow: 0 4px 12px rgba(4, 40, 80, .2); }
+.gr-page.is-active { background: var(--ucas-blue); color: #FFFFFF; box-shadow: none; }
 .gr-gap { padding-inline: 4px; color: var(--color-text-400); }
 .gr-slide-btn.is-text { width: auto; height: 38px; gap: 4px; padding-inline: 14px; border: 0; border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 6%, transparent); font-size: 13.5px; font-weight: 700; color: var(--ucas-blue); display: inline-flex; align-items: center; }
 .gr-slide-btn.is-text:hover:not(:disabled) { background: color-mix(in srgb, var(--ucas-blue) 12%, transparent); }
 .gr-progressline { width: min(260px, 70%); height: 4px; overflow: hidden; border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 10%, transparent); }
-.gr-progressline > span { display: block; height: 100%; border-radius: 4px; background: linear-gradient(270deg, #62BB46, #0E699C); transition: width .5s ease; }
+.gr-progressline > span { display: block; height: 100%; border-radius: 4px; background: var(--ucas-blue); transition: width .5s ease; }
 .gr-slide-info { width: auto; font-size: 13px; }
 @media (max-width: 639.98px) { .gr-slide-btn.is-text { padding-inline: 10px; font-size: 0; } .gr-slide-btn.is-text svg { margin: 0; } .gr-page { min-width: 32px; height: 32px; } }
 
@@ -5262,14 +5262,15 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin :is(button, a).select-none.h-icon-btn:not(.w-icon-btn) { height: 44px; padding-inline: 20px; }
 .sa-skin :is(button, a).select-none.h-9:not(.w-9) { padding-inline: 16px; }
 
-/* أزرار الإجراءات الصغيرة في الجداول (تعديل/حذف/واتساب…): دوائر ناعمة بحلقة خفيفة، التعبئة عند المرور */
-.sa-skin.ucas-portal .portal-page button.grid.place-items-center:is(.w-8, .w-9).rounded-sm { border-radius: 50%; border: 0; background: color-mix(in srgb, var(--ucas-blue) 6%, var(--color-surface)); color: var(--ucas-blue); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 14%, transparent); transition: background-color .3s ease, color .3s ease, box-shadow .3s ease; }
-.sa-skin.ucas-portal .portal-page button.grid.place-items-center:is(.w-8, .w-9).rounded-sm:not(:disabled):hover { background: linear-gradient(270deg, #62BB46, #0E699C); color: #FFFFFF; box-shadow: 0 4px 12px rgba(4, 40, 80, .2); }
-.sa-skin.ucas-portal .portal-page button.grid.place-items-center:is(.w-8, .w-9).rounded-sm.text-error { background: color-mix(in srgb, #FF5B5B 8%, var(--color-surface)); color: #E04848; box-shadow: 0 0 0 1px color-mix(in srgb, #FF5B5B 22%, transparent); }
-.sa-skin.ucas-portal .portal-page button.grid.place-items-center:is(.w-8, .w-9).rounded-sm.text-error:not(:disabled):hover { background: linear-gradient(270deg, #FF7A7A, #E04848); color: #FFFFFF; }
-.sa-skin.ucas-portal .portal-page button.grid.place-items-center:is(.w-8, .w-9).rounded-sm.text-whatsapp { background: color-mix(in srgb, #25D366 9%, var(--color-surface)); color: #128C4B; box-shadow: 0 0 0 1px color-mix(in srgb, #25D366 25%, transparent); }
-.sa-skin.ucas-portal .portal-page button.grid.place-items-center:is(.w-8, .w-9).rounded-sm.text-whatsapp:not(:disabled):hover { background: #25D366; color: #FFFFFF; }
-.sa-skin.ucas-portal .portal-page button.grid.place-items-center:is(.w-8, .w-9).rounded-sm.bg-error { background: linear-gradient(270deg, #FF7A7A, #E04848); color: #FFFFFF; }
+/* أزرار الإجراءات الصغيرة في الجداول (تعديل/حذف/واتساب…): حواف حادة، تعبئة مسطّحة خفيفة عند المرور */
+.sa-skin.ucas-portal .portal-page button.grid.place-items-center:is(.w-8, .w-9).rounded-sm { border-radius: 4px; border-width: 1px; border-style: solid; border-color: var(--color-border); background: var(--color-surface); color: var(--color-text-600); box-shadow: none; transition: background-color .25s ease, color .25s ease, border-color .25s ease; }
+.sa-skin.ucas-portal .portal-page button.grid.place-items-center:is(.w-8, .w-9).rounded-sm:not(.text-error):not(.text-whatsapp):not(.bg-error):not(:disabled):hover { background: color-mix(in srgb, var(--ucas-blue) 9%, var(--color-surface)); border-color: color-mix(in srgb, var(--ucas-blue) 32%, transparent); color: var(--ucas-blue); }
+.sa-skin.ucas-portal .portal-page button.grid.place-items-center:is(.w-8, .w-9).rounded-sm.text-error { border-color: color-mix(in srgb, #FF5B5B 28%, transparent); color: #E04848; }
+.sa-skin.ucas-portal .portal-page button.grid.place-items-center:is(.w-8, .w-9).rounded-sm.text-error:not(:disabled):hover { background: color-mix(in srgb, #FF5B5B 12%, var(--color-surface)); border-color: color-mix(in srgb, #FF5B5B 45%, transparent); color: #E04848; }
+.sa-skin.ucas-portal .portal-page button.grid.place-items-center:is(.w-8, .w-9).rounded-sm.text-whatsapp { border-color: color-mix(in srgb, #25D366 30%, transparent); color: #128C4B; }
+.sa-skin.ucas-portal .portal-page button.grid.place-items-center:is(.w-8, .w-9).rounded-sm.text-whatsapp:not(:disabled):hover { background: color-mix(in srgb, #25D366 13%, var(--color-surface)); border-color: color-mix(in srgb, #25D366 48%, transparent); color: #128C4B; }
+.sa-skin.ucas-portal .portal-page button.grid.place-items-center:is(.w-8, .w-9).rounded-sm.bg-error { background: #E04848; border-color: #E04848; color: #FFFFFF; }
+.sa-skin.ucas-portal .portal-page button.grid.place-items-center:is(.w-8, .w-9).rounded-sm.bg-error:not(:disabled):hover { background: #C93B3B; border-color: #C93B3B; }
 
 /* الحقول العامة (BaseInput / BaseTextarea / زر BaseSelect / حقول Tailwind): زوايا 12، خلفية فاتحة، هالة زرقاء عند الكتابة */
 .sa-skin :is(input, textarea).rounded-sm.border, .sa-skin button[aria-haspopup="listbox"].rounded-sm.border:not(.portal-semester *),
@@ -5601,8 +5602,13 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 :root[data-brand="ucas"] [role="dialog"] .mf-role svg { color: var(--ucas-green); transition: color .3s ease; }
 :root[data-brand="ucas"] [role="dialog"] .mf-role b { font-size: 14px; }
 :root[data-brand="ucas"] [role="dialog"] .mf-role small { font-size: 11.5px; color: var(--color-text-400); transition: color .3s ease; }
-:root[data-brand="ucas"] [role="dialog"] .mf-role:hover:not(.is-on) { background: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .05)); }
-:root[data-brand="ucas"] [role="dialog"] .mf-role.is-on { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); color: #FFFFFF; box-shadow: 0 8px 20px rgba(4, 40, 80, .2); }
+:root[data-brand="ucas"] [role="dialog"] .mf-role:hover:not(.is-on) { background: color-mix(in srgb, var(--ucas-blue) 7%, var(--color-surface)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 24%, transparent); }
+:root[data-brand="ucas"] [role="dialog"] .mf-role.is-on { background: var(--ucas-blue); color: #FFFFFF; box-shadow: 0 0 0 1px var(--ucas-blue); }
+:root[data-brand="ucas"] [role="dialog"] .mf-error { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 11px 14px; border-radius: 4px; background: color-mix(in srgb, #FF5B5B 9%, var(--color-surface)); box-shadow: inset 3px 0 0 #E04848; color: #C53030; font-size: 13.5px; font-weight: 700; }
+:root[data-brand="ucas"] [role="dialog"] .mf-error svg { flex: none; color: #E04848; }
+:root[data-brand="ucas"] [role="dialog"] .tr-row { padding: 12px 14px; border-radius: 4px; background: var(--color-surface); box-shadow: inset 3px 0 0 color-mix(in srgb, var(--ucas-blue) 55%, transparent), 0 0 0 1px var(--color-border); transition: box-shadow .25s ease; }
+:root[data-brand="ucas"] [role="dialog"] .tr-row:hover { box-shadow: inset 3px 0 0 var(--ucas-blue), 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 30%, transparent); }
+:root[data-brand="ucas"] [role="dialog"] .tr-avatar { flex: none; width: 38px; height: 38px; border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 10%, var(--color-surface)); color: var(--ucas-blue); font-weight: 800; font-size: 15px; }
 :root[data-brand="ucas"] [role="dialog"] .mf-role.is-on :is(svg, small) { color: rgba(255, 255, 255, .9); }
 
 /* اختيار التخصص */

@@ -32,6 +32,7 @@
           <BaseSelect v-if="isSuperAdmin" v-model="regionFilter" class="min-w-[140px]" aria-label="مكان التواجد" placeholder="كل المناطق" include-placeholder-option :options="regionOptions" />
         </template>
         <BaseSelect v-if="memberKind === 'supervisor'" v-model="supSpecFilter" class="min-w-[150px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specializationOptions" />
+        <BaseSelect v-model="pageSize" class="min-w-[110px]" aria-label="عدد الصفوف" :options="pageSizeOptions" />
         <div class="mb-toolbar-end">
           <button type="button" class="mb-bulk-btn is-whats" :disabled="!whatsCount" :title="`إرسال رسالة واتساب إلى ${whatsCount} عضو`" @click="sendWhatsAll(activeList)">
             <MessageCircle :size="15" /> واتساب <b>{{ whatsCount }}</b>
@@ -43,7 +44,7 @@
       </div>
 
       <div class="mb-12">
-        <SlideTable :rows="activeFiltered" :label="{ student: 'الطلاب', supervisor: 'المشرفون', committee: 'الأعضاء' }[memberKind]">
+        <SlideTable :rows="activeFiltered" :size="pageSize" :label="{ student: 'الطلاب', supervisor: 'المشرفون', committee: 'الأعضاء' }[memberKind]">
           <template #default="{ rows: shown }">
             <DataTable fixed class="mb-table" :class="isSuperAdmin && 'mb-rows-link'" :columns="activeColumns" :rows="shown" row-key="id" :primary-keys="['name', 'actions']" :loading="activeLoading" empty-title="لا توجد نتائج مطابقة" @row-click="isSuperAdmin && openProfile($event)">
               <!-- المجموعة: رقم الشعبة + المشرف تحته -->
@@ -139,10 +140,10 @@
               <!-- كلمة السر: زر توليد، وبعد التوليد حقل مضغوط (إظهار/نسخ/توليد جديدة) -->
               <template #cell-pw="{ row }">
                 <div class="flex justify-center" @click.stop>
-                  <button v-if="!passwords[row.id]" type="button" class="inline-flex items-center gap-1.5 h-8 px-3 rounded-sm border border-border text-caption font-bold text-text-600 hover:border-primary-600 hover:text-primary-600 transition-colors duration-fast whitespace-nowrap" :disabled="generatingPwFor === row.id" @click="generatePw(row)">
-                    <RefreshCw :size="13" /> {{ generatingPwFor === row.id ? 'جارٍ التوليد…' : 'توليد كلمة سر' }}
+                  <button v-if="!passwords[row.id]" type="button" class="inline-flex items-center gap-2 h-9 px-4 rounded-sm border border-border text-body-sm font-bold text-text-600 hover:border-primary-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-fast whitespace-nowrap" :disabled="generatingPwFor === row.id" @click="generatePw(row)">
+                    <RefreshCw :size="15" /> {{ generatingPwFor === row.id ? 'جارٍ التوليد…' : 'توليد كلمة سر' }}
                   </button>
-                  <div v-else class="inline-flex items-center h-8 rounded-sm border border-border bg-bg overflow-hidden">
+                  <div v-else class="inline-flex items-center h-9 rounded-sm border border-border bg-bg overflow-hidden">
                     <span class="mono px-2.5 text-caption tracking-wider min-w-[84px]">{{ visiblePw.includes(row.id) ? passwords[row.id] : maskPw(passwords[row.id]) }}</span>
                     <button type="button" class="grid place-items-center w-8 h-full border-s border-border text-text-400 hover:text-primary-600 transition-colors duration-fast" :title="visiblePw.includes(row.id) ? 'إخفاء' : 'إظهار'" @click="togglePw(row.id)"><Eye :size="13" /></button>
                     <button type="button" class="grid place-items-center w-8 h-full border-s border-border text-text-400 hover:text-primary-600 transition-colors duration-fast" title="نسخ" @click="copyPw(row.id)"><Copy :size="13" /></button>
@@ -348,6 +349,7 @@
 
     <!-- إضافة عضو -->
     <BaseModal v-model="addModalOpen" title="إضافة عضو جديد" description="يُنشأ الحساب وتُرسل بيانات الدخول للعضو عبر واتساب والبريد">
+      <p v-if="addError" class="mf-error" role="alert"><AlertCircle :size="16" /> {{ addError }}</p>
       <div class="mf-form">
         <!-- 1. نوع العضو -->
         <div class="mf-sec">
@@ -462,7 +464,7 @@
     </BaseModal>
 
     <!-- الأعضاء المحذوفون -->
-    <BaseModal v-model="trashedModal" title="الأعضاء المحذوفون" description="استرجعي أي عضو حُذف بالخطأ" size="lg">
+    <BaseModal v-model="trashedModal" title="الأعضاء المحذوفون" size="lg">
       <div v-if="trashedTabs.length > 1" class="hm-tabs mb-4">
         <button
           v-for="tab in trashedTabs" :key="tab.value" type="button"
@@ -473,13 +475,16 @@
         </button>
       </div>
       <SkeletonLoader v-if="trashedUsersLoading" :rows="3" height="60px" />
-      <EmptyState v-else-if="!trashedUsers.length" title="لا يوجد أعضاء محذوفون" description="كل الحسابات المحذوفة ستظهر هنا وبإمكانك استرجاعها." />
+      <EmptyState v-else-if="!trashedUsers.length" title="لا يوجد أعضاء محذوفون" />
       <SlideTable v-else v-slot="{ rows: shown }" :rows="trashedUsers" label="المحذوفون">
         <div class="flex flex-col gap-2">
-          <div v-for="u in shown" :key="u.id" class="flex items-center justify-between gap-3 p-3 rounded-sm border border-border bg-bg">
-            <div class="min-w-0">
-              <div class="font-bold text-text-900 truncate">{{ u.name }}</div>
-              <div class="text-caption text-text-400 truncate">{{ u.deleted_reason || 'بدون سبب مسجّل' }}</div>
+          <div v-for="u in shown" :key="u.id" class="tr-row flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="tr-avatar grid place-items-center">{{ (u.name || '؟').trim().charAt(0) }}</span>
+              <div class="min-w-0">
+                <div class="font-bold text-text-900 truncate">{{ u.name }}</div>
+                <div class="text-caption text-text-400 truncate">{{ u.email || u.whats || 'بدون بيانات تواصل' }}</div>
+              </div>
             </div>
             <BaseButton variant="outline" size="sm" :icon="RotateCcw" :loading="restoringId === u.id" @click="confirmRestore(u)">استرجاع</BaseButton>
           </div>
@@ -497,7 +502,7 @@
 </template>
 
 <script>
-import { GraduationCap, Users, UserCog, ShieldCheck, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Check, Trash2, Archive, RotateCcw, RefreshCw, Eye, UserPlus, Send, Copy, SlidersHorizontal, Link2, ChevronDown, ChevronLeft } from 'lucide-vue-next'
+import { GraduationCap, Users, UserCog, ShieldCheck, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Check, Trash2, Archive, RotateCcw, RefreshCw, Eye, UserPlus, Send, Copy, SlidersHorizontal, Link2, ChevronDown, ChevronLeft, AlertCircle } from 'lucide-vue-next'
 import { mapState, mapActions } from 'pinia'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -554,7 +559,7 @@ const STATUS_VARIANTS = { pending: 'warning', sent: 'success', failed: 'error' }
 export default {
   name: 'CommitteeMembersPage',
 
-  components: { SpecializationPicker, Check, RotateCcw, Send, Copy, GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, SlidersHorizontal, Link2, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, SlideTable, SkeletonLoader, EmptyState, EmailComposeModal, ProfileModal, ChevronDown, ChevronLeft },
+  components: { SpecializationPicker, Check, RotateCcw, Send, Copy, GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, SlidersHorizontal, Link2, AlertCircle, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, SlideTable, SkeletonLoader, EmptyState, EmailComposeModal, ProfileModal, ChevronDown, ChevronLeft },
 
   props: {
     /** 'members' = إدارة الأعضاء (افتراضي) · 'credentials' = صفحة إرسال بيانات الدخول (الإدارة العامة) */
@@ -570,6 +575,9 @@ export default {
       assignedFilter: '',
       genderOptions: [{ value: 'male', label: 'طلاب' }, { value: 'female', label: 'طالبات' }],
       assignedOptions: [{ value: 'yes', label: 'ضمن مجموعة' }, { value: 'no', label: 'بدون مجموعة' }],
+      pageSize: 25,
+      pageSizeOptions: [{ value: 25, label: 'عرض 25' }, { value: 50, label: 'عرض 50' }, { value: 100, label: 'عرض 100' }],
+      addError: '',
       openSupId: null,
       openGroupId: null,
       profile: { open: false, kind: 'student', id: null, name: '' },
@@ -973,31 +981,35 @@ export default {
       // الدور الافتراضي = التبويب الحالي (الطلاب / المشرفون / لجنة الإشراف)
       const role = this.addRoleOptions.some((o) => o.value === this.memberKind) ? this.memberKind : 'student'
       this.addForm = { ...emptyAddForm(), role }
+      this.addError = ''
       this.addModalOpen = true
     },
     async submitAdd() {
+      this.addError = ''
       if (this.addForm.role === 'committee' && !this.addForm.specialization_id) {
-        this.$toast?.error('اختر التخصص الذي ينتمي له عضو اللجنة')
+        this.addError = 'اختر التخصص الذي ينتمي له عضو اللجنة'
         return
       }
       if (!this.addForm.name || !this.addForm.email) {
-        this.$toast?.error('يرجى تعبئة الاسم والبريد الإلكتروني على الأقل')
+        this.addError = 'يرجى تعبئة الاسم والبريد الإلكتروني على الأقل'
         return
       }
       this.adding = true
       try {
         const result = await this.createUser(this.addForm)
         const password = await this.setUserPassword(result.user.id)
-        this.addModalOpen = false
+        const created = { name: this.addForm.name, mail: this.addForm.email, whats: this.addForm.whatsapp, password, user_id: result.user.id }
+        const role = this.addForm.role
+        this.inviteTarget = created
         this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
-        this.inviteTarget = { name: this.addForm.name, mail: this.addForm.email, whats: this.addForm.whatsapp, password, user_id: result.user.id }
-        this.inviteModalOpen = true
         this.sendInviteWhats()
         this.sendInviteMail()
-        this.$toast?.success('تم إنشاء الحساب')
-        await this.reloadKind(this.addForm.role)
+        this.addModalOpen = false
+        this.addForm = emptyAddForm()
+        this.$toast?.success(`تم إنشاء حساب ${created.name} وإرسال بيانات الدخول`)
+        await this.reloadKind(role)
       } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء الحساب')
+        this.addError = err.normalized?.message || 'تعذّر إنشاء الحساب — راجع البيانات وحاول مجددًا'
       } finally {
         this.adding = false
       }
