@@ -27,7 +27,7 @@
     <p v-if="error" class="mt-1.5 text-label text-error">{{ error }}</p>
 
     <teleport to="body">
-      <div v-if="isOpen" class="fixed inset-0 z-popover bg-text-900/20" aria-hidden="true" @click="closeDropdown" />
+      <div v-if="isOpen" class="fixed inset-0 bg-text-900/20" :style="{ zIndex: panelZ }" aria-hidden="true" @click="closeDropdown" />
       <transition
         enter-active-class="transition duration-fast ease-standard"
         enter-from-class="opacity-0 -translate-y-1 scale-[0.98]"
@@ -38,8 +38,8 @@
           v-if="isOpen"
           ref="list"
           role="listbox"
-          class="fixed z-popover max-h-72 overflow-y-auto scrollbar-thin rounded-md border border-border bg-surface shadow-dropdown p-1.5"
-          :style="listStyle"
+          class="fixed max-h-72 overflow-y-auto scrollbar-thin rounded-md border border-border bg-surface shadow-dropdown p-1.5"
+          :style="[listStyle, { zIndex: panelZ }]"
         >
           <li v-for="option in fullOptions" :key="option.value">
             <button
@@ -88,6 +88,7 @@ const isOpen = ref(false)
 const root = ref(null)
 const list = ref(null)
 const listStyle = ref({})
+const panelZ = ref(39)
 
 const normalizedOptions = computed(() => {
   return props.options.map((option) =>
@@ -140,7 +141,7 @@ const handleOutsideClick = (event) => {
 }
 
 const openDropdown = () => {
-  // الحقل قرب أسفل الشاشة: يُرفع لمنتصف الشاشة أولًا حتى تنسدل القائمة للأسفل بمساحة كافية
+  panelZ.value = root.value?.closest('[role="dialog"]') ? 120 : 39
   const button = root.value?.querySelector('button')
   if (button && window.innerHeight - button.getBoundingClientRect().bottom < 200) button.scrollIntoView({ block: 'center' })
   isOpen.value = true
