@@ -49,12 +49,9 @@
             <DataTable fixed class="mb-table" :class="isSuperAdmin && 'mb-rows-link'" :columns="activeColumns" :rows="shown" row-key="id" :primary-keys="['name', 'actions']" :loading="activeLoading" empty-title="لا توجد نتائج مطابقة" :row-extra-when="(row) => openSupId === row.id" @row-click="isSuperAdmin && openProfile($event)">
               <!-- المجموعة: رقم الشعبة + المشرف تحته -->
               <template #cell-grp="{ row }">
-                <template v-if="row.grp">
-                  <component :is="isSuperAdmin ? 'span' : 'router-link'" :to="isSuperAdmin ? undefined : { name: 'committee-teams' }" class="inline-flex items-center gap-1.5 font-bold text-text-900">
-                    {{ row.section ? 'شعبة ' + row.section : row.teamName }} <ExternalLink v-if="!isSuperAdmin" :size="11" class="opacity-65" />
-                  </component>
-                  <div class="text-caption text-text-400 mt-0.5">{{ row.sup || 'بلا مشرف' }}</div>
-                </template>
+                <component v-if="row.grp" :is="isSuperAdmin ? 'span' : 'router-link'" :to="isSuperAdmin ? undefined : { name: 'committee-teams' }" class="inline-flex items-center gap-1.5 font-bold text-text-900">
+                  {{ row.section ? 'شعبة ' + row.section : row.teamName }} <ExternalLink v-if="!isSuperAdmin" :size="11" class="opacity-65" />
+                </component>
                 <span v-else class="text-caption text-text-400">غير منضم لمجموعة</span>
               </template>
               <template #cell-spec="{ row }">
@@ -62,10 +59,6 @@
                   <span v-for="sid in (row.specs && row.specs.length ? row.specs : [row.spec])" :key="sid" class="rv-pill">{{ specializationName(sid) }}</span>
                 </div>
                 <span v-else class="text-caption text-text-400">كل التخصصات</span>
-              </template>
-              <template #cell-who="{ row }">
-                <div>{{ GENDERS[row.gender] || '—' }}</div>
-                <div class="text-caption text-text-400 mt-0.5">{{ REGIONS[row.region] || 'غير محدد' }}</div>
               </template>
               <!-- التواصل: الواتس والبريد معًا -->
               <template #cell-contact="{ row }">
@@ -85,6 +78,10 @@
                   <span v-if="row.restricted" class="ms-1.5 text-label font-bold text-error bg-error-bg px-2 py-0.5 rounded-sm">موقوف</span>
                 </div>
                 <div class="mt-0.5"><span class="mono text-caption text-text-400">{{ (memberKind === 'student' ? row.uid : row.empId) || '—' }}</span></div>
+                <div v-if="memberKind === 'student'" class="mt-1 flex flex-wrap items-center gap-1">
+                  <span :class="['mb-tag', row.gender === 'female' ? 'is-f' : 'is-m']">{{ GENDERS[row.gender] || 'غير محدد' }}</span>
+                  <span class="mb-tag is-region">{{ REGIONS[row.region] || 'غير محدد' }}</span>
+                </div>
                 <div v-if="row.restricted && row.restrictedReason" class="text-label text-error mt-0.5">السبب: {{ row.restrictedReason }}</div>
               </template>
               <!-- المشرف ← مجموعاته (دليل الأعضاء — الإدارة العامة) -->
@@ -823,23 +820,23 @@ export default {
     /** القسم الموحّد (طلاب/مشرفون) — يبدّل حسب memberKind */
     /** ترتيب الأعمدة: الهوية ← الانتماء ← النشاط ← التواصل ← الحساب ← الإجراءات */
     activeColumns() {
-      const actions = { key: 'actions', label: 'إجراءات', className: (this.isSuperAdmin ? 'w-[268px]' : 'w-[196px]') + ' !text-center' }
-      const tail = [{ key: 'contact', label: 'التواصل', className: 'min-w-[220px]' }, { key: 'pw', label: 'كلمة السر', className: 'w-[190px] !text-center' }, actions]
+      // الجداول الثلاثة بعرض موحّد: نفس عمود التواصل/كلمة السر/الإجراءات، وعمودان قياديّان بنفس العرض الإجمالي
+      const actions = { key: 'actions', label: 'إجراءات', className: (this.isSuperAdmin ? 'w-[240px]' : 'w-[190px]') + ' !text-center' }
+      const tail = [{ key: 'contact', label: 'التواصل', className: 'w-[240px]' }, { key: 'pw', label: 'كلمة السر', className: 'w-[180px] !text-center' }, actions]
       if (this.memberKind === 'student') {
         return [
-          { key: 'name', label: 'الطالب / الرقم الجامعي', className: 'w-[190px]' },
-          { key: 'grp', label: 'المجموعة / المشرف', className: 'w-[150px]' },
-          { key: 'who', label: 'الفئة / مكان التواجد', className: 'w-[120px]' },
+          { key: 'name', label: 'الطالب / الرقم الجامعي', className: 'w-[260px]' },
+          { key: 'grp', label: 'المجموعة', className: 'w-[200px]' },
           ...tail
         ]
       }
-      const name = { key: 'name', label: this.memberKind === 'committee' ? 'العضو / الرقم الوظيفي' : 'المشرف / الرقم الوظيفي', className: 'w-[230px]' }
+      const name = { key: 'name', label: this.memberKind === 'committee' ? 'العضو / الرقم الوظيفي' : 'المشرف / الرقم الوظيفي', className: 'w-[260px]' }
       if (this.memberKind === 'committee') return [name, { key: 'spec', label: 'التخصص', className: 'w-[200px]' }, ...tail]
       if (!this.isSuperAdmin) return [name, ...tail]
       return [
         name,
-        { key: 'groups', label: 'المجموعات', className: 'w-[130px]' },
-        { key: 'lastActive', label: 'آخر نشاط', className: 'w-[150px]' },
+        { key: 'groups', label: 'المجموعات', className: 'w-[90px]' },
+        { key: 'lastActive', label: 'آخر نشاط', className: 'w-[110px]' },
         ...tail
       ]
     },
@@ -1471,6 +1468,10 @@ export default {
 .mb-name { color: var(--portal-cyan, var(--color-primary-600)); text-align: start; }
 .mb-name:hover { text-decoration: underline; }
 .mb-head-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.mb-tag { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; line-height: 1.7; }
+.mb-tag.is-m { background: color-mix(in srgb, var(--ucas-blue) 10%, transparent); color: var(--ucas-blue); }
+.mb-tag.is-f { background: color-mix(in srgb, #D6336C 12%, transparent); color: #C2255C; }
+.mb-tag.is-region { background: var(--color-bg); color: var(--color-text-600); box-shadow: inset 0 0 0 1px var(--color-border); }
 .mb-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .mb-toolbar-search { flex: 1 1 240px; min-width: 200px; }
 .mb-toolbar-end { display: flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
