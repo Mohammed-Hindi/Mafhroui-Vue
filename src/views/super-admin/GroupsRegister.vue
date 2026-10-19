@@ -278,6 +278,11 @@ export default {
       return activeSemesterName()
     },
 
+    /** المجموعات الخام (قبل أي فلترة) — المصدر لكل قوائم الفلاتر المتداخلة */
+    baseGroups() {
+      return this.list
+    },
+
     groups() {
       return this.list.map((g) => {
         const shown = g.members.filter((m) => (!this.f.gender || m.gender === this.f.gender) && (!this.f.region || m.region === this.f.region))
@@ -291,32 +296,52 @@ export default {
       })
     },
 
+    /** المجموعات المطابقة لفلاتر معيّنة مع تجاهل فلتر محدد — لبناء قوائم الخيارات المتداخلة */
+    groupsMatching() {
+      const f = this.f
+      const q = this.q
+      const match = (g, skip) => {
+        if (q && !`${g.section} ${g.project} ${g.supName} ${g.members.map((m) => m.name).join(' ')}`.includes(q)) return false
+        if (skip !== 'degree' && f.degree && g.degree !== f.degree) return false
+        if (skip !== 'spec' && f.spec && g.spec !== f.spec) return false
+        if (skip !== 'sup' && f.sup && g.supId !== f.sup) return false
+        if (skip !== 'size' && f.size && g.members.length !== Number(f.size)) return false
+        if (skip !== 'gender' && f.gender && !g.members.some((m) => m.gender === f.gender)) return false
+        if (skip !== 'region' && f.region && !g.members.some((m) => m.region === f.region)) return false
+        return true
+      }
+      return (skip) => this.baseGroups.filter((g) => match(g, skip))
+    },
+
     specOptions() {
-      return [...new Set(this.groups.map((g) => g.spec))]
+      return [...new Set(this.groupsMatching('spec').map((g) => g.spec))]
     },
 
     specSelectOptions() {
       return this.specOptions.map((s) => ({ value: s, label: s }))
     },
     supSelectOptions() {
-      return this.supList.map((s) => ({ value: s.id, label: s.name }))
+      const ids = new Set(this.groupsMatching('sup').map((g) => g.supId))
+      return this.supList.filter((s) => ids.has(s.id)).map((s) => ({ value: s.id, label: s.name }))
     },
     sizeSelectOptions() {
-      return [1, 2, 3, 4].map((n) => ({ value: n, label: `${n} ${n === 1 ? 'طالب' : 'طلاب'}` }))
+      const sizes = new Set(this.groupsMatching('size').map((g) => g.members.length))
+      return [1, 2, 3, 4].filter((n) => sizes.has(n)).map((n) => ({ value: n, label: `${n} ${n === 1 ? 'طالب' : 'طلاب'}` }))
     },
 
-    /** التصنيف مع أعداد الطلاب في كل فئة */
     degreeSelectOptions() {
-      return Object.entries(DEGREES).map(([value, label]) => ({ value, label }))
+      const degrees = new Set(this.groupsMatching('degree').map((g) => g.degree))
+      return Object.entries(DEGREES).filter(([value]) => degrees.has(value)).map(([value, label]) => ({ value, label }))
     },
     genderSelectOptions() {
       return [
         { value: 'male', label: 'طلاب' },
         { value: 'female', label: 'طالبات' }
-      ]
+      ].filter((o) => this.groupsMatching('gender').some((g) => g.members.some((m) => m.gender === o.value)))
     },
     regionSelectOptions() {
-      return Object.entries(REGIONS).map(([value, label]) => ({ value, label }))
+      const regions = new Set(this.groupsMatching('region').flatMap((g) => g.members.map((m) => m.region)))
+      return Object.entries(REGIONS).filter(([value]) => regions.has(value)).map(([value, label]) => ({ value, label }))
     },
 
     /** وصف الفلترة الحالية لتقرير المشرفين (مثل: بكالوريوس · طالبات · غزة) */
