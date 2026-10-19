@@ -4,8 +4,8 @@
     <div v-if="!isSuperAdmin" class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex flex-wrap gap-3">
         <BaseButton :icon="UserPlus" @click="openAddStudent">إضافة طالب</BaseButton>
-        <BaseButton variant="secondary" :icon="UserPlus" @click="openAddSupervisor">إضافة مشرف</BaseButton>
-        <BaseButton variant="outline" :icon="Upload" @click="openImport">استيراد من Excel</BaseButton>
+        <BaseButton variant="outline" :icon="UserPlus" @click="openAddSupervisor">إضافة مشرف</BaseButton>
+        <BaseButton variant="soft" :icon="Upload" @click="openImport">استيراد من Excel</BaseButton>
       </div>
       <div class="flex flex-wrap gap-2">
         <BaseButton variant="outline" :icon="Archive" @click="openTrashed">المجموعات المحذوفة</BaseButton>
@@ -38,7 +38,7 @@
       <template v-if="userRole === 'super_admin'" #actions>
         <BaseButton :icon="UserPlus" @click="openAddStudent">إضافة طالب</BaseButton>
         <BaseButton variant="outline" :icon="UserPlus" @click="openAddSupervisor">إضافة مشرف</BaseButton>
-        <BaseButton variant="outline" :icon="Upload" @click="openImport">استيراد من Excel</BaseButton>
+        <BaseButton variant="soft" :icon="Upload" @click="openImport">استيراد من Excel</BaseButton>
         <BaseButton variant="outline" :icon="Archive" @click="openTrashed">المجموعات المحذوفة</BaseButton>
       </template>
     </GroupsRegister>
@@ -100,11 +100,13 @@
         <BaseInput v-model="addStudentForm.university_number" label="الرقم الجامعي" placeholder="اختياري" />
         <BaseSelect v-model="addStudentForm.specialization_id" label="التخصص" placeholder="اختاري التخصص" :options="specializationSelectOptions" />
         <BaseInput v-model="addStudentForm.email" type="email" label="البريد الإلكتروني" placeholder="name@mashroui.local" />
-        <BaseInput v-model="addStudentForm.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" class="sm:col-span-2" />
+        <BaseInput v-model="addStudentForm.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" />
+        <BaseSelect v-model="addStudentForm.gender" label="الجنس" placeholder="اختر الجنس" :options="genderSelectOptions" required />
+        <BaseSelect v-model="addStudentForm.region" label="مكان التواجد" placeholder="اختر مكان التواجد" :options="regionSelectOptions" required />
 
         <div class="sm:col-span-2 pt-2 mt-1 border-t border-dashed border-border">
           <label class="flex items-center gap-2 text-body-sm font-bold text-text-900 cursor-pointer">
-            <input v-model="addStudentForm.createTeam" type="checkbox">
+            <input v-model="addStudentForm.createTeam" type="checkbox" class="mf-chk">
             إنشاء فريق جديد لهذا الطالب
           </label>
         </div>
@@ -125,6 +127,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <BaseInput v-model="addSupervisorForm.name" label="اسم المشرف" placeholder="مثال: د. نورة العتيبي" class="sm:col-span-2" />
         <BaseInput v-model="addSupervisorForm.employee_number" label="الرقم الوظيفي" placeholder="اختياري" />
+        <BaseSelect v-model="addSupervisorForm.specialization_id" label="التخصص" placeholder="اختاري التخصص" :options="specializationSelectOptions" />
         <BaseInput v-model="addSupervisorForm.email" type="email" label="البريد الإلكتروني" placeholder="name@mashroui.local" class="sm:col-span-2" />
         <BaseInput v-model="addSupervisorForm.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" class="sm:col-span-2" />
       </div>
@@ -275,6 +278,7 @@ import TeamMembersPanel from '@/components/shared/TeamMembersPanel.vue'
 import ProjectTypes from '@/components/shared/ProjectTypes.vue'
 import GroupsRegister from '@/views/super-admin/GroupsRegister.vue'
 import { useAuthStore } from '@/stores/auth.store'
+import { GENDERS, REGIONS } from '@/utils/progressData'
 
 const GROUPS_PAGE_SIZE = 5
 
@@ -282,8 +286,8 @@ function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
 }
 
-const emptyStudentForm = () => ({ name: '', university_number: '', email: '', whatsapp: '', createTeam: false, team_name: '', section: '', specialization_id: '', supervisor_id: '' })
-const emptySupervisorForm = () => ({ name: '', employee_number: '', email: '', whatsapp: '' })
+const emptyStudentForm = () => ({ name: '', university_number: '', email: '', whatsapp: '', gender: '', region: '', createTeam: false, team_name: '', section: '', specialization_id: '', supervisor_id: '' })
+const emptySupervisorForm = () => ({ name: '', employee_number: '', email: '', whatsapp: '', specialization_id: '' })
 
 export default {
   name: 'CommitteeTeamsPage',
@@ -401,6 +405,12 @@ export default {
     specializationSelectOptions() {
       return this.specializations.map((s) => ({ value: s.id, label: s.name }))
     },
+    genderSelectOptions() {
+      return Object.entries(GENDERS).map(([value, label]) => ({ value, label }))
+    },
+    regionSelectOptions() {
+      return Object.entries(REGIONS).map(([value, label]) => ({ value, label }))
+    },
 
     totalMembers() {
       return this.groups.reduce((sum, g) => sum + g.members.length, 0)
@@ -462,6 +472,10 @@ export default {
         this.$toast?.error('يرجى تعبئة الاسم والبريد الإلكتروني على الأقل')
         return
       }
+      if (!f.gender || !f.region) {
+        this.$toast?.error('يرجى اختيار الجنس ومكان التواجد')
+        return
+      }
       if (f.createTeam && (!f.team_name || !f.specialization_id || !f.supervisor_id)) {
         this.$toast?.error('يرجى تعبئة اسم الفريق والتخصص والمشرف لإنشاء الفريق')
         return
@@ -470,7 +484,7 @@ export default {
       try {
         const result = await this.createUser({
           name: f.name, email: f.email, whatsapp: f.whatsapp, university_number: f.university_number,
-          role: 'student', specialization_id: f.specialization_id || null
+          role: 'student', specialization_id: f.specialization_id || null, gender: f.gender, region: f.region
         })
         const password = await this.setUserPassword(result.user.id)
         if (f.createTeam) {
@@ -504,7 +518,7 @@ export default {
       }
       this.submitting = true
       try {
-        const result = await this.createUser({ ...this.addSupervisorForm, role: 'supervisor' })
+        const result = await this.createUser({ ...this.addSupervisorForm, specialization_id: this.addSupervisorForm.specialization_id || null, role: 'supervisor' })
         const password = await this.setUserPassword(result.user.id)
         this.addSupervisorModal = false
         this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
@@ -809,4 +823,28 @@ export default {
 
 <style scoped>
 .mono { direction: ltr; text-align: start; display: inline-block; }
+
+/* checkbox بنفس ستايل بوابة UCAS: مربع صغير ممتلئ أزرق */
+.mf-chk {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.mf-chk:hover { border-color: var(--ucas-blue); }
+.mf-chk:checked { background: var(--ucas-blue); border-color: var(--ucas-blue); }
+.mf-chk:checked::after {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 8px;
+  margin: 0 auto;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translateY(-1px);
+}
 </style>

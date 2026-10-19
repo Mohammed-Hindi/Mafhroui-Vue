@@ -8,7 +8,15 @@
         <span class="dash-chip">{{ semesterName }}</span>
         <span class="dash-chip">{{ rows.length }} مجموعة</span>
       </div>
-      <div class="gr-card-actions"><slot name="actions" /></div>
+      <div class="gr-card-actions">
+        <slot name="actions" />
+        <BaseButton v-if="!isSupervisor" variant="outline" :icon="FileSpreadsheet" :disabled="!rows.length || !!exporting" @click="exportExcel">
+          {{ exporting === 'excel' ? 'جارٍ التجهيز…' : 'تصدير Excel' }}
+        </BaseButton>
+        <BaseButton variant="outline" :icon="Printer" :disabled="!rows.length || !!exporting" @click="exportSupReport">
+          {{ exporting === 'sups' ? 'جارٍ التجهيز…' : isSupervisor ? 'طباعة تقرير المجموعات' : 'طباعة تقرير المشرفين' }}
+        </BaseButton>
+      </div>
     </header>
 
     <div class="gr-filters" aria-label="تصفية المجموعات">
@@ -187,16 +195,6 @@
       </template>
     </SlideTable>
 
-
-    <!-- أزرار الملفات أسفل البطاقة: الطباعة خضراء والتصدير سماوي (نمط "طباعة الجدول" / "للإطلاع على الخطة") -->
-    <footer class="gr-card-foot">
-      <BaseButton variant="outline" :icon="Printer" :disabled="!rows.length || !!exporting" @click="exportSupReport">
-        {{ exporting === 'sups' ? 'جارٍ التجهيز…' : isSupervisor ? 'طباعة تقرير المجموعات' : 'طباعة تقرير المشرفين' }}
-      </BaseButton>
-      <BaseButton v-if="!isSupervisor" variant="outline" :icon="FileSpreadsheet" :disabled="!rows.length || !!exporting" @click="exportExcel">
-        {{ exporting === 'excel' ? 'جارٍ التجهيز…' : 'تصدير Excel' }}
-      </BaseButton>
-    </footer>
 
     <ProfileModal v-model="profile.open" :kind="profile.kind" :person-id="profile.id" :name="profile.name" />
 
