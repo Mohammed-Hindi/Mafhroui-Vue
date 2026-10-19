@@ -8,8 +8,8 @@
     >
       <UploadCloud :size="28" :stroke-width="1.5" />
       <b>اسحب الملفات وأفلتها هنا أو <u>تصفّح</u></b>
-      <span>PDF، Word، PowerPoint، Excel، صور، ZIP أو RAR — حتى {{ maxMb }}MB للملف<template v-if="multiple"> · بحد أقصى {{ max }} ملفات</template></span>
-      <input type="file" :accept="accept" :multiple="multiple" hidden @change="onPick">
+      <span>{{ hintText }}</span>
+      <input type="file" :accept="acceptAttr" :multiple="multiple" hidden @change="onPick">
     </label>
 
     <ul v-if="modelValue.length" class="fz-list">
@@ -41,13 +41,34 @@ export default {
     modelValue: { type: Array, default: () => [] },
     multiple: { type: Boolean, default: false },
     max: { type: Number, default: 5 },
-    maxMb: { type: Number, default: 10 }
+    maxMb: { type: Number, default: 10 },
+    label: { type: String, default: '' },
+    accept: { type: String, default: '' },
+    hint: { type: String, default: '' }
   },
 
   emits: ['update:modelValue'],
 
   data() {
-    return { over: false, errors: [], accept: EXTS.map((e) => `.${e}`).join(',') }
+    return { over: false, errors: [] }
+  },
+
+  computed: {
+    acceptAttr() {
+      return this.accept || EXTS.map((e) => `.${e}`).join(',')
+    },
+    hintText() {
+      if (this.hint) return this.hint
+      const list = this.accept
+        ? this.accept.split(',').map((e) => e.trim().replace(/^\./, '').toUpperCase()).join('، ')
+        : 'PDF، Word، PowerPoint، Excel، صور، ZIP أو RAR'
+      return `${list} — حتى ${this.maxMb}MB للملف${this.multiple ? ` · بحد أقصى ${this.max} ملفات` : ''}`
+    },
+    acceptExts() {
+      if (!this.accept) return EXTS
+      const list = this.accept.split(',').map((e) => e.trim().replace(/^\./, '').toLowerCase()).filter(Boolean)
+      return list.length ? list : EXTS
+    }
   },
 
   methods: {
@@ -70,7 +91,7 @@ export default {
     add(files) {
       this.errors = []
       const ok = files.filter((f) => {
-        if (!EXTS.includes(this.ext(f.name))) return this.errors.push(`«${f.name}»: نوع غير مدعوم`) && false
+        if (!this.acceptExts.includes(this.ext(f.name))) return this.errors.push(`«${f.name}»: نوع غير مدعوم`) && false
         if (f.size > this.maxMb * 1024 * 1024) return this.errors.push(`«${f.name}»: أكبر من ${this.maxMb}MB`) && false
         return !this.modelValue.some((x) => x.name === f.name && x.size === f.size)
       })

@@ -5,7 +5,7 @@
       <div class="flex flex-wrap gap-3">
         <BaseButton :icon="UserPlus" @click="openAddStudent">إضافة طالب</BaseButton>
         <BaseButton variant="outline" :icon="UserPlus" @click="openAddSupervisor">إضافة مشرف</BaseButton>
-        <BaseButton variant="soft" :icon="Upload" @click="openImport">استيراد من Excel</BaseButton>
+        <BaseButton variant="outline" :icon="Upload" class="mf-import" @click="openImport">استيراد من Excel</BaseButton>
       </div>
       <div class="flex flex-wrap gap-2">
         <BaseButton variant="outline" :icon="Archive" @click="openTrashed">المجموعات المحذوفة</BaseButton>
@@ -33,13 +33,12 @@
     </div>
 
     <!-- سجل المجموعات للإدارة العامة ولجنة الإشراف (البوابة) -->
-    <GroupsRegister v-if="isSuperAdmin">
+    <GroupsRegister v-if="isSuperAdmin" @open-trashed="openTrashed">
       <!-- أدوات الإدارة للإدارة العامة فقط؛ لجنة الإشراف ترى المجموعات (مجموعات تخصصها من الخادم) -->
       <template v-if="userRole === 'super_admin'" #actions>
         <BaseButton :icon="UserPlus" @click="openAddStudent">إضافة طالب</BaseButton>
         <BaseButton variant="outline" :icon="UserPlus" @click="openAddSupervisor">إضافة مشرف</BaseButton>
-        <BaseButton variant="soft" :icon="Upload" @click="openImport">استيراد من Excel</BaseButton>
-        <BaseButton variant="outline" :icon="Archive" @click="openTrashed">المجموعات المحذوفة</BaseButton>
+        <BaseButton variant="outline" :icon="Upload" class="mf-import" @click="openImport">استيراد من Excel</BaseButton>
       </template>
     </GroupsRegister>
 
@@ -95,6 +94,7 @@
 
     <!-- إضافة طالب -->
     <BaseModal v-model="addStudentModal" title="إضافة طالب" description="إنشاء حساب الطالب، وإنشاء فريق جديد له (اختياري)" size="lg">
+      <p v-if="addStudentError" class="mf-error" role="alert"><AlertCircle :size="16" /> {{ addStudentError }}</p>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <BaseInput v-model="addStudentForm.name" label="اسم الطالب" placeholder="مثال: سيف قطناني" class="sm:col-span-2" />
         <BaseInput v-model="addStudentForm.university_number" label="الرقم الجامعي" placeholder="اختياري" />
@@ -118,12 +118,13 @@
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="addStudentModal = false">إلغاء</BaseButton>
-        <BaseButton :icon="Send" :loading="submitting" @click="submitAddStudent">إضافة وإرسال البيانات (واتس + بريد)</BaseButton>
+        <BaseButton :icon="Send" :loading="submitting" @click="submitAddStudent">إضافة</BaseButton>
       </template>
     </BaseModal>
 
     <!-- إضافة مشرف -->
     <BaseModal v-model="addSupervisorModal" title="إضافة مشرف" description="إنشاء حساب مشرف جديد مباشرة">
+      <p v-if="addSupervisorError" class="mf-error" role="alert"><AlertCircle :size="16" /> {{ addSupervisorError }}</p>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <BaseInput v-model="addSupervisorForm.name" label="اسم المشرف" placeholder="مثال: د. نورة العتيبي" class="sm:col-span-2" />
         <BaseInput v-model="addSupervisorForm.employee_number" label="الرقم الوظيفي" placeholder="اختياري" />
@@ -133,7 +134,7 @@
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="addSupervisorModal = false">إلغاء</BaseButton>
-        <BaseButton :icon="Send" :loading="submitting" @click="submitAddSupervisor">إضافة وإرسال البيانات (واتس + بريد)</BaseButton>
+        <BaseButton :icon="Send" :loading="submitting" @click="submitAddSupervisor">إضافة</BaseButton>
       </template>
     </BaseModal>
 
@@ -258,7 +259,7 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Plus, Upload, Download, FileDown, Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, Check, Archive, RotateCcw, UserPlus, Send, Copy } from 'lucide-vue-next'
+import { Plus, Upload, Download, FileDown, Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, Check, Archive, RotateCcw, UserPlus, Send, Copy, AlertCircle } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -316,9 +317,11 @@ export default {
 
       addStudentModal: false,
       addStudentForm: emptyStudentForm(),
+      addStudentError: '',
 
       addSupervisorModal: false,
       addSupervisorForm: emptySupervisorForm(),
+      addSupervisorError: '',
 
       inviteModal: false,
       inviteLink: '',
@@ -464,20 +467,22 @@ export default {
 
     openAddStudent() {
       this.addStudentForm = emptyStudentForm()
+      this.addStudentError = ''
       this.addStudentModal = true
     },
     async submitAddStudent() {
+      this.addStudentError = ''
       const f = this.addStudentForm
       if (!f.name || !f.email) {
-        this.$toast?.error('يرجى تعبئة الاسم والبريد الإلكتروني على الأقل')
+        this.addStudentError = 'يرجى تعبئة الاسم والبريد الإلكتروني على الأقل'
         return
       }
       if (!f.gender || !f.region) {
-        this.$toast?.error('يرجى اختيار الجنس ومكان التواجد')
+        this.addStudentError = 'يرجى اختيار الجنس ومكان التواجد'
         return
       }
       if (f.createTeam && (!f.team_name || !f.specialization_id || !f.supervisor_id)) {
-        this.$toast?.error('يرجى تعبئة اسم الفريق والتخصص والمشرف لإنشاء الفريق')
+        this.addStudentError = 'يرجى تعبئة اسم الفريق والتخصص والمشرف لإنشاء الفريق'
         return
       }
       this.submitting = true
@@ -493,15 +498,15 @@ export default {
             member_ids: [result.user.id], leader_id: result.user.id
           })
         }
-        this.addStudentModal = false
         this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
         this.inviteTarget = { name: f.name, mail: f.email, whats: f.whatsapp, password, user_id: result.user.id }
-        this.inviteModal = true
+        this.addStudentModal = false
+        this.addStudentForm = emptyStudentForm()
         this.sendInviteWhats()
         this.sendInviteMail()
-        this.$toast?.success('تم إنشاء حساب الطالب')
+        this.$toast?.success('تم إنشاء حساب الطالب وإرسال بيانات الدخول')
       } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء حساب الطالب')
+        this.addStudentError = err.normalized?.message || 'تعذّر إنشاء حساب الطالب — راجع البيانات وحاول مجددًا'
       } finally {
         this.submitting = false
       }
@@ -509,26 +514,28 @@ export default {
 
     openAddSupervisor() {
       this.addSupervisorForm = emptySupervisorForm()
+      this.addSupervisorError = ''
       this.addSupervisorModal = true
     },
     async submitAddSupervisor() {
+      this.addSupervisorError = ''
       if (!this.addSupervisorForm.name || !this.addSupervisorForm.email) {
-        this.$toast?.error('يرجى تعبئة الاسم والبريد الإلكتروني على الأقل')
+        this.addSupervisorError = 'يرجى تعبئة الاسم والبريد الإلكتروني على الأقل'
         return
       }
       this.submitting = true
       try {
         const result = await this.createUser({ ...this.addSupervisorForm, specialization_id: this.addSupervisorForm.specialization_id || null, role: 'supervisor' })
         const password = await this.setUserPassword(result.user.id)
-        this.addSupervisorModal = false
         this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
         this.inviteTarget = { name: this.addSupervisorForm.name, mail: this.addSupervisorForm.email, whats: this.addSupervisorForm.whatsapp, password, user_id: result.user.id }
-        this.inviteModal = true
+        this.addSupervisorModal = false
+        this.addSupervisorForm = emptySupervisorForm()
         this.sendInviteWhats()
         this.sendInviteMail()
-        this.$toast?.success('تم إنشاء حساب المشرف')
+        this.$toast?.success('تم إنشاء حساب المشرف وإرسال بيانات الدخول')
       } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء حساب المشرف')
+        this.addSupervisorError = err.normalized?.message || 'تعذّر إنشاء حساب المشرف — راجع البيانات وحاول مجددًا'
       } finally {
         this.submitting = false
       }
@@ -824,9 +831,14 @@ export default {
 <style scoped>
 .mono { direction: ltr; text-align: start; display: inline-block; }
 
+/* أيقونة زر استيراد Excel بلون البوابة */
+.mf-import svg { color: var(--ucas-blue); }
+
 /* checkbox بنفس ستايل بوابة UCAS: مربع صغير ممتلئ أزرق */
 .mf-chk {
   appearance: none;
+  position: relative;
+  flex-shrink: 0;
   width: 16px;
   height: 16px;
   border: 1px solid var(--color-border);
@@ -839,12 +851,14 @@ export default {
 .mf-chk:checked { background: var(--ucas-blue); border-color: var(--ucas-blue); }
 .mf-chk:checked::after {
   content: '';
-  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: 4px;
   height: 8px;
-  margin: 0 auto;
+  margin: -6px 0 0 -2px;
   border: solid #fff;
   border-width: 0 2px 2px 0;
-  transform: rotate(45deg) translateY(-1px);
+  transform: rotate(45deg);
 }
 </style>

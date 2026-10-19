@@ -10,14 +10,19 @@
       </div>
       <div class="gr-card-actions">
         <slot name="actions" />
+        <span class="gr-actions-sep" aria-hidden="true" />
         <BaseButton v-if="!isSupervisor" variant="outline" :icon="FileSpreadsheet" :disabled="!rows.length || !!exporting" @click="exportExcel">
           {{ exporting === 'excel' ? 'جارٍ التجهيز…' : 'تصدير Excel' }}
         </BaseButton>
         <BaseButton variant="outline" :icon="Printer" :disabled="!rows.length || !!exporting" @click="exportSupReport">
           {{ exporting === 'sups' ? 'جارٍ التجهيز…' : isSupervisor ? 'طباعة تقرير المجموعات' : 'طباعة تقرير المشرفين' }}
         </BaseButton>
+        <span v-if="!isSupervisor" class="gr-actions-sep" aria-hidden="true" />
+        <BaseButton v-if="!isSupervisor" variant="outline" :icon="Archive" @click="$emit('open-trashed')">المجموعات المحذوفة</BaseButton>
       </div>
     </header>
+
+    <hr class="gr-divider" aria-hidden="true">
 
     <div class="gr-filters" aria-label="تصفية المجموعات">
       <label class="gr-search">
@@ -207,7 +212,7 @@ import SlideTable from '@/components/ui/SlideTable.vue'
 import ProjectTypes from '@/components/shared/ProjectTypes.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
-import { Search, ChevronLeft, FileSpreadsheet, Printer, ListTodo, Megaphone, Paperclip } from 'lucide-vue-next'
+import { Search, ChevronLeft, FileSpreadsheet, Printer, Archive, ListTodo, Megaphone, Paperclip } from 'lucide-vue-next'
 import ProfileModal from '@/components/shared/ProfileModal.vue'
 import { DEGREES, GENDERS, REGIONS, PROJECT_STATUS as STATUS, level } from '@/utils/progressData'
 import { exportSupervisorsPdf } from '@/utils/ucasReports'
@@ -236,7 +241,9 @@ const EMPTY_FILTERS = { degree: '', gender: '', region: '', spec: '', sup: '', s
 export default {
   name: 'GroupsRegister',
 
-  components: { SlideTable, ProjectTypes, BaseSelect, BaseButton, Search, ChevronLeft, FileSpreadsheet, Printer, ProfileModal },
+  emits: ['open-trashed'],
+
+  components: { SlideTable, ProjectTypes, BaseSelect, BaseButton, Search, ChevronLeft, FileSpreadsheet, Printer, Archive, ProfileModal },
 
   data() {
     return {
