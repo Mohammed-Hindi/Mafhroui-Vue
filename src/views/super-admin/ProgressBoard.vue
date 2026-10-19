@@ -47,7 +47,7 @@
             <option value="100">عرض 100</option>
           </select>
         </label>
-        <BaseButton class="pb-export" variant="outline" size="sm" :icon="FileDown" :loading="exporting" :disabled="loading" @click="exportPdf">تصدير PDF</BaseButton>
+        <BaseButton class="pb-export" variant="outline" size="md" :icon="FileDown" :loading="exporting" :disabled="loading" @click="exportPdf">تصدير PDF</BaseButton>
       </div>
 
       <SlideTable :rows="grpRows" :size="pageSize" label="المجموعات">
@@ -98,7 +98,7 @@
                           <thead><tr><th>الطالب</th><th>الموكلة</th><th>المنجزة</th><th>المتأخرة</th><th>نسبة الإنجاز</th><th>آخر نشاط</th></tr></thead>
                           <tbody>
                             <tr v-for="m in g.members" :key="m.id">
-                              <td class="pt-strong">{{ m.name }}</td>
+                              <td class="pt-strong"><button type="button" class="pb-link" @click.stop="openStudent(g, m)">{{ m.name }}</button></td>
                               <td>{{ m.total }}</td>
                               <td>{{ m.done }}</td>
                               <td><span :class="lateClass(studentLate(g.id, m.id))">{{ studentLate(g.id, m.id) ?? '…' }}</span></td>
@@ -115,10 +115,11 @@
                         <SkeletonLoader v-if="!tasks[g.id]" :rows="2" />
                         <p v-else-if="!tasks[g.id].length" class="pt-muted">لا توجد مهام لهذه المجموعة</p>
                         <ul v-else class="pb-tasks">
-                          <li v-for="t in tasks[g.id]" :key="t.id">
+                          <li v-for="t in tasks[g.id]" :key="t.id" class="pb-task-li" role="button" tabindex="0" @click="openTask(t)" @keydown.enter="openTask(t)">
                             <span :class="['rv-pill', t.status === 'done' ? 'is-approved' : isLate(t) ? 'is-rejected' : 'is-pending']">{{ isLate(t) ? 'متأخرة' : TASK_STATUS[t.status] || t.status }}</span>
                             <b>{{ t.title }}</b>
                             <span class="pt-muted">{{ (t.assignees || []).map((a) => a.name).join('، ') || 'كل الفريق' }}<template v-if="t.due_date"> · التسليم {{ formatDate(t.due_date) }}</template></span>
+                            <ChevronLeft :size="16" class="pb-task-go" />
                           </li>
                         </ul>
                       </div>
@@ -139,6 +140,139 @@
         </template>
       </SlideTable>
     </section>
+
+    <!-- بطاقة الطالب: معلوماته وإحصاؤه ومهامه — للقراءة فقط -->
+    <BaseModal :model-value="!!stu" :title="stu ? stu.m.name : ''" :description="stu ? stu.g.name : ''" size="lg" @update:model-value="!$event && closeStudent()">
+      <div v-if="stu" class="pbm">
+        <div class="pbm-stats">
+          <div class="pbm-stat"><span>الموكلة</span><b>{{ stu.m.total }}</b></div>
+          <div class="pbm-stat"><span>المنجزة</span><b>{{ stu.m.done }}</b></div>
+          <div class="pbm-stat"><span>المتأخرة</span><b :class="lateClass(studentLate(stu.g.id, stu.m.id))">{{ studentLate(stu.g.id, stu.m.id) ?? '—' }}</b></div>
+          <div class="pbm-stat"><span>نسبة الإنجاز</span><b>{{ stu.m.percentage }}%</b></div>
+        </div>
+        <div class="pbm-bar"><span class="gr-progress"><span :class="level(stu.m.percentage)" :style="{ width: stu.m.percentage + '%' }" /></span></div>
+
+        <dl class="pbm-kv">
+          <div><dt>المشروع</dt><dd>{{ stu.g.project?.name || 'بلا مشروع' }}</dd></div>
+          <div v-if="!isSup"><dt>المشرف</dt><dd>{{ stu.g.sup.name || '—' }}</dd></div>
+          <div><dt>التخصص</dt><dd>{{ stu.g.spec || '—' }}</dd></div>
+          <div><dt>الدرجة</dt><dd>{{ degreeLabel(stu.g.degree) }}</dd></div>
+          <div><dt>الفئة</dt><dd>{{ genderLabel(stu.m.gender) }}</dd></div>
+          <div><dt>الرقم الجامعي</dt><dd>{{ stu.m.uid || '—' }}</dd></div>
+          <div v-if="stu.m.email"><dt>البريد</dt><dd dir="ltr">{{ stu.m.email }}</dd></div>
+          <div><dt>آخر نشاط</dt><dd>{{ stu.m.lastActive ? formatRelativeTime(stu.m.lastActive) : 'لم يدخل بعد' }}</dd></div>
+        </dl>
+
+        <h5 class="pb-drop-title"><ListTodo :size="15" /> مهام الطالب <small>{{ studentTasks(stu.g.id, stu.m.id).length }}</small></h5>
+        <SkeletonLoader v-if="!tasks[stu.g.id]" :rows="2" />
+        <p v-else-if="!studentTasks(stu.g.id, stu.m.id).length" class="pt-muted">لا مهام مُسندة لهذا الطالب — مهام الفريق تُتابَع على مستوى المجموعة.</p>
+        <ul v-else class="pbm-tasks">
+          <li v-for="t in studentTasks(stu.g.id, stu.m.id)" :key="t.id" :class="['pbm-task', stuTaskOpen === t.id && 'is-open']">
+            <button type="button" class="pbm-task-head" @click="toggleStuTask(t)">
+              <span :class="['rv-pill', t.status === 'done' ? 'is-approved' : isLate(t) ? 'is-rejected' : 'is-pending']">{{ isLate(t) ? 'متأخرة' : TASK_STATUS[t.status] || t.status }}</span>
+              <b>{{ t.title }}</b>
+              <span v-if="t.due_date" class="pt-muted">التسليم {{ formatDate(t.due_date) }}</span>
+              <ChevronDown :size="16" class="pbm-task-caret" />
+            </button>
+            <div v-if="stuTaskOpen === t.id" class="pbm-task-body">
+              <SkeletonLoader v-if="stuTaskLoading" :rows="2" />
+              <template v-else>
+                <p v-if="stuTaskDetail && stuTaskDetail.description" class="tl-desc">{{ stuTaskDetail.description }}</p>
+                <p v-else class="pt-muted">لا يوجد وصف لهذه المهمة.</p>
+                <div v-if="stuTaskDetail && stuTaskDetail.files && stuTaskDetail.files.length" class="pbm-sec">
+                  <h6 class="pbm-task-h"><FileText :size="14" /> المرفقات <small>{{ stuTaskDetail.files.length }}</small></h6>
+                  <ul class="tk-files">
+                    <li v-for="f in stuTaskDetail.files" :key="f.id">
+                      <FileText :size="16" />
+                      <span class="tk-file-name">{{ fileName(f.file_path) }}</span>
+                      <span class="pt-muted">{{ f.uploaded_by?.name || '' }} · {{ formatDate(f.created_at) }}</span>
+                    </li>
+                  </ul>
+                </div>
+                <div v-if="stuTaskDetail && stuTaskDetail.notes && stuTaskDetail.notes.length" class="pbm-sec">
+                  <h6 class="pbm-task-h">الملاحظات <small>{{ stuTaskDetail.notes.length }}</small></h6>
+                  <ul class="tk-notes">
+                    <li v-for="n in stuTaskDetail.notes" :key="n.id">
+                      <span class="tk-avatar">{{ initials(n.user?.name) }}</span>
+                      <div>
+                        <b>{{ n.user?.name || '—' }}</b> <span class="pt-muted">{{ formatDateTime(n.created_at) }}</span>
+                        <p>{{ n.note }}</p>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <div v-if="stuTaskLog.length" class="pbm-sec">
+                  <h6 class="pbm-task-h">سجل الحركة</h6>
+                  <ol class="tl-log">
+                    <li v-for="(e, i) in stuTaskLog" :key="i">
+                      <span class="tl-dot" />
+                      <span><b>{{ e.user?.name || 'النظام' }}</b> {{ describe(e) }}</span>
+                      <span class="pt-muted">{{ formatDateTime(e.created_at) }}</span>
+                    </li>
+                  </ol>
+                </div>
+              </template>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </BaseModal>
+
+    <!-- تفاصيل المهمة: الحالة والوصف والمرفقات والملاحظات وسجل الحركة — للقراءة فقط -->
+    <BaseModal :model-value="!!taskSel" :title="taskSel ? taskSel.title : ''" size="lg" @update:model-value="!$event && closeTask()">
+      <div v-if="taskSel" class="pbm">
+        <div class="pbm-taskhead">
+          <span :class="['rv-pill', taskSel.status === 'done' ? 'is-approved' : isLate(taskSel) ? 'is-rejected' : 'is-pending']">{{ isLate(taskSel) ? 'متأخرة' : TASK_STATUS[taskSel.status] || taskSel.status }}</span>
+          <span v-if="taskSel.due_date" class="pt-muted">التسليم {{ formatDate(taskSel.due_date) }}</span>
+        </div>
+        <dl class="pbm-kv">
+          <div><dt>المكلّفون</dt><dd>{{ (taskSel.assignees || []).map((a) => a.name).join('، ') || 'كل الفريق' }}</dd></div>
+          <div v-if="taskSel.status === 'done' && completedBy(taskLog)"><dt>أنجزها</dt><dd>{{ completedBy(taskLog) }}</dd></div>
+        </dl>
+
+        <section class="pbm-sec">
+          <h5 class="pb-drop-title">الوصف والتعليمات</h5>
+          <SkeletonLoader v-if="taskLoading" :rows="2" />
+          <p v-else-if="taskDetail && taskDetail.description" class="tl-desc">{{ taskDetail.description }}</p>
+          <p v-else class="pt-muted">لا يوجد وصف لهذه المهمة.</p>
+        </section>
+
+        <section v-if="taskLoading || (taskDetail && taskDetail.files && taskDetail.files.length)" class="pbm-sec">
+          <h5 class="pb-drop-title"><FileText :size="15" /> المرفقات <small>{{ taskDetail && taskDetail.files ? taskDetail.files.length : 0 }}</small></h5>
+          <ul v-if="taskDetail && taskDetail.files && taskDetail.files.length" class="tk-files">
+            <li v-for="f in taskDetail.files" :key="f.id">
+              <FileText :size="16" />
+              <span class="tk-file-name">{{ fileName(f.file_path) }}</span>
+              <span class="pt-muted">{{ f.uploaded_by?.name || '' }} · {{ formatDate(f.created_at) }}</span>
+            </li>
+          </ul>
+        </section>
+
+        <section v-if="taskLoading || (taskDetail && taskDetail.notes && taskDetail.notes.length)" class="pbm-sec">
+          <h5 class="pb-drop-title">الملاحظات <small>{{ taskDetail && taskDetail.notes ? taskDetail.notes.length : 0 }}</small></h5>
+          <ul v-if="taskDetail && taskDetail.notes && taskDetail.notes.length" class="tk-notes">
+            <li v-for="n in taskDetail.notes" :key="n.id">
+              <span class="tk-avatar">{{ initials(n.user?.name) }}</span>
+              <div>
+                <b>{{ n.user?.name || '—' }}</b> <span class="pt-muted">{{ formatDateTime(n.created_at) }}</span>
+                <p>{{ n.note }}</p>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <section v-if="taskLog.length" class="pbm-sec">
+          <h5 class="pb-drop-title">سجل الحركة</h5>
+          <ol class="tl-log">
+            <li v-for="(e, i) in taskLog" :key="i">
+              <span class="tl-dot" />
+              <span><b>{{ e.user?.name || 'النظام' }}</b> {{ describe(e) }}</span>
+              <span class="pt-muted">{{ formatDateTime(e.created_at) }}</span>
+            </li>
+          </ol>
+        </section>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
@@ -146,13 +280,14 @@
 import SlideTable from '@/components/ui/SlideTable.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
-import { ChevronDown, FileDown, ListTodo, Search, Users } from 'lucide-vue-next'
+import BaseModal from '@/components/ui/BaseModal.vue'
+import { ChevronDown, ChevronLeft, FileDown, FileText, ListTodo, Search, Users } from 'lucide-vue-next'
 
 import { escapeHtml } from '@/utils/exportReport'
 import { exportTablePdf } from '@/utils/ucasReports'
 import api from '@/services/api'
-import { fetchGroups, level, TASK_STATUS } from '@/utils/progressData'
-import { formatDate, formatRelativeTime } from '@/utils/formatters'
+import { completedBy, describeTaskEvent, fetchGroups, level, TASK_STATUS } from '@/utils/progressData'
+import { formatDate, formatDateTime, formatRelativeTime, initials } from '@/utils/formatters'
 import { useAuthStore } from '@/stores/auth.store'
 import { groupGender } from '@/services/adminData'
 
@@ -161,7 +296,7 @@ const DEGREES = { diploma: 'دبلوم', bachelor: 'بكالوريوس' }
 export default {
   name: 'ProgressBoard',
 
-  components: { SlideTable, SkeletonLoader, BaseButton, ChevronDown, Search, Users, ListTodo },
+  components: { SlideTable, SkeletonLoader, BaseButton, BaseModal, ChevronDown, ChevronLeft, FileText, Search, Users, ListTodo },
 
   data() {
     // المشرف: مجموعاته فقط (الخادم يقيّد /progress) بلا فلتر المشرف/الدرجة
@@ -172,6 +307,9 @@ export default {
       pageSize: 25,
       openGrp: null,
       exporting: false,
+      stu: null,
+      stuTaskOpen: null, stuTaskDetail: null, stuTaskLog: [], stuTaskLoading: false,
+      taskSel: null, taskDetail: null, taskLog: [], taskLoading: false,
       f: { q: '', sup: '', spec: '', degree: '', gender: '', level: '' }
     }
   },
@@ -214,8 +352,72 @@ export default {
   methods: {
     formatDate,
     formatRelativeTime,
-    formatDateTime: (d) => new Date(d).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' }),
+    formatDateTime,
+    initials,
+    completedBy,
+    describe: describeTaskEvent,
+    fileName: (path = '') => path.split('/').pop(),
+    degreeLabel: (d) => DEGREES[d] || '—',
+    genderLabel: (g) => (g === 'female' ? 'طالبة' : g === 'male' ? 'طالب' : '—'),
     level,
+
+    /** بطاقة الطالب */
+    openStudent(g, m) {
+      this.stu = { g, m }
+      this.stuTaskOpen = null
+      this.loadTasks(g.id)
+    },
+
+    closeStudent() {
+      this.stu = null
+      this.stuTaskOpen = null
+      this.stuTaskDetail = null
+      this.stuTaskLog = []
+    },
+
+    /** مهام الطالب الشخصية فقط (المُسندة إليه صراحةً) — مطابِقة لإحصائه؛
+        مهام "كل الفريق" تُتابَع على مستوى المجموعة لا الفرد */
+    studentTasks(teamId, studentId) {
+      const list = this.tasks[teamId] || []
+      return list.filter((t) => (t.assignees || []).some((a) => a.id === studentId))
+    },
+
+    /** فتح/طيّ تفاصيل مهمة داخل بطاقة الطالب (انسدال لا مودال فوق مودال) */
+    async toggleStuTask(t) {
+      if (this.stuTaskOpen === t.id) { this.stuTaskOpen = null; return }
+      this.stuTaskOpen = t.id
+      this.stuTaskDetail = null
+      this.stuTaskLog = []
+      this.stuTaskLoading = true
+      try {
+        const [detail, log] = await Promise.allSettled([api.get(`/tasks/${t.id}`), api.get(`/tasks/${t.id}/activity`)])
+        this.stuTaskDetail = detail.value?.data?.data || detail.value?.data || {}
+        this.stuTaskLog = log.value?.data || []
+      } finally {
+        this.stuTaskLoading = false
+      }
+    },
+
+    /** تفاصيل المهمة: الوصف والمرفقات والملاحظات وسجل الحركة — للقراءة */
+    async openTask(t) {
+      this.taskSel = t
+      this.taskDetail = null
+      this.taskLog = []
+      this.taskLoading = true
+      try {
+        const [detail, log] = await Promise.allSettled([api.get(`/tasks/${t.id}`), api.get(`/tasks/${t.id}/activity`)])
+        this.taskDetail = detail.value?.data?.data || detail.value?.data || {}
+        this.taskLog = log.value?.data || []
+      } finally {
+        this.taskLoading = false
+      }
+    },
+
+    closeTask() {
+      this.taskSel = null
+      this.taskDetail = null
+      this.taskLog = []
+    },
 
     /** هل تمرّ المجموعة من مجموعة فلاتر (كلها مجتمعة) + البحث */
     passes(g, f) {
@@ -268,11 +470,11 @@ export default {
       return list ? list.filter(this.isLate).length : null
     },
 
-    /** المهام المتأخرة للطالب: المكلّف بها صراحة، أو مهام الفريق كله إن لم يُحدَّد مكلّفون */
+    /** المهام المتأخرة للطالب: المُسندة إليه صراحةً فقط — متوافقة مع إحصائه الشخصي */
     studentLate(teamId, studentId) {
       const list = this.tasks[teamId]
       if (!list) return null
-      return list.filter((t) => this.isLate(t) && (!(t.assignees || []).length || t.assignees.some((a) => a.id === studentId))).length
+      return list.filter((t) => this.isLate(t) && (t.assignees || []).some((a) => a.id === studentId)).length
     },
 
     avgOf(list) {
