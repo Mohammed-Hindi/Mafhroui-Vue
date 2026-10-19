@@ -39,10 +39,10 @@
     <GroupsRegister v-if="isSuperAdmin">
       <!-- أدوات الإدارة للإدارة العامة فقط؛ لجنة الإشراف ترى المجموعات (مجموعات تخصصها من الخادم) -->
       <template v-if="userRole === 'super_admin'" #actions>
-        <button type="button" class="pbtn is-green" @click="openAddStudent"><component :is="UserPlus" :size="17" /> إضافة طالب</button>
-        <button type="button" class="pbtn is-cyan" @click="openAddSupervisor"><component :is="UserPlus" :size="17" /> إضافة مشرف</button>
-        <button type="button" class="pbtn is-outline" @click="openImport"><component :is="Upload" :size="17" /> استيراد من Excel</button>
-        <button type="button" class="pbtn is-outline" @click="openTrashed"><component :is="Archive" :size="17" /> المجموعات المحذوفة</button>
+        <BaseButton :icon="UserPlus" @click="openAddStudent">إضافة طالب</BaseButton>
+        <BaseButton variant="secondary" :icon="UserPlus" @click="openAddSupervisor">إضافة مشرف</BaseButton>
+        <BaseButton variant="outline" :icon="Upload" @click="openImport">استيراد من Excel</BaseButton>
+        <BaseButton variant="outline" :icon="Archive" @click="openTrashed">المجموعات المحذوفة</BaseButton>
       </template>
     </GroupsRegister>
 

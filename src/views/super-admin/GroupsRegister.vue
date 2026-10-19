@@ -33,29 +33,12 @@
         <Search :size="16" />
         <input v-model.trim="q" type="search" placeholder="بحث برقم الشعبة، المشروع، المشرف أو الطالب…">
       </label>
-      <label class="gr-pick">
-        <span>التخصص</span>
-        <select v-model="f.spec" class="gr-select">
-          <option value="">كل التخصصات</option>
-          <option v-for="s in specOptions" :key="s" :value="s">{{ s }}</option>
-        </select>
-      </label>
+      <!-- فلاتر BaseSelect (عاتة = بند 7 من دليل التصميم: الـ native select يُرسم فوق التوب بار) -->
+      <BaseSelect v-model="f.spec" class="min-w-[170px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specSelectOptions" />
       <!-- المشرف يرى مجموعاته فقط: فلتر المشرف بلا معنى له -->
-      <label v-if="userRole !== 'supervisor'" class="gr-pick">
-        <span>المشرف</span>
-        <select v-model="f.sup" class="gr-select">
-          <option value="">كل المشرفين</option>
-          <option v-for="s in supList" :key="s.id" :value="s.id">{{ s.name }}</option>
-        </select>
-      </label>
+      <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.sup" class="min-w-[180px]" aria-label="المشرف" placeholder="كل المشرفين" include-placeholder-option :options="supSelectOptions" />
       <!-- المشرف: فلترا التخصص والجنس فقط -->
-      <label v-if="userRole !== 'supervisor'" class="gr-pick">
-        <span>حجم الفريق</span>
-        <select v-model="f.size" class="gr-select">
-          <option value="">من 1 حتى 4</option>
-          <option v-for="n in 4" :key="n" :value="n">{{ n }} {{ n === 1 ? 'طالب' : 'طلاب' }}</option>
-        </select>
-      </label>
+      <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.size" class="min-w-[140px]" aria-label="حجم الفريق" placeholder="حجم الفريق" include-placeholder-option :options="sizeSelectOptions" />
     </div>
 
     <SlideTable :rows="rows" label="المجموعات">
@@ -220,12 +203,13 @@
 
     <!-- أزرار الملفات أسفل البطاقة: الطباعة خضراء والتصدير سماوي (نمط "طباعة الجدول" / "للإطلاع على الخطة") -->
     <footer class="gr-card-foot">
-      <button type="button" class="pbtn is-green" :disabled="!rows.length || !!exporting" @click="exportSupReport">
-        <Printer :size="17" /> {{ exporting === 'sups' ? 'جارٍ التجهيز…' : isSupervisor ? 'طباعة تقرير المجموعات' : 'طباعة تقرير المشرفين' }}
-      </button>
-      <button v-if="!isSupervisor" type="button" class="pbtn is-cyan" :disabled="!rows.length || !!exporting" @click="exportExcel">
-        <FileSpreadsheet :size="17" /> {{ exporting === 'excel' ? 'جارٍ التجهيز…' : 'تصدير Excel' }}
-      </button>
+      <!-- أزرار الملفات أسفل البطاقة: ثانوية outline (نمط صفحات الأعضاء) -->
+      <BaseButton variant="outline" :icon="Printer" :disabled="!rows.length || !!exporting" @click="exportSupReport">
+        {{ exporting === 'sups' ? 'جارٍ التجهيز…' : isSupervisor ? 'طباعة تقرير المجموعات' : 'طباعة تقرير المشرفين' }}
+      </BaseButton>
+      <BaseButton v-if="!isSupervisor" variant="outline" :icon="FileSpreadsheet" :disabled="!rows.length || !!exporting" @click="exportExcel">
+        {{ exporting === 'excel' ? 'جارٍ التجهيز…' : 'تصدير Excel' }}
+      </BaseButton>
     </footer>
 
     <ProfileModal v-model="profile.open" :kind="profile.kind" :person-id="profile.id" :name="profile.name" />
@@ -237,6 +221,8 @@
 <script>
 import SlideTable from '@/components/ui/SlideTable.vue'
 import ProjectTypes from '@/components/shared/ProjectTypes.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
 import { Search, ChevronLeft, FileSpreadsheet, Printer, ListTodo, Megaphone, Paperclip } from 'lucide-vue-next'
 import ProfileModal from '@/components/shared/ProfileModal.vue'
 import { DEGREES, GENDERS, REGIONS, PROJECT_STATUS as STATUS, level } from '@/utils/progressData'
@@ -266,7 +252,7 @@ const EMPTY_FILTERS = { degree: '', gender: '', region: '', spec: '', sup: '', s
 export default {
   name: 'GroupsRegister',
 
-  components: { SlideTable, ProjectTypes, Search, ChevronLeft, FileSpreadsheet, Printer, ProfileModal },
+  components: { SlideTable, ProjectTypes, BaseSelect, BaseButton, Search, ChevronLeft, FileSpreadsheet, Printer, ProfileModal },
 
   data() {
     return {
@@ -310,6 +296,17 @@ export default {
 
     specOptions() {
       return [...new Set(this.groups.map((g) => g.spec))]
+    },
+
+    /** خيارات BaseSelect (نمط صفحات الأعضاء) */
+    specSelectOptions() {
+      return this.specOptions.map((s) => ({ value: s, label: s }))
+    },
+    supSelectOptions() {
+      return this.supList.map((s) => ({ value: s.id, label: s.name }))
+    },
+    sizeSelectOptions() {
+      return [1, 2, 3, 4].map((n) => ({ value: n, label: `${n} ${n === 1 ? 'طالب' : 'طلاب'}` }))
     },
 
     /** التصنيف مع أعداد الطلاب في كل فئة */
