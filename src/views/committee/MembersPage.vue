@@ -1,13 +1,6 @@
 <template>
   <div>
-    <!-- صفحة "إرسال بيانات الدخول" (الإدارة العامة) — رأسها فقط، ومحتواها القسم الجماعي بالأسفل -->
-    <header v-if="mode === 'credentials'" class="dash-head mb-6">
-      <div>
-        <h2 class="dash-title">إرسال بيانات الدخول</h2>
-      </div>
-    </header>
-
-    <template v-else>
+    <template v-if="mode !== 'credentials'">
       <div class="mb-head-row mb-5">
         <nav class="hm-tabs w-fit" aria-label="نوع العضو">
           <button v-for="k in memberKindOptions" :key="k.value" type="button" :class="memberKind === k.value && 'is-active'" @click="memberKind = k.value">
@@ -46,7 +39,7 @@
       <div class="mb-12">
         <SlideTable :rows="activeFiltered" :size="pageSize" :label="{ student: 'الطلاب', supervisor: 'المشرفون', committee: 'الأعضاء' }[memberKind]">
           <template #default="{ rows: shown }">
-            <DataTable fixed class="mb-table" :class="isSuperAdmin && 'mb-rows-link'" :columns="activeColumns" :rows="shown" row-key="id" :primary-keys="['name', 'actions']" :loading="activeLoading" empty-title="لا توجد نتائج مطابقة" :row-extra-when="(row) => openSupId === row.id" @row-click="isSuperAdmin && openProfile($event)">
+            <DataTable fixed class="mb-table" :class="isSuperAdmin && 'mb-rows-link'" :columns="activeColumns" :rows="shown" row-key="id" :primary-keys="['name', 'actions']" :loading="activeLoading" empty-title="لا توجد نتائج مطابقة" @row-click="isSuperAdmin && openProfile($event)">
               <!-- المجموعة: رقم الشعبة + المشرف تحته -->
               <template #cell-grp="{ row }">
                 <component v-if="row.grp" :is="isSuperAdmin ? 'span' : 'router-link'" :to="isSuperAdmin ? undefined : { name: 'committee-teams' }" class="inline-flex items-center gap-1.5 font-bold text-text-900">
@@ -83,58 +76,6 @@
                   <span class="mb-tag is-region">{{ REGIONS[row.region] || 'غير محدد' }}</span>
                 </div>
                 <div v-if="row.restricted && row.restrictedReason" class="text-label text-error mt-0.5">السبب: {{ row.restrictedReason }}</div>
-              </template>
-              <!-- المشرف ← مجموعاته (دليل الأعضاء — الإدارة العامة) -->
-              <template #cell-groups="{ row }">
-                <button v-if="supGroups(row.id).length" type="button" class="gr-link mb-groups-btn" :aria-expanded="openSupId === row.id" @click.stop="openSupId = openSupId === row.id ? null : row.id">
-                  {{ supGroups(row.id).length }} مجموعات <ChevronDown :size="14" :class="openSupId === row.id && 'rotate-180'" />
-                </button>
-                <span v-else class="text-caption text-text-400">لا توجد</span>
-              </template>
-              <template v-if="isSuperAdmin && memberKind === 'supervisor'" #row-extra="{ row }">
-                <!-- مجموعات المشرف بنفس قائمة سجل المجموعات: صف لكل مجموعة يُفتح على جدول طلابها -->
-                <div v-if="openSupId === row.id" class="mb-sup-groups">
-                  <table class="gr-table">
-                    <thead>
-                      <tr><th class="w-12" aria-label="فتح" /><th>الشعبة</th><th>المشروع</th><th>التخصص</th><th>الطلاب</th></tr>
-                    </thead>
-                    <tbody v-for="g in supGroups(row.id)" :key="g.id" :class="['gr-group', openGroupId === g.id && 'is-open']">
-                      <tr class="gr-row" @click="openGroupId = openGroupId === g.id ? null : g.id">
-                        <td>
-                          <button type="button" class="gr-toggle" :aria-expanded="openGroupId === g.id" :aria-label="`طلاب ${g.name}`" @click.stop="openGroupId = openGroupId === g.id ? null : g.id">
-                            <ChevronLeft :size="16" />
-                          </button>
-                        </td>
-                        <td><span class="gr-section">{{ g.section || '—' }}</span></td>
-                        <td class="gr-name-cell"><span class="gr-name">{{ g.project?.name || 'بلا مشروع' }}</span></td>
-                        <td>{{ specializationName(g.specialization_id) }}</td>
-                        <td>{{ (g.members || []).length }} طلاب</td>
-                      </tr>
-                      <tr v-if="openGroupId === g.id" class="gr-detail-row">
-                        <td colspan="5">
-                          <div class="gr-members mb-sup-members">
-                            <table>
-                              <thead><tr><th>الطالب</th><th>الرقم الجامعي</th><th>الجنس</th><th>مكان التواجد</th><th>الواتس</th></tr></thead>
-                              <tbody>
-                                <tr v-for="m in g.members || []" :key="m.id">
-                                  <td><button type="button" class="gr-member-name gr-link" title="عرض بروفايل الطالب" @click="openProfile({ id: m.student?.id, name: m.student?.name }, 'student')"><span class="gm-av" aria-hidden="true">{{ (m.student?.name || '؟').charAt(0) }}</span>{{ m.student?.name }}</button></td>
-                                  <td><span class="mono">{{ m.student?.university_number || '—' }}</span></td>
-                                  <td><span :class="['gm-chip', m.student?.gender === 'female' && 'is-f']">{{ GENDERS[m.student?.gender] || 'غير محدد' }}</span></td>
-                                  <td>{{ REGIONS[m.student?.region] || 'غير محدد' }}</td>
-                                  <td>
-                                    <button v-if="m.student?.whatsapp" type="button" class="gr-link mono" title="فتح واتساب" @click="sendWhats(m.student.whatsapp)">{{ m.student.whatsapp }}</button>
-                                    <span v-else>—</span>
-                                  </td>
-                                </tr>
-                                <tr v-if="!(g.members || []).length"><td colspan="5" class="gr-muted">لا يوجد طلاب في هذه المجموعة</td></tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
               </template>
               <template #cell-lastActive="{ value }">
                 <span v-if="value && value !== 'لم يسجّل دخولًا بعد'" class="inline-flex items-center gap-1.5 text-caption text-text-600"><span class="w-1.5 h-1.5 rounded-sm bg-primary-600" aria-hidden="true" />{{ value }}</span>
@@ -198,19 +139,9 @@
     <!-- ===================== إرسال بيانات الدخول الجماعي (صفحة مستقلة للإدارة العامة) =====================
          المسار: الفئة ← طريقة الإرسال ← تحديد المستلمين (المؤهَّلون فقط) ← مراجعة في نافذة تأكيد ← إرسال، ثم سجل الإرسال -->
     <template v-if="isSuperAdmin && mode === 'credentials'">
-      <ol class="sp-steps cr-steps" aria-label="خطوات الإرسال">
-        <li :class="notifySelectedIds.length ? 'is-done' : 'is-current'"><b>1</b><span>الفئة وطريقة الإرسال</span></li>
-        <li :class="notifySelectedIds.length ? (crConfirmOpen ? 'is-done' : 'is-current') : ''"><b>2</b><span>تحديد المستلمين</span></li>
-        <li :class="crConfirmOpen && 'is-current'"><b>3</b><span>المراجعة والإرسال</span></li>
-      </ol>
-
-      <section class="dash-card cr-card">
-        <div class="dash-card-head">
-          <h3>إرسال بيانات الدخول جماعيًا</h3>
-          <span class="dash-chip">{{ notifyDirectoryLoading ? 'جارٍ التحميل…' : `${notifyDirectory.length} ${notifyRoleLabel}` }}</span>
-        </div>
-
-        <!-- 1. الفئة + طريقة الإرسال -->
+     <div class="cr-layout">
+      <section class="dash-card cr-card cr-send">
+        <!-- الفئة + طريقة الإرسال + الإرسال في صف واحد -->
         <div class="cr-setup">
           <div class="cr-field">
             <span class="cr-label">الفئة</span>
@@ -222,34 +153,37 @@
           </div>
           <div class="cr-field">
             <span class="cr-label">طريقة الإرسال</span>
-            <div class="bc-channel-pick cr-channels">
-              <label v-for="c in crChannels" :key="c.value" :class="['bc-channel-opt', notifyChannel === c.value && 'is-on']">
-                <input type="radio" name="cr-channel" :value="c.value" :checked="notifyChannel === c.value" @change="setNotifyChannel(c.value)">
-                <component :is="c.icon" :size="18" />
-                <span><b>{{ c.label }}</b><small>{{ c.hint }}</small></span>
-              </label>
-            </div>
+            <nav class="hm-tabs" aria-label="طريقة الإرسال">
+              <button v-for="c in crChannels" :key="c.value" type="button" :class="notifyChannel === c.value && 'is-active'" @click="setNotifyChannel(c.value)">
+                <component :is="c.icon" :size="15" /> {{ c.label }}
+              </button>
+            </nav>
           </div>
+          <BaseButton class="cr-send-btn" size="lg" :icon="Send" :loading="crPreviewing" :disabled="!notifySelectedIds.length" @click="openNotifyConfirm">مراجعة وإرسال</BaseButton>
         </div>
+        <hr class="cr-sep">
 
-        <!-- 2. البحث والتخصص + شريط التحديد -->
-        <div class="gr-filters cr-filters" aria-label="تصفية المستلمين">
-          <label class="gr-search">
+        <!-- المستلمون: بحث + تخصص -->
+        <div class="cr-tools" aria-label="تصفية المستلمين">
+          <label class="gr-search cr-search">
             <Search :size="16" />
             <input v-model.trim="notifySearch" type="search" placeholder="بحث بالاسم أو البريد أو الواتساب…">
           </label>
-          <BaseSelect v-model="notifySpecFilter" class="min-w-[170px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specializationOptions" />
+          <BaseSelect v-model="notifySpecFilter" class="min-w-[160px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specializationOptions" />
         </div>
 
-        <div class="cr-selbar">
-          <label class="gp-check">
+        <!-- شريط التحديد: ثابت التخطيط مهما تغيّر العدد -->
+        <div class="cr-selrow">
+          <label class="cr-selall">
             <input type="checkbox" :checked="allNotifyFilteredSelected" :indeterminate.prop="someNotifyFilteredSelected" :disabled="!eligibleFiltered.length" @change="toggleNotifySelectAll">
-            تحديد كل المؤهَّلين ({{ eligibleFiltered.length }})
+            <span>تحديد الكل <span class="cr-selall-n">({{ eligibleFiltered.length }})</span></span>
           </label>
-          <span class="cr-count"><b>{{ notifySelectedIds.length }}</b> محدَّد</span>
-          <span v-if="ineligibleCount" class="cr-warn">{{ ineligibleCount }} بلا {{ notifyChannel === 'email' ? 'بريد' : 'واتساب' }} — غير قابل للتحديد</span>
-          <button v-if="notifySelectedIds.length" type="button" class="cr-clear" @click="notifySelectedIds = []">إلغاء التحديد</button>
+          <div class="cr-selright">
+            <span class="cr-count"><b>{{ notifySelectedIds.length }}</b> محدَّد</span>
+            <button type="button" class="cr-clear" :disabled="!notifySelectedIds.length" @click="notifySelectedIds = []">إلغاء</button>
+          </div>
         </div>
+        <p v-if="ineligibleCount" class="cr-warn">{{ ineligibleCount }} عضو بلا {{ notifyChannel === 'email' ? 'بريد إلكتروني' : 'رقم واتساب' }} — غير قابل للتحديد</p>
 
         <SkeletonLoader v-if="notifyDirectoryLoading" variant="cards" />
         <EmptyState v-else-if="!filteredNotifyDirectory.length" :title="notifyDirectory.length ? 'لا يوجد عضو مطابق للبحث' : 'لا يوجد ' + notifyRoleLabel + ' حاليًا'" description="غيّر الفئة أو البحث أو التخصص" />
@@ -257,7 +191,7 @@
           <li v-for="u in filteredNotifyDirectory" :key="u.id">
             <label :class="['cr-person', notifySelectedIds.includes(u.id) && 'is-on', !contactOf(u) && 'is-off']">
               <input v-model="notifySelectedIds" type="checkbox" :value="u.id" :disabled="!contactOf(u)">
-              <span class="hm-avatar cr-av" aria-hidden="true">{{ (u.name || '؟').charAt(0) }}</span>
+              <span class="cr-av" aria-hidden="true">{{ (u.name || '؟').charAt(0) }}</span>
               <span class="cr-who">
                 <b>{{ u.name }}</b>
                 <small v-if="contactOf(u)" class="mono">{{ contactOf(u) }}</small>
@@ -268,21 +202,10 @@
             </label>
           </li>
         </ul>
-
-        <!-- 3. شريط الإجراء الثابت أسفل البطاقة -->
-        <div class="cr-actionbar">
-          <p>
-            <template v-if="notifySelectedIds.length">سيصل رابط الدعوة إلى <b>{{ notifySelectedIds.length }}</b> {{ notifyRoleLabel }} عبر <b>{{ notifyChannel === 'email' ? 'البريد الإلكتروني' : 'واتساب' }}</b></template>
-            <template v-else>حدّد المستلمين من القائمة للمتابعة</template>
-          </p>
-          <button type="button" class="pbtn is-green" :disabled="!notifySelectedIds.length || crPreviewing" @click="openNotifyConfirm">
-            <Send :size="16" /> {{ crPreviewing ? 'جارٍ التجهيز…' : 'مراجعة وإرسال' }}
-          </button>
-        </div>
       </section>
 
       <!-- سجل الإرسال -->
-      <section class="dash-card cr-card mt-6">
+      <section class="dash-card cr-card cr-logcard">
         <div class="dash-card-head">
           <h3>سجلّ الإرسال</h3>
           <nav class="hm-tabs" aria-label="حالة الإرسال">
@@ -290,36 +213,33 @@
           </nav>
         </div>
 
-        <SlideTable :rows="deliveryRows" label="الرسائل">
-          <template #default="{ rows: shown }">
-            <DataTable fixed :columns="deliveryColumns" :rows="shown" row-key="id" :primary-keys="['name', 'status']" :loading="deliveriesLoading" empty-title="لا توجد محاولات إرسال بعد">
-              <template #cell-name="{ row }">
-                <span class="cr-row-name"><span class="hm-avatar cr-av is-sm" aria-hidden="true">{{ row.name.charAt(0) }}</span><b>{{ row.name }}</b></span>
-              </template>
-              <template #cell-channel="{ value }">
-                <span :class="['cr-chan', value === 'email' ? 'is-mail' : 'is-whats']"><component :is="value === 'email' ? 'Mail' : 'MessageCircle'" :size="13" /> {{ value === 'email' ? 'بريد' : 'واتساب' }}</span>
-              </template>
-              <template #cell-status="{ row }">
-                <span :class="['rv-pill', `cr-st-${row.status}`]">{{ statusLabel(row.status) }}</span>
-              </template>
-              <template #cell-sentAt="{ value }"><span class="mono">{{ value }}</span></template>
-              <template #cell-actions="{ row }">
-                <button v-if="row.status === 'failed'" type="button" class="pbtn is-outline is-sm" :disabled="retryingDeliveryId === row.id" @click="retryDeliveryRow(row)">
-                  <RotateCcw :size="14" /> {{ retryingDeliveryId === row.id ? 'جارٍ…' : 'إعادة المحاولة' }}
-                </button>
-              </template>
-            </DataTable>
-          </template>
-          <template v-if="deliveryRows.length" #after>
-            <div class="gr-sumbar">
-              <span>المحاولات: {{ deliveryRows.length }}</span>
-              <span>تم الإرسال: {{ deliveryRows.filter((d) => d.status === 'sent').length }}</span>
-              <span>قيد الإرسال: {{ deliveryRows.filter((d) => d.status === 'pending').length }}</span>
-              <span>فشل: {{ deliveryRows.filter((d) => d.status === 'failed').length }}</span>
-            </div>
-          </template>
-        </SlideTable>
+        <SkeletonLoader v-if="deliveriesLoading && !deliveryRows.length" :rows="4" />
+        <EmptyState v-else-if="!deliveryRows.length" :icon="Send" title="لا توجد محاولات إرسال بعد" description="ستظهر هنا كل رسالة دعوة بحالتها ووقتها." />
+        <template v-else>
+          <div class="cr-log-sum">
+            <span class="is-sent"><b>{{ deliveryRows.filter((d) => d.status === 'sent').length }}</b> تم الإرسال</span>
+            <span class="is-pending"><b>{{ deliveryRows.filter((d) => d.status === 'pending').length }}</b> قيد الإرسال</span>
+            <span class="is-failed"><b>{{ deliveryRows.filter((d) => d.status === 'failed').length }}</b> فشل</span>
+          </div>
+          <SlideTable :rows="deliveryRows" :size="8" label="الرسائل">
+            <template #default="{ rows: shown }">
+              <ul class="cr-log">
+                <li v-for="row in shown" :key="row.id" :class="['cr-log-item', `is-${row.status}`]">
+                  <span class="cr-av is-sm" aria-hidden="true">{{ row.name.charAt(0) }}</span>
+                  <div class="cr-log-main">
+                    <b>{{ row.name }}</b>
+                    <span class="cr-log-time mono">{{ row.sentAt }}</span>
+                  </div>
+                  <span :class="['cr-chan', row.channel === 'email' ? 'is-mail' : 'is-whats']"><component :is="row.channel === 'email' ? 'Mail' : 'MessageCircle'" :size="13" /> {{ row.channel === 'email' ? 'بريد' : 'واتساب' }}</span>
+                  <span :class="['rv-pill', `cr-st-${row.status}`]">{{ statusLabel(row.status) }}</span>
+                  <BaseButton v-if="row.status === 'failed'" variant="outline" size="sm" :icon="RotateCcw" :loading="retryingDeliveryId === row.id" @click="retryDeliveryRow(row)">إعادة</BaseButton>
+                </li>
+              </ul>
+            </template>
+          </SlideTable>
+        </template>
       </section>
+     </div>
 
       <!-- نافذة المراجعة والتأكيد -->
       <BaseModal v-model="crConfirmOpen" title="مراجعة الإرسال" :description="`رابط دعوة عبر ${notifyChannel === 'email' ? 'البريد الإلكتروني' : 'واتساب'} — ${notifyRoleLabel}`" size="sm">
@@ -330,7 +250,7 @@
           </div>
           <div v-if="crNoInvite.length" class="palert is-info cr-fix">
             <span><b>{{ crNoInvite.length }}</b> بلا رابط دعوة نشط — أنشئ لهم روابط جديدة ثم تُعاد المراجعة تلقائيًا.</span>
-            <button type="button" class="pbtn is-outline is-sm" :disabled="crInviting" @click="crCreateInvites"><Link2 :size="14" /> {{ crInviting ? `جارٍ الإنشاء… ${crInviteDone}/${crNoInvite.length}` : 'إنشاء روابط الدعوة' }}</button>
+            <BaseButton variant="outline" size="sm" :icon="Link2" :loading="crInviting" @click="crCreateInvites">{{ crInviting ? `جارٍ الإنشاء… ${crInviteDone}/${crNoInvite.length}` : 'إنشاء روابط الدعوة' }}</BaseButton>
           </div>
           <p v-else-if="!notifyPreviewResult.valid_count" class="palert is-warning">لا يوجد مستلم مؤهَّل للإرسال.</p>
           <div v-if="notifyPreviewResult.invalid?.length" class="cr-invalid">
@@ -506,7 +426,7 @@
 </template>
 
 <script>
-import { GraduationCap, Users, UserCog, ShieldCheck, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Check, Trash2, Archive, RotateCcw, RefreshCw, Eye, UserPlus, Send, Copy, SlidersHorizontal, Link2, ChevronDown, ChevronLeft, AlertCircle } from 'lucide-vue-next'
+import { GraduationCap, Users, UserCog, ShieldCheck, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Check, Trash2, Archive, RotateCcw, RefreshCw, Eye, UserPlus, Send, Copy, SlidersHorizontal, Link2, AlertCircle } from 'lucide-vue-next'
 import { mapState, mapActions } from 'pinia'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -563,7 +483,7 @@ const STATUS_VARIANTS = { pending: 'warning', sent: 'success', failed: 'error' }
 export default {
   name: 'CommitteeMembersPage',
 
-  components: { SpecializationPicker, Check, RotateCcw, Send, Copy, GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, SlidersHorizontal, Link2, AlertCircle, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, SlideTable, SkeletonLoader, EmptyState, EmailComposeModal, ProfileModal, ChevronDown, ChevronLeft },
+  components: { SpecializationPicker, Check, RotateCcw, Send, Copy, GraduationCap, Users, Search, MessageCircle, Mail, ExternalLink, Pencil, Lock, Archive, RefreshCw, Eye, Trash2, SlidersHorizontal, Link2, AlertCircle, BaseInput, BaseSelect, BaseButton, BaseBadge, BaseModal, DataTable, SlideTable, SkeletonLoader, EmptyState, EmailComposeModal, ProfileModal },
 
   props: {
     /** 'members' = إدارة الأعضاء (افتراضي) · 'credentials' = صفحة إرسال بيانات الدخول (الإدارة العامة) */
@@ -582,8 +502,6 @@ export default {
       pageSize: 25,
       pageSizeOptions: [{ value: 25, label: 'عرض 25' }, { value: 50, label: 'عرض 50' }, { value: 100, label: 'عرض 100' }],
       addError: '',
-      openSupId: null,
-      openGroupId: null,
       profile: { open: false, kind: 'student', id: null, name: '', preset: null },
       Check, Lock, Trash2, RotateCcw, Archive, UserPlus, Send, Copy, GraduationCap, Users,
       emailComposeOpen: false,
@@ -670,13 +588,6 @@ export default {
         { value: 'sent', label: 'تم الإرسال' },
         { value: 'pending', label: 'قيد الإرسال' },
         { value: 'failed', label: 'فشل' }
-      ],
-      deliveryColumns: [
-        { key: 'name', label: 'العضو' },
-        { key: 'channel', label: 'الطريقة', className: 'w-[150px]' },
-        { key: 'status', label: 'الحالة', className: 'w-[150px]' },
-        { key: 'sentAt', label: 'وقت الإرسال', className: 'w-[200px]' },
-        { key: 'actions', label: 'إجراء', className: 'w-[180px]' }
       ]
     }
   },
@@ -835,7 +746,6 @@ export default {
       if (!this.isSuperAdmin) return [name, ...tail]
       return [
         name,
-        { key: 'groups', label: 'المجموعات', className: 'w-[90px]' },
         { key: 'lastActive', label: 'آخر نشاط', className: 'w-[110px]' },
         ...tail
       ]
@@ -932,6 +842,9 @@ export default {
   },
 
   async created() {
+    // تثبيت التبويب من رابط الصفحة (kind) حتى لا يعود للطلاب عند تحديث الصفحة
+    const qk = this.$route?.query?.kind
+    if (['student', 'supervisor', 'committee'].includes(qk) && this.memberKind !== qk) this.memberKind = qk
     // قائمة أعضاء اللجنة للإدارة العامة فقط (الخادم يرفضها لعضو اللجنة)
     await Promise.all([this.loadStudents(), this.loadSupervisors(), this.isSuperAdmin && this.loadCommittee(), this.fetchTeams()])
     this.fetchSpecializations()
@@ -1455,14 +1368,6 @@ export default {
 
 <style scoped>
 .mono { direction: ltr; text-align: start; display: inline-block; }
-.mb-sup-groups { padding: 12px 16px; background: var(--color-bg); overflow-x: auto; }
-.mb-sup-groups .gr-table { min-width: 640px; background: var(--color-surface); box-shadow: var(--shadow-card); border-radius: 4px; }
-.mb-sup-members { margin: 12px; }
-/* قائمة مجموعات المشرف: بلا حركة ظهور (الصف الأب يعيد تشغيلها عند كل فتح) ورأس محايد بدل السماوي */
-.mb-sup-groups :deep(tr),
-:deep(tr:has(> td > .mb-sup-groups)) { animation: none !important; }
-.mb-sup-groups :deep(.gr-table thead tr) { background: var(--color-bg) !important; }
-.mb-sup-groups :deep(.gr-table > thead th) { color: var(--color-text-600) !important; border-bottom: 1px solid var(--color-border); }
 .mb-sumbar { margin-top: 0; }
 .mb-rows-link :deep(tbody > tr.row-interactive) { cursor: pointer; }
 .mb-name { color: var(--portal-cyan, var(--color-primary-600)); text-align: start; }

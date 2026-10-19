@@ -30,7 +30,7 @@ export const NAV_ITEMS_BY_ROLE = {
       title: 'الأعضاء والهيكل',
       items: [
         { label: 'إدارة الأعضاء', to: '/committee/members', icon: UserPlus },
-        { label: 'الأقسام والتخصصات والفصول', to: '/super-admin/structure', icon: Building2 },
+        { label: 'الهيكل الأكاديمي', to: '/super-admin/structure', icon: Building2 },
         { label: 'إرسال بيانات الدخول', to: '/super-admin/credentials', icon: KeyRound }
       ]
     },
