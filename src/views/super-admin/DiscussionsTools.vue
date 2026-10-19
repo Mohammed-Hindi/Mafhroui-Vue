@@ -2,30 +2,19 @@
   <!-- مواعيد المناقشات للإدارة العامة:
        إعدادات (القاعات لكل مكان + ساعاته الملزمة ← مدة الدبلوم/البكالوريوس ← الأيام حسب الفئة أو الدرجة) + سعة كل يوم ← توليد تلقائي بالقيود
        ← تعديل كل الجدول (قائمة أو شبكة حسب القاعات) مع كشف التعارضات فورًا ← طباعة حسب القاعات / Excel وإعادة رفعه ← نشر لكل مشرف جدوله -->
-  <div class="dash">
-    <header class="dash-head">
-      <h2 class="dash-title">مواعيد المناقشات</h2>
-    </header>
-
-    <!-- مراحل العمل بتبويبات العرض المعتمدة (خانات بيضاء، النشط بتدرّج خفيف وخط تدرّج، المكتملة بعلامة ✓) -->
-    <div class="ev-steps-bar dp-tabs-bar">
-      <ol class="tk-stepper ev-steps" aria-label="مراحل جدولة المناقشات">
-        <li v-for="(st, i) in steps" :key="st.label" :class="[step === i && 'is-active', st.done && 'is-done']">
-          <button type="button" :disabled="i > 0 && !plan.length" :aria-current="step === i && 'step'" @click="step = i">
-            <b>{{ st.done && step !== i ? '✓' : i + 1 }}</b> <component :is="st.icon" :size="16" /> {{ st.label }}
-          </button>
-        </li>
-      </ol>
-    </div>
-
-    <!-- الإعدادات -->
-    <!-- الخطوة 1 -->
-    <section v-show="step === 0" id="dp-settings" class="dash-card">
-      <div class="dash-card-head">
-        <h3>إعدادات الجدولة</h3>
+  <div class="dash dp-page">
+    <!-- صفحة واحدة بسيطة: إعدادات (تنطوي بعد التوليد) ← الجدول ← التصدير والنشر ← جدول المشرف -->
+    <!-- 1) إعدادات الجدولة — قابلة للطي -->
+    <section id="dp-settings" class="dash-card">
+      <div class="dash-card-head dp-set-head">
+        <button type="button" class="dp-set-toggle" :aria-expanded="settingsOpen || !plan.length" @click="settingsOpen = !settingsOpen">
+          <Settings2 :size="18" /> <h3>إعدادات الجدولة</h3>
+          <ChevronDown v-if="plan.length" :size="18" :class="['dp-set-caret', settingsOpen && 'is-open']" />
+        </button>
         <span class="dash-chip">{{ loading ? 'جارٍ التحميل…' : `${groups.length} مجموعة لها مشروع` }}</span>
       </div>
 
+      <div v-show="settingsOpen || !plan.length" class="dp-set-body">
       <div class="dp-blocks">
         <!-- 1. القاعات أولًا: لكل مكان تواجد قاعاته، ونافذة ساعات ملزمة اختيارية (مثل: الجنوب من 10:00 إلى 13:00) -->
         <fieldset class="dp-block dp-block-wide">
@@ -96,13 +85,12 @@
 
       <div class="dp-actions">
         <button type="button" class="pbtn is-cyan" :disabled="loading || !!badWindows.length" @click="generate"><CalendarPlus :size="17" /> {{ plan.length ? 'إعادة توليد الجدول' : 'توليد الجدول' }}</button>
-        <button v-if="plan.length" type="button" class="pbtn is-outline" @click="step = 1">التالي: مراجعة الجدول الحالي</button>
+      </div>
       </div>
     </section>
 
-    <!-- الجدول -->
-    <!-- الخطوة 2 -->
-    <section v-if="plan.length && step === 1" id="dp-table" class="dash-card">
+    <!-- 2) جدول المناقشات -->
+    <section v-if="plan.length" id="dp-table" class="dash-card">
       <div class="dash-card-head">
         <h3>جدول المناقشات</h3>
         <span :class="['dash-chip', conflictCount ? 'is-bad' : 'is-good']">{{ conflictCount ? `${conflictCount} مجموعة فيها تعارض` : 'بلا تعارضات — جاهز للنشر' }}</span>
@@ -219,42 +207,27 @@
         </p>
       </div>
 
-      <div class="dp-actions">
-        <button type="button" class="pbtn is-outline" @click="step = 0">السابق: الإعدادات</button>
-        <div class="dp-actions-main">
-          <button type="button" class="pbtn is-outline" :disabled="saving" @click="saveDraft"><Save :size="16" /> {{ saving ? 'جارٍ الحفظ…' : 'حفظ كمسودة' }}</button>
-          <button type="button" class="pbtn is-cyan" @click="step = 2">التالي: الطباعة والنشر</button>
-        </div>
-      </div>
     </section>
 
-    <!-- الخطوة 3: الطباعة والتصدير والنشر + جدول كل مشرف -->
-    <section v-if="plan.length && step === 2" class="dash-card">
+    <!-- 3) التصدير والنشر — شريط مضغوط بدل بطاقات كبيرة -->
+    <section v-if="plan.length" class="dash-card">
       <div class="dash-card-head">
-        <h3>الطباعة والنشر</h3>
+        <h3>التصدير والنشر</h3>
         <span :class="['dash-chip', conflictCount ? 'is-bad' : 'is-good']">{{ conflictCount ? `${conflictCount} مجموعة فيها تعارض` : 'بلا تعارضات — جاهز للنشر' }}</span>
       </div>
-      <div class="dp-kpis">
-        <div v-for="k in kpis" :key="k.label" :class="['dp-kpi', k.tone]"><b>{{ k.value }}</b><span>{{ k.label }}</span></div>
-      </div>
-      <div class="dp-files">
-        <button type="button" class="dp-file" :disabled="busy" @click="printPlan"><Printer :size="22" /><b>طباعة الجدول كاملًا</b><span>PDF — صفحة لكل يوم ودرجة</span></button>
-        <button type="button" class="dp-file" :disabled="busy" @click="openRoomPrint"><DoorOpen :size="22" /><b>طباعة حسب القاعات</b><span>اختر اليوم والقاعات — PDF أو Word</span></button>
-        <button type="button" class="dp-file" :disabled="busy" @click="downloadWord"><FileText :size="22" /><b>تصدير Word</b><span>بنموذج جدول المناقشات للتعديل</span></button>
-        <button type="button" class="dp-file" :disabled="busy" @click="downloadExcel"><FileSpreadsheet :size="22" /><b>تنزيل Excel</b><span>للتعديل ثم إعادة الرفع</span></button>
-        <label class="dp-file"><Upload :size="22" /><b>إعادة رفع Excel</b><span>تحديث المواعيد من الملف المعدّل</span><input type="file" accept=".xlsx" hidden @change="reupload"></label>
-      </div>
-      <div class="dp-actions">
-        <button type="button" class="pbtn is-outline" @click="step = 1">السابق: مراجعة الجدول</button>
-        <div class="dp-actions-main">
-          <button type="button" class="pbtn is-outline" :disabled="saving" @click="saveDraft"><Save :size="16" /> {{ saving ? 'جارٍ الحفظ…' : 'حفظ كمسودة' }}</button>
-          <button type="button" class="pbtn is-green" :disabled="!!conflictCount || saving" :title="conflictCount ? 'عالج التعارضات أولًا' : ''" @click="publish"><Send :size="16" /> نشر للمشرفين</button>
-        </div>
+      <div class="dp-export-row">
+        <button type="button" class="pbtn is-outline" :disabled="busy" @click="printPlan"><Printer :size="16" /> طباعة الجدول</button>
+        <button type="button" class="pbtn is-outline" :disabled="busy" @click="openRoomPrint"><DoorOpen :size="16" /> طباعة حسب القاعات</button>
+        <button type="button" class="pbtn is-outline" :disabled="busy" @click="downloadWord"><FileText :size="16" /> Word</button>
+        <button type="button" class="pbtn is-outline" :disabled="busy" @click="downloadExcel"><FileSpreadsheet :size="16" /> Excel</button>
+        <label class="pbtn is-outline dp-upload"><Upload :size="16" /> إعادة رفع Excel<input type="file" accept=".xlsx" hidden @change="reupload"></label>
+        <button type="button" class="pbtn is-outline dp-publish-draft" :disabled="saving" @click="saveDraft"><Save :size="16" /> {{ saving ? 'جارٍ الحفظ…' : 'حفظ كمسودة' }}</button>
+        <button type="button" class="pbtn is-green dp-publish-go" :disabled="!!conflictCount || saving" :title="conflictCount ? 'عالج التعارضات أولًا' : ''" @click="publish"><Send :size="16" /> نشر للمشرفين</button>
       </div>
     </section>
 
-    <!-- جدول كل مشرف بعد النشر (ضمن الخطوة 3) -->
-    <section v-show="step === 2" class="dash-card">
+    <!-- 4) جدول كل مشرف بعد النشر -->
+    <section v-if="plan.length" class="dash-card">
       <div class="dash-card-head">
         <h3>جدول مناقشات المشرف</h3>
         <span class="dash-chip">{{ published ? `آخر نشر: ${published.at}` : 'لم يُنشر بعد' }}</span>
@@ -392,7 +365,7 @@
 <script>
 import SlideTable from '@/components/ui/SlideTable.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
-import { CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, Settings2, ListChecks } from 'lucide-vue-next'
+import { CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, Settings2, ChevronDown } from 'lucide-vue-next'
 import { exportStyledExcel } from '@/utils/exportReport'
 import { exportPlanPdf, exportRoomsPdf, exportDiscussionsDoc } from '@/utils/ucasReports'
 import { DEGREES, REGIONS } from '@/utils/progressData'
@@ -411,7 +384,7 @@ const CITY = { gaza: 'غزة', middle: 'وسط غزة', south: 'خانيونس' 
 export default {
   name: 'DiscussionsTools',
 
-  components: { SlideTable, BaseModal, CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil },
+  components: { SlideTable, BaseModal, CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, Settings2, ChevronDown },
 
   data() {
     return {
@@ -437,7 +410,7 @@ export default {
         // ساعات إلزامية لكل مكان تواجد
         windows: { gaza: { start: '09:00', end: '14:00' }, middle: { start: '09:00', end: '14:00' }, south: { start: '10:00', end: '13:00' } }
       },
-      step: 0,
+      settingsOpen: true,
       detail: null,
       roomDraft: { gaza: '', middle: '', south: '' },
       view: 'list',
@@ -494,15 +467,6 @@ export default {
         { label: 'بلا موعد', value: this.plan.length - done, tone: this.plan.length - done ? 'is-bad' : '' },
         { label: 'فيها تعارض', value: this.conflictCount, tone: this.conflictCount ? 'is-warn' : '' },
         { label: 'قاعة مستخدمة', value: this.allRooms.length }
-      ]
-    },
-
-    /** مراحل الجدولة؛ كل مرحلة تعرض قسمها فقط */
-    steps() {
-      return [
-        { label: 'الإعدادات والتوليد', done: this.plan.length > 0, icon: Settings2 },
-        { label: 'مراجعة الجدول ومعالجة التعارضات', done: this.plan.length > 0 && !this.conflictCount, icon: ListChecks },
-        { label: 'الطباعة والنشر', done: !!this.published, icon: Printer }
       ]
     },
 
@@ -653,6 +617,8 @@ export default {
     this.supView = this.supList[0]?.id ?? null
     try {
       this.fromDiscussions(await loadDiscussions())
+      // جدول محفوظ موجود ← ابدأ والإعدادات مطوية ليظهر الجدول مباشرة
+      if (this.plan.length) this.settingsOpen = false
     } catch {
       // لا مواعيد محفوظة بعد
     }
@@ -693,7 +659,7 @@ export default {
     /** من النافذة إلى صف المجموعة في قائمة الخطوة 2 */
     editDetail() {
       const id = this.detail.id
-      Object.assign(this, { detail: null, step: 1, view: 'list', day: '', roomFilter: '', onlyConflicts: false })
+      Object.assign(this, { detail: null, view: 'list', day: '', roomFilter: '', onlyConflicts: false })
       this.$nextTick(() => document.querySelector(`[data-row="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
     },
 
@@ -840,7 +806,8 @@ export default {
         return row
       })
       this.published = null
-      this.step = 1
+      this.settingsOpen = false
+      this.$nextTick(() => document.getElementById('dp-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
       const missing = this.plan.filter((r) => !r.time).length
       missing ? this.$toast?.error(`تعذّر جدولة ${missing} مجموعة — راجع مؤشر السعة في الإعدادات`) : this.$toast?.success(`جُدولت ${this.plan.length} مناقشة بلا تعارضات`)
     },
