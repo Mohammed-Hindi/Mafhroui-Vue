@@ -4560,8 +4560,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 
 /* تقدّم المشاريع — المجموعات: شارة شعبة متدرّجة واسم مميز، وصف قابل للفتح بلوحة تفاصيل تمرَّر داخليًا */
 .pb-grp { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.pb-caret { flex-shrink: 0; width: 26px; height: 26px; padding: 5px; border-radius: 50%; background: color-mix(in srgb, var(--ucas-blue) 10%, transparent); color: var(--ucas-blue); transition: transform .35s ease, background-color .35s ease, color .35s ease; }
-.pb-caret.is-open { transform: rotate(180deg); background: linear-gradient(270deg, #62BB46, #0E699C); color: #FFFFFF; }
+.pb-caret { flex-shrink: 0; width: 26px; height: 26px; padding: 5px; border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 10%, transparent); color: var(--ucas-blue); transition: transform .35s ease, background-color .35s ease, color .35s ease; }
+.pb-caret.is-open { transform: rotate(180deg); background: var(--ucas-blue); color: #FFFFFF; }
 .pb-sec { flex-shrink: 0; padding: 4px 12px; border-radius: 4px; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); font-size: 12.5px; font-weight: 800; color: #FFFFFF; white-space: nowrap; box-shadow: 0 3px 8px rgba(4, 40, 80, .18); }
 .pb-grp-text { display: flex; flex-direction: column; min-width: 0; }
 .pb-grp-text b { font-size: 14.5px; font-weight: 800; color: var(--ucas-blue); }
@@ -4569,13 +4569,13 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .pt tr.is-link.is-open { background: linear-gradient(270deg, rgba(98, 187, 70, .14), rgba(0, 91, 170, .08)) !important; }
 .sa-skin .pt tr.is-link.is-open > td:first-child { box-shadow: inset -4px 0 0 #62BB46; }
 .sa-skin .pt tr.pt-sub > td { padding: 4px 10px 14px; background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-bg)) !important; background-image: none !important; }
-.pb-drop { max-height: 420px; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px; border-radius: 4px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent), 0 10px 26px rgba(4, 40, 80, .08); border-inline-start: 4px solid transparent; border-image: linear-gradient(180deg, #62BB46, #005BAA) 1; animation: saDropIn .4s cubic-bezier(.2, .8, .2, 1); scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ucas-blue) 30%, transparent) transparent; }
+.pb-drop { max-height: 420px; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px; border-radius: 4px; background: var(--color-surface); box-shadow: inset 0 0 0 1px var(--color-border); animation: saDropIn .4s cubic-bezier(.2, .8, .2, 1); scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ucas-blue) 30%, transparent) transparent; }
 .pb-drop-title { display: flex; align-items: center; gap: 6px; margin: 4px 0 10px; font-size: 14px; font-weight: 800; color: var(--ucas-blue); }
 .pb-drop-title svg { color: var(--ucas-green); }
-.pb-drop-title small { padding: 1px 9px; border-radius: 4px; background: linear-gradient(270deg, rgba(98, 187, 70, .18), rgba(0, 91, 170, .1)); font-size: 12px; color: var(--ucas-blue); }
+.pb-drop-title small { padding: 1px 9px; border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 12%, transparent); font-size: 12px; color: var(--ucas-blue); }
 .pb-drop .ev-students { margin-bottom: 16px; overflow: hidden; border-radius: 4px; }
 .sa-skin .pb-tasks { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.sa-skin .pb-tasks li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px 14px; border-radius: 4px; background: linear-gradient(270deg, rgba(98, 187, 70, .06), rgba(0, 91, 170, .03)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 9%, transparent); }
+.sa-skin .pb-tasks li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px 14px; border-radius: 4px; background: var(--color-surface); box-shadow: inset 0 0 0 1px var(--color-border); }
 .sa-skin .pb-tasks b { color: var(--ucas-blue); }
 .pb-drop .pb-tasks { max-height: none; margin: 0; padding: 0; overflow: visible; border: 0; background: none; }
 
@@ -5256,14 +5256,14 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .es-supres-score b { font-size: 18px; font-weight: 800; color: var(--ucas-blue); }
 
 /* ===== تقدّم المشاريع (كل اللوحات): الجداول داخل القائمة المنسدلة — رأس بتدرّج الهوية ونص أبيض واضح، صفوف متناوبة ===== */
-:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table { width: 100%; margin: 0 0 14px; border: 0; border-collapse: separate; border-spacing: 0; overflow: hidden; border-radius: 4px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent), 0 8px 22px rgba(4, 40, 80, .06); }
-:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table thead tr { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9) !important; }
-:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table thead th { padding: 12px 14px !important; border: 0 !important; font-size: 13px !important; font-weight: 800 !important; color: #FFFFFF !important; background: transparent !important; background-image: none !important; opacity: 1 !important; white-space: nowrap; }
+:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table { width: 100%; margin: 0 0 14px; border: 0; border-collapse: separate; border-spacing: 0; overflow: hidden; border-radius: 4px; background: var(--color-surface); box-shadow: inset 0 0 0 1px var(--color-border); }
+:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table thead tr { background: var(--color-bg) !important; background-image: none !important; }
+:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table thead th { padding: 12px 14px !important; border: 0 !important; border-bottom: 1px solid var(--color-border) !important; font-size: 13px !important; font-weight: 800 !important; color: var(--color-text-600) !important; background: transparent !important; background-image: none !important; opacity: 1 !important; white-space: nowrap; }
 :root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table tbody td { padding: 11px 14px !important; border: 0 !important; border-bottom: 1px solid color-mix(in srgb, var(--ucas-blue) 7%, transparent) !important; font-size: 13.5px; color: var(--color-text-700); background: transparent !important; }
 :root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--ucas-blue) 3%, transparent) !important; }
 :root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table tbody tr:hover td { background: color-mix(in srgb, var(--ucas-blue) 6%, transparent) !important; }
 :root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table tbody tr:last-child td { border-bottom: 0 !important; }
-:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table tbody td:first-child { font-weight: 800; color: var(--ucas-blue); background-image: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .04)) !important; }
+:root[data-brand="ucas"] :is(.pb-drop, .pt-sub) table tbody td:first-child { font-weight: 800; color: var(--ucas-blue); background-image: none !important; }
 :root[data-brand="ucas"] .sa-skin .pt tr.pt-sub > td, .sa-skin .pt tr.pt-sub > td { padding: 10px 14px 16px !important; }
 /* حالة المتأخرة داخل جدول الطلاب */
 .pb-drop .ev-students .is-bad, .pb-drop .ev-students .is-late { color: #E53E3E; font-weight: 800; }

@@ -1,187 +1,130 @@
 <template>
-  <!-- مخطط تقدّم الفرق للإدارة العامة — تفاعل المشرفين + تقدّم المجموعات وطلابها -->
+  <!-- تقدّم المشاريع — جدول موحّد للمجموعات، والمشرف/التخصص/الدرجة/الفئة/المستوى فلاتر متتالية منطقية.
+       كل صف قابل للفتح: طلاب المجموعة ثم مهامها. العنوان من التوب بار فلا يتكرّر هنا. -->
   <div class="dash">
-    <header class="dash-head">
-      <div>
-        <h2 class="dash-title">تقدّم المشاريع</h2>
-      </div>
-      <button type="button" class="pbtn is-cyan" :disabled="loading || exporting" @click="exportPdf"><FileDown :size="16" /> {{ exporting ? 'جارٍ التصدير…' : 'تصدير PDF' }}</button>
-    </header>
-
-    <nav v-if="!isSup" class="rv-tabs" aria-label="العرض">
-      <button v-if="!isSup" type="button" :class="['rv-tab', tab === 'sup' && 'is-active']" @click="tab = 'sup'">المشرفون <span class="rv-count">{{ supervisors.length }}</span></button>
-      <button type="button" :class="['rv-tab', tab === 'grp' && 'is-active']" @click="tab = 'grp'">المجموعات والطلاب <span class="rv-count">{{ groups.length }}</span></button>
-    </nav>
-
-    <section class="dash-card">
-      <div class="hm-filters">
+    <section class="gr gr-card">
+      <!-- فلاتر مجتمعة ومتتالية + تصدير -->
+      <div class="gr-filters" aria-label="تصفية تقدّم المشاريع">
         <label class="gr-search">
           <Search :size="16" />
-          <input v-model.trim="q" type="search" :placeholder="tab === 'sup' ? 'بحث باسم المشرف…' : isSup ? 'بحث بالمجموعة أو الطالب…' : 'بحث بالمجموعة أو الطالب أو المشرف…'">
+          <input :value="f.q" type="search" :placeholder="isSup ? 'بحث بالمجموعة أو الطالب أو المشروع…' : 'بحث بالمجموعة أو الطالب أو المشرف أو المشروع…'" @input="onSearch($event.target.value)">
         </label>
-        <select v-if="tab === 'grp' && !isSup" v-model="supFilter" class="gr-select" aria-label="المشرف">
-          <option value="">كل المشرفين</option>
-          <option v-for="s in supervisors" :key="s.id" :value="s.id">{{ s.name }}</option>
-        </select>
-        <select v-model="specFilter" class="gr-select" aria-label="التخصص">
-          <option value="">كل التخصصات</option>
-          <option v-for="s in specs" :key="s" :value="s">{{ s }}</option>
-        </select>
-        <select v-if="!isSup" v-model="degreeFilter" class="gr-select" aria-label="الدرجة">
-          <option value="">كل الدرجات</option>
-          <option value="diploma">دبلوم</option>
-          <option value="bachelor">بكالوريوس</option>
-        </select>
-        <!-- المشرف: فلترا التخصص والجنس فقط -->
-        <select v-if="isSup" v-model="genderFilter" class="gr-select" aria-label="الجنس">
-          <option value="">طلاب وطالبات</option>
-          <option value="male">طلاب</option>
-          <option value="female">طالبات</option>
-        </select>
-        <select v-if="tab === 'grp' && !isSup" v-model="levelFilter" class="gr-select" aria-label="مستوى الإنجاز">
-          <option value="">كل المستويات</option>
-          <option value="low">إنجاز منخفض (أقل من 35%)</option>
-          <option value="mid">متوسط (35–69%)</option>
-          <option value="high">مرتفع (70% فأكثر)</option>
-        </select>
+        <label v-if="!isSup" class="gr-pick">
+          <select :value="f.sup" class="gr-select" aria-label="المشرف" @change="setF('sup', $event.target.value)">
+            <option value="">كل المشرفين</option>
+            <option v-for="s in supOptions" :key="s.id" :value="s.id">{{ s.name }}</option>
+          </select>
+        </label>
+        <label class="gr-pick">
+          <select :value="f.spec" class="gr-select" aria-label="التخصص" @change="setF('spec', $event.target.value)">
+            <option value="">كل التخصصات</option>
+            <option v-for="s in specOptions" :key="s" :value="s">{{ s }}</option>
+          </select>
+        </label>
+        <label v-if="!isSup" class="gr-pick">
+          <select :value="f.degree" class="gr-select" aria-label="الدرجة" @change="setF('degree', $event.target.value)">
+            <option value="">كل الدرجات</option>
+            <option v-for="d in degreeOptions" :key="d.value" :value="d.value">{{ d.label }}</option>
+          </select>
+        </label>
+        <label class="gr-pick">
+          <select :value="f.gender" class="gr-select" aria-label="الفئة" @change="setF('gender', $event.target.value)">
+            <option v-for="g in genderOptions" :key="g.value" :value="g.value">{{ g.label }}</option>
+          </select>
+        </label>
+        <label class="gr-pick">
+          <select :value="f.level" class="gr-select" aria-label="مستوى الإنجاز" @change="setF('level', $event.target.value)">
+            <option value="">كل المستويات</option>
+            <option value="low">إنجاز منخفض (أقل من 35%)</option>
+            <option value="mid">متوسط (35–69%)</option>
+            <option value="high">مرتفع (70% فأكثر)</option>
+          </select>
+        </label>
+        <label class="gr-pick gr-pick-rows">
+          <select :value="pageSize" class="gr-select" aria-label="عدد الصفوف" @change="pageSize = Number($event.target.value)">
+            <option value="25">عرض 25</option>
+            <option value="50">عرض 50</option>
+            <option value="100">عرض 100</option>
+          </select>
+        </label>
+        <BaseButton class="pb-export" variant="outline" size="sm" :icon="FileDown" :loading="exporting" :disabled="loading" @click="exportPdf">تصدير PDF</BaseButton>
       </div>
 
-      <SkeletonLoader v-if="loading" :rows="4" height="40px" />
-
-      <!-- المشرفون -->
-      <SlideTable v-else-if="tab === 'sup'" :rows="supRows" :label="'المشرفون'">
+      <SlideTable :rows="grpRows" :size="pageSize" label="المجموعات">
         <template #default="{ rows: shown }">
-          <div class="pt-wrap">
-            <table class="pt">
-              <thead><tr><th>المشرف</th><th>المجموعات</th><th>الطلاب</th><th>المهام الموكلة</th><th>المنجزة</th><th>المتأخرة</th><th>الاجتماعات</th><th>الملاحظات</th><th>الملفات</th><th>التفاعل</th></tr></thead>
-              <tbody>
-                <template v-for="s in shown" :key="s.id">
-                  <tr :class="['is-link', openSup === s.id && 'is-open']" :aria-expanded="openSup === s.id" @click="toggleSup(s)">
-                    <!-- المشرف: سهم الفتح + الحرف الأول بدائرة متدرّجة + الاسم -->
-                    <td>
-                      <span class="pb-grp">
-                        <ChevronDown :size="16" :class="['pb-caret', openSup === s.id && 'is-open']" />
-                        <span class="ab-ava">{{ s.name.replace(/^(د|م|أ)\.\s*/, '').charAt(0) }}</span>
-                        <span class="pb-grp-text"><b>{{ s.name }}</b></span>
-                      </span>
-                    </td>
-                    <td>{{ s.groups.length }}</td>
-                    <td>{{ s.students }}</td>
-                    <td>{{ s.stats ? s.stats.tasks : '…' }}</td>
-                    <td>{{ s.stats ? s.stats.done : '…' }}</td>
-                    <td><span :class="lateClass(s.late)">{{ s.late ?? '—' }}</span></td>
-                    <td>{{ s.stats ? s.stats.meetings : '…' }}</td>
-                    <td>{{ s.stats ? s.stats.notes : '…' }}</td>
-                    <td>{{ s.stats ? s.stats.files : '…' }}</td>
-                    <td>
-                      <template v-if="s.stats">
-                        <span class="gr-progress"><span :class="level(s.stats.activity)" :style="{ width: s.stats.activity + '%' }" /></span>
-                        <span class="gr-pct">{{ s.stats.activity }}%</span>
-                      </template>
-                      <span v-else class="pt-muted">…</span>
-                    </td>
-                  </tr>
-                  <tr v-if="openSup === s.id" class="pt-sub">
-                    <td colspan="10">
-                      <div class="pb-drop">
-                      <h5 class="pb-drop-title"><Users :size="15" /> مجموعات المشرف <small>{{ s.profileTeams.length }}</small></h5>
-                      <table class="ev-students">
-                        <thead><tr><th>المجموعة</th><th>المشروع</th><th>المهام</th><th>المتأخرة</th><th>الاجتماعات</th><th>تفاعل المشرف</th></tr></thead>
-                        <tbody>
-                          <tr v-for="t in s.profileTeams" :key="t.team.id">
-                            <td class="pt-strong">{{ t.team.name }}<span v-if="t.team.section" class="pt-muted"> · شعبة {{ t.team.section }}</span></td>
-                            <td class="pt-muted">{{ t.project?.name || '—' }}</td>
-                            <td><span class="mono">{{ t.interaction.tasks_done }}/{{ t.interaction.tasks_total }}</span></td>
-                            <td><span :class="lateClass(lateOf(t.team.id))">{{ lateOf(t.team.id) ?? '…' }}</span></td>
-                            <td>{{ t.interaction.meetings_count }}</td>
-                            <td>
-                              <span class="gr-progress is-sm"><span :class="level(t.interaction.activity_score)" :style="{ width: t.interaction.activity_score + '%' }" /></span>
-                              <span class="gr-pct">{{ t.interaction.activity_score }}%</span>
-                            </td>
-                          </tr>
-                          <tr v-if="!s.profileTeams.length"><td colspan="6" class="pt-muted">{{ s.stats ? 'لا توجد مجموعات' : 'جارٍ التحميل…' }}</td></tr>
-                        </tbody>
-                      </table>
-                      </div>
-                    </td>
-                  </tr>
-                </template>
+          <div class="gr-table-wrap">
+            <table class="gr-table pb-table">
+              <thead>
+                <tr>
+                  <th class="hm-center">الشعبة</th>
+                  <th data-rt-title>المجموعة</th>
+                  <th v-if="!isSup">المشرف</th>
+                  <th class="hm-center">الطلاب</th>
+                  <th class="hm-center">المهام</th>
+                  <th class="hm-center">المتأخرة</th>
+                  <th>الإنجاز</th>
+                  <th aria-label="تفاصيل" />
+                </tr>
+              </thead>
+              <tbody v-if="loading">
+                <SkeletonLoader variant="table" :cols="isSup ? 7 : 8" :rows="6" />
               </tbody>
-            </table>
-          </div>
-        </template>
-        <template #after>
-          <div class="gr-sumbar">
-            <span>عدد المشرفين: {{ supRows.length }}</span>
-            <span>المجموعات: {{ supRows.reduce((n, s) => n + s.groups.length, 0) }}</span>
-            <span>الطلاب: {{ supRows.reduce((n, s) => n + s.students, 0) }}</span>
-            <span>المهام المنجزة: {{ supRows.reduce((n, s) => n + (s.stats?.done || 0), 0) }} / {{ supRows.reduce((n, s) => n + (s.stats?.tasks || 0), 0) }}</span>
-            <span>متوسط التفاعل: {{ avgOf(supRows.map((s) => s.stats?.activity).filter((x) => x != null)) }}%</span>
-          </div>
-        </template>
-      </SlideTable>
-
-      <!-- المجموعات والطلاب -->
-      <SlideTable v-else :rows="grpRows" :label="'المجموعات'">
-        <template #default="{ rows: shown }">
-          <div class="pt-wrap">
-            <table class="pt">
-              <thead><tr><th>المجموعة</th><th v-if="!isSup">المشرف</th><th>المهام (منجزة/موكلة)</th><th>المتأخرة</th><th>الإنجاز</th></tr></thead>
-              <tbody>
+              <tbody v-else-if="!grpRows.length">
+                <tr><td :colspan="isSup ? 7 : 8" class="gr-empty">لا توجد مجموعات مطابقة للفلاتر</td></tr>
+              </tbody>
+              <tbody v-else>
                 <template v-for="g in shown" :key="g.id">
-                  <tr :class="['is-link', openGrp === g.id && 'is-open']" @click="toggleGrp(g)">
-                    <!-- المجموعة: شارة الشعبة متدرّجة + الاسم بلون مميز + سهم الفتح -->
-                    <td>
-                      <span class="pb-grp">
-                        <ChevronDown :size="16" :class="['pb-caret', openGrp === g.id && 'is-open']" />
-                        <span v-if="g.section" class="pb-sec">شعبة {{ g.section }}</span>
-                        <span class="pb-grp-text"><b>{{ g.name }}</b><small>{{ g.project?.name || 'بلا مشروع' }}</small></span>
-                      </span>
+                  <tr :class="['gr-row', openGrp === g.id && 'is-open']" :aria-expanded="openGrp === g.id" @click="toggleGrp(g)">
+                    <td class="hm-center"><span class="ev-sec-chip">{{ g.section ? `شعبة ${g.section}` : '—' }}</span></td>
+                    <td class="gr-name-cell">
+                      <span class="gr-name">{{ g.name }}</span>
+                      <span class="gr-types">{{ g.project?.name || 'بلا مشروع' }}</span>
                     </td>
-                    <td v-if="!isSup">{{ g.sup.name }}</td>
-                    <td><span class="mono">{{ g.tasksDone }}/{{ g.tasksTotal }}</span></td>
-                    <td><span :class="lateClass(lateOf(g.id))">{{ lateOf(g.id) ?? '—' }}</span></td>
+                    <td v-if="!isSup">{{ g.sup.name || '—' }}</td>
+                    <td class="hm-center">{{ g.members.length }}</td>
+                    <td class="hm-center"><span class="mono">{{ g.tasksDone }}/{{ g.tasksTotal }}</span></td>
+                    <td class="hm-center"><span :class="lateClass(lateOf(g.id))">{{ lateOf(g.id) ?? '—' }}</span></td>
                     <td>
                       <span class="gr-progress"><span :class="level(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
                       <span class="gr-pct">{{ g.percentage }}%</span>
                     </td>
+                    <td class="hm-center"><ChevronDown :size="16" :class="['pb-caret', openGrp === g.id && 'is-open']" /></td>
                   </tr>
                   <tr v-if="openGrp === g.id" class="pt-sub">
-                    <td :colspan="isSup ? 4 : 5">
-                      <!-- تفاصيل المجموعة: الطلاب ثم المهام، داخل لوحة منسدلة تمرَّر داخليًا -->
+                    <td :colspan="isSup ? 7 : 8">
                       <div class="pb-drop">
-                      <h5 class="pb-drop-title"><Users :size="15" /> الطلاب <small>{{ g.members.length }}</small></h5>
-                      <table class="ev-students">
-                        <thead><tr><th>الطالب</th><th>الموكلة</th><th>المنجزة</th><th>المتأخرة</th><th>نسبة الإنجاز</th><th>آخر نشاط</th></tr></thead>
-                        <tbody>
-                          <tr v-for="m in g.members" :key="m.id">
-                            <td class="pt-strong">{{ m.name }}</td>
-                            <td>{{ m.total }}</td>
-                            <td>{{ m.done }}</td>
-                            <td><span :class="lateClass(studentLate(g.id, m.id))">{{ studentLate(g.id, m.id) ?? '…' }}</span></td>
-                            <td>
-                              <span class="gr-progress"><span :class="level(m.percentage)" :style="{ width: m.percentage + '%' }" /></span>
-                              <span class="gr-pct">{{ m.percentage }}%</span>
-                            </td>
-                            <td class="ad-nowrap" :title="m.lastActive ? formatDateTime(m.lastActive) : ''">{{ m.lastActive ? formatRelativeTime(m.lastActive) : 'لم يدخل بعد' }}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      <h5 class="pb-drop-title"><ListTodo :size="15" /> المهام <small>{{ tasks[g.id]?.length ?? '…' }}</small></h5>
-                      <SkeletonLoader v-if="!tasks[g.id]" :rows="2" />
-                      <p v-else-if="!tasks[g.id].length" class="pt-muted">لا توجد مهام لهذه المجموعة</p>
-                      <ul v-else class="pb-tasks">
-                        <li v-for="t in tasks[g.id]" :key="t.id">
-                          <span :class="['rv-pill', t.status === 'done' ? 'is-approved' : isLate(t) ? 'is-rejected' : 'is-pending']">{{ isLate(t) ? 'متأخرة' : TASK_STATUS[t.status] || t.status }}</span>
-                          <b>{{ t.title }}</b>
-                          <span class="pt-muted">{{ (t.assignees || []).map((a) => a.name).join('، ') || 'كل الفريق' }}<template v-if="t.due_date"> · التسليم {{ formatDate(t.due_date) }}</template></span>
-                        </li>
-                      </ul>
+                        <h5 class="pb-drop-title"><Users :size="15" /> الطلاب <small>{{ g.members.length }}</small></h5>
+                        <table class="ev-students">
+                          <thead><tr><th>الطالب</th><th>الموكلة</th><th>المنجزة</th><th>المتأخرة</th><th>نسبة الإنجاز</th><th>آخر نشاط</th></tr></thead>
+                          <tbody>
+                            <tr v-for="m in g.members" :key="m.id">
+                              <td class="pt-strong">{{ m.name }}</td>
+                              <td>{{ m.total }}</td>
+                              <td>{{ m.done }}</td>
+                              <td><span :class="lateClass(studentLate(g.id, m.id))">{{ studentLate(g.id, m.id) ?? '…' }}</span></td>
+                              <td>
+                                <span class="gr-progress is-sm"><span :class="level(m.percentage)" :style="{ width: m.percentage + '%' }" /></span>
+                                <span class="gr-pct">{{ m.percentage }}%</span>
+                              </td>
+                              <td class="ad-nowrap" :title="m.lastActive ? formatDateTime(m.lastActive) : ''">{{ m.lastActive ? formatRelativeTime(m.lastActive) : 'لم يدخل بعد' }}</td>
+                            </tr>
+                            <tr v-if="!g.members.length"><td colspan="6" class="pt-muted">لا يوجد طلاب</td></tr>
+                          </tbody>
+                        </table>
+                        <h5 class="pb-drop-title"><ListTodo :size="15" /> المهام <small>{{ tasks[g.id]?.length ?? '…' }}</small></h5>
+                        <SkeletonLoader v-if="!tasks[g.id]" :rows="2" />
+                        <p v-else-if="!tasks[g.id].length" class="pt-muted">لا توجد مهام لهذه المجموعة</p>
+                        <ul v-else class="pb-tasks">
+                          <li v-for="t in tasks[g.id]" :key="t.id">
+                            <span :class="['rv-pill', t.status === 'done' ? 'is-approved' : isLate(t) ? 'is-rejected' : 'is-pending']">{{ isLate(t) ? 'متأخرة' : TASK_STATUS[t.status] || t.status }}</span>
+                            <b>{{ t.title }}</b>
+                            <span class="pt-muted">{{ (t.assignees || []).map((a) => a.name).join('، ') || 'كل الفريق' }}<template v-if="t.due_date"> · التسليم {{ formatDate(t.due_date) }}</template></span>
+                          </li>
+                        </ul>
                       </div>
                     </td>
                   </tr>
                 </template>
-                <tr v-if="!grpRows.length"><td :colspan="isSup ? 4 : 5" class="gr-empty">لا توجد مجموعات مطابقة</td></tr>
               </tbody>
             </table>
           </div>
@@ -192,7 +135,6 @@
             <span>الطلاب: {{ grpRows.reduce((n, g) => n + g.members.length, 0) }}</span>
             <span>المهام المنجزة: {{ grpRows.reduce((n, g) => n + g.tasksDone, 0) }} / {{ grpRows.reduce((n, g) => n + g.tasksTotal, 0) }}</span>
             <span>متوسط الإنجاز: {{ avgOf(grpRows.map((g) => g.percentage)) }}%</span>
-            <!-- المشرف: تصدير PDF داخل الشريط الأخضر أسفل الجدول -->
           </div>
         </template>
       </SlideTable>
@@ -202,6 +144,8 @@
 
 <script>
 import SlideTable from '@/components/ui/SlideTable.vue'
+import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
 import { ChevronDown, FileDown, ListTodo, Search, Users } from 'lucide-vue-next'
 
 import { escapeHtml } from '@/utils/exportReport'
@@ -212,59 +156,50 @@ import { formatDate, formatRelativeTime } from '@/utils/formatters'
 import { useAuthStore } from '@/stores/auth.store'
 import { groupGender } from '@/services/adminData'
 
+const DEGREES = { diploma: 'دبلوم', bachelor: 'بكالوريوس' }
+
 export default {
   name: 'ProgressBoard',
 
-  components: { SlideTable, ChevronDown, FileDown, ListTodo, Search, Users },
+  components: { SlideTable, SkeletonLoader, BaseButton, ChevronDown, Search, Users, ListTodo },
 
   data() {
-    // المشرف: مجموعاته فقط (الخادم يقيّد /progress) بلا تبويب المشرفين
+    // المشرف: مجموعاته فقط (الخادم يقيّد /progress) بلا فلتر المشرف/الدرجة
     const isSup = useAuthStore().userRole === 'supervisor'
-    return { isSup, TASK_STATUS, tab: isSup ? 'grp' : 'sup', groups: [], profiles: {}, tasks: {}, loading: true, q: '', supFilter: '', specFilter: '', degreeFilter: '', levelFilter: '', genderFilter: '', openSup: null, openGrp: null, exporting: false }
+    return {
+      isSup, TASK_STATUS, FileDown,
+      groups: [], tasks: {}, loading: true,
+      pageSize: 25,
+      openGrp: null,
+      exporting: false,
+      f: { q: '', sup: '', spec: '', degree: '', gender: '', level: '' }
+    }
   },
 
   computed: {
-    supervisors() {
-      const map = new Map()
-      this.groups.forEach((g) => {
-        if (!g.sup.id) return
-        if (!map.has(g.sup.id)) map.set(g.sup.id, { id: g.sup.id, name: g.sup.name, groups: [], students: 0 })
-        const s = map.get(g.sup.id)
-        s.groups.push(g)
-        s.students += g.members.length
-      })
-      return [...map.values()].map((s) => {
-        const p = this.profiles[s.id]
-        const teams = p?.interaction?.teams || []
-        const sum = (k) => teams.reduce((n, t) => n + (t.interaction[k] || 0), 0)
-        const lates = s.groups.map((g) => this.lateOf(g.id))
-        return {
-          ...s,
-          profileTeams: teams,
-          stats: p ? { tasks: sum('tasks_total'), done: sum('tasks_done'), meetings: sum('meetings_count'), notes: sum('notes_count'), files: sum('files_count'), activity: Math.round(p.interaction?.average_activity ?? 0) } : null,
-          late: lates.every((x) => x !== null) ? lates.reduce((n, x) => n + x, 0) : null
-        }
-      })
-    },
-    specs() {
-      return [...new Set(this.groups.map((g) => g.spec).filter(Boolean))]
-    },
-    /** المشرف يظهر إن كانت له مجموعة واحدة على الأقل تطابق التخصص/الدرجة */
-    supRows() {
-      return this.supervisors.filter((s) =>
-        (!this.q || s.name.includes(this.q)) &&
-        s.groups.some((g) => (!this.specFilter || g.spec === this.specFilter) && (!this.degreeFilter || g.degree === this.degreeFilter))
-      )
-    },
+    /** الصفوف المعروضة: كل الفلاتر مجتمعة + البحث — محليًا */
     grpRows() {
-      return this.groups.filter((g) =>
-        (!this.q || `${g.name} ${g.sup.name} ${g.members.map((m) => m.name).join(' ')}`.includes(this.q)) &&
-        (!this.supFilter || g.sup.id === this.supFilter) &&
-        (!this.specFilter || g.spec === this.specFilter) &&
-        (!this.degreeFilter || g.degree === this.degreeFilter) &&
-        (!this.levelFilter || level(g.percentage) === 'is-' + this.levelFilter) &&
-        (!this.genderFilter || groupGender(g) === this.genderFilter)
-      )
+      return this.groups.filter((g) => this.passes(g, this.f))
+    },
+    /** خيارات كل فلتر تتضيّق حسب باقي الفلاتر المفعّلة (منطقية متتالية) */
+    supOptions() {
+      const map = new Map()
+      this.baseExcept('sup').forEach((g) => g.sup?.id && map.set(g.sup.id, g.sup))
+      return [...map.values()].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'))
+    },
+    specOptions() {
+      return [...new Set(this.baseExcept('spec').map((g) => g.spec).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar'))
+    },
+    degreeOptions() {
+      const present = new Set(this.baseExcept('degree').map((g) => String(g.degree)))
+      return Object.entries(DEGREES).filter(([k]) => present.has(String(k))).map(([value, label]) => ({ value, label }))
+    },
+    genderOptions() {
+      const present = new Set(this.baseExcept('gender').map((g) => groupGender(g)).filter(Boolean))
+      const opts = [{ value: '', label: 'طلاب وطالبات' }]
+      if (present.has('male')) opts.push({ value: 'male', label: 'طلاب' })
+      if (present.has('female')) opts.push({ value: 'female', label: 'طالبات' })
+      return opts
     }
   },
 
@@ -274,7 +209,6 @@ export default {
     } finally {
       this.loading = false
     }
-    this.supervisors.forEach((s) => this.loadProfile(s.id))
   },
 
   methods: {
@@ -283,13 +217,31 @@ export default {
     formatDateTime: (d) => new Date(d).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' }),
     level,
 
-    async loadProfile(id) {
-      try {
-        const { data } = await api.get(`/supervisors/${id}/profile`)
-        this.profiles = { ...this.profiles, [id]: data }
-      } catch {
-        // بلا بيانات تفاعل
-      }
+    /** هل تمرّ المجموعة من مجموعة فلاتر (كلها مجتمعة) + البحث */
+    passes(g, f) {
+      if (f.sup && g.sup?.id !== f.sup) return false
+      if (f.spec && g.spec !== f.spec) return false
+      if (f.degree && g.degree !== f.degree) return false
+      if (f.gender && groupGender(g) !== f.gender) return false
+      if (f.level && level(g.percentage) !== 'is-' + f.level) return false
+      const q = (f.q || '').trim()
+      if (q && !`${g.name} ${g.sup?.name || ''} ${g.project?.name || ''} ${g.members.map((m) => m.name).join(' ')}`.includes(q)) return false
+      return true
+    },
+
+    /** القائمة مفلترة بكل الفلاتر عدا المفتاح — لاشتقاق خياراته (تتالٍ) */
+    baseExcept(key) {
+      const f = { ...this.f, [key]: '' }
+      return this.groups.filter((g) => this.passes(g, f))
+    },
+
+    setF(key, value) {
+      this.f = { ...this.f, [key]: value }
+    },
+
+    onSearch(value) {
+      clearTimeout(this.searchTimer)
+      this.searchTimer = setTimeout(() => { this.f = { ...this.f, q: value.trim() } }, 300)
     },
 
     async loadTasks(teamId) {
@@ -300,11 +252,6 @@ export default {
       } catch {
         this.tasks = { ...this.tasks, [teamId]: [] }
       }
-    },
-
-    toggleSup(s) {
-      this.openSup = this.openSup === s.id ? null : s.id
-      if (this.openSup) s.groups.forEach((g) => this.loadTasks(g.id))
     },
 
     toggleGrp(g) {
@@ -332,56 +279,45 @@ export default {
       return list.length ? Math.round(list.reduce((n, x) => n + x, 0) / list.length) : 0
     },
 
-    /** وصف الفلترة المطبّقة لعنوان التقرير */
-    filterLabel() {
-      const sup = this.supervisors.find((s) => s.id === this.supFilter)?.name
-      const deg = { diploma: 'دبلوم', bachelor: 'بكالوريوس' }[this.degreeFilter]
-      const lvl = { low: 'إنجاز منخفض', mid: 'إنجاز متوسط', high: 'إنجاز مرتفع' }[this.levelFilter]
-      return [this.specFilter, deg, this.tab === 'grp' && sup, this.tab === 'grp' && lvl, this.q && `بحث: ${this.q}`].filter(Boolean).join(' · ')
+    lateClass(n) {
+      return n ? 'pb-late' : ''
     },
 
-    /** تصدير PDF بترويسة الكلية للتبويب الحالي (المشرفون أو المجموعات) حسب الفلترة */
+    /** وصف الفلترة المطبّقة لعنوان التقرير */
+    filterLabel() {
+      const sup = this.supOptions.find((s) => s.id === this.f.sup)?.name
+      const lvl = { low: 'إنجاز منخفض', mid: 'إنجاز متوسط', high: 'إنجاز مرتفع' }[this.f.level]
+      const gen = { male: 'طلاب', female: 'طالبات' }[this.f.gender]
+      return [this.f.spec, DEGREES[this.f.degree], !this.isSup && sup, gen, lvl, this.f.q && `بحث: ${this.f.q}`].filter(Boolean).join(' · ')
+    },
+
+    /** تصدير PDF بترويسة الكلية لجدول المجموعات حسب الفلترة */
     async exportPdf() {
       this.exporting = true
       const e = escapeHtml
       try {
-        if (this.tab === 'sup') {
-          await exportTablePdf({
-            fileName: `تقدم المشاريع - المشرفون${this.filterLabel() ? ' - ' + this.filterLabel() : ''}.pdf`,
-            title: 'تقرير تقدّم المشاريع — تفاعل المشرفين',
-            filterLabel: this.filterLabel(),
-            landscape: true,
-            perPage: 12,
-            head: [{ label: 'المشرف' }, { label: 'المجموعات', width: 80 }, { label: 'الطلاب', width: 70 }, { label: 'المهام المنجزة/الموكلة', width: 130 }, { label: 'المتأخرة', width: 80 }, { label: 'الاجتماعات', width: 85 }, { label: 'الملاحظات', width: 80 }, { label: 'الملفات', width: 70 }, { label: 'التفاعل', width: 80 }],
-            rows: this.supRows.map((s) => [
-              `<b>${e(s.name)}</b>`, s.groups.length, s.students,
-              s.stats ? `<span dir="ltr">${s.stats.done}/${s.stats.tasks}</span>` : '—', s.late ?? '—',
-              s.stats?.meetings ?? '—', s.stats?.notes ?? '—', s.stats?.files ?? '—', s.stats ? `${s.stats.activity}%` : '—'
-            ])
+        const head = [{ label: 'الشعبة', width: 60 }, { label: 'المجموعة والمشروع' }]
+        if (!this.isSup) head.push({ label: 'المشرف', width: 110 })
+        head.push({ label: 'الطلاب', width: 56 }, { label: 'المهام', width: 70 }, { label: 'المتأخرة', width: 66 }, { label: 'الإنجاز', width: 66 })
+        await exportTablePdf({
+          fileName: `تقدم المشاريع${this.filterLabel() ? ' - ' + this.filterLabel() : ''}.pdf`,
+          title: 'تقرير تقدّم المشاريع — المجموعات والطلاب',
+          filterLabel: this.filterLabel(),
+          perPage: 14,
+          head,
+          rows: this.grpRows.map((g) => {
+            const row = [e(g.section || '—'), `<b>${e(g.name)}</b><br><span style="font-size:12px; color:#444;">${e(g.project?.name || 'بلا مشروع')}</span>`]
+            if (!this.isSup) row.push(e(g.sup?.name || '—'))
+            row.push(g.members.length, `<span dir="ltr">${g.tasksDone}/${g.tasksTotal}</span>`, this.lateOf(g.id) ?? '—', `<b>${g.percentage}%</b>`)
+            return row
           })
-        } else {
-          await exportTablePdf({
-            fileName: `تقدم المشاريع - المجموعات${this.filterLabel() ? ' - ' + this.filterLabel() : ''}.pdf`,
-            title: 'تقرير تقدّم المشاريع — المجموعات والطلاب',
-            filterLabel: this.filterLabel(),
-            perPage: 14,
-            head: [{ label: 'الشعبة', width: 60 }, { label: 'المجموعة والمشروع' }, { label: 'المشرف', width: 110 }, { label: 'المهام', width: 70 }, { label: 'المتأخرة', width: 66 }, { label: 'الإنجاز', width: 66 }],
-            rows: this.grpRows.map((g) => [
-              e(g.section || '—'), `<b>${e(g.name)}</b><br><span style="font-size:12px; color:#444;">${e(g.project?.name || 'بلا مشروع')}</span>`,
-              e(g.sup.name), `<span dir="ltr">${g.tasksDone}/${g.tasksTotal}</span>`, this.lateOf(g.id) ?? '—', `<b>${g.percentage}%</b>`
-            ])
-          })
-        }
+        })
         this.$toast?.success('تم تصدير التقرير PDF')
       } catch {
         this.$toast?.error('تعذّر تصدير التقرير')
       } finally {
         this.exporting = false
       }
-    },
-
-    lateClass(n) {
-      return n ? 'pb-late' : ''
     }
   }
 }
