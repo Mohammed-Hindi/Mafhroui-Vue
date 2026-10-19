@@ -1,95 +1,76 @@
 <template>
-  <div>
-    <!-- الإدارة العامة: صندوق مراجعة (قائمة + تفاصيل) — اللجنة تبقى على التصميم الأصلي -->
-    <ProposalsReview v-if="isSuperAdmin" />
+  <!-- الإدارة العامة: صندوق مراجعة (قائمة + تفاصيل) — اللجنة تبقى على التصميم الأصلي -->
+  <ProposalsReview v-if="isSuperAdmin" />
 
-    <template v-else>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="reveal group bg-surface rounded-lg border border-border shadow-card p-5 flex items-center lg:flex-col lg:items-start gap-4 lg:gap-0 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200 active:scale-[0.98]">
-          <span class="grid place-items-center w-11 h-11 rounded-md bg-error-bg text-error shrink-0 lg:mb-4"><XCircle :size="20" /></span>
-          <div class="flex items-baseline gap-2 lg:block">
-            <div class="font-cairo font-extrabold text-h1 text-text-900 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="stats.rejected" /></div>
-            <div class="text-body-sm font-bold text-text-600 lg:mt-1.5">طلبات مرفوضة</div>
-          </div>
-        </div>
-        <div class="reveal group bg-surface rounded-lg border border-border shadow-card p-5 flex items-center lg:flex-col lg:items-start gap-4 lg:gap-0 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200 active:scale-[0.98]">
-          <span class="grid place-items-center w-11 h-11 rounded-md bg-success-bg text-success shrink-0 lg:mb-4"><CheckCircle2 :size="20" /></span>
-          <div class="flex items-baseline gap-2 lg:block">
-            <div class="font-cairo font-extrabold text-h1 text-text-900 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="stats.approved" /></div>
-            <div class="text-body-sm font-bold text-text-600 lg:mt-1.5">طلبات معتمدة</div>
-          </div>
-        </div>
-        <div class="reveal group bg-surface rounded-lg border border-border shadow-card p-5 flex items-center lg:flex-col lg:items-start gap-4 lg:gap-0 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200 active:scale-[0.98]">
-          <span class="grid place-items-center w-11 h-11 rounded-md bg-warning-bg text-warning-text shrink-0 lg:mb-4"><Clock :size="20" /></span>
-          <div class="flex items-baseline gap-2 lg:block">
-            <div class="font-cairo font-extrabold text-h1 text-text-900 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="stats.pending" /></div>
-            <div class="text-body-sm font-bold text-text-600 lg:mt-1.5">قيد المراجعة</div>
-          </div>
-        </div>
-        <div class="reveal group bg-surface rounded-lg border border-border shadow-card p-5 flex items-center lg:flex-col lg:items-start gap-4 lg:gap-0 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200 active:scale-[0.98]">
-          <span class="grid place-items-center w-11 h-11 rounded-md bg-primary-50 text-primary-600 shrink-0 lg:mb-4"><FileCheck :size="20" /></span>
-          <div class="flex items-baseline gap-2 lg:block">
-            <div class="font-cairo font-extrabold text-h1 text-text-900 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="proposals.length" /></div>
-            <div class="text-body-sm font-bold text-text-600 lg:mt-1.5">إجمالي الطلبات</div>
-          </div>
-        </div>
+  <section v-else class="gr gr-card pv">
+    <header class="gr-card-head">
+      <div class="gr-card-title">
+        <span class="dash-chip">{{ semesterName }}</span>
+        <span class="dash-chip">{{ filteredProposals.length }} مقترح</span>
       </div>
-
-      <div class="bg-surface rounded-lg border border-border shadow-card overflow-hidden">
-        <div class="flex flex-wrap items-center justify-between gap-4 p-5 pb-4">
-          <h3 class="portal-title font-cairo font-bold text-h4 text-text-900">قائمة المقترحات</h3>
-          <div class="portal-tabs flex items-center gap-1 bg-bg border border-border rounded-md p-1">
-            <button
-              v-for="tab in tabs" :key="tab.value" type="button"
-              class="h-8 px-4 rounded-sm text-caption font-bold transition-colors duration-fast"
-              :class="activeTab === tab.value ? 'bg-primary-600 text-white shadow-card' : 'text-text-600 hover:text-primary-700'"
-              @click="activeTab = tab.value; page = 1"
-            >
-              {{ tab.label }}
-            </button>
-          </div>
-        </div>
-
-        <div class="px-5 pb-4">
-          <div class="relative">
-            <Search :size="16" class="pointer-events-none absolute top-1/2 -translate-y-1/2 start-3 text-text-400" />
-            <input v-model.trim="search" type="search" placeholder="ابحث عن مشروع أو فريق..." class="w-full h-icon-btn ps-10 pe-3 rounded-pill border border-border bg-bg text-body text-text-900 focus:border-primary-600 transition-colors duration-fast">
-          </div>
-        </div>
-
-        <DataTable
-          :columns="columns" :rows="pageRows" row-key="id"
-          :loading="!teamsLoaded"
-          :meta="{ current_page: page, last_page: totalPages, total: filteredProposals.length }"
-          empty-title="لا توجد مقترحات مطابقة"
-          @page-change="page = $event"
-        >
-          <template #cell-spec="{ row }">
-            <div class="font-bold text-text-900">{{ row.title }}</div>
-            <div v-if="row.sub" class="text-label text-text-400 mt-0.5">{{ row.sub }}</div>
-          </template>
-          <template #cell-team="{ value }"><span class="font-bold text-text-900">{{ value }}</span></template>
-          <template #cell-file="{ row }">
-            <button type="button" class="inline-flex items-center gap-2 text-caption font-semibold text-primary-700 bg-primary-50 px-3 py-1.5 rounded-sm hover:bg-primary-100 transition-colors duration-fast" @click="openFile(row)">
-              <FileText :size="14" /> عرض المقترح
-            </button>
-          </template>
-          <template #cell-status="{ row }"><BaseBadge :variant="statusVariant(row.status)" dot>{{ row.status }}</BaseBadge></template>
-          <template #cell-actions="{ row }">
-            <div class="flex gap-2">
-              <button type="button" class="grid place-items-center w-9 h-9 rounded-pill bg-error-bg text-error hover:brightness-95 transition-all duration-fast disabled:opacity-40" :disabled="row.status !== 'قيد المراجعة'" title="رفض" @click="openReject(row)"><X :size="15" /></button>
-              <button type="button" class="grid place-items-center w-9 h-9 rounded-pill bg-success-bg text-success hover:brightness-95 transition-all duration-fast disabled:opacity-40" :disabled="row.status !== 'قيد المراجعة'" title="موافقة" @click="approve(row)"><Check :size="15" /></button>
-            </div>
-          </template>
-          <template #row-extra="{ row }">
-            <div v-if="row.status === 'مرفوض' && row.rejectReason" class="flex items-start gap-2 p-3 rounded-sm bg-error-bg md:rounded-none md:px-5 md:py-3 md:border-t md:border-error-border/50">
-              <XCircle :size="14" class="text-error shrink-0 mt-0.5" />
-              <p class="text-caption text-error leading-relaxed"><span class="font-bold">ملاحظات الرفض: </span>{{ row.rejectReason }}</p>
-            </div>
-          </template>
-        </DataTable>
+      <div class="gr-card-actions">
+        <slot name="actions" />
       </div>
-    </template>
+    </header>
+
+    <div class="gr-filters" aria-label="تصفية المقترحات">
+      <label class="gr-search">
+        <Search :size="16" />
+        <input v-model.trim="q" type="search" placeholder="بحث باسم المشروع أو الفريق…">
+      </label>
+      <BaseSelect v-model="f.spec" class="min-w-[170px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specSelectOptions" />
+      <BaseSelect v-model="f.status" class="min-w-[140px]" aria-label="الحالة" placeholder="كل الحالات" include-placeholder-option :options="statusSelectOptions" />
+      <BaseSelect v-model="pageSize" class="min-w-[110px]" aria-label="عدد الصفوف" :options="pageSizeOptions" />
+    </div>
+
+    <SlideTable :rows="filteredProposals" :size="pageSize" label="المقترحات">
+      <template #default="{ rows: pageRows }">
+        <div class="gr-table-wrap">
+          <table class="gr-table pv-table">
+            <thead>
+              <tr>
+                <th>المشروع</th>
+                <th>الفريق</th>
+                <th class="gr-hide-md">التخصص</th>
+                <th>الحالة</th>
+                <th>المرفقات</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody v-if="!pageRows.length">
+              <SkeletonLoader v-if="!teamsLoaded" variant="table" :cols="6" :rows="6" />
+              <tr v-else><td colspan="6" class="gr-empty">لا توجد مقترحات مطابقة للفلاتر</td></tr>
+            </tbody>
+            <tbody v-else>
+              <tr v-for="p in pageRows" :key="p.id">
+                <td class="gr-name-cell">
+                  <span class="gr-name">{{ p.title }}</span>
+                  <span v-if="p.supervisor" class="gr-types">المشرف: {{ p.supervisor }}</span>
+                  <span v-if="p.statusKey === 'rejected' && p.rejectReason" class="pv-reason">
+                    <XCircle :size="13" />
+                    <span><b>ملاحظات الرفض: </b>{{ p.rejectReason }}</span>
+                  </span>
+                </td>
+                <td><span class="gr-name">{{ p.team }}</span></td>
+                <td class="gr-hide-md"><span class="gr-spec">{{ p.sub }}</span></td>
+                <td><span :class="['gm-chip', STATUS_CLASS[p.statusKey]]">{{ p.status }}</span></td>
+                <td>
+                  <button type="button" class="pv-file" @click="openFile(p)">
+                    <FileText :size="14" /> عرض المقترح
+                  </button>
+                </td>
+                <td>
+                  <div class="pv-acts">
+                    <button type="button" class="pv-act is-reject" :disabled="p.statusKey !== 'pending'" title="رفض" @click="openReject(p)"><X :size="15" /></button>
+                    <button type="button" class="pv-act is-approve" :disabled="p.statusKey !== 'pending'" title="موافقة" @click="approve(p)"><Check :size="15" /></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
+    </SlideTable>
 
     <BaseModal v-model="rejectModal" title="سبب الرفض" :description="rejectTarget ? `سبب رفض مقترح ${rejectTarget.team}` : ''" size="sm">
       <div class="flex flex-col gap-2">
@@ -101,64 +82,63 @@
         <BaseButton variant="danger" :icon="X" :loading="rejecting" @click="confirmReject">تأكيد الرفض</BaseButton>
       </template>
     </BaseModal>
-  </div>
+  </section>
 </template>
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, X, Check } from 'lucide-vue-next'
+import { Search, FileText, X, Check, XCircle } from 'lucide-vue-next'
 import ProposalsReview from '@/views/super-admin/ProposalsReview.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { PORTAL_ROLES } from '@/utils/constants'
-import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
-import DataTable from '@/components/ui/DataTable.vue'
-import CountUp from '@/components/ui/CountUp.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
+import SlideTable from '@/components/ui/SlideTable.vue'
+import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import { useTeamsStore } from '@/stores/teams.store'
+import { activeSemesterName } from '@/services/adminData'
 
-const PAGE_SIZE = 5
 const STATUS_LABELS = { pending: 'قيد المراجعة', approved: 'معتمد', rejected: 'مرفوض' }
+/** الحالة كشارة ملوّنة: معلّق (أزرق) · معتمد (أخضر) · مرفوض (أحمر) */
+const STATUS_CLASS = { pending: 'is-active', approved: 'is-done', rejected: 'is-rejected' }
+const EMPTY_FILTERS = { spec: '', status: '' }
 
 export default {
   name: 'CommitteeProposalsPage',
 
-  components: { XCircle, CheckCircle2, Clock, FileCheck, Search, FileText, X, Check, BaseBadge, BaseButton, BaseModal, DataTable, CountUp, ProposalsReview },
+  components: { Search, FileText, X, Check, XCircle, ProposalsReview, BaseButton, BaseModal, BaseSelect, SlideTable, SkeletonLoader },
 
   data() {
     return {
       X,
-      search: '',
-      activeTab: 'all',
-      page: 1,
-      tabs: [
-        { value: 'all', label: 'الكل' },
-        { value: 'قيد المراجعة', label: 'المعلّقة' },
-        { value: 'معتمد', label: 'المعتمدة' }
+      STATUS_CLASS,
+      q: '',
+      f: { ...EMPTY_FILTERS },
+      pageSize: 25,
+      pageSizeOptions: [
+        { value: 25, label: 'عرض 25' },
+        { value: 50, label: 'عرض 50' },
+        { value: 100, label: 'عرض 100' }
       ],
-      columns: [
-        { key: 'spec', label: 'تفاصيل المشروع والتخصص' },
-        { key: 'team', label: 'الفريق' },
-        { key: 'file', label: 'المرفقات' },
-        { key: 'status', label: 'الحالة' },
-        { key: 'actions', label: 'الإجراءات' }
-      ],
-
       rejectModal: false,
       rejectTarget: null,
       rejectReason: '',
-      rejecting: false,
-      approvingId: null
+      rejecting: false
     }
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['teams', 'teamsLoaded', 'specializationName']),
+    ...mapState(useTeamsStore, ['teams', 'teamsLoaded', 'specializationName', 'specializations']),
     ...mapState(useAuthStore, ['userRole']),
 
     /** قوالب البوابة (هوية UCAS) للإدارة العامة ولجنة الإشراف */
     isSuperAdmin() {
       return PORTAL_ROLES.includes(this.userRole)
+    },
+
+    semesterName() {
+      return activeSemesterName()
     },
 
     proposals() {
@@ -170,48 +150,38 @@ export default {
             id: p.id,
             title: p.name,
             sub: this.specializationName(t.specialization_id),
+            specId: t.specialization_id,
             team: t.name,
+            statusKey: p.status,
             status: STATUS_LABELS[p.status] || p.status,
             rejectReason: p.rejection_reason,
             ext: p.pdf_path?.split('.').pop() || 'pdf',
-            // تفاصيل يعرضها صندوق المراجعة للإدارة العامة
-            supervisor: t.supervisor?.name || '',
-            description: p.description,
-            problems: p.problems,
-            solutions: p.solutions,
-            features: p.features_value,
-            rejectionCount: p.rejection_count || 0,
-            submittedAt: p.created_at,
-            projectId: t.project.id,
-            reviewer: p.reviewed_by ? (p.reviewed_by === t.supervisor?.id ? t.supervisor.name : 'لجنة الإشراف') : '',
-            members: (t.members || []).map((m) => ({ id: m.id, name: m.student?.name || '' }))
+            supervisor: t.supervisor?.name || ''
           }
         })
     },
 
-    stats() {
-      const rejected = this.proposals.filter((p) => p.status === 'مرفوض').length
-      const approved = this.proposals.filter((p) => p.status === 'معتمد').length
-      const pending = this.proposals.filter((p) => p.status === 'قيد المراجعة').length
-      return { rejected, approved, pending }
+    /** المصدر الخام لكل قوائم الفلاتر المتداخلة */
+    baseProposals() {
+      return this.proposals
+    },
+
+    specSelectOptions() {
+      return this.specializations.map((s) => ({ value: s.id, label: s.name }))
+    },
+
+    statusSelectOptions() {
+      return Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))
     },
 
     filteredProposals() {
-      const q = this.search.trim()
-      return this.proposals.filter((p) => {
-        const matchTab = this.activeTab === 'all' || p.status === this.activeTab
-        const matchQ = !q || `${p.title}${p.team}`.includes(q)
-        return matchTab && matchQ
+      const q = this.q.trim()
+      return this.baseProposals.filter((p) => {
+        const matchSpec = !this.f.spec || p.specId === this.f.spec
+        const matchStatus = !this.f.status || p.statusKey === this.f.status
+        const matchQ = !q || `${p.title}${p.team}${p.sub}${p.supervisor}`.includes(q)
+        return matchSpec && matchStatus && matchQ
       })
-    },
-
-    totalPages() {
-      return Math.max(1, Math.ceil(this.filteredProposals.length / PAGE_SIZE))
-    },
-
-    pageRows() {
-      const start = (this.page - 1) * PAGE_SIZE
-      return this.filteredProposals.slice(start, start + PAGE_SIZE)
     }
   },
 
@@ -221,10 +191,6 @@ export default {
 
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'approveProposal', 'rejectProposal', 'openProtectedFile']),
-
-    statusVariant(status) {
-      return { 'معتمد': 'success', 'مرفوض': 'error', 'قيد المراجعة': 'warning' }[status] || 'neutral'
-    },
 
     async openFile(row) {
       try {

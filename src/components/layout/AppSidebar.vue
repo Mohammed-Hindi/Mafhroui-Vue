@@ -115,7 +115,10 @@
                   <span :class="isUcasBrand ? 'sidebar-row-label' : 'flex-1 truncate'">{{ item.label }}</span>
                   <span
                     v-if="item.badge"
-                    class="shrink-0 min-w-[20px] px-1.5 py-0.5 rounded-pill bg-error text-white text-label font-bold text-center"
+                    class="shrink-0 ms-auto min-w-[20px] px-1.5 py-0.5 rounded-pill bg-error text-white text-label font-bold text-center"
+                    role="status"
+                    aria-label="يوجد إجراء مطلوب"
+                    title="مقترحات بانتظار المراجعة"
                   >
                     {{ item.badge }}
                   </span>

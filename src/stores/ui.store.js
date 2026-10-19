@@ -18,6 +18,9 @@ export const useUiStore = defineStore('ui', () => {
   const activeSemesterId = ref(localStorage.getItem(STORAGE_KEYS.SEMESTER) || null)
   const semestersLoading = ref(false)
 
+  // عدّاد المقترحات بانتظار المراجعة — يُظهر نقطة إجراء بالسايد بار
+  const pendingProposals = ref(0)
+
   const setLoading = (status) => {
     isLoading.value = status
   }
@@ -79,6 +82,17 @@ export const useUiStore = defineStore('ui', () => {
     }
   }
 
+  // GET /proposals?status=pending → عدد المقترحات المنتظرة (للنقطة الحمراء بالسايد بار)
+  const fetchPendingProposals = async () => {
+    try {
+      const { data } = await api.get('/proposals', { params: { status: 'pending' } })
+      pendingProposals.value = (Array.isArray(data) ? data : data.data || []).length
+    } catch {
+      // يبقى العدّاد كما هو
+    }
+    return pendingProposals.value
+  }
+
   const setActiveSemester = (id) => {
     activeSemesterId.value = id
     localStorage.setItem(STORAGE_KEYS.SEMESTER, id)
@@ -121,6 +135,8 @@ export const useUiStore = defineStore('ui', () => {
     semesters,
     activeSemesterId,
     semestersLoading,
+    pendingProposals,
+    fetchPendingProposals,
     fetchSemesters,
     setActiveSemester,
     createAcademicTerm,
