@@ -1575,18 +1575,19 @@
 .gr-project { display: block; margin-top: 2px; font-size: 12.5px; color: var(--color-text-400); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gr-types { display: block; margin-top: 4px; font-size: 12px; font-weight: 700; color: var(--portal-cyan); }
 .gr-ptypes { margin-bottom: 16px; }
-.gr-spec { display: block; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gr-spec { display: block; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gr-degree {
   display: inline-block;
   margin-top: 4px;
   padding: 1px 8px;
   border-radius: 4px;
-  background: var(--color-bg);
-  color: var(--color-text-600);
+  background: color-mix(in srgb, var(--ucas-blue) 10%, transparent);
+  color: var(--ucas-blue);
   font-size: 11.5px;
   font-weight: 700;
 }
-.gr-count { font-size: 11.5px; font-weight: 700; color: var(--color-text-400); }
+.gr-count { display: inline-flex; align-items: baseline; gap: 4px; font-size: 11.5px; font-weight: 700; color: var(--color-text-400); }
+.gr-count-n { font-size: 15px; font-weight: 800; color: var(--color-text-900); font-variant-numeric: tabular-nums; }
 .gr-progress {
   display: inline-block;
   vertical-align: middle;
@@ -4613,39 +4614,53 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* المهام والإعلانات والملفات أعرض قليلًا من قسم الشعبة */
 @media (min-width: 1024px) { .gr-detail { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); } }
 
-/* المهام والإعلانات والملفات داخل تفاصيل المجموعة: رأس بعنوان أزرق وعدّاد، وقائمة بطاقات صغيرة بأيقونة النوع */
-.gr-timeline .tl-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.gr-timeline .tl-head h4 { position: relative; margin: 0; padding-bottom: 8px; font-size: 13.5px; font-weight: 800; color: var(--ucas-blue); }
-.gr-timeline .tl-head h4::after { content: ''; position: absolute; bottom: 0; inset-inline-start: 0; width: 36px; height: 3px; border-radius: 4px; background: linear-gradient(270deg, #62BB46, #005BAA); }
-.gr-timeline .tl-count { margin-inline-start: auto; padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: 800; color: var(--ucas-blue); background: linear-gradient(270deg, rgba(98, 187, 70, .16), rgba(0, 91, 170, .1)); }
-.gr-detail .gr-timeline .gr-items-scroll { padding: 2px 4px 2px 2px; border-radius: 0; }
-.tl-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.tl-list li {
-  display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 4px;
-  background: color-mix(in srgb, var(--ucas-blue) 3%, var(--color-surface));
-  box-shadow: inset -3px 0 0 var(--tl-c, var(--ucas-blue));
-  transition: background-color .2s ease;
-  animation: saFadeUp .4s ease backwards;
+/* المهام والإعلانات داخل تفاصيل المجموعة: رأس بعنوان وعدّاد، وقائمة صفوف */
+.gr-timeline .tl-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.gr-timeline .tl-head h4 { margin: 0; font-size: 13px; font-weight: 800; color: var(--color-text-900); }
+.gr-timeline .tl-count { margin-inline-start: auto; padding: 1px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 800; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 10%, transparent); }
+/* منطقة التمرير: سكرول واحد داخلي فقط */
+.gr-timeline .tl-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-inline: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ucas-blue) 35%, transparent) transparent;
 }
-.tl-list li:hover { background: color-mix(in srgb, var(--ucas-blue) 7%, var(--color-surface)); }
-.tl-list li.is-task { --tl-c: var(--ucas-blue); }
-.tl-list li.is-announcement { --tl-c: var(--ucas-green); }
-.tl-list li.is-file { --tl-c: #F89E32; }
-.tl-ic { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; color: #FFFFFF; background: var(--tl-c); }
-.tl-list li.is-task .tl-ic { background: linear-gradient(270deg, #0E699C, #025DA9); }
-.tl-list li.is-announcement .tl-ic { background: linear-gradient(270deg, #62BB46, #50A16E); }
-.tl-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.tl-body b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13.5px; font-weight: 700; color: var(--color-text-900); }
-.tl-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12px; color: var(--color-text-400); }
-.tl-meta > span + span::before { content: '·'; margin-inline-end: 10px; }
-.tl-due { color: var(--color-text-600); }
-.tl-list li .rv-pill { flex-shrink: 0; }
-.tl-empty { padding: 36px 0; text-align: center; font-size: 13px; color: var(--color-text-400); }
-@media (prefers-reduced-motion: reduce) { .tl-list li { animation: none; } }
-/* القائمة بالشرائح بدل التمرير */
-.gr-timeline .tl-wrap { flex: 1; display: flex; flex-direction: column; }
-.gr-timeline .tl-wrap .gr-slider { margin-top: auto; padding-top: 14px; }
-.gr-timeline .tl-wrap > div { flex: 1; display: flex; flex-direction: column; }
+.gr-timeline .tl-scroll::-webkit-scrollbar { width: 6px; }
+.gr-timeline .tl-scroll::-webkit-scrollbar-track { background: transparent; }
+.gr-timeline .tl-scroll::-webkit-scrollbar-thumb { border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 40%, transparent); }
+.gr-timeline .tl-scroll::-webkit-scrollbar-thumb:hover { background: var(--ucas-blue); }
+/* الصفوف: حواف حادة وب间距 ضيق */
+.tl-list { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.tl-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 0;
+  background: var(--color-bg);
+  transition: background-color .15s ease;
+  animation: saFadeUp .35s ease backwards;
+}
+.tl-row.is-clickable { cursor: pointer; }
+.tl-row.is-clickable:hover { background: color-mix(in srgb, var(--tl-c, var(--ucas-blue)) 6%, var(--color-bg)); }
+.tl-row.is-clickable:focus-visible { outline: 2px solid var(--ucas-blue); outline-offset: 1px; }
+.tl-row.is-task { --tl-c: var(--ucas-blue); }
+.tl-row.is-announcement { --tl-c: var(--ucas-green); }
+.tl-row.is-file { --tl-c: #F89E32; }
+.tl-row .tl-ic { display: grid; place-items: center; flex-shrink: 0; width: 26px; height: 26px; border-radius: 4px; color: #FFFFFF; background: var(--tl-c); }
+.tl-row .tl-ic svg { display: block; }
+.tl-row .tl-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.tl-row .tl-info > b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; font-weight: 700; color: var(--color-text-900); }
+.tl-row .tl-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; font-size: 11.5px; color: var(--color-text-400); }
+.tl-row .tl-meta .tl-due { color: var(--color-text-600); }
+.tl-row .rv-pill { flex-shrink: 0; }
+.tl-empty { padding: 28px 0; text-align: center; font-size: 12.5px; color: var(--color-text-400); }
+@media (prefers-reduced-motion: reduce) { .tl-row { animation: none; } }
+@media (min-width: 1024px) { .gr-detail > .gr-timeline { height: auto; min-height: max(100%, 340px); } }
 
 /* جدول الأعضاء داخل الدروب داون (كل اللوحات): رأس بتدرّج خفيف وزوايا 12، صفوف متناوبة، اسم بدائرة حرف أولى، الجنس كبسولة */
 .gr-detail .gr-detail-full,
@@ -4672,32 +4687,6 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .gm-chip { display: inline-block; padding: 3px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 9%, transparent); }
 .gm-chip.is-f { color: #C2255C; background: color-mix(in srgb, #C2255C 11%, transparent); }
 :root[data-brand="ucas"] .gr-members table .mono { color: var(--color-text-600); }
-/* تمرير قائمة المهام والإعلانات والملفات: ارتفاع ثابت، شريط رفيع متدرّج، وتلاشٍ ناعم أعلى/أسفل القائمة */
-.gr-timeline .tl-scroll {
-  flex: 1 1 0;
-  min-height: 300px;
-  max-height: 420px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scroll-behavior: smooth;
-  padding: 10px 2px 14px 8px;
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--ucas-blue) 35%, transparent) transparent;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 22px), transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 22px), transparent 100%);
-}
-.gr-timeline .tl-scroll::-webkit-scrollbar { width: 6px; }
-.gr-timeline .tl-scroll::-webkit-scrollbar-track { background: transparent; }
-.gr-timeline .tl-scroll::-webkit-scrollbar-thumb { border-radius: 4px; background: linear-gradient(180deg, #62BB46, #005BAA); }
-.gr-timeline .tl-scroll > .tl-list { padding-bottom: 6px; }
-/* المهام والإعلانات والملفات: القسم كاملًا يتمرّر بطول قسم الشعبة المجاور، والرأس ثابت أعلاه */
-.gr-detail > .gr-timeline { position: relative; display: block; max-height: 460px; overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth; padding-top: 0; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ucas-blue) 35%, transparent) transparent; }
-.gr-detail > .gr-timeline::-webkit-scrollbar { width: 6px; }
-.gr-detail > .gr-timeline::-webkit-scrollbar-track { background: transparent; margin: 14px 0; }
-.gr-detail > .gr-timeline::-webkit-scrollbar-thumb { border-radius: 4px; background: linear-gradient(180deg, #62BB46, #005BAA); }
-.gr-timeline .tl-head { position: sticky; top: 0; z-index: 2; margin: 0 -16px 10px; padding: 16px 16px 10px; background: var(--color-surface); box-shadow: 0 8px 12px -10px rgba(4, 40, 80, .18); }
-.gr-timeline .tl-wrap { display: block; }
-@media (min-width: 1024px) { .gr-detail > .gr-timeline { height: 0; min-height: max(100%, 340px); max-height: none; } }
 /* رئيسية المشرف/الإدارة: أرقام البانر وقسم حالة المهام كهياكل وهمية أثناء التحميل */
 .sa-stat-sk { display: inline-block; width: 64px; height: 34px; border-radius: 4px; background: linear-gradient(90deg, rgba(255, 255, 255, .18) 25%, rgba(255, 255, 255, .38) 50%, rgba(255, 255, 255, .18) 75%); background-size: 200% 100%; }
 .hm-prog-sk { display: flex; flex-direction: column; gap: 14px; padding: 6px 0 14px; }

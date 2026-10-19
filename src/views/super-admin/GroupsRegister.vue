@@ -22,8 +22,6 @@
       </div>
     </header>
 
-    <hr class="gr-divider" aria-hidden="true">
-
     <div class="gr-filters" aria-label="تصفية المجموعات">
       <label class="gr-search">
         <Search :size="16" />
@@ -36,8 +34,7 @@
       <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.spec" class="min-w-[170px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specSelectOptions" />
       <!-- المشرف يرى مجموعاته فقط: فلتر المشرف بلا معنى له -->
       <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.sup" class="min-w-[180px]" aria-label="المشرف" placeholder="كل المشرفين" include-placeholder-option :options="supSelectOptions" />
-      <!-- المشرف: فلترа التخصص والجنس فقط -->
-      <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.size" class="min-w-[140px]" aria-label="حجم الفريق" placeholder="حجم الفريق" include-placeholder-option :options="sizeSelectOptions" />
+      <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.status" class="min-w-[140px]" aria-label="حالة المشروع" placeholder="حالة المشروع" include-placeholder-option :options="statusSelectOptions" />
       <BaseSelect v-model="pageSize" class="min-w-[110px]" aria-label="عدد الصفوف" :options="pageSizeOptions" />
     </div>
 
@@ -50,6 +47,7 @@
                 <th class="w-12" aria-label="فتح" />
                 <th data-rt-title>رقم المجموعة</th>
                 <th data-rt-show>المشروع</th>
+                <th>حالة المشروع</th>
                 <th v-if="!isSupervisor" data-rt-show>المشرف</th>
                 <th class="gr-hide-md">التخصص</th>
                 <th class="gr-hide-md">عدد الطلاب</th>
@@ -57,8 +55,8 @@
               </tr>
             </thead>
             <tbody v-if="!rows.length">
-              <SkeletonLoader v-if="loading" variant="table" :cols="isSupervisor ? 6 : 7" :rows="8" />
-              <tr v-else><td :colspan="isSupervisor ? 6 : 7" class="gr-empty">لا توجد مجموعات مطابقة للفلاتر</td></tr>
+              <SkeletonLoader v-if="loading" variant="table" :cols="isSupervisor ? 7 : 8" :rows="8" />
+              <tr v-else><td :colspan="isSupervisor ? 7 : 8" class="gr-empty">لا توجد مجموعات مطابقة للفلاتر</td></tr>
             </tbody>
             <template v-else>
               <tbody v-for="g in pageRows" :key="g.id" :class="['gr-group', isOpen(g.id) && 'is-open']">
@@ -71,8 +69,11 @@
                   <td><span class="gr-section">{{ g.section }}</span></td>
                   <td class="gr-name-cell">
                     <span class="gr-name">{{ g.project }}</span>
-                    <span class="gr-project">{{ STATUS[g.projectStatus] }}</span>
                     <span v-if="g.types.length" class="gr-types">{{ g.types.join(' · ') }}</span>
+                  </td>
+                  <td>
+                    <span v-if="g.projectStatus" :class="['gm-chip', STATUS_CLASS[g.projectStatus]]">{{ STATUS[g.projectStatus] }}</span>
+                    <span v-else class="gr-muted">غير محدّد</span>
                   </td>
                   <td v-if="!isSupervisor">{{ g.supName }}</td>
                   <td class="gr-hide-md">
@@ -80,7 +81,10 @@
                     <span class="gr-degree">{{ DEGREES[g.degree] }}</span>
                   </td>
                   <td class="gr-hide-md">
-                    <span class="gr-count">{{ g.shown.length }}<template v-if="g.members.length !== g.shown.length"> من {{ g.members.length }}</template></span>
+                    <span class="gr-count">
+                      <span class="gr-count-n">{{ g.shown.length }}</span>
+                      <span v-if="g.members.length !== g.shown.length" class="gr-count-unit">/ {{ g.members.length }}</span>
+                    </span>
                   </td>
                   <td>
                     <span class="gr-progress"><span :class="levelClass(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
@@ -89,7 +93,7 @@
                 </tr>
   
                 <tr v-if="isOpen(g.id)" class="gr-detail-row">
-                  <td :colspan="isSupervisor ? 6 : 7">
+                  <td :colspan="isSupervisor ? 7 : 8">
                     <div class="gr-detail">
                       <div class="gr-members gr-detail-full">
                         <table>
@@ -157,27 +161,26 @@
                       </aside>
                       <div class="gr-members gr-timeline">
                         <header class="tl-head">
-                          <h4>المهام والإعلانات والملفات</h4>
+                          <h4>المهام والإعلانات</h4>
                           <span class="tl-count">{{ g.timeline.length }}</span>
                         </header>
-                        <!-- القسم كاملًا يتمرّر (الرأس ثابت أعلاه) بشريط رفيع بهوية مسار -->
-                        <div class="tl-wrap">
-                          <SkeletonLoader v-if="!timelines[g.id] || timelines[g.id].loading" :rows="4" height="46px" />
-                          <p v-else-if="!g.timeline.length" class="tl-empty">لا توجد مهام أو إعلانات بعد</p>
-                          <ul v-else class="tl-list">
-                            <li v-for="i in g.timeline" :key="i.key" :class="'is-' + i.type">
-                              <span class="tl-ic"><component :is="ITEM_TYPES[i.type].icon" :size="16" /></span>
-                              <div class="tl-body">
+                        <div class="tl-scroll">
+                          <ul v-if="timelines[g.id] && !timelines[g.id].loading && g.timeline.length" class="tl-list">
+                            <li v-for="i in g.timeline" :key="i.key" :class="['tl-row', 'is-' + i.type, 'is-clickable']" role="button" tabindex="0" @click="openTlItem(i)" @keydown.enter="openTlItem(i)">
+                              <span class="tl-ic"><component :is="ITEM_TYPES[i.type].icon" :size="13" /></span>
+                              <div class="tl-info">
                                 <b :title="i.title">{{ i.title }}</b>
                                 <span class="tl-meta">
                                   <span>{{ i.kind }}</span>
                                   <span class="mono">{{ i.date }}</span>
-                                  <span v-if="i.due" class="tl-due">التسليم <span class="mono">{{ i.due }}</span></span>
+                                  <span v-if="i.due" class="tl-due mono">{{ i.due }}</span>
                                 </span>
                               </div>
                               <span v-if="i.status" :class="['rv-pill', i.status.pill]">{{ i.status.label }}</span>
                             </li>
                           </ul>
+                          <SkeletonLoader v-else-if="!timelines[g.id] || timelines[g.id].loading" :rows="4" height="46px" />
+                          <p v-else class="tl-empty">لا توجد مهام أو إعلانات بعد</p>
                         </div>
                       </div>
                     </div>
@@ -202,6 +205,18 @@
 
     <ProfileModal v-model="profile.open" :kind="profile.kind" :person-id="profile.id" :name="profile.name" />
 
+    <!-- تفاصيل مهمة/إعلان -->
+    <BaseModal v-model="tlItem.open" :title="tlItem.item?.title || ''" :description="tlItem.item?.kind" size="sm">
+      <dl v-if="tlItem.item" class="gr-kv">
+        <div><dt>النوع</dt><dd>{{ tlItem.item.kind }}</dd></div>
+        <div><dt>تاريخ الإصدار</dt><dd class="mono">{{ tlItem.item.date || '—' }}</dd></div>
+        <div v-if="tlItem.item.due"><dt>موعد التسليم</dt><dd class="mono">{{ tlItem.item.due }}</dd></div>
+        <div v-if="tlItem.item.status"><dt>الحالة</dt><dd><span :class="['rv-pill', tlItem.item.status.pill]">{{ tlItem.item.status.label }}</span></dd></div>
+      </dl>
+      <p v-if="tlItem.item?.body" class="gr-desc">{{ tlItem.item.body }}</p>
+      <p v-else class="gr-muted">لا يوجد وصف إضافي.</p>
+    </BaseModal>
+
     <!-- إضافة مهمة / إعلان / ملف (محلي فقط) -->
   </section>
 </template>
@@ -211,6 +226,7 @@ import SlideTable from '@/components/ui/SlideTable.vue'
 import ProjectTypes from '@/components/shared/ProjectTypes.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 import { Search, ChevronLeft, FileSpreadsheet, Printer, Archive, ListTodo, Megaphone, Paperclip } from 'lucide-vue-next'
 import ProfileModal from '@/components/shared/ProfileModal.vue'
 import { DEGREES, GENDERS, REGIONS, PROJECT_STATUS as STATUS, level } from '@/utils/progressData'
@@ -235,18 +251,21 @@ const ITEM_TYPES = {
   file: { label: 'ملف', icon: Paperclip, pill: 'is-rejected' }
 }
 
-const EMPTY_FILTERS = { degree: '', gender: '', region: '', spec: '', sup: '', size: '' }
+const EMPTY_FILTERS = { degree: '', gender: '', region: '', spec: '', sup: '', status: '' }
+
+/** حالة المشروع كشارة ملوّنة: مقترح (رمادي) · قيد التنفيذ (أزرق) · مكتمل (أخضر) */
+const STATUS_CLASS = { proposed: 'is-neutral', in_progress: 'is-active', completed: 'is-done' }
 
 export default {
   name: 'GroupsRegister',
 
   emits: ['open-trashed'],
 
-  components: { SlideTable, ProjectTypes, BaseSelect, BaseButton, Search, ChevronLeft, FileSpreadsheet, Printer, Archive, ProfileModal },
+  components: { SlideTable, ProjectTypes, BaseSelect, BaseButton, BaseModal, Search, ChevronLeft, FileSpreadsheet, Printer, Archive, ProfileModal },
 
   data() {
     return {
-      DEGREES, GENDERS, REGIONS, STATUS, ITEM_TYPES,
+      DEGREES, GENDERS, REGIONS, STATUS, STATUS_CLASS, ITEM_TYPES,
       loading: true,
       list: [],
       supList: [],
@@ -263,7 +282,8 @@ export default {
       f: { ...EMPTY_FILTERS },
       openIds: [],
       exporting: '',
-      profile: { open: false, kind: 'student', id: null, name: '' }
+      profile: { open: false, kind: 'student', id: null, name: '' },
+      tlItem: { open: false, item: null }
     }
   },
 
@@ -288,8 +308,8 @@ export default {
         const act = this.supProfiles[g.supId]?.interaction?.teams?.find((t) => t.team.id === g.id)?.interaction || null
         const tl = this.timelines[g.id] || { tasks: [], announcements: [] }
         const timeline = [
-          ...tl.tasks.map((t) => ({ key: `t${t.id}`, type: 'task', title: t.title, kind: 'مهمة', date: t.issued, due: t.due, status: taskStatus(t) })),
-          ...tl.announcements.map((a) => ({ key: `a${a.id}`, type: 'announcement', title: [a.title, a.body].filter(Boolean).join(' — '), kind: 'إعلان', date: day(a.created_at) }))
+          ...tl.tasks.map((t) => ({ key: `t${t.id}`, id: t.id, type: 'task', title: t.title, body: t.description || '', kind: 'مهمة', date: t.issued, due: t.due, status: taskStatus(t) })),
+          ...tl.announcements.map((a) => ({ key: `a${a.id}`, id: a.id, type: 'announcement', title: a.title, body: a.body || '', kind: 'إعلان', date: day(a.created_at) }))
         ].sort((x, y) => (y.date || '').localeCompare(x.date || ''))
         return { ...g, shown, act, timeline }
       })
@@ -304,7 +324,7 @@ export default {
         if (skip !== 'degree' && f.degree && g.degree !== f.degree) return false
         if (skip !== 'spec' && f.spec && g.spec !== f.spec) return false
         if (skip !== 'sup' && f.sup && g.supId !== f.sup) return false
-        if (skip !== 'size' && f.size && g.members.length !== Number(f.size)) return false
+        if (skip !== 'status' && f.status && g.projectStatus !== f.status) return false
         if (skip !== 'gender' && f.gender && !g.members.some((m) => m.gender === f.gender)) return false
         if (skip !== 'region' && f.region && !g.members.some((m) => m.region === f.region)) return false
         return true
@@ -323,9 +343,9 @@ export default {
       const ids = new Set(this.groupsMatching('sup').map((g) => g.supId))
       return this.supList.filter((s) => ids.has(s.id)).map((s) => ({ value: s.id, label: s.name }))
     },
-    sizeSelectOptions() {
-      const sizes = new Set(this.groupsMatching('size').map((g) => g.members.length))
-      return [1, 2, 3, 4].filter((n) => sizes.has(n)).map((n) => ({ value: n, label: `${n} ${n === 1 ? 'طالب' : 'طلاب'}` }))
+    statusSelectOptions() {
+      const statuses = new Set(this.groupsMatching('status').map((g) => g.projectStatus))
+      return Object.entries(STATUS).filter(([value]) => statuses.has(value)).map(([value, label]) => ({ value, label }))
     },
 
     degreeSelectOptions() {
@@ -348,7 +368,7 @@ export default {
       const f = this.f
       return [
         DEGREES[f.degree], { male: 'طلاب', female: 'طالبات' }[f.gender], REGIONS[f.region], f.spec,
-        this.supList.find((s) => s.id === f.sup)?.name, f.size && `${f.size} طلاب`, this.q && `بحث: ${this.q}`
+        this.supList.find((s) => s.id === f.sup)?.name, STATUS[f.status], this.q && `بحث: ${this.q}`
       ].filter(Boolean).join(' · ')
     },
 
@@ -366,7 +386,9 @@ export default {
           if (f.degree && g.degree !== f.degree) return false
           if (f.spec && g.spec !== f.spec) return false
           if (f.sup && g.supId !== f.sup) return false
-          if (f.size && g.members.length !== Number(f.size)) return false
+          if (f.status && g.projectStatus !== f.status) return false
+          if (f.gender && !g.members.some((m) => m.gender === f.gender)) return false
+          if (f.region && !g.members.some((m) => m.region === f.region)) return false
           return g.shown.length > 0
         })
         .sort((a, b) => a.spec.localeCompare(b.spec, 'ar') || a.degree.localeCompare(b.degree) || a.section.localeCompare(b.section, 'en', { numeric: true }))
@@ -441,6 +463,10 @@ export default {
       if (id) this.profile = { open: true, kind, id, name }
     },
 
+    openTlItem(item) {
+      this.tlItem = { open: true, item }
+    },
+
     async exportExcel() {
       this.exporting = 'excel'
       try {
@@ -452,6 +478,7 @@ export default {
             { key: 'spec', label: 'التخصص' },
             { key: 'degree', label: 'الدرجة', width: 14 },
             { key: 'project', label: 'المشروع', width: 30 },
+            { key: 'status', label: 'حالة المشروع', width: 16 },
             { key: 'sup', label: 'المشرف' },
             { key: 'name', label: 'الطالب', width: 26 },
             { key: 'uni', label: 'الرقم الجامعي', width: 16 },
@@ -460,10 +487,11 @@ export default {
             { key: 'progress', label: 'التقدّم', width: 10 }
           ],
           rowGroups: this.rows.map((g) => g.shown.map((m) => ({
-            section: g.section, spec: g.spec, degree: DEGREES[g.degree], project: g.project, sup: g.supName,
+            section: g.section, spec: g.spec, degree: DEGREES[g.degree], project: g.project,
+            status: STATUS[g.projectStatus] || 'غير محدّد', sup: g.supName,
             name: m.name, uni: m.uni, gender: GENDERS[m.gender], region: REGIONS[m.region], progress: `${m.percentage}%`
           }))),
-          mergeKeys: ['section', 'spec', 'degree', 'project', 'sup']
+          mergeKeys: ['section', 'spec', 'degree', 'project', 'status', 'sup']
         })
       } finally {
         this.exporting = ''
