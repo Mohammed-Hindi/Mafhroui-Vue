@@ -52,7 +52,7 @@
                 <th data-rt-show>المشروع</th>
                 <th v-if="!isSupervisor" data-rt-show>المشرف</th>
                 <th class="gr-hide-md">التخصص</th>
-                <th class="gr-hide-md">الطلاب</th>
+                <th class="gr-hide-md">عدد الطلاب</th>
                 <th>التقدّم</th>
               </tr>
             </thead>
@@ -80,8 +80,7 @@
                     <span class="gr-degree">{{ DEGREES[g.degree] }}</span>
                   </td>
                   <td class="gr-hide-md">
-                    <span class="gr-students" :title="g.shown.map((m) => m.name).join('، ')">{{ g.shown.map((m) => m.name.split(' ')[0]).join('، ') }}</span>
-                    <span class="gr-count">{{ g.members.length }}/4</span>
+                    <span class="gr-count">{{ g.shown.length }}<template v-if="g.members.length !== g.shown.length"> من {{ g.members.length }}</template></span>
                   </td>
                   <td>
                     <span class="gr-progress"><span :class="levelClass(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
@@ -180,8 +179,8 @@
                             </li>
                           </ul>
                         </div>
-                        </div>
                       </div>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -221,7 +220,7 @@ import api from '@/services/api'
 import { mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
 
-import { loadGroups, loadSupervisors, loadGroupTimeline, activeSemesterName } from '@/services/adminData'
+import { loadGroups, loadSupervisors, loadGroupTimeline, activeSemesterName, day } from '@/services/adminData'
 
 /** حالة المهمة في القائمة: مكتملة / متأخرة (تجاوزت موعدها) / جارية */
 const taskStatus = (t) => {
@@ -290,8 +289,8 @@ export default {
         const tl = this.timelines[g.id] || { tasks: [], announcements: [] }
         const timeline = [
           ...tl.tasks.map((t) => ({ key: `t${t.id}`, type: 'task', title: t.title, kind: 'مهمة', date: t.issued, due: t.due, status: taskStatus(t) })),
-          ...tl.announcements.map((a) => ({ key: `a${a.id}`, type: 'announcement', title: [a.title, a.body].filter(Boolean).join(' — '), kind: 'إعلان', date: String(a.created_at || '').slice(0, 10) }))
-        ].sort((x, y) => y.date.localeCompare(x.date))
+          ...tl.announcements.map((a) => ({ key: `a${a.id}`, type: 'announcement', title: [a.title, a.body].filter(Boolean).join(' — '), kind: 'إعلان', date: day(a.created_at) }))
+        ].sort((x, y) => (y.date || '').localeCompare(x.date || ''))
         return { ...g, shown, act, timeline }
       })
     },

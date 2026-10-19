@@ -5,7 +5,7 @@ import { useUiStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
 
 const list = (data) => data?.data || data || []
-const day = (v) => (v ? String(v).slice(0, 10) : '')
+export const day = (v) => (v ? String(v).slice(0, 10) : '')
 
 /**
  * مجموعات الفصل الحالي (GET /progress):
