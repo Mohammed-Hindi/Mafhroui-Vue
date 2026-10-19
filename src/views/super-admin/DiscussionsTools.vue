@@ -8,17 +8,43 @@
     <section id="dp-settings" class="dash-card">
       <div class="dash-card-head dp-set-head">
         <button type="button" class="dp-set-toggle" :aria-expanded="settingsOpen || !plan.length" @click="settingsOpen = !settingsOpen">
-          <Settings2 :size="18" /> <h3>إعدادات الجدولة</h3>
+          <span class="dp-set-titles">
+            <h3>إعدادات الجدولة</h3>
+            <small class="dp-set-count">{{ loading ? 'جارٍ التحميل…' : `${groups.length} مجموعة لها مشروع` }}</small>
+          </span>
           <ChevronDown v-if="plan.length" :size="18" :class="['dp-set-caret', settingsOpen && 'is-open']" />
         </button>
-        <span class="dash-chip">{{ loading ? 'جارٍ التحميل…' : `${groups.length} مجموعة لها مشروع` }}</span>
+        <button type="button" class="pbtn is-cyan dp-gen-btn" :disabled="loading || !!badWindows.length" @click="generate"><CalendarPlus :size="17" /> {{ plan.length ? 'إعادة توليد الجدول' : 'توليد الجدول' }}</button>
       </div>
 
-      <div v-show="settingsOpen || !plan.length" class="dp-set-body">
+      <div v-show="!loading && (settingsOpen || !plan.length)" class="dp-set-body">
+      <!-- ترتيب أبسط: متى (الأيام) ← كم المدة ← أين (القاعات وساعاتها) -->
       <div class="dp-blocks">
-        <!-- 1. القاعات أولًا: لكل مكان تواجد قاعاته، ونافذة ساعات ملزمة اختيارية (مثل: الجنوب من 10:00 إلى 13:00) -->
+        <!-- 1. الأيام: فئة لكل تقاطع (طلاب/طالبات × دبلوم/بكالوريوس) — يوم خاص لكل فئة -->
+        <fieldset class="dp-block">
+          <legend><span class="dp-no">1</span><CalendarDays :size="17" /> الأيام<small>يوم خاص لكل فئة: طلاب/طالبات × دبلوم/بكالوريوس</small></legend>
+          <div class="dp-form">
+            <label v-for="d in dayKeys" :key="d.key" class="pfield"><span>يوم {{ d.label }}</span><input v-model="s.days[d.key]" type="date"></label>
+          </div>
+        </fieldset>
+
+        <!-- 2. مدة المناقشة لكل درجة (الأوقات تُقسَّم تلقائيًا ضمن ساعات كل مكان) + استراحة اختيارية -->
+        <fieldset class="dp-block">
+          <legend><span class="dp-no">2</span><Clock :size="17" /> مدة المناقشة والاستراحة</legend>
+          <div class="dp-form">
+            <label class="pfield"><span>مدة الدبلوم (دقيقة)</span><input v-model.number="s.durations.diploma" type="number" min="5" step="5"></label>
+            <label class="pfield"><span>مدة البكالوريوس (دقيقة)</span><input v-model.number="s.durations.bachelor" type="number" min="5" step="5"></label>
+          </div>
+          <label class="gp-check dp-break-toggle"><input v-model="s.breakOn" type="checkbox"> استراحة (اختياري)</label>
+          <div v-if="s.breakOn" class="dp-form">
+            <label class="pfield"><span>الاستراحة من</span><input v-model="s.breakFrom" type="time"></label>
+            <label class="pfield"><span>إلى</span><input v-model="s.breakTo" type="time"></label>
+          </div>
+        </fieldset>
+
+        <!-- 3. القاعات: لكل مكان تواجد قاعاته، ونافذة ساعات ملزمة (مثل: الجنوب من 10:00 إلى 13:00) -->
         <fieldset class="dp-block dp-block-wide">
-          <legend><span class="dp-no">1</span><DoorOpen :size="17" /> القاعات حسب مكان تواجد المجموعات<small>قاعات كل منطقة وساعاتها الملزمة</small></legend>
+          <legend><span class="dp-no">3</span><DoorOpen :size="17" /> القاعات حسب مكان تواجد المجموعات<small>قاعات كل منطقة وساعاتها الملزمة</small></legend>
           <div class="dp-rooms">
             <div v-for="(label, key) in REGIONS" :key="key" class="dp-room-row">
               <span class="dp-room-label">{{ label }}<small>{{ regionCount(key) }} مجموعة</small></span>
@@ -41,32 +67,6 @@
           </div>
           <small v-if="badWindows.length" class="dp-note is-bad">حدّد ساعات صحيحة (من قبل إلى) لـ: {{ badWindows.map((k) => REGIONS[k]).join('، ') }}</small>
         </fieldset>
-
-        <!-- 2. مدة المناقشة لكل درجة (الأوقات تُقسَّم تلقائيًا ضمن ساعات كل مكان) + استراحة اختيارية -->
-        <fieldset class="dp-block">
-          <legend><span class="dp-no">2</span><Clock :size="17" /> مدة المناقشة والاستراحة</legend>
-          <div class="dp-form">
-            <label class="pfield"><span>مدة الدبلوم (دقيقة)</span><input v-model.number="s.durations.diploma" type="number" min="5" step="5"></label>
-            <label class="pfield"><span>مدة البكالوريوس (دقيقة)</span><input v-model.number="s.durations.bachelor" type="number" min="5" step="5"></label>
-          </div>
-          <label class="gp-check dp-break-toggle"><input v-model="s.breakOn" type="checkbox"> استراحة (اختياري)</label>
-          <div v-if="s.breakOn" class="dp-form">
-            <label class="pfield"><span>الاستراحة من</span><input v-model="s.breakFrom" type="time"></label>
-            <label class="pfield"><span>إلى</span><input v-model="s.breakTo" type="time"></label>
-          </div>
-        </fieldset>
-
-        <!-- 3. تقسيم الأيام: الطلاب/الطالبات أو الدبلوم/البكالوريوس -->
-        <fieldset class="dp-block">
-          <legend><span class="dp-no">3</span><CalendarDays :size="17" /> الأيام</legend>
-          <nav class="hm-tabs dp-split" aria-label="طريقة تقسيم الأيام">
-            <button type="button" :class="s.splitBy === 'gender' && 'is-active'" @click="s.splitBy = 'gender'">الطلاب / الطالبات</button>
-            <button type="button" :class="s.splitBy === 'degree' && 'is-active'" @click="s.splitBy = 'degree'">الدبلوم / البكالوريوس</button>
-          </nav>
-          <div class="dp-form">
-            <label v-for="d in dayKeys" :key="d.key" class="pfield"><span>يوم {{ d.label }}</span><input v-model="s.days[d.key]" type="date"></label>
-          </div>
-        </fieldset>
       </div>
 
       <!-- سعة كل يوم بالدقائق (لأن مدة الدبلوم تختلف عن البكالوريوس) -->
@@ -76,24 +76,34 @@
             <span class="dp-cap-ic"><CalendarDays :size="18" /></span>
             <b>يوم {{ c.label }}</b>
             <span class="mono">{{ c.date || '—' }}</span>
-            <span :class="['dp-cap-state', c.ok ? 'is-ok' : 'is-bad']">{{ c.ok ? 'الوقت كافٍ' : 'الوقت غير كافٍ' }}</span>
+            <span v-if="!c.ok" class="dp-cap-state is-bad">الوقت غير كافٍ</span>
           </div>
           <div class="dp-cap-num"><b>{{ c.groups }}</b> مجموعة · تحتاج <b>{{ c.need }}</b> من <b>{{ c.have }}</b> دقيقة</div>
           <div class="dp-cap-bar"><span :style="{ width: Math.min(100, c.have ? (c.need / c.have) * 100 : 100) + '%' }" /></div>
         </div>
       </div>
 
-      <div class="dp-actions">
-        <button type="button" class="pbtn is-cyan" :disabled="loading || !!badWindows.length" @click="generate"><CalendarPlus :size="17" /> {{ plan.length ? 'إعادة توليد الجدول' : 'توليد الجدول' }}</button>
-      </div>
       </div>
     </section>
 
     <!-- 2) جدول المناقشات -->
     <section v-if="plan.length" id="dp-table" class="dash-card">
-      <div class="dash-card-head">
+      <!-- التصدير والنشر قبال العنوان في رأس البطاقة (أفخم) -->
+      <div class="dash-card-head dp-table-head">
         <h3>جدول المناقشات</h3>
-        <span :class="['dash-chip', conflictCount ? 'is-bad' : 'is-good']">{{ conflictCount ? `${conflictCount} مجموعة فيها تعارض` : 'بلا تعارضات — جاهز للنشر' }}</span>
+        <div class="dp-tablebar">
+          <div class="dp-publish-row">
+            <button type="button" class="pbtn is-green dp-publish-go" :disabled="!!conflictCount || saving" :title="conflictCount ? 'عالج التعارضات أولًا' : ''" @click="publish"><Send :size="16" /> نشر للمشرفين</button>
+            <button type="button" class="pbtn is-outline" :disabled="saving" @click="saveDraft"><Save :size="16" /> {{ saving ? 'جارٍ الحفظ…' : 'حفظ كمسودة' }}</button>
+          </div>
+          <div class="dp-export-row">
+            <button type="button" class="pbtn is-outline" :disabled="busy" @click="printPlan"><Printer :size="16" /> طباعة الجدول</button>
+            <button type="button" class="pbtn is-outline" :disabled="busy" @click="openRoomPrint"><DoorOpen :size="16" /> طباعة حسب القاعات</button>
+            <button type="button" class="pbtn is-outline" :disabled="busy" @click="downloadWord"><FileText :size="16" /> Word</button>
+            <button type="button" class="pbtn is-outline" :disabled="busy" @click="downloadExcel"><FileSpreadsheet :size="16" /> Excel</button>
+            <label class="pbtn is-outline dp-upload"><Upload :size="16" /> إعادة رفع Excel<input type="file" accept=".xlsx" hidden @change="reupload"></label>
+          </div>
+        </div>
       </div>
 
       <!-- أرقام سريعة عن الجدول -->
@@ -108,18 +118,23 @@
         <button type="button" class="pbtn is-outline is-sm" @click="onlyConflicts = !onlyConflicts">{{ onlyConflicts ? 'عرض الكل' : 'عرض المتعارضة فقط' }}</button>
       </div>
 
-      <div class="dp-toolbar">
+      <div class="dp-toolbar gr-filters">
+        <!-- طريقة العرض تبقى مفتاح عرض (قائمة/شبكة) لا فلتر؛ واليوم والقاعة فلاتر بنمطنا -->
         <nav class="hm-tabs" aria-label="طريقة العرض">
           <button type="button" :class="view === 'list' && 'is-active'" @click="view = 'list'"><List :size="15" /> قائمة</button>
           <button type="button" :class="view === 'rooms' && 'is-active'" @click="view = 'rooms'"><LayoutGrid :size="15" /> حسب القاعات</button>
         </nav>
-        <nav class="hm-tabs" aria-label="اليوم">
-          <button v-for="t in dayTabs" :key="t.value" type="button" :class="day === t.value && 'is-active'" @click="day = t.value">{{ t.label }}</button>
-        </nav>
-        <select v-if="view === 'list'" v-model="roomFilter" class="gr-select" aria-label="القاعة">
-          <option value="">كل القاعات</option>
-          <option v-for="r in allRooms" :key="r" :value="r">{{ r }}</option>
-        </select>
+        <label class="gr-pick">
+          <select v-model="day" class="gr-select" aria-label="اليوم">
+            <option v-for="t in dayTabs" :key="t.value" :value="t.value">{{ t.label }}</option>
+          </select>
+        </label>
+        <label v-if="view === 'list'" class="gr-pick">
+          <select v-model="roomFilter" class="gr-select" aria-label="القاعة">
+            <option value="">كل القاعات</option>
+            <option v-for="r in allRooms" :key="r" :value="r">{{ r }}</option>
+          </select>
+        </label>
       </div>
 
       <!-- عرض القائمة: أعمدة مضغوطة (حقلان فوق بعض) بلا تمرير أفقي، وسبب التعارض تحت الصف مباشرة -->
@@ -135,7 +150,7 @@
             <tr>
               <td class="dp-group">
                 <button type="button" class="dp-sec" title="تفاصيل المناقشة" @click="detail = r">{{ r.g.section }}</button>
-                <span class="dp-meta"><b>{{ supName(r.g.supId) }}</b>{{ DEGREES[r.g.degree] }} · {{ r.g.members.length }} طلاب</span>
+                <span class="dp-meta"><button type="button" class="dp-suplink" title="معلومات المشرف" @click="openSup(r.g.supId)">{{ supName(r.g.supId) }}</button>{{ DEGREES[r.g.degree] }} · {{ r.g.members.length }} طلاب</span>
               </td>
               <td class="dp-stack">
                 <select v-model="r.gender" class="ev-input" aria-label="الفئة" @change="r.date = dayOf(r)">
@@ -167,7 +182,7 @@
             </tr>
             <tr v-if="conflicts[r.id]" class="dp-why">
               <td colspan="6">
-                <AlertTriangle :size="14" /> {{ conflicts[r.id].join(' · ') }}
+                <div class="dp-why-msg"><AlertTriangle :size="14" /><span>{{ conflicts[r.id].join(' · ') }}</span></div>
                 <div class="dp-free">
                   <span>الأوقات المتاحة في القاعات ({{ dayOf(r) }}):</span>
                   <button v-for="o in freeSlots(r)" :key="o.room + o.time" type="button" class="dp-free-opt" :title="`نقل المناقشة إلى ${o.room} الساعة ${o.time}`" @click="applySlot(r, o)">
@@ -209,24 +224,7 @@
 
     </section>
 
-    <!-- 3) التصدير والنشر — شريط مضغوط بدل بطاقات كبيرة -->
-    <section v-if="plan.length" class="dash-card">
-      <div class="dash-card-head">
-        <h3>التصدير والنشر</h3>
-        <span :class="['dash-chip', conflictCount ? 'is-bad' : 'is-good']">{{ conflictCount ? `${conflictCount} مجموعة فيها تعارض` : 'بلا تعارضات — جاهز للنشر' }}</span>
-      </div>
-      <div class="dp-export-row">
-        <button type="button" class="pbtn is-outline" :disabled="busy" @click="printPlan"><Printer :size="16" /> طباعة الجدول</button>
-        <button type="button" class="pbtn is-outline" :disabled="busy" @click="openRoomPrint"><DoorOpen :size="16" /> طباعة حسب القاعات</button>
-        <button type="button" class="pbtn is-outline" :disabled="busy" @click="downloadWord"><FileText :size="16" /> Word</button>
-        <button type="button" class="pbtn is-outline" :disabled="busy" @click="downloadExcel"><FileSpreadsheet :size="16" /> Excel</button>
-        <label class="pbtn is-outline dp-upload"><Upload :size="16" /> إعادة رفع Excel<input type="file" accept=".xlsx" hidden @change="reupload"></label>
-        <button type="button" class="pbtn is-outline dp-publish-draft" :disabled="saving" @click="saveDraft"><Save :size="16" /> {{ saving ? 'جارٍ الحفظ…' : 'حفظ كمسودة' }}</button>
-        <button type="button" class="pbtn is-green dp-publish-go" :disabled="!!conflictCount || saving" :title="conflictCount ? 'عالج التعارضات أولًا' : ''" @click="publish"><Send :size="16" /> نشر للمشرفين</button>
-      </div>
-    </section>
-
-    <!-- 4) جدول كل مشرف بعد النشر -->
+    <!-- 3) جدول كل مشرف بعد النشر -->
     <section v-if="plan.length" class="dash-card">
       <div class="dash-card-head">
         <h3>جدول مناقشات المشرف</h3>
@@ -235,13 +233,11 @@
       <template v-if="published">
         <div class="gr-filters dp-sup-bar">
           <label class="gr-pick">
-            <span>المشرف</span>
             <select v-model="supView" class="gr-select" aria-label="المشرف" @change="supRoom = ''">
               <option v-for="sp in supList" :key="sp.id" :value="sp.id">{{ sp.name }}</option>
             </select>
           </label>
           <label class="gr-pick">
-            <span>القاعة</span>
             <select v-model="supRoom" class="gr-select" aria-label="القاعة">
               <option value="">كل القاعات</option>
               <option v-for="rm in supRooms" :key="rm" :value="rm">{{ rm }}</option>
@@ -330,8 +326,24 @@
       </template>
     </BaseModal>
 
+    <!-- معلومات المشرف (للقراءة) -->
+    <BaseModal :model-value="!!supSel" :title="supSel ? supSel.name : ''" size="md" @update:model-value="!$event && (supSel = null)">
+      <div v-if="supSel" class="pbm">
+        <div class="pbm-stats">
+          <div class="pbm-stat"><span>مجموعاته</span><b>{{ supStats.groups }}</b></div>
+          <div class="pbm-stat"><span>يناقش</span><b>{{ supStats.examining }}</b></div>
+        </div>
+        <dl class="pbm-kv dp-supkv">
+          <div><dt>التخصص</dt><dd>{{ supSel.spec || '—' }}</dd></div>
+          <div v-if="supSel.employee_number"><dt>الرقم الوظيفي</dt><dd>{{ supSel.employee_number }}</dd></div>
+          <div v-if="supSel.email"><dt>البريد الإلكتروني</dt><dd dir="ltr">{{ supSel.email }}</dd></div>
+          <div v-if="supSel.whatsapp"><dt>واتساب</dt><dd dir="ltr">{{ supSel.whatsapp }}</dd></div>
+        </dl>
+      </div>
+    </BaseModal>
+
     <!-- طباعة حسب القاعات: اختيار اليوم والقاعات قبل الطباعة -->
-    <BaseModal v-model="roomPrint.open" title="طباعة جدول المناقشات حسب القاعات" description="صفحة لكل قاعة في كل يوم، بأسماء الطلاب والمشرف والمناقشين" size="md">
+    <BaseModal v-model="roomPrint.open" title="طباعة جدول المناقشات حسب القاعات" size="md">
       <div class="dp-print">
         <div class="pfield">
           <span>اليوم</span>
@@ -365,7 +377,7 @@
 <script>
 import SlideTable from '@/components/ui/SlideTable.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
-import { CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, Settings2, ChevronDown } from 'lucide-vue-next'
+import { CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, ChevronDown } from 'lucide-vue-next'
 import { exportStyledExcel } from '@/utils/exportReport'
 import { exportPlanPdf, exportRoomsPdf, exportDiscussionsDoc } from '@/utils/ucasReports'
 import { DEGREES, REGIONS } from '@/utils/progressData'
@@ -384,7 +396,7 @@ const CITY = { gaza: 'غزة', middle: 'وسط غزة', south: 'خانيونس' 
 export default {
   name: 'DiscussionsTools',
 
-  components: { SlideTable, BaseModal, CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, Settings2, ChevronDown },
+  components: { SlideTable, BaseModal, CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, ChevronDown },
 
   data() {
     return {
@@ -398,9 +410,8 @@ export default {
         durations: { diploma: 15, bachelor: 30 },
         // استراحة اختيارية من–إلى (لا مناقشات خلالها)
         breakOn: false, breakFrom: '12:30', breakTo: '13:00',
-        // تقسيم الأيام: gender = الطالبات/الطلاب، degree = الدبلوم/البكالوريوس
-        splitBy: 'gender',
-        days: { female: '2027-01-24', male: '2027-01-25', diploma: '2027-01-24', bachelor: '2027-01-25' },
+        // تقسيم الأيام = الجنس × الدرجة معًا (فئة لكل تقاطع): يوم خاص لكل من طالبات/طلاب مقسومًا على الدبلوم/البكالوريوس
+        days: { 'female-diploma': '2027-01-24', 'female-bachelor': '2027-01-25', 'male-diploma': '2027-01-26', 'male-bachelor': '2027-01-27' },
         rooms: { gaza: ['E504', 'E506', 'E304'], middle: [], south: ['S101', 'S102'] },
         // ساعات كل قاعة (تُملأ افتراضيًا بساعات مكانها عند إضافتها)
         roomHours: {
@@ -410,8 +421,10 @@ export default {
         // ساعات إلزامية لكل مكان تواجد
         windows: { gaza: { start: '09:00', end: '14:00' }, middle: { start: '09:00', end: '14:00' }, south: { start: '10:00', end: '13:00' } }
       },
-      settingsOpen: true,
+      // الإعدادات مخفية طبيعيًا؛ نتذكّر اختيار المستخدم (فتح/طي) عبر التحديثات
+      settingsOpen: (() => { try { return localStorage.getItem('dp-settings-open') === '1' } catch { return false } })(),
       detail: null,
+      supSel: null,
       roomDraft: { gaza: '', middle: '', south: '' },
       view: 'list',
       onlyConflicts: false,
@@ -427,15 +440,26 @@ export default {
   },
 
   computed: {
-    /** مفاتيح الأيام حسب طريقة التقسيم */
+    /** فئات الأيام = الجنس × الدرجة معًا (أربع فئات) */
     dayKeys() {
-      return this.s.splitBy === 'degree'
-        ? [{ key: 'diploma', label: 'الدبلوم' }, { key: 'bachelor', label: 'البكالوريوس' }]
-        : [{ key: 'female', label: 'الطالبات' }, { key: 'male', label: 'الطلاب' }]
+      return [
+        { key: 'female-diploma', label: 'طالبات دبلوم' },
+        { key: 'female-bachelor', label: 'طالبات بكالوريوس' },
+        { key: 'male-diploma', label: 'طلاب دبلوم' },
+        { key: 'male-bachelor', label: 'طلاب بكالوريوس' }
+      ]
     },
 
+    /** تبويبات فلتر اليوم: تواريخ فريدة (الفئات التي تشترك في تاريخ تُدمَج في تبويب واحد) */
     dayTabs() {
-      return [{ value: '', label: 'كل الأيام' }, ...this.dayKeys.map((d) => ({ value: this.s.days[d.key], label: `${d.label} ${this.s.days[d.key]}` }))]
+      const byDate = {}
+      this.dayKeys.forEach((d) => {
+        const date = this.s.days[d.key]
+        if (!date) return
+        ;(byDate[date] = byDate[date] || []).push(d.label)
+      })
+      // عنوان مختصر: فئة واحدة → اسمها والتاريخ، أكثر من فئة في نفس اليوم → التاريخ فقط (تفادي عنوان طويل)
+      return [{ value: '', label: 'كل الأيام' }, ...Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b)).map(([date, labels]) => ({ value: date, label: labels.length === 1 ? `${labels[0]} — ${date}` : date }))]
     },
 
     /** أماكن لها قاعات أو مجموعات وساعاتها ناقصة أو غير صحيحة (البداية بعد النهاية) — تمنع التوليد */
@@ -470,6 +494,16 @@ export default {
       ]
     },
 
+    /** إحصاء المشرف المختار في بطاقته: عدد مجموعاته وعدد المناقشات التي يناقش فيها */
+    supStats() {
+      if (!this.supSel) return { groups: 0, examining: 0 }
+      const id = this.supSel.id
+      return {
+        groups: this.groups.filter((g) => g.supId === id).length,
+        examining: this.plan.filter((r) => r.examiners.includes(id)).length
+      }
+    },
+
     /** الاستراحة بالدقائق [من، إلى]، أو null إن لم تُفعَّل أو كانت غير صحيحة */
     breakRange() {
       const a = toMin(this.s.breakFrom)
@@ -495,7 +529,7 @@ export default {
         const need = mine.reduce((n, r) => n + this.durOf(r), 0)
         const have = Math.max(0, minutes) * parallel
         return { key, label, date: this.s.days[key], groups: mine.length, need, have, ok: need <= have }
-      })
+      }).filter((c) => c.groups > 0)
     },
 
     /** ملخص التعارضات حسب النوع */
@@ -617,12 +651,17 @@ export default {
     this.supView = this.supList[0]?.id ?? null
     try {
       this.fromDiscussions(await loadDiscussions())
-      // جدول محفوظ موجود ← ابدأ والإعدادات مطوية ليظهر الجدول مباشرة
-      if (this.plan.length) this.settingsOpen = false
     } catch {
       // لا مواعيد محفوظة بعد
     }
     this.loading = false
+  },
+
+  watch: {
+    // تذكّر حالة لوحة الإعدادات (مفتوحة/مطوية) بين التحديثات
+    settingsOpen(open) {
+      try { localStorage.setItem('dp-settings-open', open ? '1' : '0') } catch { /* تجاهل */ }
+    }
   },
 
   methods: {
@@ -667,13 +706,18 @@ export default {
       return this.supList.find((x) => x.id === id)?.name || '—'
     },
 
+    /** بطاقة معلومات المشرف */
+    openSup(id) {
+      this.supSel = this.supList.find((x) => x.id === id) || null
+    },
+
     roomsOf(region) {
       return this.s.rooms[region] || []
     },
 
-    /** مفتاح يوم الصف حسب طريقة التقسيم (الفئة أو الدرجة) */
+    /** مفتاح فئة الصف = الجنس-الدرجة */
     dayKeyOf(row) {
-      return this.s.splitBy === 'degree' ? row.g.degree : row.gender
+      return `${row.gender}-${row.g.degree}`
     },
 
     dayOf(row) {
@@ -979,20 +1023,15 @@ export default {
     },
 
     /**
-     * يستنتج تقسيم الأيام وتواريخها من المواعيد المحفوظة: اليوم الغالب لكل درجة (أو لكل فئة) إن اختلف عن الأخرى
-     * يُضبط التقسيم عليه، حتى لا يظهر الجدول المحفوظ كتعارضات "يوم غير مطابق"
+     * يستنتج تاريخ كل فئة (جنس×درجة) من المواعيد المحفوظة = التاريخ الأكثر تكرارًا لها،
+     * حتى لا يظهر الجدول المحفوظ كتعارضات "يوم غير مطابق"
      */
     adoptDays(rows) {
-      // التاريخ الأكثر تكرارًا لكل مفتاح (يتحمّل صفوفًا قليلة في يوم خاطئ — تظهر كتعارض)
       const mode = (list) => Object.entries(list.reduce((m, d) => ({ ...m, [d]: (m[d] || 0) + 1 }), {})).sort((x, y) => y[1] - x[1])[0]?.[0]
-      const tryBy = (split, keyOf, keys) => {
-        const dates = keys.map((k) => mode(rows.filter((r) => keyOf(r) === k && r.date).map((r) => r.date)))
-        if (!dates.some(Boolean) || (dates[0] && dates[0] === dates[1])) return false
-        this.s.splitBy = split
-        keys.forEach((k, i) => dates[i] && (this.s.days[k] = dates[i]))
-        return true
-      }
-      tryBy('degree', (r) => r.g.degree, ['diploma', 'bachelor']) || tryBy('gender', (r) => r.gender, ['female', 'male'])
+      this.dayKeys.forEach((d) => {
+        const date = mode(rows.filter((r) => `${r.gender}-${r.g.degree}` === d.key && r.date).map((r) => r.date))
+        if (date) this.s.days[d.key] = date
+      })
     },
 
     /** يبني الجدول من مواعيد المناقشات المحفوظة في الخادم */
