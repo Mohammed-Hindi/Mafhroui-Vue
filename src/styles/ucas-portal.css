@@ -6370,3 +6370,18 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 :root[data-brand="ucas"] .sa-skin .gr-card .gr-progress > span.is-high { background: #62BB46; }
 :root[data-brand="ucas"] .sa-skin .gr-card .gr-progress > span.is-mid { background: var(--ucas-blue); }
 :root[data-brand="ucas"] .sa-skin .gr-card .gr-progress > span.is-low { background: #F9C851; }
+
+/* توحيد جدول السجل مع mb-table: رأس رمادي بلون حقل، بلا خطوط عمودية أو تدرّجات */
+:root[data-brand="ucas"] .sa-skin .gr-card .gr-table thead tr { background: var(--color-bg); }
+:root[data-brand="ucas"] .sa-skin .gr-card .gr-table thead th { background: transparent; color: var(--color-text-600); }
+:root[data-brand="ucas"] .sa-skin .gr-card .gr-table tbody tr:nth-child(even) { background: transparent; }
+:root[data-brand="ucas"] .sa-skin .gr-card .gr-row:hover { background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-surface)); }
+:root[data-brand="ucas"] .sa-skin .gr-card .gr-group.is-open .gr-row { background: color-mix(in srgb, var(--ucas-blue) 6%, var(--color-surface)); }
+/* لوحة التفاصيل: عناوين صلبة بلا خط متدرّج، إحصاءات ومرر صفّح */
+:root[data-brand="ucas"] .sa-skin .gr-card .gr-detail .gr-side h4 { color: var(--color-text-900); }
+:root[data-brand="ucas"] .sa-skin .gr-card .gr-detail .gr-side h4::after { content: none; }
+:root[data-brand="ucas"] .sa-skin .gr-card .gr-detail .gr-stats { background: var(--color-bg); }
+:root[data-brand="ucas"] .sa-skin .gr-card .gr-detail .gr-stats b { color: var(--ucas-blue); }
+:root[data-brand="ucas"] .sa-skin .gr-card :is(.gr-detail > .gr-timeline)::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ucas-blue) 55%, transparent); border-radius: 0; }
+:root[data-brand="ucas"] .sa-skin .gr-card .tl-dot { background: var(--ucas-blue); border-radius: 0; }
+:root[data-brand="ucas"] .sa-skin .gr-card .gr-members table thead th { background: var(--color-bg); color: var(--color-text-600); font-weight: 700; }

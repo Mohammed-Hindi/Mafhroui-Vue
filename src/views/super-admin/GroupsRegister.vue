@@ -5,43 +5,30 @@
   <section class="gr gr-card">
     <header class="gr-card-head">
       <div class="gr-card-title">
-        <h3>سجل المجموعات</h3>
-        <span>{{ semesterName }}</span>
+        <span class="dash-chip">{{ semesterName }}</span>
+        <span class="dash-chip">{{ rows.length }} مجموعة</span>
       </div>
       <div class="gr-card-actions"><slot name="actions" /></div>
     </header>
 
-    <!-- التصنيف (يعمل كفلتر سريع) -->
-    <div class="gr-classes" aria-label="تصنيف الطلاب والمجموعات">
-      <div v-for="c in classes" :key="c.key" class="gr-class" role="radiogroup" :aria-label="c.label">
-        <span class="gr-class-label">{{ c.label }}</span>
-        <div class="gr-seg">
-          <button
-            v-for="o in c.options" :key="o.value" type="button" role="radio"
-            :class="f[c.key] === o.value && 'is-active'" :aria-checked="f[c.key] === o.value"
-            @click="f[c.key] = o.value"
-          >
-            {{ o.label }} <b>{{ o.count }}</b>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- "حدد …" بنمط البوابة: عنوان الحقل بجانبه -->
     <div class="gr-filters" aria-label="تصفية المجموعات">
       <label class="gr-search">
         <Search :size="16" />
         <input v-model.trim="q" type="search" placeholder="بحث برقم الشعبة، المشروع، المشرف أو الطالب…">
       </label>
-      <!-- فلاتر BaseSelect (عاتة = بند 7 من دليل التصميم: الـ native select يُرسم فوق التوب بار) -->
-      <BaseSelect v-model="f.spec" class="min-w-[170px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specSelectOptions" />
+      <!-- المشرف يرى مجموعاته فقط: فلترا الدرجة والمكان والتخصص والمشرف والحجم بلا معنى له -->
+      <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.degree" class="min-w-[140px]" aria-label="الدرجة" placeholder="كل الدرجات" include-placeholder-option :options="degreeSelectOptions" />
+      <BaseSelect v-model="f.gender" class="min-w-[140px]" aria-label="الفئة" placeholder="طلاب وطالبات" include-placeholder-option :options="genderSelectOptions" />
+      <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.region" class="min-w-[150px]" aria-label="مكان التواجد" placeholder="كل المناطق" include-placeholder-option :options="regionSelectOptions" />
+      <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.spec" class="min-w-[170px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specSelectOptions" />
       <!-- المشرف يرى مجموعاته فقط: فلتر المشرف بلا معنى له -->
       <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.sup" class="min-w-[180px]" aria-label="المشرف" placeholder="كل المشرفين" include-placeholder-option :options="supSelectOptions" />
-      <!-- المشرف: فلترا التخصص والجنس فقط -->
+      <!-- المشرف: فلترа التخصص والجنس فقط -->
       <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.size" class="min-w-[140px]" aria-label="حجم الفريق" placeholder="حجم الفريق" include-placeholder-option :options="sizeSelectOptions" />
+      <BaseSelect v-model="pageSize" class="min-w-[110px]" aria-label="عدد الصفوف" :options="pageSizeOptions" />
     </div>
 
-    <SlideTable :rows="rows" label="المجموعات">
+    <SlideTable :rows="rows" :size="pageSize" label="المجموعات">
       <template #default="{ rows: pageRows }">
         <div class="gr-table-wrap">
           <table class="gr-table">
@@ -203,7 +190,6 @@
 
     <!-- أزرار الملفات أسفل البطاقة: الطباعة خضراء والتصدير سماوي (نمط "طباعة الجدول" / "للإطلاع على الخطة") -->
     <footer class="gr-card-foot">
-      <!-- أزرار الملفات أسفل البطاقة: ثانوية outline (نمط صفحات الأعضاء) -->
       <BaseButton variant="outline" :icon="Printer" :disabled="!rows.length || !!exporting" @click="exportSupReport">
         {{ exporting === 'sups' ? 'جارٍ التجهيز…' : isSupervisor ? 'طباعة تقرير المجموعات' : 'طباعة تقرير المشرفين' }}
       </BaseButton>
@@ -264,6 +250,12 @@ export default {
       supProfiles: {},
       supLoading: {},
       q: '',
+      pageSize: 25,
+      pageSizeOptions: [
+        { value: 25, label: 'عرض 25' },
+        { value: 50, label: 'عرض 50' },
+        { value: 100, label: 'عرض 100' }
+      ],
       f: { ...EMPTY_FILTERS },
       openIds: [],
       exporting: '',
@@ -298,7 +290,6 @@ export default {
       return [...new Set(this.groups.map((g) => g.spec))]
     },
 
-    /** خيارات BaseSelect (نمط صفحات الأعضاء) */
     specSelectOptions() {
       return this.specOptions.map((s) => ({ value: s, label: s }))
     },
@@ -310,19 +301,17 @@ export default {
     },
 
     /** التصنيف مع أعداد الطلاب في كل فئة */
-    classes() {
-      const all = this.groups.flatMap((g) => g.members.map((m) => ({ ...m, degree: g.degree })))
-      const opts = (key, labels) => [
-        { value: '', label: 'الكل', count: all.length },
-        ...Object.entries(labels).map(([value, label]) => ({ value, label, count: all.filter((m) => m[key] === value).length }))
-      ]
-      const gender = { key: 'gender', label: 'الجنس', options: opts('gender', { male: 'طلاب', female: 'طالبات' }) }
-      if (this.isSupervisor) return [gender]
+    degreeSelectOptions() {
+      return Object.entries(DEGREES).map(([value, label]) => ({ value, label }))
+    },
+    genderSelectOptions() {
       return [
-        { key: 'degree', label: 'الدرجة', options: opts('degree', DEGREES) },
-        gender,
-        { key: 'region', label: 'مكان التواجد', options: opts('region', REGIONS) }
+        { value: 'male', label: 'طلاب' },
+        { value: 'female', label: 'طالبات' }
       ]
+    },
+    regionSelectOptions() {
+      return Object.entries(REGIONS).map(([value, label]) => ({ value, label }))
     },
 
     /** وصف الفلترة الحالية لتقرير المشرفين (مثل: بكالوريوس · طالبات · غزة) */

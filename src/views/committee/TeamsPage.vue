@@ -1,8 +1,5 @@
 <template>
   <div>
-    <header v-if="isSuperAdmin" class="dash-head mb-6">
-      <h2 class="dash-title">المجموعات</h2>
-    </header>
 
     <div v-if="!isSuperAdmin" class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div class="flex flex-wrap gap-3">
@@ -40,7 +37,7 @@
       <!-- أدوات الإدارة للإدارة العامة فقط؛ لجنة الإشراف ترى المجموعات (مجموعات تخصصها من الخادم) -->
       <template v-if="userRole === 'super_admin'" #actions>
         <BaseButton :icon="UserPlus" @click="openAddStudent">إضافة طالب</BaseButton>
-        <BaseButton variant="secondary" :icon="UserPlus" @click="openAddSupervisor">إضافة مشرف</BaseButton>
+        <BaseButton variant="outline" :icon="UserPlus" @click="openAddSupervisor">إضافة مشرف</BaseButton>
         <BaseButton variant="outline" :icon="Upload" @click="openImport">استيراد من Excel</BaseButton>
         <BaseButton variant="outline" :icon="Archive" @click="openTrashed">المجموعات المحذوفة</BaseButton>
       </template>
