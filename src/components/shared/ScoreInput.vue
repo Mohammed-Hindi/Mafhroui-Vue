@@ -5,7 +5,7 @@
     <option v-for="l in SCALE" :key="l.pct" :value="l.pct">{{ l.label }} ({{ round(l.pct * max) }})</option>
   </select>
   <input
-    v-else type="number" class="ev-score mono" min="0" :max="max" step="0.5" :value="modelValue ?? ''" :aria-label="label" placeholder="—"
+    v-else type="number" class="ev-score mono" min="0" :max="max" step="0.5" :value="modelValue ?? ''" :aria-label="label" placeholder="0"
     :class="invalid && 'is-invalid'" @input="set($event.target.value)"
   >
 </template>

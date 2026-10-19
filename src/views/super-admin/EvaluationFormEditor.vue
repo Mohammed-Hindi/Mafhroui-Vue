@@ -23,6 +23,13 @@
     </section>
 
     <section v-if="draft" class="dash-card ef-edit">
+      <!-- شريط الحفظ أعلى النموذج (الأهم): حالة التعديل ثم تراجع/حفظ -->
+      <div class="ef-actions is-top">
+        <span :class="['as-summary', missing && 'is-missing']">{{ missing || `القصوى لكل طالب: ${formMax(draft)} درجة` }}</span>
+        <button type="button" class="pbtn is-outline" :disabled="!dirty" @click="reset">تراجع</button>
+        <button type="button" class="pbtn is-green" :disabled="!!missing || !dirty || saving" @click="save"><Save :size="15" /> {{ saving ? 'جارٍ الحفظ…' : 'حفظ النموذج' }}</button>
+      </div>
+
       <div class="dash-card-head ef-edit-head">
         <div>
           <span class="ef-item-tags">
@@ -71,12 +78,6 @@
           </li>
         </ol>
       </section>
-
-      <div class="ef-actions">
-        <span :class="['as-summary', missing && 'is-missing']">{{ missing || `القصوى لكل طالب: ${formMax(draft)} درجة` }}</span>
-        <button type="button" class="pbtn is-outline" :disabled="!dirty" @click="reset">تراجع</button>
-        <button type="button" class="pbtn is-green" :disabled="!!missing || !dirty || saving" @click="save"><Save :size="15" /> {{ saving ? 'جارٍ الحفظ…' : 'حفظ النموذج' }}</button>
-      </div>
     </section>
   </div>
 </template>
@@ -101,7 +102,7 @@ export default {
   computed: {
     filters() {
       return [
-        { key: 'kind', value: this.kind, label: 'نوع النموذج', options: Object.entries(FORM_KINDS).map(([value, l]) => ({ value, label: `نموذج ${l}` })) },
+        { key: 'kind', value: this.kind, label: 'نوع النموذج', options: Object.entries(FORM_KINDS).map(([value, label]) => ({ value, label })) },
         { key: 'degree', value: this.degree, label: 'الدرجة', options: Object.entries(DEGREES).map(([value, label]) => ({ value, label })) }
       ]
     },

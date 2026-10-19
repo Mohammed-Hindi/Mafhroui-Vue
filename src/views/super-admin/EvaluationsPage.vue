@@ -1,194 +1,218 @@
 <template>
-  <!-- التقييمات — نظام نماذج الكلية: تقييم المجموعات (ورقة تقييم لكل مجموعة)، نماذج التقييم (تعديل الحقول وطريقة التقييم
-       للإدارة العامة ولجنة الإشراف)، والنتائج (جزء المشرف + متوسط المناقشين = الدرجة من 100).
-       المشرف: مجموعاته ونموذج المشرف فقط، بلا تعديل نماذج ولا رؤية تقييمات المناقشين. -->
-  <div class="dash">
-    <header class="dash-head">
-      <h2 class="dash-title">التقييمات</h2>
-    </header>
-
-    <!-- أقسام التقييمات بتبويبات العرض المعتمدة (خانات كاملة بيضاء، النشط بخلفية تدرّج خفيفة وخط تدرّج) -->
-    <div class="ev-steps-bar ev-tabs-bar">
-      <ol class="tk-stepper ev-steps" aria-label="أقسام التقييمات">
-        <li v-for="t in steps" :key="t.value" :class="tab === t.value && 'is-active'">
-          <button type="button" :aria-current="tab === t.value && 'page'" @click="tab = t.value">
-            <b v-if="t.count != null">{{ t.count }}</b> <component :is="t.icon" :size="16" /> {{ t.label }}
-          </button>
-        </li>
-      </ol>
-    </div>
-
-    <section v-if="tab === 'groups' || tab === 'results'" class="hm-stats tk-stats" aria-label="ملخص التقييمات">
-      <div class="hm-stat"><span class="hm-stat-label">المجموعات</span><span class="hm-stat-value">{{ groupsWithStatus.length }}</span><span class="hm-stat-split">مكتملة التقييم <b>{{ statusCount('done') }}</b></span></div>
-      <div class="hm-stat"><span class="hm-stat-label">قيد التقييم</span><span class="hm-stat-value">{{ statusCount('partial') }}</span><span class="hm-stat-split">لم تُقيَّم <b>{{ statusCount('none') }}</b></span></div>
-      <div class="hm-stat"><span class="hm-stat-label">متوسط الدرجات</span><span class="hm-stat-value">{{ avg }}</span><span class="hm-stat-split">من 100 · {{ results.length }} طالبًا</span></div>
-      <div class="hm-stat"><span class="hm-stat-label">أعلى درجة</span><span class="hm-stat-value">{{ top?.score ?? '—' }}</span><span class="hm-stat-split">{{ top?.student?.name || '' }}</span></div>
+  <!-- التقييمات — هوية المسار المسطّحة (نفس المواعيد/التقدّم/المقترحات):
+       إعداد النماذج كبطاقة قابلة للطي أعلى الصفحة (للإدارة واللجنة) ← مؤشرات سريعة ← بطاقة "تقييم المجموعات"
+       (فلاتر بنمطنا + جدول منزلق + شريط ملخّص) ← بطاقة "نتائج الطلاب". بلا عنوان صفحة مكرّر (التوب بار يعرضه). -->
+  <div class="dash evp-page">
+    <!-- 1) إعداد نماذج التقييم — بطاقة قابلة للطي أعلى الصفحة (كإعدادات الجدولة) -->
+    <section v-if="isStaff" id="ev-forms" class="dash-card">
+      <div class="dash-card-head dp-set-head">
+        <button type="button" class="dp-set-toggle" :aria-expanded="formsOpen" @click="formsOpen = !formsOpen">
+          <span class="dp-set-titles">
+            <h3>إعداد نماذج التقييم</h3>
+            <small class="dp-set-count">بنود النموذج وطريقة التقييم وأوزان الأقسام</small>
+          </span>
+          <ChevronDown :size="18" :class="['dp-set-caret', formsOpen && 'is-open']" />
+        </button>
+      </div>
+      <div v-show="formsOpen" class="dp-set-body">
+        <EvaluationFormEditor />
+      </div>
     </section>
 
-    <!-- تقييم المجموعات — بنمط صفحة المجموعات: تصنيف سريع (الدرجة · حالة التقييم) ثم "حدد …" ثم الجدول بالسلايدر والشريط الأخضر -->
-    <section v-if="tab === 'groups'" class="dash-card ev-card">
-      <div class="dash-card-head">
-        <h3>تقييم المجموعات</h3>
-        <span class="dash-chip">{{ groupRows.length }} مجموعة</span>
-      </div>
+    <!-- 2) مؤشرات سريعة -->
+    <div class="dp-kpis evp-kpis">
+      <div class="dp-kpi"><b>{{ groupsWithStatus.length }}</b><span>{{ isStaff ? 'المجموعات' : 'مجموعات أناقشها' }}</span></div>
+      <div class="dp-kpi is-good"><b>{{ statusCount('done') }}</b><span>مكتمل التقييم</span></div>
+      <div class="dp-kpi is-warn"><b>{{ statusCount('partial') }}</b><span>قيد التقييم</span></div>
+      <div class="dp-kpi"><b>{{ avg }}</b><span>متوسط الدرجات</span></div>
+    </div>
 
-      <div class="gr-classes" aria-label="تصنيف المجموعات">
-        <div v-for="c in gClasses" :key="c.key" class="gr-class" role="radiogroup" :aria-label="c.label">
-          <span class="gr-class-label">{{ c.label }}</span>
-          <div class="gr-seg">
-            <button
-              v-for="o in c.options" :key="o.value" type="button" role="radio"
-              :class="c.value === o.value && 'is-active'" :aria-checked="c.value === o.value"
-              @click="c.set(o.value)"
-            >
-              {{ o.label }} <b>{{ o.count }}</b>
-            </button>
-          </div>
-        </div>
+    <!-- 3) تقييم المجموعات -->
+    <section class="gr gr-card evp-card">
+      <div class="gr-card-title">
+        <h3>تقييم المجموعات</h3>
+        <span class="dash-chip">{{ groupTable.length }} من {{ groupsWithStatus.length }} مجموعة</span>
       </div>
 
       <div class="gr-filters" aria-label="تصفية المجموعات">
-        <label class="gr-search"><Search :size="16" /><input v-model.trim="gq" type="search" placeholder="بحث برقم الشعبة، المشروع أو الطالب…"></label>
+        <label class="gr-search">
+          <Search :size="16" />
+          <input v-model.trim="gq" type="search" placeholder="بحث برقم الشعبة أو المشروع أو الطالب…">
+        </label>
+        <label class="gr-pick">
+          <select v-model="gStatus" class="gr-select" aria-label="الحالة">
+            <option value="">كل الحالات ({{ groupsWithStatus.length }})</option>
+            <option v-for="(l, k) in STATUS" :key="k" :value="k">{{ l.label }} ({{ statusCount(k) }})</option>
+          </select>
+        </label>
         <label v-if="isStaff" class="gr-pick">
-          <span>المشرف</span>
-          <select v-model="gSup" class="gr-select">
+          <select v-model="gSup" class="gr-select" aria-label="المشرف">
             <option value="">كل المشرفين</option>
-            <option v-for="s in supOptions" :key="s.id" :value="s.id">{{ s.name }}</option>
+            <option v-for="s in supSelectOptions" :key="s.value" :value="s.value">{{ s.label }}</option>
+          </select>
+        </label>
+        <label class="gr-pick gr-pick-rows">
+          <select v-model.number="gSize" class="gr-select" aria-label="عدد الصفوف">
+            <option :value="25">عرض 25</option>
+            <option :value="50">عرض 50</option>
+            <option :value="100">عرض 100</option>
           </select>
         </label>
       </div>
 
-      <SkeletonLoader v-if="loading" :rows="5" height="44px" />
-      <SlideTable v-else :rows="groupRows" label="المجموعات">
-        <template #default="{ rows: pageRows }">
-          <div class="pt-wrap">
-            <table class="pt ev-groups">
+      <SlideTable :rows="groupTable" :size="gSize" label="المجموعات">
+        <template #default="{ rows: shown }">
+          <div class="gr-table-wrap">
+            <table class="gr-table evp-table">
               <thead>
                 <tr>
-                  <th data-rt-title>الشعبة</th><th data-rt-show>المشروع والطلبة</th><th v-if="isStaff">المشرف</th><th>الدرجة</th>
-                  <th class="ev-c">تقييم المشرف</th><th class="ev-c">لجنة المناقشة</th><th class="ev-c">الحالة</th><th />
+                  <th class="hm-center">الشعبة</th>
+                  <th>المشروع والطلبة</th>
+                  <th v-if="isStaff">المشرف</th>
+                  <th>الدرجة</th>
+                  <th class="hm-center">المشرف</th>
+                  <th class="hm-center">اللجنة</th>
+                  <th class="hm-center">الحالة</th>
+                  <th aria-label="إجراء" />
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="g in pageRows" :key="g.id" class="is-link" @click="openSheet(g.id)">
-                  <td class="pt-strong ev-nowrap">
-                    <span class="ev-sec-chip">{{ g.section ? `شعبة ${g.section}` : g.name }}</span>
-                    <span v-if="g.examining" class="ef-kind is-examiner ev-exam-tag">مناقش</span>
+                <tr v-for="g in shown" :key="g.id" class="gr-row" @click="openSheet(g.id)">
+                  <td class="hm-center"><span class="ev-sec-chip">{{ g.section }}</span></td>
+                  <td>
+                    <span class="gr-name">{{ g.projectName }}</span>
+                    <span class="evp-mems">
+                      <span v-for="name in g.members" :key="name" class="evp-mem">{{ name }}</span>
+                    </span>
                   </td>
-                  <td class="ev-proj">
-                    <b>{{ g.project?.name || 'لم يُسجَّل مشروع' }}</b>
-                    <span class="pt-muted">{{ g.members.length }} طلاب · {{ g.members.map((m) => m.name).join('، ') }}</span>
-                  </td>
-                  <td v-if="isStaff" class="ev-nowrap">{{ g.sup.name }}</td>
-                  <td class="ev-nowrap">{{ DEGREES[g.degree] || '—' }}</td>
-                  <td class="ev-c">
-                    <span v-if="g.examining" class="pt-muted">—</span>
-                    <span v-else :class="['ev-mark', g.ev.sup && 'is-done']"><Check v-if="g.ev.sup" :size="14" />{{ g.ev.sup ? 'تم' : 'لم يتم' }}</span>
-                  </td>
-                  <td class="ev-c"><span :class="['ev-mark', g.ev.com && 'is-done']"><Check v-if="g.ev.com" :size="14" />{{ g.ev.com ? 'تم' : 'لم يتم' }}</span></td>
-                  <td class="ev-c"><span :class="['rv-pill', STATUS[g.ev.status].tone]">{{ STATUS[g.ev.status].label }}</span></td>
-                  <td class="ev-act">
-                    <button type="button" :class="['pbtn is-sm', g.examining || g.ev.status !== 'none' ? 'is-outline' : 'is-cyan']" @click.stop="openSheet(g.id)">
-                      <ClipboardPen :size="14" /> {{ g.examining ? 'عرض العلامة' : g.ev.status === 'none' ? 'تقييم' : 'فتح التقييم' }}
+                  <td v-if="isStaff" class="pt-strong">{{ g.sup }}</td>
+                  <td>{{ g.degree }}</td>
+                  <td class="hm-center"><span :class="['rv-pill', g.supMark ? 'is-approved' : '']">{{ g.supMark ? 'تم' : 'لم يتم' }}</span></td>
+                  <td class="hm-center"><span :class="['rv-pill', g.comMark ? 'is-approved' : '']">{{ g.comMark ? 'تم' : 'لم يتم' }}</span></td>
+                  <td class="hm-center"><span :class="['rv-pill', STATUS_PILL[g.status]]">{{ STATUS[g.status].label }}</span></td>
+                  <td @click.stop>
+                    <button type="button" class="pbtn is-cyan is-sm" @click="openSheet(g.id)">
+                      <ClipboardPen :size="15" /> {{ g.examining ? 'عرض العلامة' : g.status === 'none' ? 'تقييم' : 'فتح التقييم' }}
                     </button>
                   </td>
                 </tr>
-                <tr v-if="!groupRows.length"><td :colspan="isStaff ? 8 : 7" class="gr-empty">لا توجد مجموعات مطابقة</td></tr>
+                <SkeletonLoader v-if="loading && !groupTable.length" variant="table" :cols="isStaff ? 8 : 7" :rows="5" />
+                <tr v-else-if="!groupTable.length"><td :colspan="isStaff ? 8 : 7" class="gr-empty">لا توجد مجموعات مطابقة</td></tr>
               </tbody>
             </table>
           </div>
         </template>
         <template #after>
           <div class="gr-sumbar">
-            <span>عدد المجموعات: {{ groupRows.length }}</span>
-            <span v-for="(l, k) in STATUS" :key="k">{{ l.label }}: {{ groupRows.filter((g) => g.ev.status === k).length }}</span>
-            <span>الطلبة: {{ groupRows.reduce((n, g) => n + g.members.length, 0) }}</span>
+            <span>عدد المجموعات: {{ groupTable.length }}</span>
+            <span v-for="(l, k) in STATUS" :key="k">{{ l.label }}: {{ groupTable.filter((g) => g.status === k).length }}</span>
+            <span>الطلبة: {{ groupTable.reduce((n, g) => n + g.members.length, 0) }}</span>
           </div>
         </template>
       </SlideTable>
     </section>
 
-    <!-- نماذج التقييم -->
-    <EvaluationFormEditor v-else-if="tab === 'forms'" />
-
-    <!-- النتائج — بنمط صفحة المجموعات: تصنيف سريع (الدرجة · الفئة · التقدير) ثم "حدد …" ثم جدول بترتيب الطالب -->
-    <section v-else class="dash-card ev-card">
-      <div class="dash-card-head">
+    <!-- 4) نتائج الطلاب -->
+    <section class="gr gr-card evp-card">
+      <div class="gr-card-title">
         <h3>نتائج الطلاب</h3>
-        <span class="dash-chip">{{ resultRows.length }} طالبًا</span>
-      </div>
-
-      <div class="gr-classes" aria-label="تصنيف النتائج">
-        <div v-for="c in rClasses" :key="c.key" class="gr-class" role="radiogroup" :aria-label="c.label">
-          <span class="gr-class-label">{{ c.label }}</span>
-          <div class="gr-seg">
-            <button
-              v-for="o in c.options" :key="o.value" type="button" role="radio"
-              :class="f[c.key] === o.value && 'is-active'" :aria-checked="f[c.key] === o.value"
-              @click="f[c.key] = o.value"
-            >
-              {{ o.label }} <b>{{ o.count }}</b>
-            </button>
-          </div>
-        </div>
+        <span class="dash-chip">{{ resultTable.length }} طالبًا</span>
       </div>
 
       <div class="gr-filters" aria-label="تصفية النتائج">
-        <label class="gr-search"><Search :size="16" /><input v-model.trim="q" type="search" placeholder="بحث بالطالب أو الرقم الجامعي أو الشعبة أو المشروع…"></label>
-        <label v-if="isStaff" class="gr-pick">
-          <span>المكان</span>
-          <select v-model="f.region" class="gr-select"><option value="">كل المناطق</option><option v-for="(l, k) in REGIONS" :key="k" :value="k">{{ l }}</option></select>
+        <label class="gr-search">
+          <Search :size="16" />
+          <input v-model.trim="rq" type="search" placeholder="بحث بالطالب أو الرقم الجامعي أو الشعبة…">
         </label>
         <label v-if="isStaff" class="gr-pick">
-          <span>التمييز</span>
-          <select v-model="f.featured" class="gr-select"><option value="">الكل</option><option value="yes">مشروع مميّز</option><option value="no">غير مميّز</option></select>
+          <select v-model="f.degree" class="gr-select" aria-label="الدرجة">
+            <option value="">دبلوم وبكالوريوس</option>
+            <option v-for="d in degreeSelectOptions" :key="d.value" :value="d.value">{{ d.label }}</option>
+          </select>
+        </label>
+        <label v-if="isStaff" class="gr-pick">
+          <select v-model="f.gender" class="gr-select" aria-label="الفئة">
+            <option value="">طلاب وطالبات</option>
+            <option v-for="g in genderSelectOptions" :key="g.value" :value="g.value">{{ g.label }}</option>
+          </select>
+        </label>
+        <label v-if="isStaff" class="gr-pick">
+          <select v-model="f.region" class="gr-select" aria-label="المنطقة">
+            <option value="">كل المناطق</option>
+            <option v-for="r in regionSelectOptions" :key="r.value" :value="r.value">{{ r.label }}</option>
+          </select>
+        </label>
+        <label v-if="isStaff" class="gr-pick">
+          <select v-model="f.featured" class="gr-select" aria-label="التميّز">
+            <option value="">الكل</option>
+            <option value="yes">مشروع مميّز</option>
+            <option value="no">غير مميّز</option>
+          </select>
+        </label>
+        <label class="gr-pick">
+          <select v-model="f.grade" class="gr-select" aria-label="التقدير">
+            <option value="">كل التقديرات</option>
+            <option v-for="g in GRADE_NAMES" :key="g" :value="g">{{ g }}</option>
+          </select>
+        </label>
+        <label class="gr-pick gr-pick-rows">
+          <select v-model.number="rSize" class="gr-select" aria-label="عدد الصفوف">
+            <option :value="25">عرض 25</option>
+            <option :value="50">عرض 50</option>
+            <option :value="100">عرض 100</option>
+          </select>
         </label>
       </div>
 
-      <SlideTable :rows="resultRows" label="الطلاب">
-        <template #default="{ rows: pageRows }">
-          <div class="pt-wrap">
-            <table class="pt ev-results">
+      <SlideTable :rows="resultTable" :size="rSize" label="النتائج">
+        <template #default="{ rows: shown }">
+          <div class="gr-table-wrap">
+            <table class="gr-table evp-table">
               <thead>
                 <tr>
-                  <th class="ev-c">الترتيب</th><th>الطالب</th><th class="ev-c">الشعبة</th><th>المشروع</th><th>الدرجة</th>
-                  <th class="ev-c">المشرف</th><th class="ev-c">المناقشة</th><th class="ev-c">المجموع</th><th class="ev-c">التقدير</th>
+                  <th class="hm-center">الترتيب</th>
+                  <th>الطالب</th>
+                  <th>المشروع</th>
+                  <th>الدرجة</th>
+                  <th class="hm-center">المشرف</th>
+                  <th class="hm-center">اللجنة</th>
+                  <th class="hm-center">المجموع</th>
+                  <th class="hm-center">التقدير</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="r in pageRows" :key="r.id" class="is-link" @click="openSheet(r.team?.id)">
-                  <td class="ev-c"><span :class="['ev-rank', rank[r.id] <= 3 && `is-r${rank[r.id]}`]" :title="`الترتيب ${rank[r.id]}`">{{ rank[r.id] }}</span></td>
-                  <td class="ev-student">
-                    <b>{{ r.student?.name }}</b>
-                    <small><span class="mono">{{ r.student?.university_number || '—' }}</span> · {{ r.student?.gender === 'female' ? 'طالبة' : 'طالب' }}<template v-if="REGIONS[r.student?.region]"> · {{ REGIONS[r.student.region] }}</template></small>
+                <tr v-for="r in shown" :key="r.id" class="gr-row" @click="openSheet(r.teamId)">
+                  <td class="hm-center"><b class="evp-rank">{{ r.rank }}</b></td>
+                  <td>
+                    <span class="gr-name">{{ r.name }}</span>
+                    <span class="evp-sub"><span class="mono">{{ r.number }}</span> · {{ r.gender }} · {{ r.section }}</span>
                   </td>
-                  <td class="ev-c"><span class="ev-sec-chip">{{ r.team?.section ? `شعبة ${r.team.section}` : r.team?.name }}</span></td>
-                  <td class="ev-proj">
-                    <b>{{ r.project?.name || '—' }}<Star v-if="r.project?.is_featured" :size="13" fill="currentColor" class="ev-star" /></b>
-                    <span class="pt-muted">{{ r.supervisor?.name || '' }}</span>
+                  <td>
+                    <span class="gr-name">{{ r.projectName }}<Star v-if="r.featured" :size="12" fill="currentColor" class="ev-star" /></span>
+                    <span class="evp-sub">{{ r.supName }}</span>
                   </td>
-                  <td class="ev-nowrap">{{ DEGREES[r.degree] }}</td>
-                  <td class="ev-c mono">{{ r.supervisor_score ?? '—' }}</td>
-                  <td class="ev-c mono">{{ r.committee_score ?? '—' }}</td>
-                  <td class="ev-c">
-                    <span class="ev-total">
-                      <b class="mono">{{ r.score }}</b>
-                      <span class="ev-total-bar"><span :class="r.score < 60 ? 'is-low' : r.score < 80 ? 'is-mid' : ''" :style="{ width: Math.min(100, r.score) + '%' }" /></span>
+                  <td>{{ r.degree }}</td>
+                  <td class="hm-center"><span class="mono">{{ r.supScore ?? '—' }}</span></td>
+                  <td class="hm-center"><span class="mono">{{ r.comScore ?? '—' }}</span></td>
+                  <td class="hm-center">
+                    <span class="evp-score">
+                      <span class="evp-score-bar"><span :style="{ width: Math.min(100, Number(r.score) || 0) + '%' }" /></span>
+                      <b class="mono">{{ r.score ?? '—' }}</b>
                     </span>
                   </td>
-                  <td class="ev-c"><span :class="['rv-pill', isDone(r) ? gradeTone(r.score) : 'is-pending']">{{ gradeOf(r) }}</span></td>
+                  <td class="hm-center"><span :class="['rv-pill', VARIANT_PILL[r.variant]]">{{ r.gradeLabel }}</span></td>
                 </tr>
-                <SkeletonLoader v-if="loading && !resultRows.length" variant="table" :cols="9" :rows="6" />
-                <tr v-else-if="!resultRows.length"><td colspan="9" class="gr-empty">لا توجد نتائج مطابقة</td></tr>
+                <SkeletonLoader v-if="loading && !resultTable.length" variant="table" :cols="8" :rows="5" />
+                <tr v-else-if="!resultTable.length"><td colspan="8" class="gr-empty">لا توجد نتائج مطابقة</td></tr>
               </tbody>
             </table>
           </div>
         </template>
         <template #after>
           <div class="gr-sumbar">
-            <span>عدد الطلبة: {{ resultRows.length }}</span>
-            <span>متوسط الدرجات: {{ avgOf(resultRows.filter(isDone)) }}</span>
-            <span v-for="g in GRADE_NAMES" :key="g">{{ g }}: {{ resultRows.filter((r) => gradeOf(r) === g).length }}</span>
+            <span>عدد الطلبة: {{ resultTable.length }}</span>
+            <span>متوسط الدرجات: {{ avg }}</span>
+            <span v-for="g in GRADE_NAMES" :key="g">{{ g }}: {{ resultTable.filter((r) => r.gradeLabel === g).length }}</span>
           </div>
         </template>
       </SlideTable>
@@ -198,82 +222,91 @@
 
 <script>
 import { mapState } from 'pinia'
-import { markRaw } from 'vue'
-import { Award, Check, ClipboardPen, Search, Settings2, Star } from 'lucide-vue-next'
-
-const Settings2Icon = markRaw(Settings2)
-const ClipboardIcon = markRaw(ClipboardPen)
-const AwardIcon = markRaw(Award)
+import { ClipboardPen, Search, Star, ChevronDown } from 'lucide-vue-next'
 import SlideTable from '@/components/ui/SlideTable.vue'
+import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import EvaluationFormEditor from './EvaluationFormEditor.vue'
 import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth.store'
-import { DEGREES, REGIONS, fetchGroups } from '@/utils/progressData'
-import { groupGender } from '@/services/adminData'
-import { grade, gradeTone } from '@/utils/evaluation'
+import { DEGREES, GENDERS, REGIONS, fetchGroups } from '@/utils/progressData'
+import { grade } from '@/utils/evaluation'
 
 const STATUS = {
-  done: { label: 'مكتمل', tone: 'is-approved' },
-  partial: { label: 'قيد التقييم', tone: 'is-pending' },
-  none: { label: 'لم يُقيَّم', tone: '' }
+  done: { label: 'مكتمل', variant: 'success' },
+  partial: { label: 'قيد التقييم', variant: 'info' },
+  none: { label: 'لم يُقيَّم', variant: 'neutral' }
 }
+const STATUS_PILL = { done: 'is-approved', partial: 'is-pending', none: '' }
+
+const EMPTY_FILTERS = { degree: '', gender: '', grade: '', featured: '', region: '' }
+
+const GRADE_VARIANTS = {
+  ممتاز: 'success',
+  'جيد جدًا': 'success',
+  جيد: 'success',
+  مقبول: 'warning',
+  راسب: 'error',
+  'غير مكتمل': 'neutral'
+}
+const VARIANT_PILL = { success: 'is-approved', info: 'is-pending', warning: 'is-pending', error: 'is-rejected', neutral: '' }
 
 export default {
   name: 'EvaluationsPage',
 
-  components: { SlideTable, EvaluationFormEditor, Check, ClipboardPen, Search, Star },
+  components: { SlideTable, SkeletonLoader, EvaluationFormEditor, Search, ClipboardPen, Star, ChevronDown },
 
   data() {
     return {
-      DEGREES, REGIONS, STATUS,
-      tab: 'groups',
+      DEGREES, REGIONS, STATUS, STATUS_PILL, VARIANT_PILL, GRADE_NAMES: Object.keys(GRADE_VARIANTS),
+      ClipboardPen,
+      formsOpen: (() => { try { return localStorage.getItem('ev-forms-open') === '1' } catch { return false } })(),
       groups: [],
       examining: [],
       results: [],
       loading: true,
-      gq: '', gSup: '', gDegree: '', gStatus: '', gGender: '', gSpec: '',
-      q: '',
-      GRADE_NAMES: ['ممتاز', 'جيد جدًا', 'جيد', 'مقبول', 'راسب', 'غير مكتمل'],
-      f: { degree: '', gender: '', grade: '', featured: '', region: '', spec: '' }
+      gq: '', rq: '', gSup: '', gStatus: '',
+      gSize: 25, rSize: 25,
+      f: { ...EMPTY_FILTERS }
+    }
+  },
+
+  watch: {
+    // تذكّر حالة بطاقة إعداد النماذج (مفتوحة/مطوية) بين التحديثات
+    formsOpen(open) {
+      try { localStorage.setItem('ev-forms-open', open ? '1' : '0') } catch { /* تجاهل */ }
     }
   },
 
   computed: {
     ...mapState(useAuthStore, ['userRole']),
-    /** الإدارة العامة ولجنة الإشراف: كل الأدوات · المشرف: تقييم مجموعاته والنتائج فقط */
     isStaff() {
       return this.userRole === 'super_admin' || this.userRole === 'committee'
     },
-    /** مراحل التقييم: الإدارة واللجنة تبدآن بإعداد النماذج، والمشرف بتقييم مجموعاته */
-    steps() {
-      return [
-        ...(this.isStaff ? [{ value: 'forms', label: 'إعداد نماذج التقييم', icon: Settings2Icon, count: null }] : []),
-        { value: 'groups', label: 'تقييم المجموعات', icon: ClipboardIcon, count: this.groupsWithStatus.length },
-        { value: 'results', label: 'نتائج الطلاب', icon: AwardIcon, count: this.results.length }
-      ]
-    },
-    /** تصنيف سريع بنمط صفحة المجموعات، بأعداد من كل المجموعات */
-    gClasses() {
-      const all = this.groupsWithStatus
-      const opt = (value, label, n) => ({ value, label, count: n })
-      return [
-        {
-          key: 'degree', label: 'الدرجة', value: this.gDegree, set: (v) => { this.gDegree = v },
-          options: [opt('', 'الكل', all.length), ...Object.entries(DEGREES).map(([k, l]) => opt(k, l, all.filter((g) => g.degree === k).length))]
-        },
-        {
-          key: 'status', label: 'حالة التقييم', value: this.gStatus, set: (v) => { this.gStatus = v },
-          options: [opt('', 'الكل', all.length), ...Object.entries(STATUS).map(([k, l]) => opt(k, l.label, all.filter((g) => g.ev.status === k).length))]
-        }
-      ]
-    },
-    supOptions() {
+    supSelectOptions() {
       const map = new Map()
-      this.groups.forEach((g) => g.sup.id && map.set(g.sup.id, g.sup))
-      return [...map.values()]
+      this.groups.forEach((g) => g.sup?.id && map.set(g.sup.id, g.sup))
+      return [...map.values()].map((s) => ({ value: s.id, label: s.name }))
     },
-    /** حالة تقييم كل مجموعة من نتائج الخادم: جزء المشرف وجزء اللجنة لكل طلابها */
+    degreeSelectOptions() {
+      return Object.entries(DEGREES).map(([value, label]) => ({ value, label }))
+    },
+    genderSelectOptions() {
+      return Object.entries(GENDERS).map(([value, label]) => ({ value, label }))
+    },
+    regionSelectOptions() {
+      return Object.entries(REGIONS).map(([value, label]) => ({ value, label }))
+    },
+    /**
+     * حالة تقييم كل مجموعة.
+     * الإدارة/اللجنة: كل المجموعات. المشرف: المجموعات التي يناقشها فقط (كلجنة مناقشة) — لا مجموعاته التي يشرف عليها.
+     */
     groupsWithStatus() {
+      if (!this.isStaff) {
+        return this.examining.map((t) => {
+          const com = t.members.length > 0 && t.members.every((m) => t.results.some((r) => r.student_id === m.id && r.committee_score != null))
+          return { ...t, examining: true, sup: t.supervisor || { id: null, name: '—' }, ev: { sup: false, com, status: com ? 'done' : t.results.length ? 'partial' : 'none' } }
+        })
+      }
       const byTeam = {}
       this.results.forEach((r) => (byTeam[r.team?.id] ||= []).push(r))
       return this.groups.map((g) => {
@@ -282,66 +315,77 @@ export default {
         const sup = all('supervisor_score')
         const com = all('committee_score')
         const any = rs.some((r) => r.supervisor_score != null || r.committee_score != null)
-        return { ...g, ev: { sup, com, status: sup && (com || !this.isStaff) ? 'done' : any ? 'partial' : 'none' } }
-      }).concat(this.examining.map((t) => {
-        const com = t.members.length > 0 && t.members.every((m) => t.results.some((r) => r.student_id === m.id && r.committee_score != null))
-        return { ...t, examining: true, sup: t.supervisor || { id: null, name: '—' }, ev: { sup: false, com, status: com ? 'done' : t.results.length ? 'partial' : 'none' } }
-      }))
+        return { ...g, ev: { sup, com, status: sup && com ? 'done' : any ? 'partial' : 'none' } }
+      })
     },
-    groupRows() {
+    groupTable() {
       const q = this.gq
-      return this.groupsWithStatus.filter((g) =>
-        (!q || `${g.section} ${g.name} ${g.project?.name || ''} ${g.members.map((m) => m.name).join(' ')}`.includes(q)) &&
-        (!this.gSup || g.sup.id === this.gSup) && (!this.gDegree || g.degree === this.gDegree) && (!this.gStatus || g.ev.status === this.gStatus) &&
-        (!this.gGender || groupGender(g) === this.gGender) && (!this.gSpec || g.spec === this.gSpec)
-      )
+      return this.groupsWithStatus
+        .filter((g) =>
+          (!q || `${g.section} ${g.name} ${g.project?.name || ''} ${g.members.map((m) => m.name).join(' ')}`.includes(q)) &&
+          (!this.gSup || g.sup.id === this.gSup) && (!this.gStatus || g.ev.status === this.gStatus)
+        )
+        .map((g) => ({
+          id: g.id,
+          section: g.section ? `شعبة ${g.section}` : g.name,
+          projectName: g.project?.name || 'لم يُسجَّل مشروع',
+          members: g.members.map((m) => m.name),
+          sup: g.sup.name,
+          degree: DEGREES[g.degree] || '—',
+          supMark: g.ev.sup,
+          comMark: g.ev.com,
+          status: g.ev.status,
+          examining: !!g.examining
+        }))
     },
-    specs() {
-      return [...new Set(this.groups.map((g) => g.spec).filter(Boolean))]
-    },
-    /** تخصص مجموعة النتيجة (لفلتر المشرف) */
-    specByTeam() {
-      return Object.fromEntries(this.groups.map((g) => [g.id, g.spec]))
-    },
-    /** ترتيب الطالب بين كل النتائج (الخادم يرتّبها تنازليًا بالدرجة؛ المتساوون بنفس الترتيب) */
-    /** ترتيب متقارب (Dense): المتعادلون بنفس المركز، والمركز التالي يليه مباشرة (1، 1، 2، 3) — فتظهر المراكز الثلاثة الأولى دائمًا */
     rank() {
       const out = {}
       let place = 0
       this.results.forEach((r, i) => { if (!i || r.score !== this.results[i - 1].score) place++; out[r.id] = place })
       return out
     },
-    rClasses() {
-      const all = this.results
-      const opt = (value, label, n) => ({ value, label, count: n })
-      const gender = { key: 'gender', label: 'الفئة', options: [opt('', 'الكل', all.length), opt('male', 'طلاب', all.filter((r) => r.student?.gender !== 'female').length), opt('female', 'طالبات', all.filter((r) => r.student?.gender === 'female').length)] }
-      return [
-        { key: 'degree', label: 'الدرجة', options: [opt('', 'الكل', all.length), ...Object.entries(DEGREES).map(([k, l]) => opt(k, l, all.filter((r) => r.degree === k).length))] },
-        ...(this.isStaff ? [gender] : []),
-        { key: 'grade', label: 'التقدير', options: [opt('', 'الكل', all.length), ...[['ممتاز', 'متميز'], ['جيد جدًا', 'جيد جدًا'], ['مقبول', 'مقبول']].map(([g, l]) => opt(g, l, all.filter((r) => this.gradeOf(r) === g).length))] }
-      ]
-    },
-    resultRows() {
+    resultTable() {
       const { degree, gender, featured, region } = this.f
-      return this.results.filter((r) =>
-        (!this.q || `${r.student?.name} ${r.student?.university_number} ${r.team?.section} ${r.team?.name} ${r.project?.name}`.includes(this.q)) &&
-        (!degree || r.degree === degree) && (!gender || (gender === 'female') === (r.student?.gender === 'female')) && (!this.f.grade || this.gradeOf(r) === this.f.grade) &&
-        (!featured || (featured === 'yes') === !!r.project?.is_featured) && (!region || r.student?.region === region) &&
-        (!this.f.spec || this.specByTeam[r.team?.id] === this.f.spec)
-      )
+      const q = this.rq
+      return this.results
+        .filter((r) =>
+          (!q || `${r.student?.name} ${r.student?.university_number} ${r.team?.section} ${r.team?.name} ${r.project?.name}`.includes(q)) &&
+          (!degree || r.degree === degree) && (!gender || (gender === 'female') === (r.student?.gender === 'female')) &&
+          (!this.f.grade || this.gradeOf(r) === this.f.grade) &&
+          (!featured || (featured === 'yes') === !!r.project?.is_featured) && (!region || r.student?.region === region)
+        )
+        .map((r) => {
+          const label = this.gradeOf(r)
+          return {
+            ...r,
+            teamId: r.team?.id,
+            rank: this.rank[r.id],
+            name: r.student?.name || '—',
+            number: r.student?.university_number || '—',
+            gender: r.student?.gender === 'female' ? 'طالبة' : 'طالب',
+            section: r.team?.section ? `شعبة ${r.team.section}` : r.team?.name || '—',
+            projectName: r.project?.name || '—',
+            featured: !!r.project?.is_featured,
+            supName: r.supervisor?.name || '',
+            degree: DEGREES[r.degree] || '—',
+            supScore: r.supervisor_score,
+            comScore: r.committee_score,
+            score: r.score,
+            gradeLabel: label,
+            variant: GRADE_VARIANTS[label] || 'neutral'
+          }
+        })
+    },
+    statusCount() {
+      return (k) => this.groupsWithStatus.filter((g) => g.ev.status === k).length
     },
     avg() {
-      return this.avgOf(this.results)
-    },
-    top() {
-      return this.results[0]
+      const scored = this.results.filter((r) => r.score != null && !Number.isNaN(Number(r.score)))
+      return scored.length ? Math.round(scored.reduce((n, r) => n + Number(r.score), 0) / scored.length) : '—'
     }
   },
 
   async created() {
-    // الإدارة واللجنة تبدآن من الإعداد
-    if (this.isStaff) this.tab = 'forms'
-    if (this.steps.some((t) => t.value === this.$route.query.tab)) this.tab = this.$route.query.tab
     const [groups] = await Promise.allSettled([fetchGroups(), this.loadResults(), this.loadExamining()])
     this.groups = groups.value || []
     if (groups.status === 'rejected') this.$toast?.error('تعذّر تحميل المجموعات')
@@ -350,9 +394,7 @@ export default {
 
   methods: {
     grade,
-    gradeTone,
 
-    // GET /evaluations — النتائج النهائية (مرتبة تنازليًا بالدرجة من الخادم)
     async loadResults() {
       try {
         const { data } = await api.get('/evaluations')
@@ -362,7 +404,6 @@ export default {
       }
     },
 
-    // GET /evaluations/examining — المشرف: مجموعات يناقشها (علامة لجنة المناقشة للاطلاع فقط)
     async loadExamining() {
       if (this.isStaff) return
       try {
@@ -373,32 +414,16 @@ export default {
       }
     },
 
-    // ورقة التقييم صفحة مستقلة: super-admin-evaluations ← super-admin-evaluation-sheet
     openSheet(teamId) {
       if (teamId) this.$router.push({ name: this.$route.name.replace('-evaluations', '-evaluation-sheet'), params: { teamId } })
     },
 
-    /** النتيجة مكتملة حين يُقيَّم الطالب من المشرف ولجنة المناقشة؛ غير ذلك لا يُعطى تقديرًا (لا "راسب" لنقص التقييم) */
     isDone(r) {
       return r.supervisor_score != null && r.committee_score != null
     },
+
     gradeOf(r) {
       return this.isDone(r) ? grade(r.score) : 'غير مكتمل'
-    },
-
-    clearResultFilters() {
-      this.q = ''
-      Object.keys(this.f).forEach((k) => { this.f[k] = '' })
-    },
-
-    statusCount(s) {
-      return this.groupsWithStatus.filter((g) => g.ev.status === s).length
-    },
-
-    avgOf(rows) {
-      // الخادم يرسل الدرجة نصًا عشريًا ("94.00") — تُحوَّل لرقم قبل الجمع وإلا تُلصق النصوص (NaN)
-      const scored = rows.filter((r) => r.score !== null && r.score !== '' && !Number.isNaN(Number(r.score)))
-      return scored.length ? Math.round(scored.reduce((n, r) => n + Number(r.score), 0) / scored.length) : '—'
     }
   }
 }
