@@ -53,7 +53,7 @@
             </dl>
             <h5 class="ab-info-h"><Users :size="15" /> فريق المشروع <small>{{ current.members.length }}</small></h5>
             <ul class="ab-team">
-              <li v-for="m in current.members" :key="m.id || m.name"><span class="ab-ava">{{ m.name.trim().charAt(0) }}</span>{{ m.name }}</li>
+              <li v-for="m in current.members" :key="m.id || m.name">{{ m.name }}</li>
               <li v-if="!current.members.length" class="pt-muted">لا يوجد طلاب</li>
             </ul>
             <button v-if="!isSup" type="button" :class="['pbtn ar-feature', current.featured ? 'is-green' : 'is-outline']" :aria-pressed="current.featured" @click="toggleFeatured(current)">
@@ -217,7 +217,7 @@
                       <!-- المشرف ثم أسماء الطلاب كشارات (صورة الحرف + الاسم الأول والعائلة) -->
                       <span class="ab-pf-sup"><UserRound :size="14" /> {{ p.supName }}</span>
                       <ul class="ab-pf-names" aria-label="فريق المشروع">
-                        <li v-for="m in p.members" :key="m.id || m.name"><span class="ab-ava">{{ m.name.trim().charAt(0) }}</span>{{ m.name }}</li>
+                        <li v-for="m in p.members" :key="m.id || m.name">{{ m.name }}</li>
                         <li v-if="!p.members.length" class="is-empty">لا يوجد طلاب</li>
                       </ul>
                     </div>
