@@ -6817,4 +6817,14 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 
 /* صفحة المساعد الآلي: عمود شات أطول (يملأ ارتفاع الشاشة) وأضيق في وسط الصفحة بإطار واضح */
 .ac-page, .ucas-portal .portal-page.ac-page { align-items: center; margin-block: -24px; }
-.ac-page .ac-wrap, .ucas-portal .portal-page.ac-page .ac-wrap { width: 100%; max-width: 1100px; height: calc(100vh - 120px) !important; min-height: 520px; border-radius: 14px; border: 1px solid var(--color-border); box-shadow: 0 12px 34px rgba(4, 40, 80, .1); }
+.ac-page .ac-wrap, .ucas-portal .portal-page.ac-page .ac-wrap { width: 100%; max-width: none; height: calc(100vh - 120px) !important; min-height: 520px; border-radius: 14px; border: 1px solid var(--color-border); box-shadow: 0 12px 34px rgba(4, 40, 80, .1); }
+
+/* Full-width modern assistant: full-bleed shell, a centred reading column for messages, and a unified pill composer (committee/admin portal) */
+.ucas-portal .portal-page.ac-page .ac-stream { width: 100%; max-width: 880px; margin-inline: auto; }
+.ucas-portal .portal-page.ac-page .ac-wrap > form { padding-block: 16px 22px; }
+.ucas-portal .portal-page.ac-page .ac-bar { max-width: 880px; margin-inline: auto; padding: 6px 6px 6px 10px; border: 1px solid color-mix(in srgb, var(--ucas-blue) 16%, var(--color-border)); border-radius: 16px; background: var(--color-surface); box-shadow: 0 8px 24px rgba(4, 40, 80, .08); transition: border-color .3s ease, box-shadow .3s ease; }
+.ucas-portal .portal-page.ac-page .ac-bar:focus-within { border-color: var(--ucas-blue); box-shadow: 0 0 0 4px rgba(0, 91, 170, .1); }
+.ucas-portal .portal-page.ac-page .ac-bar .ac-input { height: 46px; border: 0; background: transparent; box-shadow: none; }
+.ucas-portal .portal-page.ac-page .ac-bar .ac-input:focus { border: 0; background: transparent; box-shadow: none; }
+.ucas-portal .portal-page.ac-page .ac-bar .ac-send { width: 42px; height: 42px; border-radius: 12px; box-shadow: 0 6px 16px rgba(4, 40, 80, .22); }
+.ucas-portal .portal-page.ac-page .ac-msg { max-width: 82%; }

@@ -4,57 +4,61 @@
       <h3 class="portal-title font-cairo font-bold text-h4 text-text-900">{{ title }}</h3>
     </header>
 
-    <div ref="body" class="flex-1 overflow-y-auto scrollbar-thin px-5 py-6 flex flex-col gap-4">
-      <div v-if="!messages.length" class="ac-empty m-auto text-center">
-        <span class="ac-empty-icon"><Bot :size="30" /></span>
-        <h4 class="ac-empty-title">مساعد مسار الآلي</h4>
-        <p class="ac-empty-hint">{{ emptyHint }}</p>
-        <div class="ac-chips">
-          <button
-            v-for="suggestion in suggestions"
-            :key="suggestion"
-            type="button"
-            class="ac-chip text-caption font-semibold text-text-700 bg-bg border border-border px-4 py-2 rounded-pill hover:bg-primary-50 hover:border-primary-200 hover:text-primary-700 transition-colors duration-fast"
-            @click="sendSuggested(suggestion)"
-          >
-            {{ suggestion }}
-          </button>
+    <div ref="body" class="flex-1 overflow-y-auto scrollbar-thin px-5 py-6 flex flex-col">
+      <div class="ac-stream w-full flex-1 flex flex-col gap-4">
+        <div v-if="!messages.length" class="ac-empty m-auto text-center">
+          <span class="ac-empty-icon"><Bot :size="30" /></span>
+          <h4 class="ac-empty-title">مساعد مسار الآلي</h4>
+          <p class="ac-empty-hint">{{ emptyHint }}</p>
+          <div class="ac-chips">
+            <button
+              v-for="suggestion in suggestions"
+              :key="suggestion"
+              type="button"
+              class="ac-chip text-caption font-semibold text-text-700 bg-bg border border-border px-4 py-2 rounded-pill hover:bg-primary-50 hover:border-primary-200 hover:text-primary-700 transition-colors duration-fast"
+              @click="sendSuggested(suggestion)"
+            >
+              {{ suggestion }}
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div
-        v-for="message in messages"
-        :key="message.id"
-        :class="[
-          'ac-msg max-w-[75%] px-4 py-3 rounded-lg text-body-sm leading-relaxed',
-          message.who === 'user'
-            ? 'is-user self-end bg-gradient-to-bl from-primary-600 to-primary-700 text-white rounded-bl-sm'
-            : 'is-ai self-start bg-bg border border-border-soft text-text-900 rounded-br-sm'
-        ]"
-      >
-        {{ message.text }}
-      </div>
+        <div
+          v-for="message in messages"
+          :key="message.id"
+          :class="[
+            'ac-msg max-w-[75%] px-4 py-3 rounded-lg text-body-sm leading-relaxed',
+            message.who === 'user'
+              ? 'is-user self-end bg-gradient-to-bl from-primary-600 to-primary-700 text-white rounded-bl-sm'
+              : 'is-ai self-start bg-bg border border-border-soft text-text-900 rounded-br-sm'
+          ]"
+        >
+          {{ message.text }}
+        </div>
 
-      <div v-if="typing" class="self-start flex gap-1 px-4 py-3.5 bg-bg border border-border-soft rounded-lg">
-        <span v-for="n in 3" :key="n" class="w-1.5 h-1.5 rounded-pill bg-text-400 animate-bounce" :style="{ animationDelay: `${n * 0.12}s` }" />
+        <div v-if="typing" class="self-start flex gap-1 px-4 py-3.5 bg-bg border border-border-soft rounded-lg">
+          <span v-for="n in 3" :key="n" class="w-1.5 h-1.5 rounded-pill bg-text-400 animate-bounce" :style="{ animationDelay: `${n * 0.12}s` }" />
+        </div>
       </div>
     </div>
 
-    <form class="flex items-center gap-2.5 px-5 py-4 border-t border-border-soft shrink-0" @submit.prevent="send">
-      <input
-        v-model.trim="draft"
-        type="text"
-        :placeholder="placeholder"
-        class="ac-input flex-1 h-11 px-4 rounded-md border border-border bg-bg text-body-sm text-text-900 focus:border-primary-600 focus:bg-surface transition-colors duration-fast outline-none"
-      >
-      <button
-        type="submit"
-        class="ac-send grid place-items-center w-11 h-11 rounded-md bg-gradient-to-bl from-primary-600 to-primary-700 text-white shrink-0 disabled:opacity-50"
-        :disabled="!draft || typing"
-        aria-label="إرسال"
-      >
-        <Send :size="17" />
-      </button>
+    <form class="flex justify-center px-5 py-4 border-t border-border-soft shrink-0" @submit.prevent="send">
+      <div class="ac-bar w-full flex items-center gap-2.5">
+        <input
+          v-model.trim="draft"
+          type="text"
+          :placeholder="placeholder"
+          class="ac-input flex-1 h-11 px-4 rounded-md border border-border bg-bg text-body-sm text-text-900 focus:border-primary-600 focus:bg-surface transition-colors duration-fast outline-none"
+        >
+        <button
+          type="submit"
+          class="ac-send grid place-items-center w-11 h-11 rounded-md bg-gradient-to-bl from-primary-600 to-primary-700 text-white shrink-0 disabled:opacity-50"
+          :disabled="!draft || typing"
+          aria-label="إرسال"
+        >
+          <Send :size="17" />
+        </button>
+      </div>
     </form>
   </div>
 </template>
