@@ -5111,6 +5111,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .tk-filters { gap: 8px; align-items: center; }
 .sa-skin .tk-filters .gr-search { flex: 0 1 260px; min-width: 180px; max-width: 320px; margin-inline-end: auto; }
 .sa-skin .tk-filters .tk-filter { flex: 0 1 150px; min-width: 128px; }
+.sa-skin .tk-filters .tk-filter-size { flex: 0 0 auto; min-width: 104px; max-width: 120px; }
 .sa-skin .tk-filters .tk-filter > button { height: 42px; }
 .sa-skin .tk-filters .gr-select { flex: 0 1 150px; min-width: 128px; max-width: 180px; }
 /* شكل كلندر موعد التسليم داخل الفورم — أيقونة الكلندر بلون الهوية (أزرق UCAS) مثل صفحة المناقشات */

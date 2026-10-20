@@ -32,12 +32,14 @@
         <BaseSelect v-if="!isStaff" v-model="fSpec" class="tk-filter" placeholder="كل التخصصات" include-placeholder-option value-key="id" label-key="name" :options="specOptions" />
         <!-- المشرف: فلترا التخصص والفئة فقط -->
         <BaseSelect v-if="isSupervisor" v-model="fGender" class="tk-filter" placeholder="طلاب وطالبات" include-placeholder-option :options="[{ value: 'male', label: 'طلاب' }, { value: 'female', label: 'طالبات' }]" />
+        <!-- عدد الصفوف المعروضة في الجدول (عرض القائمة فقط) -->
+        <BaseSelect v-if="view === 'list'" v-model="pageSize" class="tk-filter tk-filter-size" aria-label="عدد الصفوف" :options="pageSizeOptions" />
       </div>
 
       <SkeletonLoader v-if="!loaded" variant="cards" :rows="6" />
 
       <!-- القائمة: سلايدر بنمط سجل المجموعات (6 مهام لكل شريحة) + شريط الملخص الأخضر -->
-      <SlideTable v-else-if="view === 'list'" :rows="rows" label="المهام" :class="loadingTasks && 'tk-busy'">
+      <SlideTable v-else-if="view === 'list'" :rows="rows" :size="pageSize" label="المهام" :class="loadingTasks && 'tk-busy'">
         <template #default="{ rows: pageRows }">
           <div class="gr-table-wrap">
             <table class="gr-table evp-table tk-table">
@@ -317,6 +319,12 @@ export default {
       counts: {},
       reqId: 0,
       view: 'board',
+      pageSize: 25,
+      pageSizeOptions: [
+        { value: 25, label: 'عرض 25' },
+        { value: 50, label: 'عرض 50' },
+        { value: 100, label: 'عرض 100' }
+      ],
       q: '',
       fCommittee: '',
       fGroup: '',
