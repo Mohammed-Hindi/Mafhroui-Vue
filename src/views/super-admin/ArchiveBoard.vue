@@ -87,19 +87,6 @@
           </div>
         </div>
 
-        <h4 class="ad-sub">معاينة تسليمات الطالب</h4>
-        <div class="ad-previews">
-          <article v-for="c in previews" :key="c.key" :class="['ad-prev', `is-${c.kind}`, !c.ok && 'is-missing']">
-            <div class="ad-prev-art">
-              <component :is="c.icon" :size="46" />
-              <span v-if="c.ok && c.badge" class="ad-prev-badge">{{ c.badge }}</span>
-            </div>
-            <div class="ad-prev-body">
-              <b>{{ c.title }}</b>
-              <span :class="c.ok ? 'is-ok' : 'is-bad'"><Check v-if="c.ok" :size="14" /><X v-else :size="14" /> {{ c.ok ? c.okText : c.missText }}</span>
-            </div>
-          </article>
-        </div>
     </section>
 
     <!-- عرض المشاريع: فلاتر بجانب البحث + تبديل معرض/جدول (بنية جداولنا القياسية) -->
