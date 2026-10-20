@@ -6459,7 +6459,9 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 @media (max-width: 1023.98px) { .sa-skin .ev-card .gr-classes { grid-template-columns: minmax(0, 1fr); } }
 
 /* ===== صفحة التقييمات (القائمة) — هوية مسطّحة: مؤشرات + بطاقتا جدول منزلق ===== */
-.sa-skin .evp-page > * + * { margin-top: 14px; }
+/* مصدر مباعدة واحد بين السكشنات (بدل gap:24 الموروث + margin) — متقارب ومرتّب */
+.sa-skin .evp-page { gap: 14px; }
+.sa-skin .evp-page > * + * { margin-top: 0; }
 .sa-skin .evp-kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 0; }
 /* عناوين بطاقات الجداول */
 .sa-skin .evp-card .gr-card-title { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 4px; }
