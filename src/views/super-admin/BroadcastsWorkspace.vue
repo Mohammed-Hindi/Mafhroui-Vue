@@ -120,13 +120,17 @@
     <BaseModal v-model="composer" :title="isFile ? 'إرسال ملف' : 'إعلان جديد'" size="xl">
       <!-- فورم مكدّس: قالب (اختياري) ← تفاصيل ← مستلمون ← قنوات الإرسال، في تمرير واحد -->
       <div class="as-form">
-      <!-- القوالب الدائمة (للإدارة العامة ولجنة الإشراف) — اختيار قالب يعبّئ التفاصيل -->
-      <section v-if="!isSupervisor" class="tk-sec">
-        <header class="tk-sec-head"><h4>قالب جاهز</h4><span class="pt-muted">اختياري</span></header>
-        <div class="tk-sec-body">
+      <!-- قالب جاهز: أكورديون يفتح/يتسكّر، اختياره يعبّئ العنوان والنص -->
+      <details v-if="!isSupervisor" class="as-acc">
+        <summary class="as-acc-head">
+          <Paperclip :size="15" />
+          <span class="as-acc-t">قالب جاهز <small>اختياري — يعبّئ العنوان والنص</small></span>
+          <ChevronDown :size="17" class="as-acc-chev" />
+        </summary>
+        <div class="as-acc-body">
           <TemplatePicker :kind="type" :title="form.title" :body="form.body" @apply="(t) => useTemplate({ title: t.title || '', body: t.body || '' })" />
         </div>
-      </section>
+      </details>
 
       <section :class="['tk-sec', filled && 'is-filled']">
         <header class="tk-sec-head"><h4>{{ isFile ? 'تفاصيل الملف' : 'تفاصيل الإعلان' }}</h4></header>
@@ -218,7 +222,7 @@
 </template>
 
 <script>
-import { Download, FileText, Paperclip, Plus, Search, Send, Trash2, X } from 'lucide-vue-next'
+import { ChevronDown, Download, FileText, Paperclip, Plus, Search, Send, Trash2, X } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import SlideTable from '@/components/ui/SlideTable.vue'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
@@ -238,7 +242,7 @@ const emptyForm = () => ({ title: '', body: '', files: [], channels: ['platform'
 export default {
   name: 'BroadcastsWorkspace',
 
-  components: { BaseModal, SlideTable, ChannelPicker, FileDropzone, GroupPicker, TemplatePicker, Download, FileText, Paperclip, Plus, Search, Send, Trash2, X },
+  components: { BaseModal, SlideTable, ChannelPicker, FileDropzone, GroupPicker, TemplatePicker, ChevronDown, Download, FileText, Paperclip, Plus, Search, Send, Trash2, X },
 
   props: {
     /** announcement | file */

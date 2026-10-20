@@ -158,13 +158,17 @@
     <BaseModal v-model="composer" title="مهمة جديدة" size="lg">
       <!-- فورم مكدّس: قالب (اختياري) ← تفاصيل ← مستلمون ← قنوات الإرسال، في تمرير واحد -->
       <div class="as-form">
-      <!-- القوالب الدائمة (للإدارة العامة ولجنة الإشراف) — اختيار قالب يعبّئ التفاصيل -->
-      <section v-if="!isSupervisor" class="tk-sec">
-        <header class="tk-sec-head"><h4>قالب جاهز</h4><span class="pt-muted">اختياري</span></header>
-        <div class="tk-sec-body">
+      <!-- قالب جاهز: أكورديون يفتح/يتسكّر، اختياره يعبّئ العنوان والوصف -->
+      <details v-if="!isSupervisor" class="as-acc">
+        <summary class="as-acc-head">
+          <Paperclip :size="15" />
+          <span class="as-acc-t">قالب جاهز <small>اختياري — يعبّئ العنوان والوصف</small></span>
+          <ChevronDown :size="17" class="as-acc-chev" />
+        </summary>
+        <div class="as-acc-body">
           <TemplatePicker kind="task" :title="form.title" :body="form.description" @apply="(t) => useTemplate({ title: t.title || '', description: t.body || '' })" />
         </div>
-      </section>
+      </details>
 
       <section :class="['tk-sec', filled && 'is-filled']">
         <header class="tk-sec-head"><h4>تفاصيل المهمة</h4></header>
