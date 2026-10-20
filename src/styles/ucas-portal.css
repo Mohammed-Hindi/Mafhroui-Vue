@@ -1498,6 +1498,9 @@
   color: var(--color-text-700);
   font-size: 14px;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .gr-select:focus { outline: 0; border-color: var(--portal-cyan); box-shadow: 0 0 0 3px rgba(0, 91, 170, 0.15); }
 :root[data-theme="dark"] :is(.gr-search, .gr-select) { border-color: var(--color-border); }
@@ -3734,7 +3737,9 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
   .sa-skin :is(.gr-select, .us-select, select.portal-input),
   .sa-skin :is(.gr-select, .us-select, select.portal-input)::picker(select) { appearance: base-select; }
   .sa-skin :is(.gr-select, .us-select, select.portal-input) { display: flex; align-items: center; gap: 8px; }
-  .sa-skin :is(.gr-select, .us-select, select.portal-input)::picker-icon { content: ""; width: 10px; height: 10px; border: solid var(--ucas-blue); border-width: 0 2px 2px 0; transform: translateY(-3px) rotate(45deg); transition: transform .3s ease; }
+  /* نص الخيار المختار (مع عدّاده) يُقصَّر بثلاث نقاط بدل ما يطلع فوق السهم */
+  .sa-skin :is(.gr-select, .us-select, select.portal-input) selectedcontent { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sa-skin :is(.gr-select, .us-select, select.portal-input)::picker-icon { content: ""; flex-shrink: 0; width: 10px; height: 10px; border: solid var(--ucas-blue); border-width: 0 2px 2px 0; transform: translateY(-3px) rotate(45deg); transition: transform .3s ease; }
   .sa-skin :is(.gr-select, .us-select, select.portal-input):open::picker-icon { transform: translateY(2px) rotate(-135deg); }
   .sa-skin :is(.gr-select, .us-select, select.portal-input)::picker(select) {
     margin-block: 6px; padding: 6px; border: 0; border-radius: 4px; background: var(--color-surface);
@@ -4522,8 +4527,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .ab-toggle { padding: 3px; border-radius: 4px; background: var(--color-bg); box-shadow: inset 0 0 0 1px var(--color-border); }
 .sa-skin .ab-toggle button { border-radius: 4px; color: var(--color-text-600); }
 .sa-skin .ab-toggle button.is-active { background: var(--ucas-blue); color: #FFFFFF; }
-.sa-skin .ab-card { border: 1px solid color-mix(in srgb, var(--ucas-blue) 22%, var(--color-border)); border-radius: 4px; box-shadow: 0 6px 18px rgba(4, 40, 80, .05); transition: border-color .35s ease, box-shadow .35s ease; animation: saFadeUp .45s ease backwards; }
-.sa-skin .ab-card:hover { border-color: color-mix(in srgb, var(--ucas-blue) 48%, transparent); box-shadow: 0 12px 28px rgba(4, 40, 80, .12); }
+.sa-skin .ab-card { border: 1.5px solid color-mix(in srgb, var(--ucas-blue) 32%, var(--color-border)); border-radius: 4px; box-shadow: 0 2px 6px rgba(4, 40, 80, .04); transition: border-color .3s ease, box-shadow .3s ease; animation: saFadeUp .45s ease backwards; }
+.sa-skin .ab-card:hover { border-color: var(--ucas-blue); box-shadow: 0 8px 22px rgba(4, 40, 80, .1); }
 .sa-skin .ab-card-media { background: color-mix(in srgb, var(--ucas-blue) 6%, var(--color-bg)); }
 .sa-skin .ab-card-sec { border-radius: 4px; background: var(--ucas-blue); color: #FFFFFF; font-weight: 800; }
 .sa-skin .ab-card-star { border-radius: 4px; }
