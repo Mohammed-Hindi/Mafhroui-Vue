@@ -5104,9 +5104,12 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 }
 .sa-skin .as-page .tk .gr-table-wrap .gr-table { background: var(--color-surface); border-radius: 4px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--color-border); }
 .tk-table .tk-nowrap { white-space: nowrap; }
-/* فلاتر BaseSelect في شريط المهام */
-.sa-skin .tk-filters .tk-filter { flex: 0 1 180px; min-width: 150px; }
+/* فلاتر شريط المهام/الإعلانات: مضغوطة لتبقى في صف واحد دون نزول الأزرار لأسفل */
+.sa-skin .tk-filters { gap: 8px; }
+.sa-skin .tk-filters .gr-search { flex: 1 1 170px; min-width: 150px; max-width: 260px; }
+.sa-skin .tk-filters .tk-filter { flex: 0 1 150px; min-width: 128px; }
 .sa-skin .tk-filters .tk-filter > button { height: 42px; }
+.sa-skin .tk-filters .gr-select { flex: 0 1 150px; min-width: 128px; max-width: 180px; }
 /* شكل كلندر موعد التسليم داخل الفورم */
 [role="dialog"] .pfield input[type="date"] { color: var(--color-text-900); font-weight: 600; }
 [role="dialog"] .pfield input[type="date"]::-webkit-calendar-picker-indicator { padding: 5px; border-radius: 4px; cursor: pointer; opacity: .55; transition: opacity .2s ease, background-color .2s ease; }
@@ -6520,7 +6523,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* مراجعة جدول المناقشات: تمرير داخلي بارتفاع ثابت ورأس الجدول ثابت أعلاه */
 .dp-review-scroll { max-height: clamp(420px, calc(100vh - 330px), 760px); overflow: auto; border-radius: 4px; scrollbar-width: thin; }
 .dp-review-scroll thead th { position: sticky; top: 0; z-index: 2; }
-.sa-skin .tk-filters select[aria-label="المجموعة"] { min-width: 240px; max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sa-skin .tk-filters select[aria-label="المجموعة"] { min-width: 160px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ev-tabs-bar { margin: 0; }
 .ev-tabs-bar .ev-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); width: 100%; }
 .ev-tabs-bar .ev-steps > li > button { width: 100%; justify-content: center; }
