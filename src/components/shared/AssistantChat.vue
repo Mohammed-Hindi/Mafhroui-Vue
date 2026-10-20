@@ -1,9 +1,6 @@
 <template>
   <div class="ac-wrap bg-surface rounded-lg border border-border shadow-card flex flex-col h-[calc(100vh-160px)] min-h-[480px] overflow-hidden">
     <header class="flex items-center gap-3 px-5 py-4 border-b border-border-soft shrink-0">
-      <span class="ac-head-icon grid place-items-center w-9 h-9 rounded-md bg-gradient-to-bl from-primary-600 to-accent-500 text-white shrink-0">
-        <Bot :size="18" />
-      </span>
       <h3 class="portal-title font-cairo font-bold text-h4 text-text-900">{{ title }}</h3>
     </header>
 

@@ -6814,3 +6814,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .ucas-portal.sa-skin .portal-page .ac-empty-icon { width: 66px; height: 66px; background: var(--ucas-blue); background-image: none; box-shadow: 0 10px 24px rgba(4, 40, 80, .18); animation: saFadeUp .5s ease backwards; }
 .ucas-portal.sa-skin .portal-page .ac-msg { font-size: 14.5px; padding: 14px 18px; max-width: 78%; line-height: 1.9; }
 .ucas-portal.sa-skin .portal-page .ac-wrap > div { padding: 22px 26px; gap: 14px; }
+
+/* صفحة المساعد الآلي: الشات يملأ منطقة المحتوى كاملة تحت التوب بار (أكبر، edge-to-edge) */
+.ucas-portal .portal-page.ac-page { margin: -24px -16px; }
+.ucas-portal .portal-page.ac-page .ac-wrap { height: calc(100vh - 76px); border-radius: 0; }
+@media (min-width: 1024px) { .ucas-portal .portal-page.ac-page { margin: -24px -24px; } }
