@@ -127,7 +127,7 @@
       <p v-if="addSupervisorError" class="mf-error" role="alert"><AlertCircle :size="16" /> {{ addSupervisorError }}</p>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <BaseInput v-model="addSupervisorForm.name" label="اسم المشرف" placeholder="مثال: د. نورة العتيبي" class="sm:col-span-2" />
-        <BaseInput v-model="addSupervisorForm.employee_number" label="الرقم الوظيفي" placeholder="اختياري" />
+        <BaseInput v-model="addSupervisorForm.employee_number" label="الرقم الوظيفي" placeholder="مثال: EMP-1003" required />
         <BaseSelect v-model="addSupervisorForm.specialization_id" label="التخصص" placeholder="اختاري التخصص" :options="specializationSelectOptions" />
         <BaseInput v-model="addSupervisorForm.email" type="email" label="البريد الإلكتروني" placeholder="name@mashroui.local" class="sm:col-span-2" />
         <BaseInput v-model="addSupervisorForm.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" class="sm:col-span-2" />
@@ -521,6 +521,10 @@ export default {
       this.addSupervisorError = ''
       if (!this.addSupervisorForm.name || !this.addSupervisorForm.email) {
         this.addSupervisorError = 'يرجى تعبئة الاسم والبريد الإلكتروني على الأقل'
+        return
+      }
+      if (!this.addSupervisorForm.employee_number) {
+        this.addSupervisorError = 'الرقم الوظيفي للمشرف مطلوب'
         return
       }
       this.submitting = true

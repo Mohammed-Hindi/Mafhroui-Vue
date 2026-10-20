@@ -289,7 +289,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <BaseInput v-model="addForm.name" label="الاسم الكامل" :placeholder="addForm.role === 'student' ? 'مثال: أحمد خالد' : 'مثال: د. نورة العتيبي'" required class="sm:col-span-2" />
             <BaseInput v-if="addForm.role === 'student'" v-model="addForm.university_number" label="الرقم الجامعي" placeholder="اختياري" />
-            <BaseInput v-else v-model="addForm.employee_number" label="الرقم الوظيفي" placeholder="اختياري" />
+            <BaseInput v-else v-model="addForm.employee_number" label="الرقم الوظيفي" :placeholder="addForm.role === 'supervisor' ? 'مثال: EMP-1003' : 'اختياري'" :required="addForm.role === 'supervisor'" />
             <BaseInput v-model="addForm.whatsapp" label="رقم الواتساب" placeholder="970591234567" />
             <BaseInput v-model="addForm.email" type="email" label="البريد الإلكتروني" placeholder="name@ucas.edu.ps" class="sm:col-span-2" />
             <template v-if="addForm.role === 'student'">
@@ -950,6 +950,10 @@ export default {
       }
       if (!this.addForm.name || !this.addForm.email) {
         this.addError = 'يرجى تعبئة الاسم والبريد الإلكتروني على الأقل'
+        return
+      }
+      if (this.addForm.role === 'supervisor' && !this.addForm.employee_number) {
+        this.addError = 'الرقم الوظيفي للمشرف مطلوب'
         return
       }
       this.adding = true
