@@ -5100,8 +5100,12 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
   min-height: 0;
 }
 /* إطار القائمة بدرجات الهوية */
-/* جدول المهام يتبع نمط جدول التقييمات/المجموعات القياسي (هيدر متدرّج وصفوف مخطّطة، بلا بوكس مزدوج) */
+/* جدول المهام: رأس رمادي مسطّح بلا تدرّج وصفوف بلا تخطيط — مطابق لجدول السجل/المجموعات/التقييمات (داخل .gr-card) */
 .tk-table .tk-nowrap { white-space: nowrap; }
+:root[data-brand="ucas"] .sa-skin .tk .gr-table thead tr { background: var(--color-bg); }
+:root[data-brand="ucas"] .sa-skin .tk .gr-table thead th { background: transparent; color: var(--color-text-600); }
+:root[data-brand="ucas"] .sa-skin .tk .gr-table tbody tr:nth-child(even) { background: transparent; }
+:root[data-brand="ucas"] .sa-skin .tk .gr-row:hover { background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-surface)); }
 /* فلاتر شريط المهام/الإعلانات: مضغوطة لتبقى في صف واحد دون نزول الأزرار لأسفل */
 /* البحث مثبّت أقصى اليمين، والأزرار مزاحة لأقصى اليسار بفراغ بينهما */
 .sa-skin .tk-filters { gap: 8px; align-items: center; }
