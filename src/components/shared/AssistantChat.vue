@@ -8,14 +8,11 @@
     </header>
 
     <div ref="body" class="flex-1 overflow-y-auto scrollbar-thin px-5 py-6 flex flex-col gap-4">
-      <div v-if="!messages.length" class="m-auto text-center max-w-sm">
-        <!-- هوية المنصة: كلمة مسار بقبعة التخرج واسم المنصة -->
-        <div class="ac-brand">
-          <MasarWordmark class="ac-wordmark" />
-          <p class="ac-brand-name">منصة إدارة مشاريع التخرج</p>
-        </div>
-        <p class="text-body-sm text-text-600 mb-5">{{ emptyHint }}</p>
-        <div class="flex flex-wrap gap-2.5 justify-center">
+      <div v-if="!messages.length" class="ac-empty m-auto text-center">
+        <span class="ac-empty-icon"><Bot :size="30" /></span>
+        <h4 class="ac-empty-title">مساعد مسار الآلي</h4>
+        <p class="ac-empty-hint">{{ emptyHint }}</p>
+        <div class="ac-chips">
           <button
             v-for="suggestion in suggestions"
             :key="suggestion"
@@ -67,7 +64,6 @@
 
 <script>
 import { Bot, Send } from 'lucide-vue-next'
-import MasarWordmark from '@/components/landing/MasarWordmark.vue'
 import api from '@/services/api'
 
 let uid = 0
@@ -75,7 +71,7 @@ let uid = 0
 export default {
   name: 'AssistantChat',
 
-  components: { Bot, MasarWordmark, Send },
+  components: { Bot, Send },
 
   props: {
     title: { type: String, default: 'المساعد الآلي' },

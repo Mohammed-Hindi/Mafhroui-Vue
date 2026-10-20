@@ -4340,10 +4340,10 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .ucas-portal.sa-skin .portal-page .ac-empty-icon { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); color: #FFFFFF; box-shadow: 0 0 0 8px rgba(0, 91, 170, .08), 0 10px 24px rgba(4, 40, 80, .2); animation: saFadeUp .5s ease backwards; }
 .ucas-portal.sa-skin .portal-page .ac-chip { padding: 9px 18px; border-radius: 4px; border: 1px solid color-mix(in srgb, var(--ucas-blue) 25%, transparent); background: var(--color-surface); color: var(--ucas-blue); box-shadow: 0 4px 12px rgba(4, 40, 80, .06); transition: background-color .3s ease, border-color .3s ease, color .3s ease; animation: saFadeUp .45s ease backwards; }
 .ucas-portal.sa-skin .portal-page .ac-chip:nth-child(2) { animation-delay: .08s; } .ucas-portal.sa-skin .portal-page .ac-chip:nth-child(3) { animation-delay: .16s; }
-.ucas-portal.sa-skin .portal-page .ac-chip:hover { border-color: transparent; background: linear-gradient(270deg, #62BB46, #0E699C); color: #FFFFFF; }
+.ucas-portal.sa-skin .portal-page .ac-chip:hover { border-color: var(--ucas-blue); background: var(--ucas-blue); color: #FFFFFF; }
 .ucas-portal.sa-skin .portal-page .ac-msg { border-radius: 4px; padding: 12px 16px; box-shadow: 0 4px 14px rgba(4, 40, 80, .07); animation: saFadeUp .35s ease backwards; }
 .ucas-portal.sa-skin .portal-page .ac-msg.is-user { border-end-start-radius: 6px; background: var(--ucas-blue); color: #FFFFFF; }
-.ucas-portal.sa-skin .portal-page .ac-msg.is-ai { border: 0; border-end-end-radius: 6px; background: var(--color-surface); color: var(--color-text-800, #333); }
+.ucas-portal.sa-skin .portal-page .ac-msg.is-ai { border: 1px solid var(--color-border); border-end-end-radius: 6px; background: var(--color-surface); color: var(--color-text-900); }
 .ucas-portal.sa-skin .portal-page .ac-wrap > form { padding: 14px 18px; border-top: 0; background: var(--color-surface); box-shadow: 0 -6px 18px rgba(4, 40, 80, .05); }
 .ucas-portal.sa-skin .portal-page .ac-input { height: 48px; padding-inline: 20px; border-radius: 4px; border-color: color-mix(in srgb, var(--ucas-blue) 18%, var(--color-border)); background: var(--color-bg); }
 .ucas-portal.sa-skin .portal-page .ac-input:focus { border-color: var(--ucas-blue); background: var(--color-surface); box-shadow: 0 0 0 4px rgba(0, 91, 170, .1); }
@@ -6804,3 +6804,13 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .tk2 .hd-msg.is-staff .hd-msg-head .hd-role { background: rgba(98, 187, 70, .14); color: #3E8A26; }
 .tk2 .hd-msg.is-staff .hd-msg-head time { color: var(--color-text-400); opacity: 1; }
 :root[data-theme="dark"] .tk2 .hd-msg.is-staff .hd-msg-head .hd-role { color: #7CCB5F; }
+
+/* المساعد الآلي: حالة فارغة احترافية (أيقونة بوت صلبة بدل لوجو مسار) + رسائل أوضح وأكبر */
+.ac-empty { display: flex; flex-direction: column; align-items: center; gap: 14px; max-width: 480px; }
+.ac-empty-icon { display: grid; place-items: center; width: 66px; height: 66px; border-radius: 50%; background: var(--ucas-blue); color: #FFFFFF; box-shadow: 0 10px 24px rgba(4, 40, 80, .18); }
+.ac-empty-title { font-size: 20px; font-weight: 800; color: var(--ucas-blue); }
+.ac-empty-hint { font-size: 14px; line-height: 1.9; color: var(--color-text-600); margin-bottom: 4px; }
+.ac-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.ucas-portal.sa-skin .portal-page .ac-empty-icon { width: 66px; height: 66px; background: var(--ucas-blue); background-image: none; box-shadow: 0 10px 24px rgba(4, 40, 80, .18); animation: saFadeUp .5s ease backwards; }
+.ucas-portal.sa-skin .portal-page .ac-msg { font-size: 14.5px; padding: 14px 18px; max-width: 78%; line-height: 1.9; }
+.ucas-portal.sa-skin .portal-page .ac-wrap > div { padding: 22px 26px; gap: 14px; }
