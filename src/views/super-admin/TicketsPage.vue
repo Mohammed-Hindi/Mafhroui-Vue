@@ -1,10 +1,6 @@
 <template>
   <!-- الشكاوى والملاحظات — مكتب دعم بنمط الأنظمة العالمية (Zendesk / Freshdesk): طوابير بعدّادات + قائمة + محادثة وخصائص -->
   <div class="dash hd-page">
-    <header class="dash-head">
-      <h2 class="dash-title">الشكاوى والملاحظات</h2>
-    </header>
-
     <nav class="rv-tabs" aria-label="طوابير التذاكر">
       <button v-for="v in views.filter((x) => !x.hidden)" :key="v.value" type="button" :class="['rv-tab', view === v.value && 'is-active']" @click="view = v.value">
         {{ v.label }} <span class="rv-count">{{ counts[v.value] }}</span>
