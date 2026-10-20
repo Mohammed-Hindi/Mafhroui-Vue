@@ -399,7 +399,7 @@ export default {
 
 /* 2) الأرقام */
 .st-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-.st-stat { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border-radius: 4px; background: var(--color-surface); box-shadow: 0 0 0 1px var(--color-border); border-top: 2px solid var(--ucas-blue); }
+.st-stat { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border-radius: 4px; background: var(--color-surface); box-shadow: 0 0 0 1px var(--color-border); }
 .st-stat b { font-size: 24px; font-weight: 800; line-height: 1.15; color: var(--color-text-900); font-variant-numeric: tabular-nums; }
 .st-stat span { font-size: 13px; color: var(--color-text-600); }
 
