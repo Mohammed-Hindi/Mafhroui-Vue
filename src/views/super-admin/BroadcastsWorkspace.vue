@@ -118,24 +118,18 @@
 
     <!-- إرسال جديد -->
     <BaseModal v-model="composer" :title="isFile ? 'إرسال ملف' : 'إعلان جديد'" size="xl">
-      <!-- خطوات الإرسال: التفاصيل ← المستلمون ← المراجعة والإرسال (نفس نظام المهام) -->
-      <ol class="tk-stepper">
-        <li v-for="(s, i) in steps" :key="s" :class="[i === step && 'is-active', i < step && 'is-done']">
-          <button type="button" @click="step = i"><b>{{ i + 1 }}</b> {{ s }}</button>
-        </li>
-      </ol>
-
-      <!-- 0. القوالب الدائمة (للإدارة العامة ولجنة الإشراف) — اختيار قالب يعبّئ التفاصيل وينتقل إليها -->
-      <section v-if="!isSupervisor" v-show="step === 0" class="tk-sec">
-        <header class="tk-sec-head"><h4>القوالب</h4></header>
+      <!-- فورم مكدّس: قالب (اختياري) ← تفاصيل ← مستلمون ← قنوات الإرسال، في تمرير واحد -->
+      <div class="as-form">
+      <!-- القوالب الدائمة (للإدارة العامة ولجنة الإشراف) — اختيار قالب يعبّئ التفاصيل -->
+      <section v-if="!isSupervisor" class="tk-sec">
+        <header class="tk-sec-head"><h4>قالب جاهز</h4><span class="pt-muted">اختياري</span></header>
         <div class="tk-sec-body">
           <TemplatePicker :kind="type" :title="form.title" :body="form.body" @apply="(t) => useTemplate({ title: t.title || '', body: t.body || '' })" />
         </div>
       </section>
 
-      <!-- 1. التفاصيل -->
-      <section v-show="step === off" :class="['tk-sec', filled && 'is-filled']">
-        <header class="tk-sec-head"><h4>{{ steps[off] }}</h4></header>
+      <section :class="['tk-sec', filled && 'is-filled']">
+        <header class="tk-sec-head"><h4>{{ isFile ? 'تفاصيل الملف' : 'تفاصيل الإعلان' }}</h4></header>
         <div class="tk-sec-body">
           <label class="pfield">
             <span>{{ isFile ? 'عنوان الملف / المرحلة' : 'العنوان' }} <b v-if="isFile" class="as-req">*</b></span>
@@ -154,8 +148,7 @@
         </div>
       </section>
 
-      <!-- 2. المستلمون -->
-      <section v-show="step === off + 1" class="tk-sec">
+      <section class="tk-sec">
         <header class="tk-sec-head">
           <h4>المستلمون</h4>
           <span class="dash-chip">{{ targets.length }} {{ targetNoun }}</span>
@@ -202,28 +195,21 @@
         </div>
       </section>
 
-      <!-- 3. المراجعة والإرسال -->
-      <section v-show="step === off + 2" class="tk-sec">
-        <header class="tk-sec-head"><h4>المراجعة والإرسال</h4></header>
+      <!-- قنوات الإرسال (للإدارة العامة ولجنة الإشراف فقط) -->
+      <section v-if="!isSupervisor" class="tk-sec">
+        <header class="tk-sec-head"><h4>قنوات الإرسال</h4></header>
         <div class="tk-sec-body">
-          <dl class="tk-review">
-            <dt>العنوان</dt><dd>{{ form.title || '—' }}</dd>
-            <dt>{{ isFile ? 'الوصف' : 'نص الإعلان' }}</dt><dd>{{ form.body ? (form.body.length > 120 ? form.body.slice(0, 120) + '…' : form.body) : '—' }}</dd>
-            <dt>{{ isFile ? 'الملفات' : 'المرفقات' }}</dt><dd>{{ form.files.length || 'لا يوجد' }}</dd>
-            <dt>المستلمون</dt><dd>{{ targets.length }} {{ targetNoun }}</dd>
-          </dl>
-          <ChannelPicker v-if="!isSupervisor" v-model="form.channels" :restricted="!isStaffAudience" />
+          <ChannelPicker v-model="form.channels" :restricted="!isStaffAudience" />
         </div>
       </section>
+      </div>
 
       <div v-if="warnings.length" class="palert is-warning tk-failed">{{ warnings.join(' · ') }}</div>
 
       <template #footer>
         <span :class="['as-summary', missing && 'is-missing']">{{ missing || `سيصل لـ ${targets.length} ${targetNoun}` }}</span>
-        <button v-if="step" type="button" class="pbtn is-outline" @click="step -= 1">السابق</button>
-        <button v-else type="button" class="pbtn is-outline" @click="composer = false">إلغاء</button>
-        <button v-if="step < steps.length - 1" type="button" class="pbtn is-cyan" @click="step += 1">التالي</button>
-        <button v-else type="button" class="pbtn is-green" :disabled="!!missing || sending" @click="send">
+        <button type="button" class="pbtn is-outline" @click="composer = false">إلغاء</button>
+        <button type="button" class="pbtn is-green" :disabled="!!missing || sending" @click="send">
           <Send :size="16" /> {{ sending ? 'جارٍ الإرسال…' : (isFile ? 'إرسال الملف' : 'نشر الإعلان') }}
         </button>
       </template>

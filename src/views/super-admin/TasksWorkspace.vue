@@ -156,23 +156,17 @@
 
     <!-- إنشاء مهمة -->
     <BaseModal v-model="composer" title="مهمة جديدة" size="lg">
-      <!-- خطوات الإنشاء: التفاصيل ← المستلمون ← المراجعة والإرسال -->
-      <ol class="tk-stepper">
-        <li v-for="(s, i) in steps" :key="s" :class="[i === step && 'is-active', i < step && 'is-done']">
-          <button type="button" @click="step = i"><b>{{ i + 1 }}</b> {{ s }}</button>
-        </li>
-      </ol>
-
-      <!-- 1. تفاصيل المهمة -->
-      <!-- 0. القوالب الدائمة (للإدارة العامة ولجنة الإشراف) — اختيار قالب يعبّئ التفاصيل وينتقل إليها -->
-      <section v-if="!isSupervisor" v-show="step === 0" class="tk-sec">
-        <header class="tk-sec-head"><h4>القوالب</h4></header>
+      <!-- فورم مكدّس: قالب (اختياري) ← تفاصيل ← مستلمون ← قنوات الإرسال، في تمرير واحد -->
+      <div class="as-form">
+      <!-- القوالب الدائمة (للإدارة العامة ولجنة الإشراف) — اختيار قالب يعبّئ التفاصيل -->
+      <section v-if="!isSupervisor" class="tk-sec">
+        <header class="tk-sec-head"><h4>قالب جاهز</h4><span class="pt-muted">اختياري</span></header>
         <div class="tk-sec-body">
           <TemplatePicker kind="task" :title="form.title" :body="form.description" @apply="(t) => useTemplate({ title: t.title || '', description: t.body || '' })" />
         </div>
       </section>
 
-      <section v-show="step === off" :class="['tk-sec', filled && 'is-filled']">
+      <section :class="['tk-sec', filled && 'is-filled']">
         <header class="tk-sec-head"><h4>تفاصيل المهمة</h4></header>
         <div class="tk-sec-body">
           <label class="pfield">
@@ -198,8 +192,7 @@
         </div>
       </section>
 
-      <!-- 2. المستلمون -->
-      <section v-show="step === off + 1" class="tk-sec">
+      <section class="tk-sec">
         <header class="tk-sec-head">
           <h4>المستلمون</h4>
           <span class="dash-chip">{{ targets.length }} {{ targetNoun }}</span>
@@ -263,20 +256,14 @@
         </div>
       </section>
 
-      <!-- 3. المراجعة والإرسال — ponytail: ملخص مبدئي (placeholder)، يُوسَّع لمعاينة كاملة عند الحاجة -->
-      <section v-show="step === off + 2" class="tk-sec">
-        <header class="tk-sec-head"><h4>المراجعة والإرسال</h4></header>
+      <!-- قنوات الإرسال (للإدارة العامة ولجنة الإشراف فقط) -->
+      <section v-if="!isSupervisor" class="tk-sec">
+        <header class="tk-sec-head"><h4>قنوات الإرسال</h4></header>
         <div class="tk-sec-body">
-          <dl class="tk-review">
-            <dt>العنوان</dt><dd>{{ form.title || '—' }}</dd>
-            <dt>موعد التسليم</dt><dd>{{ form.due || 'بلا موعد' }}</dd>
-            <dt>المرفقات</dt><dd>{{ form.files.length ? form.files.map((x) => x.name).join('، ') : 'لا يوجد' }}</dd>
-            <dt v-if="audience === 'groups'">المنتسبون</dt><dd v-if="audience === 'groups'">{{ pickedAssignees.length ? `${pickedAssignees.length} طالبًا محددًا` : 'كل أعضاء المجموعات' }}</dd>
-            <dt>المستلمون</dt><dd>{{ targets.length }} {{ targetNoun }}</dd>
-          </dl>
-          <ChannelPicker v-if="!isSupervisor" v-model="form.channels" :restricted="!isStaffAudience" />
+          <ChannelPicker v-model="form.channels" :restricted="!isStaffAudience" />
         </div>
       </section>
+      </div>
 
       <div v-if="failed.length" class="palert is-warning tk-failed">
         تعذّر الإنشاء لـ {{ failed.length }}: {{ failed.map((f) => `${f.label} (${f.error})`).join('، ') }}
@@ -284,10 +271,8 @@
 
       <template #footer>
         <span :class="['as-summary', !canCreate && 'is-missing']">{{ composeHint }}</span>
-        <button v-if="step" type="button" class="pbtn is-outline" @click="step -= 1">السابق</button>
-        <button v-else type="button" class="pbtn is-outline" @click="composer = false">إلغاء</button>
-        <button v-if="step < steps.length - 1" type="button" class="pbtn is-cyan" @click="step += 1">التالي</button>
-        <button v-else type="button" class="pbtn is-green" :disabled="!canCreate || sending" @click="create">
+        <button type="button" class="pbtn is-outline" @click="composer = false">إلغاء</button>
+        <button type="button" class="pbtn is-green" :disabled="!canCreate || sending" @click="create">
           <Send :size="16" /> {{ sending ? `جارٍ الإنشاء… ${done}/${targets.length}` : `إنشاء المهمة (${targets.length})` }}
         </button>
       </template>
