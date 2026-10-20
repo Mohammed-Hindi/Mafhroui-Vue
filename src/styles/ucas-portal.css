@@ -5164,7 +5164,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 [role="dialog"] .tk-sec-head h4 { color: var(--ucas-blue); font-weight: 800; }
 [role="dialog"] .pfield > span, [role="dialog"] .pfield > label > span { color: var(--ucas-green); font-weight: 800; }
 [role="dialog"] .tk-chip { height: 32px; padding-inline: 14px; border-radius: 4px; border-color: color-mix(in srgb, var(--ucas-blue) 22%, transparent); color: var(--ucas-blue); font-weight: 700; }
-[role="dialog"] .tk-chip.is-on { border-color: transparent; color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #005BAA); }
+[role="dialog"] .tk-chip.is-on { border-color: transparent; color: #FFFFFF; background: var(--ucas-blue); }
 [role="dialog"] .fz-drop { border: 1.5px dashed color-mix(in srgb, var(--ucas-blue) 35%, transparent); border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-surface)); }
 [role="dialog"] .fz-drop:hover, [role="dialog"] .fz-drop.is-over { border-color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 8%, var(--color-surface)); }
 [role="dialog"] .fz-drop svg { color: var(--ucas-green); }
