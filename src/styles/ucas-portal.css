@@ -6817,4 +6817,4 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 
 /* صفحة المساعد الآلي: عمود شات أطول (يملأ ارتفاع الشاشة) وأضيق في وسط الصفحة بإطار واضح */
 .ac-page, .ucas-portal .portal-page.ac-page { align-items: center; margin-block: -24px; }
-.ac-page .ac-wrap, .ucas-portal .portal-page.ac-page .ac-wrap { width: 100%; max-width: 820px; height: calc(100vh - 84px); border-radius: 14px; border: 1px solid var(--color-border); box-shadow: 0 12px 34px rgba(4, 40, 80, .1); }
+.ac-page .ac-wrap, .ucas-portal .portal-page.ac-page .ac-wrap { width: 100%; max-width: 1100px; height: calc(100vh - 120px) !important; min-height: 520px; border-radius: 14px; border: 1px solid var(--color-border); box-shadow: 0 12px 34px rgba(4, 40, 80, .1); }
