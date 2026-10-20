@@ -6192,9 +6192,11 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .ab-pf .ab-card-body small { color: var(--ucas-green); }
 .sa-skin .ab-pf .ab-card-body h4 { margin: 0 0 6px; font-size: 17px; line-height: 1.55; color: var(--ucas-blue); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .sa-skin .ab-pf .ab-card-foot { flex-wrap: wrap; row-gap: 8px; align-items: center; gap: 8px; margin: 0 18px; padding: 4px 0 16px; border-top: 0; }
-/* الفلاتر لا تتمدّد مع الخيارات الطويلة (أسماء التخصصات): عرض محدود + قطع النص داخل الصندوق فلا يخرج السهم */
-.sa-skin .evp-card .gr-pick { max-width: 220px; overflow: hidden; }
+/* فلاتر أوسع ليتّسع اسم التخصص الطويل مع عدّاده والسهم؛ والنص يُقصَّر بثلاث نقاط عند الحاجة فيبقى السهم ظاهرًا */
+.sa-skin .evp-card .gr-pick { max-width: 300px; }
 .sa-skin .evp-card .gr-pick > .gr-select { min-width: 0; }
+/* بحث أصغر ليفسح مجالًا للفلاتر */
+.sa-skin .evp-card .gr-search { flex: 1 1 180px; max-width: 260px; }
 .ab-pf-icons { display: inline-flex; gap: 6px; margin-inline-start: auto; }
 .ab-pf-ic { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px; border-radius: 4px; background: var(--color-surface); color: var(--ucas-blue); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 16%, transparent); transition: background-color .3s ease, color .3s ease; }
 .ab-pf-ic:hover { background: var(--ucas-blue); color: #FFFFFF; }
