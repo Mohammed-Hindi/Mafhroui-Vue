@@ -2450,7 +2450,7 @@
 
 
 /* المساعد الآلي بهوية البوابة (الإدارة العامة واللجنة): بطاقة مسطّحة 4px، بلا تدرجات ولا مربعات أيقونات ملوّنة، فقاعة المستخدم سماوية */
-.ucas-portal .portal-page .ac-wrap { height: calc(100vh - 290px); border: 0; border-radius: 4px; box-shadow: var(--shadow-card); }
+.ucas-portal .portal-page .ac-wrap { height: calc(100vh - 124px); border: 0; border-radius: 4px; box-shadow: var(--shadow-card); }
 .ucas-portal .portal-page .ac-head-icon { display: none; }
 .ucas-portal .portal-page .ac-wrap > header { padding: 16px 20px; }
 .ucas-portal .portal-page .ac-wrap > header .portal-title { font-size: 16px; }
@@ -4332,7 +4332,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
    المساعد الآلي: بطاقة ناعمة، رأس متدرّج بأيقونة، خلفية بشبكة نقاط هادئة، فقاعات بالهوية
    ====================================================================== */
 .ucas-portal.sa-skin .portal-page .ac-wrap { border-radius: 20px; box-shadow: 0 12px 34px rgba(4, 40, 80, .1); }
-.ucas-portal.sa-skin .portal-page .ac-wrap > header { position: relative; padding: 16px 22px; border-bottom: 0; background: linear-gradient(270deg, #62BB46 0%, #50A16E 30%, #0E699C 65%, #025DA9 100%); }
+.ucas-portal.sa-skin .portal-page .ac-wrap > header { position: relative; padding: 16px 22px; border-bottom: 0; background: var(--ucas-blue); }
 .ucas-portal.sa-skin .portal-page .ac-wrap > header::before { content: ""; position: absolute; inset: 0; opacity: .14; background-image: radial-gradient(#FFFFFF 1.2px, transparent 1.2px); background-size: 22px 22px; pointer-events: none; }
 .ucas-portal.sa-skin .portal-page .ac-head-icon { position: relative; display: grid; width: 40px; height: 40px; border-radius: 50%; background: #FFFFFF; color: var(--ucas-blue); box-shadow: 0 4px 12px rgba(0, 0, 0, .18); }
 .ucas-portal.sa-skin .portal-page .ac-wrap > header .portal-title { position: relative; color: #FFFFFF; font-size: 17px; }
@@ -4342,12 +4342,12 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .ucas-portal.sa-skin .portal-page .ac-chip:nth-child(2) { animation-delay: .08s; } .ucas-portal.sa-skin .portal-page .ac-chip:nth-child(3) { animation-delay: .16s; }
 .ucas-portal.sa-skin .portal-page .ac-chip:hover { border-color: transparent; background: linear-gradient(270deg, #62BB46, #0E699C); color: #FFFFFF; }
 .ucas-portal.sa-skin .portal-page .ac-msg { border-radius: 4px; padding: 12px 16px; box-shadow: 0 4px 14px rgba(4, 40, 80, .07); animation: saFadeUp .35s ease backwards; }
-.ucas-portal.sa-skin .portal-page .ac-msg.is-user { border-end-start-radius: 6px; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); color: #FFFFFF; }
+.ucas-portal.sa-skin .portal-page .ac-msg.is-user { border-end-start-radius: 6px; background: var(--ucas-blue); color: #FFFFFF; }
 .ucas-portal.sa-skin .portal-page .ac-msg.is-ai { border: 0; border-end-end-radius: 6px; background: var(--color-surface); color: var(--color-text-800, #333); }
 .ucas-portal.sa-skin .portal-page .ac-wrap > form { padding: 14px 18px; border-top: 0; background: var(--color-surface); box-shadow: 0 -6px 18px rgba(4, 40, 80, .05); }
 .ucas-portal.sa-skin .portal-page .ac-input { height: 48px; padding-inline: 20px; border-radius: 4px; border-color: color-mix(in srgb, var(--ucas-blue) 18%, var(--color-border)); background: var(--color-bg); }
 .ucas-portal.sa-skin .portal-page .ac-input:focus { border-color: var(--ucas-blue); background: var(--color-surface); box-shadow: 0 0 0 4px rgba(0, 91, 170, .1); }
-.ucas-portal.sa-skin .portal-page .ac-send { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); box-shadow: 0 6px 16px rgba(4, 40, 80, .22); transition: filter .3s ease; }
+.ucas-portal.sa-skin .portal-page .ac-send { width: 48px; height: 48px; border-radius: 50%; background: var(--ucas-blue); box-shadow: 0 6px 16px rgba(4, 40, 80, .22); transition: filter .3s ease; }
 .ucas-portal.sa-skin .portal-page .ac-send:not(:disabled):hover { filter: brightness(1.08); }
 .ucas-portal.sa-skin .portal-page .ac-send svg { transform: scaleX(-1); }
 .ucas-portal.sa-skin .portal-page .ac-head-icon { background: #FFFFFF !important; background-image: none !important; color: var(--ucas-blue) !important; }

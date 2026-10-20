@@ -1,9 +1,6 @@
 <template>
   <!-- المساعد الآلي للإدارة العامة واللجنة: رأس صفحة بطاقة بوابة + المحادثة بهوية البوابة (أنماط .ac-* في ucas-portal.css) -->
   <div class="dash hd-page">
-    <header class="dash-head">
-      <h2 class="dash-title">المساعد الآلي</h2>
-    </header>
     <AssistantChat
       title="المساعد الآلي للجنة الإشراف"
       empty-hint="اسأل عن حالة الفرق والمشرفين، صياغة تعميم للطلاب، أو تلخيص نسبة تقدّم المشاريع."
