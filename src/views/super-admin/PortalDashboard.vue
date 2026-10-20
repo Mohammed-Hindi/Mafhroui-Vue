@@ -5,7 +5,7 @@
     <section v-if="hero" class="sa-hero">
       <div class="sa-hero-in">
         <div class="sa-hero-text">
-          <span class="sa-hero-eyebrow">{{ isSup ? 'لوحة المشرف' : 'لوحة الإدارة العامة' }}</span>
+          <span class="sa-hero-eyebrow">{{ isSup ? 'لوحة المشرف' : isCommittee ? 'لوحة لجنة الإشراف' : 'لوحة الإدارة العامة' }}</span>
           <h2 class="sa-hero-title">مرحبًا، {{ firstName }}</h2>
         </div>
         <div class="sa-hero-stats" aria-label="إحصاءات عامة">
@@ -262,7 +262,7 @@ export default {
   setup() {
     const root = ref(null)
     const auth = useAuthStore()
-    if ([ROLES.SUPER_ADMIN, ROLES.SUPERVISOR].includes(auth.userRole)) {
+    if ([ROLES.SUPER_ADMIN, ROLES.COMMITTEE, ROLES.SUPERVISOR].includes(auth.userRole)) {
       useScrollMotion(root, (el) => {
         gsap.timeline({ delay: 0.15 })
           .from(el.querySelectorAll('.sa-hero-text > *'), { y: 24, autoAlpha: 0, duration: 0.7, ease: 'power3.out', stagger: 0.12 })
@@ -313,8 +313,12 @@ export default {
       return this.userRole === ROLES.SUPERVISOR
     },
 
+    isCommittee() {
+      return this.userRole === ROLES.COMMITTEE
+    },
+
     hero() {
-      return this.isSA || this.isSup
+      return this.isSA || this.isSup || this.isCommittee
     },
 
     firstName() {
