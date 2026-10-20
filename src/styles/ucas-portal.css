@@ -4513,8 +4513,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .ab-crumbs b { font-size: 14.5px; color: var(--ucas-blue); }
 .ab-crumbs .dash-chip { margin-inline-start: auto; }
 /* بطاقات المعرض */
-.sa-skin .ab-toggle { padding: 4px; border-radius: 4px; background: #0B2545; }
-.sa-skin .ab-toggle button { border-radius: 4px; color: rgba(255, 255, 255, .8); }
+.sa-skin .ab-toggle { padding: 3px; border-radius: 4px; background: var(--color-bg); box-shadow: inset 0 0 0 1px var(--color-border); }
+.sa-skin .ab-toggle button { border-radius: 4px; color: var(--color-text-600); }
 .sa-skin .ab-toggle button.is-active { background: var(--ucas-blue); color: #FFFFFF; }
 .sa-skin .ab-card { border: 0; border-radius: 4px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 10%, transparent), 0 10px 26px rgba(4, 40, 80, .08); transition: box-shadow .35s ease; animation: saFadeUp .45s ease backwards; }
 .sa-skin .ab-card:hover { box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 25%, transparent), 0 16px 34px rgba(4, 40, 80, .14); }
@@ -6501,8 +6501,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .hm-scroll thead th { position: static; }
 .sa-skin .hm-scroll thead tr { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); box-shadow: 0 4px 10px rgba(4, 40, 80, .12); }
 /* أرشيف المشاريع — الجدول: عمود "المشروع والطلبة" في الوسط (العنوان والبيانات) */
-.ad-table th[data-rt-title], .ad-table td.ad-proj-cell { text-align: center; }
-.ad-table td.ad-proj-cell .pt-muted { justify-content: center; }
+.ad-table td.ad-proj-cell { text-align: start; }
+.ad-table td.ad-proj-cell .pt-muted { justify-content: flex-start; }
 
 /* نافذة المقترح: خانة القرار للمقترح غير المعتمد — بطاقة بيضاء بشريط أخضر جانبي وحقل ملاحظات وأزرار كبسولات بالهوية */
 .prd-decide { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; border-radius: 4px; background: var(--color-surface); box-shadow: inset 0 0 0 1px var(--color-border); }

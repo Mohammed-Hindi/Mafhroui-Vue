@@ -2,23 +2,8 @@
   <div class="dash">
     <!-- أرشيف المشاريع للإدارة العامة بهوية البوابة: ستيبر العروض (كل/مميّزة/مؤرشفة/غير مؤرشفة) بأعدادها + أرشفة الكل،
          بحث وفلتر التخصص (قائمة) والدرجة، مجلدات المشاريع، ومجلد المشروع (ملفاته + معاينة تسليماته) — ملفات تجريبية بلا تخزين بعد -->
-    <header class="dash-head">
-      <h2 class="dash-title">أرشيف المشاريع</h2>
-    </header>
-
-    <div class="ev-steps-bar ad-steps-bar">
-      <ol class="tk-stepper ev-steps" aria-label="عروض الأرشيف">
-        <li v-for="v in views" :key="v.key" :class="[view === v.key && 'is-active']">
-          <button type="button" :aria-current="view === v.key && 'page'" @click="setView(v.key)">
-            <b>{{ v.count }}</b> <component :is="v.icon" :size="16" /> {{ v.label }}
-          </button>
-        </li>
-      </ol>
-    </div>
-
-    <section class="dash-card ad-card">
-      <!-- مجلد المشروع -->
-      <template v-if="current">
+    <!-- مجلد المشروع -->
+    <section v-if="current" class="dash-card ad-card">
         <!-- معرض أعمال المشروع: شريط تنقّل (رجوع / السابق والتالي / نافذة جديدة)، مسرح الغلاف أو الفيديو، وبطاقة بيانات المشروع -->
         <nav class="ab-sbar" aria-label="تنقّل المشاريع">
           <button type="button" class="pbtn is-cyan" @click="current = null"><ArrowRight :size="16" /> كل المشاريع</button>
@@ -115,45 +100,58 @@
             </div>
           </article>
         </div>
-      </template>
+    </section>
 
-      <!-- مجلدات المشاريع -->
-      <template v-else>
-        <div class="dash-card-head">
-          <h3>{{ views.find((v) => v.key === view).label }}</h3>
-          <span class="dash-chip">{{ visible.length }} مشروع</span>
-          <nav class="ab-toggle" aria-label="طريقة العرض">
-            <button type="button" :class="layout === 'gallery' && 'is-active'" @click="layout = 'gallery'"><LayoutGrid :size="16" /> معرض الأعمال</button>
-            <button type="button" :class="layout === 'table' && 'is-active'" @click="layout = 'table'"><List :size="16" /> جدول</button>
-          </nav>
-        </div>
+    <!-- عرض المشاريع: فلاتر بجانب البحث + تبديل معرض/جدول (بنية جداولنا القياسية) -->
+    <section v-else class="gr gr-card evp-card">
+      <div class="gr-card-title">
+        <h3>معرض المشاريع <span class="dash-chip">{{ visible.length }} مشروع</span></h3>
+        <nav class="ab-toggle" aria-label="طريقة العرض">
+          <button type="button" :class="layout === 'gallery' && 'is-active'" @click="layout = 'gallery'"><LayoutGrid :size="16" /> معرض الأعمال</button>
+          <button type="button" :class="layout === 'table' && 'is-active'" @click="layout = 'table'"><List :size="16" /> جدول</button>
+        </nav>
+      </div>
 
-        <div class="gr-filters" aria-label="تصفية المشاريع">
-          <label class="gr-search"><Search :size="16" /><input v-model.trim="q" type="search" placeholder="بحث بالمشروع أو الشعبة أو المشرف أو الطالب…"></label>
-          <label v-if="layout === 'table'" class="gr-pick">
-            <span>التخصص</span>
-            <select v-model="f.spec" class="gr-select">
-              <option value="">كل التخصصات</option>
-              <option v-for="sp in specs" :key="sp" :value="sp">{{ sp }} ({{ inView.filter((x) => x.spec === sp).length }})</option>
-            </select>
-          </label>
-          <label v-if="!isSup" class="gr-pick">
-            <span>الدرجة</span>
-            <select v-model="f.degree" class="gr-select">
-              <option value="">دبلوم وبكالوريوس</option>
-              <option v-for="(l, k) in DEGREES" :key="k" :value="k">{{ l }}</option>
-            </select>
-          </label>
-          <!-- المشرف: فلترا التخصص والجنس فقط -->
-          <label v-else class="gr-pick">
-            <span>الجنس</span>
-            <select v-model="f.gender" class="gr-select">
-              <option value="">طلاب وطالبات</option>
-              <option value="male">طلاب</option>
-              <option value="female">طالبات</option>
-            </select>
-          </label>
-        </div>
+      <div class="gr-filters" aria-label="تصفية المشاريع">
+        <label class="gr-search"><Search :size="16" /><input v-model.trim="q" type="search" placeholder="بحث بالمشروع أو الشعبة أو المشرف أو الطالب…"></label>
+        <label class="gr-pick">
+          <span>العرض</span>
+          <select v-model="view" class="gr-select">
+            <option v-for="v in views" :key="v.key" :value="v.key">{{ v.label }} ({{ v.count }})</option>
+          </select>
+        </label>
+        <label class="gr-pick">
+          <span>التخصص</span>
+          <select v-model="f.spec" class="gr-select">
+            <option value="">كل التخصصات</option>
+            <option v-for="sp in specs" :key="sp" :value="sp">{{ sp }} ({{ inView.filter((x) => x.spec === sp).length }})</option>
+          </select>
+        </label>
+        <label v-if="!isSup" class="gr-pick">
+          <span>الدرجة</span>
+          <select v-model="f.degree" class="gr-select">
+            <option value="">دبلوم وبكالوريوس</option>
+            <option v-for="(l, k) in DEGREES" :key="k" :value="k">{{ l }}</option>
+          </select>
+        </label>
+        <!-- المشرف: فلترا التخصص والجنس فقط -->
+        <label v-else class="gr-pick">
+          <span>الجنس</span>
+          <select v-model="f.gender" class="gr-select">
+            <option value="">طلاب وطالبات</option>
+            <option value="male">طلاب</option>
+            <option value="female">طالبات</option>
+          </select>
+        </label>
+        <label class="gr-pick gr-pick-rows">
+          <span>عدد الصفوف</span>
+          <select v-model.number="pageSize" class="gr-select">
+            <option :value="25">25</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+        </label>
+      </div>
 
         <SkeletonLoader v-if="loading" :rows="5" height="44px" />
         <!-- جدول المشاريع بالسلايدر والشريط الأخضر: موافقة المشرف + موافقة لجنة الإشراف ← أرشفة -->
@@ -163,7 +161,7 @@
           <template v-if="!f.spec && !q">
             <p v-if="!folders.length" class="gr-empty">لا توجد مشاريع</p>
             <!-- المجلدات في السلايدر الموحّد (أرقام الشرائح + السابق/التالي + شريط التقدّم أسفلها) -->
-            <SlideTable v-else :rows="folders" :size="3" label="التخصصات" v-slot="{ rows: shownFolders }">
+            <SlideTable v-else :rows="folders" :size="pageSize" label="التخصصات" v-slot="{ rows: shownFolders }">
             <div class="ab-folders">
               <div v-for="fd in shownFolders" :key="fd.spec" class="ab-folder" role="button" tabindex="0" @click="f.spec = fd.spec" @keydown.enter="f.spec = fd.spec">
                 <!-- عند المرور: صور مشاريع التخصص تخرج من المجلد على شكل قوس (غلاف التقرير، وإلا بطاقة بهوية مسار) -->
@@ -197,7 +195,7 @@
               <span class="dash-chip">{{ visible.length }} مشروع</span>
             </nav>
             <p v-if="!visible.length" class="gr-empty">لا توجد مشاريع مطابقة</p>
-            <SlideTable v-else :rows="visible" label="المشاريع">
+            <SlideTable v-else :rows="visible" :size="pageSize" label="المشاريع">
               <template #default="{ rows: pageRows }">
                 <div class="ab-gallery">
                   <!-- بطاقة معرض أعمال: الغلاف أولًا (عند المرور يغمق ويظهر "عرض المشروع")، ثم التخصص، العنوان، المشرف والفريق كصور دائرية،
@@ -243,28 +241,33 @@
           </div>
         </template>
 
-        <SlideTable v-else :rows="visible" label="المشاريع">
+        <SlideTable v-else :rows="visible" :size="pageSize" label="المشاريع">
           <template #default="{ rows: pageRows }">
-            <div class="pt-wrap">
-              <table class="pt ad-table">
+            <div class="gr-table-wrap">
+              <table class="gr-table evp-table ad-table">
                 <thead>
                   <tr>
-                    <th>الشعبة</th><th data-rt-title>المشروع والطلبة</th><th>المشرف</th><th class="ad-c">تسليم التقرير</th>
-                    <th class="ad-c">مسار الاعتماد</th><th class="ad-c" data-rt-show>الحالة</th><th v-if="!isSup" class="ad-c">الصفحة الرئيسية</th>
+                    <th class="hm-center">الشعبة</th>
+                    <th>المشروع والطلبة</th>
+                    <th class="hm-center">المشرف</th>
+                    <th class="hm-center">تسليم التقرير</th>
+                    <th class="hm-center">مسار الاعتماد</th>
+                    <th class="hm-center">الحالة</th>
+                    <th v-if="!isSup" class="hm-center">الصفحة الرئيسية</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="p in pageRows" :key="p.id" class="is-link" @click="openProject(p)">
-                    <td class="ad-nowrap"><span class="ev-sec">شعبة {{ p.section }}</span><Star v-if="p.featured" :size="14" fill="currentColor" class="ad-row-star" /></td>
+                  <tr v-for="p in pageRows" :key="p.id" class="gr-row" @click="openProject(p)">
+                    <td class="hm-center ad-nowrap"><span class="ev-sec-chip">شعبة {{ p.section }}</span><Star v-if="p.featured" :size="14" fill="currentColor" class="ad-row-star" /></td>
                     <td class="ad-proj-cell">
                       <b>{{ p.project }}</b>
                       <span class="ad-proj-spec">{{ p.spec }} · {{ DEGREES[p.degree] }}</span>
                       <span class="pt-muted"><Users :size="13" /> {{ p.members.map((m) => m.name).join('، ') || '—' }}</span>
                     </td>
-                    <td class="ad-nowrap">{{ p.supName }}</td>
-                    <td class="ad-c ad-nowrap">{{ p.report ? formatDate(p.report.created_at) : '—' }}</td>
+                    <td class="hm-center ad-nowrap">{{ p.supName }}</td>
+                    <td class="hm-center ad-nowrap">{{ p.report ? formatDate(p.report.created_at) : '—' }}</td>
                     <!-- موافقة المشرف ثم لجنة الإشراف في خانة واحدة (زر الموافقة لصاحب الدور) -->
-                    <td class="ad-c">
+                    <td class="hm-center">
                       <span class="ad-approvals">
                         <button v-if="isSup && stageOf(p) === 'pending_supervisor'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click.stop="review(p, true)"><CheckCircle2 :size="14" /> موافقة</button>
                         <span v-else :class="['ad-check', supState(p).cls]"><component :is="supState(p).icon" :size="15" /> المشرف: {{ supState(p).text }}</span>
@@ -272,9 +275,9 @@
                         <span v-else :class="['ad-check', comState(p).cls]"><component :is="comState(p).icon" :size="15" /> اللجنة: {{ comState(p).text }}</span>
                       </span>
                     </td>
-                    <td class="ad-c"><span :class="['rv-pill', REVIEW[stageOf(p)].tone]">{{ REVIEW[stageOf(p)].short }}</span></td>
+                    <td class="hm-center"><span :class="['rv-pill', REVIEW[stageOf(p)].tone]">{{ REVIEW[stageOf(p)].short }}</span></td>
                     <!-- أفضل مشاريع التخرج في الصفحة الرئيسية: لجنة الإشراف والإدارة العامة فقط -->
-                    <td v-if="!isSup" class="ad-c">
+                    <td v-if="!isSup" class="hm-center">
                       <button type="button" :class="['pbtn is-sm ar-feature', p.featured ? 'is-green' : 'is-outline']" :aria-pressed="p.featured" :title="p.featured ? 'إزالة من الصفحة الرئيسية' : 'تعيين كأفضل مشروع في الصفحة الرئيسية'" @click.stop="toggleFeatured(p)">
                         <Star :size="14" :fill="p.featured ? 'currentColor' : 'none'" /> {{ p.featured ? 'في الرئيسية' : 'تعيين' }}
                       </button>
@@ -292,7 +295,6 @@
             </div>
           </template>
         </SlideTable>
-      </template>
     </section>
 
     <FileViewer :file="viewing" @close="viewing = null" />
@@ -332,6 +334,7 @@ export default {
       q: '',
       view: 'all',
       layout: 'gallery',
+      pageSize: 25,
       f: { spec: '', degree: '', gender: '' },
       current: null,
       loading: true,
@@ -476,11 +479,6 @@ export default {
   },
 
   methods: {
-    setView(v) {
-      this.view = v
-      this.current = null
-    },
-
     /** نافذة جديدة لنفس الصفحة مفتوحة على تخصص أو مشروع (?spec= / ?project=) */
     openInNewTab(query) {
       window.open(this.$router.resolve({ path: this.$route.path, query }).href, '_blank', 'noopener')
