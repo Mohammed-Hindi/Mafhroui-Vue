@@ -60,26 +60,34 @@
       <!-- القائمة: سلايدر بنمط سجل المجموعات (6 مهام لكل شريحة) + شريط الملخص الأخضر -->
       <SlideTable v-else-if="view === 'list'" :rows="rows" label="المهام" :class="loadingTasks && 'tk-busy'">
         <template #default="{ rows: pageRows }">
-          <div class="pt-wrap">
-            <table class="pt tk-table">
-              <thead><tr><th>المهمة</th><th>{{ isStaff ? 'عضو اللجنة' : 'المجموعة' }}</th><th v-if="!isStaff">المكلّفون</th><th>موعد التسليم</th><th>الحالة</th></tr></thead>
+          <div class="gr-table-wrap">
+            <table class="gr-table evp-table tk-table">
+              <thead>
+                <tr>
+                  <th>المهمة</th>
+                  <th class="hm-center">{{ isStaff ? 'عضو اللجنة' : 'المجموعة' }}</th>
+                  <th v-if="!isStaff" class="hm-center">المكلّفون</th>
+                  <th class="hm-center">موعد التسليم</th>
+                  <th class="hm-center">الحالة</th>
+                </tr>
+              </thead>
               <tbody>
-                <tr v-for="t in pageRows" :key="t.id" class="is-link" @click="detail = t">
+                <tr v-for="t in pageRows" :key="t.id" class="gr-row" @click="detail = t">
                   <td>
                     <div class="pt-strong">{{ t.title }}</div>
                     <div v-if="t.description" class="pt-muted tk-desc">{{ t.description }}</div>
                   </td>
-                  <td v-if="isStaff">{{ t.sup }}</td>
-                  <td v-else>
+                  <td v-if="isStaff" class="hm-center">{{ t.sup }}</td>
+                  <td v-else class="hm-center">
                     <div>{{ t.group }}</div>
                     <div class="pt-muted">{{ t.sup }}</div>
                   </td>
-                  <td v-if="!isStaff"><span class="tk-people" :title="names(t)"><span v-for="a in t.assignees.slice(0, 3)" :key="a.id" class="tk-avatar">{{ initials(a.name) }}</span><span v-if="t.assignees.length > 3" class="tk-avatar is-more">+{{ t.assignees.length - 3 }}</span><span v-if="!t.assignees.length" class="pt-muted">كل الفريق</span></span></td>
-                  <td>
+                  <td v-if="!isStaff" class="hm-center"><span class="tk-people" :title="names(t)"><span v-for="a in t.assignees.slice(0, 3)" :key="a.id" class="tk-avatar">{{ initials(a.name) }}</span><span v-if="t.assignees.length > 3" class="tk-avatar is-more">+{{ t.assignees.length - 3 }}</span><span v-if="!t.assignees.length" class="pt-muted">كل الفريق</span></span></td>
+                  <td class="hm-center tk-nowrap">
                     <div class="mono">{{ t.due ? formatDate(t.due) : '—' }}</div>
                     <div :class="['tk-due', dueTone(t)]">{{ dueLabel(t) }}</div>
                   </td>
-                  <td><span :class="['tk-status', `is-${state(t)}`]">{{ stateLabel(t) }}</span></td>
+                  <td class="hm-center"><span :class="['tk-status', `is-${state(t)}`]">{{ stateLabel(t) }}</span></td>
                 </tr>
                 <tr v-if="!rows.length"><td :colspan="isStaff ? 4 : 5" class="gr-empty">{{ hasFilters ? 'لا توجد مهام مطابقة للفلاتر' : 'لا توجد مهام بعد — ابدأ بإنشاء مهمة جديدة' }}</td></tr>
               </tbody>

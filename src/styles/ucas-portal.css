@@ -5042,7 +5042,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .tk-col:has(.tk-dot.is-in_progress) { --tk-c: linear-gradient(270deg, #35B8E0, #0E699C); }
 .tk-col:has(.tk-dot.is-review) { --tk-c: linear-gradient(270deg, #F9C851, #F89E32); }
 .tk-col:has(.tk-dot.is-done) { --tk-c: linear-gradient(270deg, #62BB46, #0E699C); }
-.tk-col-head span { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 4px; font-size: 12px; font-weight: 800; color: var(--ucas-blue); background: linear-gradient(270deg, rgba(98, 187, 70, .16), rgba(0, 91, 170, .1)); }
+.tk-col-head span { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 8px; border-radius: 4px; font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 12%, var(--color-surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 22%, transparent); }
 .tk-dot.is-in_progress { background: #0E699C; }
 .tk-dot.is-done { background: var(--ucas-green); }
 .tk-col-body { padding: 12px; margin: 0; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ucas-blue) 30%, transparent) transparent; }
@@ -5096,12 +5096,14 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
   min-height: 0;
 }
 /* إطار القائمة بدرجات الهوية */
-.sa-skin .as-page .tk .pt-wrap {
+.sa-skin .as-page .tk .gr-table-wrap {
   padding: 12px;
   border-radius: 4px;
   background: color-mix(in srgb, var(--ucas-blue) 3%, var(--color-bg));
   box-shadow: inset 0 0 0 1px var(--color-border);
 }
+.sa-skin .as-page .tk .gr-table-wrap .gr-table { background: var(--color-surface); border-radius: 4px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--color-border); }
+.tk-table .tk-nowrap { white-space: nowrap; }
 
 /* ===== نافذة "مهمة جديدة" (TasksWorkspace composer) بهوية مسار ===== */
 [role="dialog"] .tk-stepper { gap: 10px; }
