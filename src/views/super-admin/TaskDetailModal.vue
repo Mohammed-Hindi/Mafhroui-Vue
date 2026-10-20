@@ -19,7 +19,7 @@
         </template>
         <template v-else>
           <p v-if="task.description" class="tl-desc">{{ task.description }}</p>
-          <p v-else class="pt-muted">لا يوجد وصف لهذه المهمة.</p>
+          <p v-else class="tk-empty"><FileText :size="15" /> لا يوجد وصف لهذه المهمة</p>
         </template>
 
         <section class="tk-detail-block">
@@ -31,8 +31,9 @@
               <span class="pt-muted">{{ f.uploaded_by?.name || '' }} · {{ formatDate(f.created_at) }}</span>
             </li>
           </ul>
-          <label class="pbtn is-outline is-sm tk-upload">
-            <Paperclip :size="14" /> {{ uploading ? 'جارٍ الرفع…' : 'إرفاق ملف' }}
+          <p v-else class="tk-empty"><Paperclip :size="15" /> لا توجد مرفقات</p>
+          <label class="tk-upload">
+            <Paperclip :size="15" /> {{ uploading ? 'جارٍ الرفع…' : 'إرفاق ملف' }}
             <input type="file" :accept="ACCEPT" hidden :disabled="uploading" @change="upload">
           </label>
         </section>
@@ -48,16 +49,17 @@
               </div>
             </li>
           </ul>
+          <p v-else class="tk-empty"><MessageSquare :size="15" /> لا توجد ملاحظات بعد — أضف أول ملاحظة للمجموعة</p>
           <form class="tk-note-form" @submit.prevent="addNote">
             <input v-model.trim="note" type="text" class="ev-input" placeholder="اكتب ملاحظة للمجموعة…">
-            <button type="submit" class="pbtn is-cyan is-sm" :disabled="!note || posting">إضافة</button>
+            <button type="submit" class="pbtn is-green is-sm" :disabled="!note || posting">إضافة</button>
           </form>
         </section>
 
         <!-- سجل الحركة: من يراه يحدده الأب (صفحة التكليفات حسب الدور) -->
         <section v-if="showLog" class="tk-detail-block">
           <h4>سجل الحركة</h4>
-          <p v-if="!log.length" class="pt-muted">لا توجد حركات مسجّلة بعد.</p>
+          <p v-if="!log.length" class="tk-empty"><History :size="15" /> لا توجد حركات مسجّلة بعد</p>
           <ol v-else class="tl-log">
             <li v-for="(e, i) in log" :key="i">
               <span class="tl-dot" />
@@ -84,7 +86,13 @@
         </label>
         <dl class="tk-meta">
           <div><dt>{{ task.groupId ? 'المجموعة' : 'الجهة' }}</dt><dd>{{ task.group }}</dd></div>
-          <div v-if="task.groupId"><dt>المشرف</dt><dd>{{ task.sup }}</dd></div>
+          <div v-if="task.groupId">
+            <dt>المشرف</dt>
+            <dd>
+              <button v-if="supervisor && supervisor.id" type="button" class="tk-sup-link" @click="profileOpen = true">{{ task.sup }} <ChevronLeft :size="13" /></button>
+              <template v-else>{{ task.sup }}</template>
+            </dd>
+          </div>
         </dl>
         <div class="pfield">
           <span>المكلّفون</span>
@@ -101,12 +109,16 @@
         </div>
       </aside>
     </div>
+
+    <!-- بروفايل المشرف: نافذة منبثقة بمعلوماته عند الضغط على اسمه -->
+    <ProfileModal v-if="supervisor && supervisor.id" v-model="profileOpen" kind="supervisor" :person-id="supervisor.id" :name="task ? task.sup : ''" />
   </BaseModal>
 </template>
 
 <script>
-import { FileText, Paperclip, Pencil, Trash2 } from 'lucide-vue-next'
+import { ChevronLeft, FileText, History, MessageSquare, Paperclip, Pencil, Trash2 } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import ProfileModal from '@/components/shared/ProfileModal.vue'
 import api from '@/services/api'
 import { completedBy, describeTaskEvent } from '@/utils/progressData'
 import { formatDate, formatDateTime, initials } from '@/utils/formatters'
@@ -116,11 +128,12 @@ export const ACCEPT = '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.png,.jpg
 export default {
   name: 'TaskDetailModal',
 
-  components: { BaseModal, FileText, Paperclip, Pencil, Trash2 },
+  components: { BaseModal, ProfileModal, ChevronLeft, FileText, History, MessageSquare, Paperclip, Pencil, Trash2 },
 
   props: {
     task: { type: Object, default: null },
     members: { type: Array, default: () => [] },
+    supervisor: { type: Object, default: null },
     statuses: { type: Array, required: true },
     showLog: { type: Boolean, default: false }
   },
@@ -128,7 +141,7 @@ export default {
   emits: ['close', 'updated', 'removed'],
 
   data() {
-    return { ACCEPT, files: [], notes: [], log: [], note: '', edit: {}, editing: false, saving: false, uploading: false, posting: false }
+    return { ACCEPT, files: [], notes: [], log: [], note: '', edit: {}, profileOpen: false, editing: false, saving: false, uploading: false, posting: false }
   },
 
   computed: {
@@ -142,6 +155,7 @@ export default {
       immediate: true,
       handler(id) {
         this.editing = false
+        this.profileOpen = false
         this.files = []
         this.notes = []
         this.log = []

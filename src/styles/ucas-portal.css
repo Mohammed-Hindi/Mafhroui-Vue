@@ -5386,6 +5386,27 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .tb-note-add > button, .td-note-add > button, .tk-note-form > button { height: 36px !important; padding-inline: 16px !important; border: 0 !important; border-radius: 4px !important; font-size: 13px !important; font-weight: 800 !important; color: #FFFFFF !important; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9) !important; box-shadow: 0 4px 12px rgba(4, 40, 80, .18); transition: filter .2s ease, box-shadow .2s ease; }
 .tb-note-add > button:hover, .td-note-add > button:hover, .tk-note-form > button:hover:not(:disabled) { filter: brightness(1.08); box-shadow: 0 6px 16px rgba(4, 40, 80, .24); }
 .tk-note-form > button:disabled { opacity: .5; }
+/* تفاصيل المهمة: حالات فارغة منسّقة على الثيم، ورابط المشرف، وتلوين تسميات البيانات بلون الهوية */
+[role="dialog"] .tk-empty { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--ucas-blue) 22%, var(--color-border)); border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 3%, var(--color-surface)); color: var(--color-text-500, #6F6F6F); font-size: 13px; font-weight: 600; text-align: center; }
+[role="dialog"] .tk-empty svg { color: color-mix(in srgb, var(--ucas-blue) 55%, var(--color-text-400)); flex-shrink: 0; }
+[role="dialog"] .tk-meta dt { color: var(--ucas-blue); }
+.tk-sup-link { display: inline-flex; align-items: center; gap: 3px; color: var(--ucas-blue); font-weight: 800; cursor: pointer; transition: color .2s ease; }
+.tk-sup-link:hover { color: var(--ucas-green); text-decoration: underline; }
+.tk-sup-link svg { opacity: .7; }
+/* أقسام التفاصيل: تباعد موحّد بين العنوان والمحتوى والنموذج حتى لا تتلاصق العناصر */
+[role="dialog"] .tk-detail-block { display: flex; flex-direction: column; gap: 12px; }
+[role="dialog"] .tk-detail-block > h4 { margin-bottom: 0; }
+[role="dialog"] .tk-detail-block :is(.tk-files, .tk-notes) { margin-bottom: 0; }
+[role="dialog"] .tk-note-form { margin: 0; }
+/* زر إرفاق ملف: منطقة رفع متواضعة بإطار متقطّع على لون الهوية */
+[role="dialog"] .tk-upload { align-self: stretch; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px 14px; border: 1.5px dashed color-mix(in srgb, var(--ucas-blue) 35%, transparent); border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-surface)); color: var(--ucas-blue); font-size: 13px; font-weight: 700; cursor: pointer; transition: background-color .2s ease, border-color .2s ease; }
+[role="dialog"] .tk-upload:hover { background: color-mix(in srgb, var(--ucas-blue) 9%, var(--color-surface)); border-color: var(--ucas-blue); }
+[role="dialog"] .tk-upload svg { flex-shrink: 0; }
+/* زر إضافة ملاحظة داخل الموديل: بنفس ارتفاع الحقل ولون الهوية الأزرق الصلب */
+[role="dialog"] .tk-note-form input,
+[role="dialog"] .tk-note-form > button { height: 42px !important; }
+[role="dialog"] .tk-note-form > button { padding-inline: 22px !important; background: var(--ucas-blue) !important; box-shadow: 0 4px 12px rgba(0, 91, 170, .22); }
+[role="dialog"] .tk-note-form > button:hover:not(:disabled) { background: #004C8E !important; filter: none; }
 /* نتيجة تقييم المشرف المباشر داخل نموذج لجنة المشاريع (للاطلاع) */
 .es-viewonly { padding: 12px 16px; border-radius: 4px; font-weight: 600; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 6%, var(--color-surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 18%, transparent); }
 .es-supres { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 5%, var(--color-surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent); }

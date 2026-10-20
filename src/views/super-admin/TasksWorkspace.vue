@@ -259,7 +259,7 @@
 
     <TaskDetailModal
       v-if="!composeOnly"
-      :task="detail" :members="detailMembers" :statuses="STATUSES" :show-log="!!detail && canSeeLog(detail)"
+      :task="detail" :members="detailMembers" :supervisor="detailSupervisor" :statuses="STATUSES" :show-log="!!detail && canSeeLog(detail)"
       @close="detail = null" @updated="replace" @removed="removeTask"
     />
   </div>
@@ -430,6 +430,10 @@ export default {
       if (this.detail.groupId) return this.groupById[this.detail.groupId]?.members || []
       const ids = this.detail.assignees.map((a) => a.id)
       return this.supervisors.some((s) => ids.includes(s.id)) ? this.supervisors : this.committee
+    },
+    /** مشرف مجموعة المهمة (للضغط عليه وفتح بروفايله) — من بيانات المجموعات، فالـ API لا يُرجعه في تفاصيل المهمة */
+    detailSupervisor() {
+      return this.detail?.groupId ? (this.groupById[this.detail.groupId]?.sup || null) : null
     },
     isStaffAudience() {
       return this.audience === 'committee' || this.audience === 'supervisors'
