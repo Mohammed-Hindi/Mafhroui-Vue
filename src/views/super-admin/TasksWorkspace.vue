@@ -3,13 +3,6 @@
   <div class="tk">
     <!-- composeOnly: نافذة الإنشاء وحدها (زر "مهمة جديدة" في صفحات أخرى) بلا قائمة المهام -->
     <template v-if="!composeOnly">
-    <section class="hm-stats tk-stats" aria-label="ملخص المهام">
-      <button v-for="s in stats" :key="s.value" type="button" :class="['hm-stat', fStatus === s.value && 'is-active']" @click="fStatus = fStatus === s.value ? '' : s.value">
-        <span class="hm-stat-label"><i :class="['tk-dot', `is-${s.value || 'all'}`]" />{{ s.label }}</span>
-        <span class="hm-stat-value">{{ s.count }}</span>
-      </button>
-    </section>
-
     <section class="dash-card">
       <div class="dash-card-head">
         <h3>المهام</h3>
@@ -27,6 +20,10 @@
           <Search :size="16" />
           <input v-model.trim="q" type="search" placeholder="بحث بعنوان المهمة أو المكلّف…">
         </label>
+        <!-- الحالة فلتر بدل بار الإحصائيات -->
+        <select v-model="fStatus" class="gr-select" aria-label="الحالة">
+          <option v-for="s in stats" :key="s.value" :value="s.value">{{ s.label }} ({{ s.count }})</option>
+        </select>
         <!-- لجنة الإشراف: الافتراضي مهام المجموعات، واختيار اللجنة أو أحد أعضائها يعرض مهام اللجنة وحدها (منفصلة عن المشرفين) -->
         <select v-if="isAdmin" v-model="fCommittee" class="gr-select" aria-label="لجنة الإشراف">
           <option value="">لجنة الإشراف</option>
@@ -342,7 +339,7 @@ export default {
       loaded: false,
       counts: {},
       reqId: 0,
-      view: 'list',
+      view: 'board',
       q: '',
       fCommittee: '',
       fGroup: '',
