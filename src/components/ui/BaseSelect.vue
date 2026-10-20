@@ -115,10 +115,12 @@ const updatePosition = () => {
 
   const rect = button.getBoundingClientRect()
   const gap = 8
-  const header = document.querySelector('.portal-topbar')
+  // المحدّد داخل الشريط العلوي نفسه (اختيار الفصل) مستثنى من حارس الإخفاء، وإلا قائمته تُقفل فورًا لأن زرّه أسفل الشريط دائمًا
+  const inTopbar = !!root.value?.closest('.portal-topbar')
+  const header = inTopbar ? null : document.querySelector('.portal-topbar')
   const headerBottom = header ? header.getBoundingClientRect().bottom : 0
 
-  if (rect.bottom <= headerBottom + 4) {
+  if (headerBottom && rect.bottom <= headerBottom + 4) {
     closeDropdown()
     return
   }
