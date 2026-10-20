@@ -5051,6 +5051,10 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .tk-card b { font-size: 14.5px; font-weight: 800; color: var(--color-text-900); }
 .tk-card:hover, .tk-card:focus-visible { box-shadow: 0 10px 26px rgba(4, 40, 80, .13); }
 .tk-card .tk-card-who { color: var(--color-text-600); }
+/* كروت المهام: مسطّحة بسيطة بإطار كامل بلا شريط جانبي ولا ظل عائم */
+.sa-skin .as-page .tk-card { border: 1px solid var(--color-border); box-shadow: none; padding-inline-start: 14px; animation: none; }
+.sa-skin .as-page .tk-card::before { display: none; }
+.sa-skin .as-page .tk-card:hover, .sa-skin .as-page .tk-card:focus-visible { box-shadow: none; border-color: color-mix(in srgb, var(--ucas-blue) 45%, var(--color-border)); background: color-mix(in srgb, var(--ucas-blue) 3%, var(--color-surface)); }
 /* زر المرفقات والسجل: كبسولة */
 .tk-card-more { justify-content: flex-start; margin-top: 4px; padding: 7px 12px; border: 0; border-radius: 4px; font-size: 12.5px; font-weight: 700; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 7%, transparent); transition: background-color .25s ease; }
 .tk-card-more:hover, .tk-card-more[aria-expanded="true"] { background: color-mix(in srgb, var(--ucas-blue) 13%, transparent); }
