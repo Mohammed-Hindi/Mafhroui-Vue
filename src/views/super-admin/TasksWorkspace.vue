@@ -135,8 +135,8 @@
 
     <!-- إنشاء مهمة -->
     <BaseModal v-model="composer" title="مهمة جديدة" size="lg">
-      <!-- فورم مكدّس: قالب (اختياري) ← تفاصيل ← مستلمون ← قنوات الإرسال، في تمرير واحد -->
-      <div class="as-form">
+      <!-- فورم مكدّس كقسم واحد متصل بلا عناوين فرعية: قالب (اختياري) ← تفاصيل ← مستلمون ← قنوات -->
+      <div class="as-form as-flow">
       <!-- قالب جاهز: أكورديون يفتح/يتسكّر، اختياره يعبّئ العنوان والوصف -->
       <details v-if="!isSupervisor" class="as-acc">
         <summary class="as-acc-head">
@@ -150,7 +150,6 @@
       </details>
 
       <section :class="['tk-sec', filled && 'is-filled']">
-        <header class="tk-sec-head"><h4>تفاصيل المهمة</h4></header>
         <div class="tk-sec-body">
           <label class="pfield">
             <span>عنوان المهمة <b class="as-req">*</b></span>
@@ -176,10 +175,6 @@
       </section>
 
       <section class="tk-sec">
-        <header class="tk-sec-head">
-          <h4>المستلمون</h4>
-          <span class="dash-chip">{{ targets.length }} {{ targetNoun }}</span>
-        </header>
         <div class="tk-sec-body">
           <nav :class="['tk-aud', isSupervisor ? 'is-2' : !isAdmin && 'is-3']" aria-label="نوع المستلمين">
             <button type="button" :class="audience === 'groups' && 'is-active'" @click="audience = 'groups'">مجموعات محددة</button>
@@ -241,7 +236,6 @@
 
       <!-- قنوات الإرسال (للإدارة العامة ولجنة الإشراف فقط) -->
       <section v-if="!isSupervisor" class="tk-sec">
-        <header class="tk-sec-head"><h4>قنوات الإرسال</h4></header>
         <div class="tk-sec-body">
           <ChannelPicker v-model="form.channels" :restricted="!isStaffAudience" />
         </div>

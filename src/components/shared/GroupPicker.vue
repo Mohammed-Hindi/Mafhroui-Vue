@@ -6,28 +6,12 @@
         <Search :size="16" />
         <input v-model.trim="q" type="search" :placeholder="isSup ? 'بحث بالمجموعة أو الشعبة…' : 'بحث بالمجموعة أو الشعبة أو المشرف…'">
       </label>
-      <select v-model="f.spec" class="gr-select" aria-label="التخصص">
-        <option value="">كل التخصصات</option>
-        <option v-for="s in specs" :key="s" :value="s">{{ s }}</option>
-      </select>
+      <BaseSelect v-model="f.spec" class="tk-filter" placeholder="كل التخصصات" include-placeholder-option :options="specs" />
       <!-- المشرف: فلتر التخصص وطلاب/طالبات فقط -->
-      <select v-if="!isSup" v-model="f.degree" class="gr-select" aria-label="الدرجة">
-        <option value="">كل الدرجات</option>
-        <option v-for="(l, k) in DEGREES" :key="k" :value="k">{{ l }}</option>
-      </select>
-      <select v-model="f.gender" class="gr-select" aria-label="طلاب / طالبات">
-        <option value="">طلاب وطالبات</option>
-        <option value="male">طلاب</option>
-        <option value="female">طالبات</option>
-      </select>
-      <select v-if="!isSup" v-model="f.region" class="gr-select" aria-label="مكان التواجد">
-        <option value="">كل المناطق</option>
-        <option v-for="(l, k) in REGIONS" :key="k" :value="k">{{ l }}</option>
-      </select>
-      <select v-if="!isSup" v-model="f.sup" class="gr-select" aria-label="المشرف">
-        <option value="">كل المشرفين</option>
-        <option v-for="s in sups" :key="s" :value="s">{{ s }}</option>
-      </select>
+      <BaseSelect v-if="!isSup" v-model="f.degree" class="tk-filter" placeholder="كل الدرجات" include-placeholder-option :options="degreeOptions" />
+      <BaseSelect v-model="f.gender" class="tk-filter" placeholder="طلاب وطالبات" include-placeholder-option :options="genderOptions" />
+      <BaseSelect v-if="!isSup" v-model="f.region" class="tk-filter" placeholder="كل المناطق" include-placeholder-option :options="regionOptions" />
+      <BaseSelect v-if="!isSup" v-model="f.sup" class="tk-filter" placeholder="كل المشرفين" include-placeholder-option :options="sups" />
     </div>
 
     <div class="gp-bar">
@@ -56,13 +40,14 @@
 
 <script>
 import { Search } from 'lucide-vue-next'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import { DEGREES, REGIONS } from '@/utils/progressData'
 import { useAuthStore } from '@/stores/auth.store'
 
 export default {
   name: 'GroupPicker',
 
-  components: { Search },
+  components: { BaseSelect, Search },
 
   props: {
     groups: { type: Array, required: true },
@@ -72,7 +57,7 @@ export default {
   emits: ['update:modelValue'],
 
   data() {
-    return { DEGREES, REGIONS, q: '', f: { spec: '', degree: '', gender: '', region: '', sup: '' } }
+    return { q: '', f: { spec: '', degree: '', gender: '', region: '', sup: '' } }
   },
 
   computed: {
@@ -85,6 +70,15 @@ export default {
     },
     sups() {
       return [...new Set(this.groups.map((g) => g.sup.name).filter(Boolean))]
+    },
+    degreeOptions() {
+      return Object.entries(DEGREES).map(([value, label]) => ({ value, label }))
+    },
+    regionOptions() {
+      return Object.entries(REGIONS).map(([value, label]) => ({ value, label }))
+    },
+    genderOptions() {
+      return [{ value: 'male', label: 'طلاب' }, { value: 'female', label: 'طالبات' }]
     },
     visible() {
       const { q, f } = this
