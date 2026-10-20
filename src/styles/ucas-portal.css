@@ -6195,8 +6195,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* الفلتر يتّسع لأطول اسم تخصص مع عدّاده والسهم: نرفع حدّ عرض الـselect نفسه (كان 210px) ونلغي الحشو الزائد من جهة البداية فيكبر من الجهتين بالتساوي؛ والنص يُقصَّر بثلاث نقاط عند الحاجة فيبقى السهم ظاهرًا */
 .sa-skin .evp-card .gr-pick { max-width: none; padding-inline-start: 0; }
 .sa-skin .evp-card .gr-pick > .gr-select { min-width: 0; max-width: 340px; }
-/* بحث أصغر ليفسح مجالًا للفلاتر */
-.sa-skin .evp-card .gr-search { flex: 1 1 170px; max-width: 240px; }
+/* بحث أصغر ثابت على اليمين، والفلاتر تُزاح لأقصى الشمال بمسافة بينهما */
+.sa-skin .evp-card .gr-search { flex: 0 1 240px; max-width: 240px; margin-inline-end: auto; }
 .ab-pf-icons { display: inline-flex; gap: 6px; margin-inline-start: auto; }
 .ab-pf-ic { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px; border-radius: 4px; background: var(--color-surface); color: var(--ucas-blue); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 16%, transparent); transition: background-color .3s ease, color .3s ease; }
 .ab-pf-ic:hover { background: var(--ucas-blue); color: #FFFFFF; }
