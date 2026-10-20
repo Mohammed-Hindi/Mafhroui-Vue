@@ -2721,7 +2721,7 @@
 /* السايد بار مضغوط قليلًا حتى تظهر عناصر "أدوات لجنة الإشراف" (11 عنصرًا) كاملة على شاشات اللابتوب */
 .ucas-portal .sidebar-row { min-height: 38px; padding-block: 5px; }
 .ucas-portal .sidebar-section-title { padding-top: 12px; padding-bottom: 6px; }
-.ucas-portal .sidebar-nav { padding-block: 2px 8px; }
+.ucas-portal .sidebar-nav { padding-block: 16px 8px; }
 .ucas-portal #app-sidebar .shrink-0.border-t { padding-block: 8px; }
 .mb-groups-btn { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: var(--portal-cyan); }
 .mb-groups-btn svg { transition: transform 300ms var(--ease-standard); }
