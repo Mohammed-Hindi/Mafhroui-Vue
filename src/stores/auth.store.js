@@ -68,6 +68,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // GET /invite/{token} | Response: { status } — فحص حالة الرابط دون استهلاكه (valid/used/expired/restricted/invalid)
+  const checkInvite = async (inviteToken) => {
+    const { data } = await api.get(`/invite/${inviteToken}`)
+    return data.status
+  }
+
   // POST /invite/{token}/accept | Response: { user, token }
   const acceptInvite = async (inviteToken, credentials) => {
     isLoading.value = true
@@ -197,6 +203,7 @@ export const useAuthStore = defineStore('auth', () => {
     homeRoute,
     login,
     logout,
+    checkInvite,
     acceptInvite,
     consumeMagicLogin,
     changePassword,

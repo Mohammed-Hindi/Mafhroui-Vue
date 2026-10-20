@@ -965,7 +965,7 @@ export default {
         const role = this.addForm.role
         const addedGender = this.addForm.gender
         this.inviteTarget = created
-        this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
+        this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}&email=${encodeURIComponent(this.addForm.email)}`
         this.sendInviteWhats()
         this.sendInviteMail()
         this.addModalOpen = false
@@ -1041,7 +1041,7 @@ export default {
       this.reinvitingId = row.id
       try {
         const result = await this.reinviteUser(row.id)
-        const link = `${window.location.origin}/reset-password?token=${result.token}`
+        const link = `${window.location.origin}/reset-password?token=${result.token}&email=${encodeURIComponent(row.email || '')}`
         await navigator.clipboard.writeText(link)
         this.$toast?.success('تم نسخ رابط الدعوة الجديد')
       } catch (err) {

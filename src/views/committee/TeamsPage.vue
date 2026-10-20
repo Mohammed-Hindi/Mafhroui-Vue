@@ -498,7 +498,7 @@ export default {
             member_ids: [result.user.id], leader_id: result.user.id
           })
         }
-        this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
+        this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}&email=${encodeURIComponent(f.email)}`
         this.inviteTarget = { name: f.name, mail: f.email, whats: f.whatsapp, password, user_id: result.user.id }
         this.addStudentModal = false
         this.addStudentForm = emptyStudentForm()
@@ -527,7 +527,7 @@ export default {
       try {
         const result = await this.createUser({ ...this.addSupervisorForm, specialization_id: this.addSupervisorForm.specialization_id || null, role: 'supervisor' })
         const password = await this.setUserPassword(result.user.id)
-        this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}`
+        this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}&email=${encodeURIComponent(this.addSupervisorForm.email)}`
         this.inviteTarget = { name: this.addSupervisorForm.name, mail: this.addSupervisorForm.email, whats: this.addSupervisorForm.whatsapp, password, user_id: result.user.id }
         this.addSupervisorModal = false
         this.addSupervisorForm = emptySupervisorForm()

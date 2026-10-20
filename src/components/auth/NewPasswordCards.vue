@@ -4,7 +4,11 @@
   <AuthSplit :title="title" :subtitle="subtitle" :back="back">
     <div v-if="error" class="au-split-alert" role="alert"><AlertCircle :size="18" /> {{ error }}</div>
 
-    <template v-if="done">
+    <template v-if="blocked">
+      <router-link :to="{ name: 'login' }" class="us-btn us-glow-btn au-split-submit">تسجيل الدخول <LogIn :size="19" class="us-flip" /></router-link>
+    </template>
+
+    <template v-else-if="done">
       <div class="au-split-alert is-success" role="status"><CheckCircle2 :size="18" /> تم تحديث كلمة المرور، يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.</div>
       <router-link :to="{ name: 'login' }" class="us-btn us-glow-btn au-split-submit">تسجيل الدخول <LogIn :size="19" class="us-flip" /></router-link>
     </template>
@@ -59,6 +63,8 @@ export default {
     back: { type: Object, default: () => ({ to: { name: 'login' }, label: 'العودة إلى تسجيل الدخول' }) },
     /** نجاح التعيين: يُستبدل الفورم برسالة وزر الدخول */
     done: { type: Boolean, default: false },
+    /** رابط غير صالح/مستخدم/منتهٍ: يُخفى الفورم ويُعرض الخطأ مع زر الدخول */
+    blocked: { type: Boolean, default: false },
     loading: { type: Boolean, default: false },
     error: { type: String, default: '' },
     /** أخطاء حقول الخادم بعد الإرسال */
