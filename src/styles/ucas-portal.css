@@ -5075,65 +5075,32 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .tk-card-log span { color: var(--color-text-700); }
 .tk-card-log time { font-family: 'Tajawal', sans-serif; font-size: 11.5px; font-variant-numeric: tabular-nums; color: var(--color-text-400); }
 
-/* ===== خلفية فضائية (galaxy) للوحة وقائمة المهام — سماء كحلي بنجوم بهوية مسار ===== */
+/* ===== لوحة المهام: ملء الشاشة بدرجات الهوية (أبيض/دارك مود) ===== */
 .sa-skin .as-page .tk-board {
-  position: relative;
-  padding: 16px;
+  min-height: calc(100vh - 232px);
+  align-items: stretch;
+  align-content: stretch;
+  padding: 14px;
   border-radius: 4px;
-  box-shadow: inset 0 0 0 1px rgba(120, 170, 255, .16);
-  background:
-    radial-gradient(1.5px 1.5px at 12% 22%, rgba(255, 255, 255, .85), transparent),
-    radial-gradient(1px 1px at 28% 68%, rgba(173, 216, 255, .8), transparent),
-    radial-gradient(1.5px 1.5px at 46% 34%, rgba(255, 255, 255, .7), transparent),
-    radial-gradient(1px 1px at 63% 78%, rgba(255, 255, 255, .62), transparent),
-    radial-gradient(1.5px 1.5px at 78% 26%, rgba(152, 210, 255, .85), transparent),
-    radial-gradient(1px 1px at 88% 60%, rgba(255, 255, 255, .68), transparent),
-    radial-gradient(1px 1px at 55% 12%, rgba(255, 255, 255, .6), transparent),
-    radial-gradient(1px 1px at 35% 90%, rgba(255, 255, 255, .55), transparent),
-    radial-gradient(1px 1px at 7% 52%, rgba(255, 255, 255, .5), transparent),
-    radial-gradient(1px 1px at 96% 40%, rgba(173, 216, 255, .6), transparent),
-    radial-gradient(760px 380px at 85% -15%, rgba(0, 91, 170, .4), transparent 70%),
-    radial-gradient(620px 320px at 8% 118%, rgba(98, 187, 70, .14), transparent 70%),
-    linear-gradient(160deg, #06152b, #0b2444 55%, #05101f);
+  background: color-mix(in srgb, var(--ucas-blue) 3%, var(--color-bg));
+  box-shadow: inset 0 0 0 1px var(--color-border);
 }
-/* الأعمدة: زجاج فضائي شفّاف */
+/* الأعمدة تمتدّ لكامل ارتفاع اللوحة والجسم يمرَّر داخله */
 .sa-skin .as-page .tk-board .tk-col {
-  background: rgba(9, 26, 51, .58);
-  box-shadow: inset 0 0 0 1px rgba(130, 175, 255, .18);
-}
-.sa-skin .as-page .tk-board .tk-col-head {
-  background: rgba(6, 19, 40, .66);
-  color: #E8F1FF;
-}
-.sa-skin .as-page .tk-board .tk-col-head span {
-  margin-inline-start: auto;
-  padding: 1px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  color: #DCEBFF;
-  background: rgba(120, 170, 255, .18);
-  box-shadow: inset 0 0 0 1px rgba(130, 175, 255, .28);
-}
-.sa-skin .as-page .tk-board .tk-col-empty { color: rgba(220, 235, 255, .5); }
-/* الكروت الفاتحة تطفو فوق الفضاء */
-.sa-skin .as-page .tk-board .tk-card {
   background: var(--color-surface);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, .35);
+  box-shadow: inset 0 0 0 1px var(--color-border);
 }
-/* إطار فضائي حول جدول القائمة */
+.sa-skin .as-page .tk-board .tk-col-body {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+/* إطار القائمة بدرجات الهوية */
 .sa-skin .as-page .tk .pt-wrap {
   padding: 12px;
   border-radius: 4px;
-  box-shadow: inset 0 0 0 1px rgba(120, 170, 255, .16);
-  background:
-    radial-gradient(1.5px 1.5px at 10% 30%, rgba(255, 255, 255, .8), transparent),
-    radial-gradient(1px 1px at 32% 72%, rgba(173, 216, 255, .75), transparent),
-    radial-gradient(1.5px 1.5px at 58% 24%, rgba(255, 255, 255, .65), transparent),
-    radial-gradient(1px 1px at 82% 66%, rgba(255, 255, 255, .6), transparent),
-    radial-gradient(1px 1px at 92% 34%, rgba(152, 210, 255, .7), transparent),
-    radial-gradient(700px 300px at 88% -40%, rgba(0, 91, 170, .32), transparent 70%),
-    linear-gradient(160deg, #06152b, #0b2444 55%, #05101f);
+  background: color-mix(in srgb, var(--ucas-blue) 3%, var(--color-bg));
+  box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
 /* ===== نافذة "مهمة جديدة" (TasksWorkspace composer) بهوية مسار ===== */

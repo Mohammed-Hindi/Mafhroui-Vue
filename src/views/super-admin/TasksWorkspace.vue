@@ -7,10 +7,6 @@
       <div class="dash-card-head">
         <h3>المهام</h3>
         <div class="tk-head-tools">
-          <nav class="hm-tabs" aria-label="طريقة العرض">
-            <button type="button" :class="view === 'list' && 'is-active'" @click="view = 'list'"><List :size="15" /> قائمة</button>
-            <button type="button" :class="view === 'board' && 'is-active'" @click="view = 'board'"><Columns3 :size="15" /> لوحة</button>
-          </nav>
           <button v-if="canAnnounce" type="button" class="pbtn is-outline" @click="$emit('announce')"><Megaphone :size="16" /> إعلان جديد</button>
           <button type="button" class="pbtn is-green" @click="openComposer"><Plus :size="16" /> مهمة جديدة</button>
         </div>
@@ -21,6 +17,11 @@
           <Search :size="16" />
           <input v-model.trim="q" type="search" placeholder="بحث بعنوان المهمة أو المكلّف…">
         </label>
+        <!-- مبدّل العرض: أيقونة جنب البحث (لوحة / قائمة) -->
+        <div class="ab-viewtog" role="group" aria-label="طريقة العرض">
+          <button type="button" :class="['ab-viewtog-btn', view === 'board' && 'is-active']" :aria-pressed="view === 'board'" title="لوحة" @click="view = 'board'"><Columns3 :size="17" /></button>
+          <button type="button" :class="['ab-viewtog-btn', view === 'list' && 'is-active']" :aria-pressed="view === 'list'" title="قائمة" @click="view = 'list'"><List :size="17" /></button>
+        </div>
         <!-- الحالة فلتر بدل بار الإحصائيات -->
         <select v-model="fStatus" class="gr-select" aria-label="الحالة">
           <option v-for="s in stats" :key="s.value" :value="s.value">{{ s.label }} ({{ s.count }})</option>
