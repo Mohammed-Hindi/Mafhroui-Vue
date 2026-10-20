@@ -22,37 +22,16 @@
           <button type="button" :class="['ab-viewtog-btn', view === 'board' && 'is-active']" :aria-pressed="view === 'board'" title="لوحة" @click="view = 'board'"><Columns3 :size="17" /></button>
           <button type="button" :class="['ab-viewtog-btn', view === 'list' && 'is-active']" :aria-pressed="view === 'list'" title="قائمة" @click="view = 'list'"><List :size="17" /></button>
         </div>
-        <!-- الحالة فلتر بدل بار الإحصائيات -->
-        <select v-model="fStatus" class="gr-select" aria-label="الحالة">
-          <option v-for="s in stats" :key="s.value" :value="s.value">{{ s.label }} ({{ s.count }})</option>
-        </select>
+        <!-- فلاتر BaseSelect المعتمدة -->
+        <BaseSelect v-model="fStatus" class="tk-filter" placeholder="الحالة" :options="statusOptions" />
         <!-- لجنة الإشراف: الافتراضي مهام المجموعات، واختيار اللجنة أو أحد أعضائها يعرض مهام اللجنة وحدها (منفصلة عن المشرفين) -->
-        <select v-if="isAdmin" v-model="fCommittee" class="gr-select" aria-label="لجنة الإشراف">
-          <option value="">لجنة الإشراف</option>
-          <option v-for="m in committee" :key="m.id" :value="m.id">{{ m.name }}</option>
-        </select>
-        <select v-if="!isStaff && !isSupervisor" v-model="fSup" class="gr-select" aria-label="المشرف">
-          <option value="">كل المشرفين</option>
-          <option v-for="s in supervisors" :key="s.id" :value="s.id">{{ s.name }}</option>
-        </select>
-        <select v-if="!isStaff" v-model="fGroup" class="gr-select" aria-label="المجموعة">
-          <option value="">كل المجموعات</option>
-          <option v-for="g in groupOptions" :key="g.id" :value="g.id">{{ g.label }}</option>
-        </select>
-        <select v-if="!isStaff && !isSupervisor" v-model="fDegree" class="gr-select" aria-label="الدرجة">
-          <option value="">كل الدرجات</option>
-          <option v-for="(l, k) in DEGREES" :key="k" :value="k">{{ l }}</option>
-        </select>
-        <select v-if="!isStaff" v-model="fSpec" class="gr-select" aria-label="التخصص">
-          <option value="">كل التخصصات</option>
-          <option v-for="s in specOptions" :key="s.id" :value="s.id">{{ s.name }}</option>
-        </select>
+        <BaseSelect v-if="isAdmin" v-model="fCommittee" class="tk-filter" placeholder="لجنة الإشراف" include-placeholder-option :options="committeeOptions" />
+        <BaseSelect v-if="!isStaff && !isSupervisor" v-model="fSup" class="tk-filter" placeholder="كل المشرفين" include-placeholder-option :options="supervisorOptions" />
+        <BaseSelect v-if="!isStaff" v-model="fGroup" class="tk-filter" placeholder="كل المجموعات" include-placeholder-option value-key="id" label-key="label" :options="groupOptions" />
+        <BaseSelect v-if="!isStaff && !isSupervisor" v-model="fDegree" class="tk-filter" placeholder="كل الدرجات" include-placeholder-option :options="degreeOptions" />
+        <BaseSelect v-if="!isStaff" v-model="fSpec" class="tk-filter" placeholder="كل التخصصات" include-placeholder-option value-key="id" label-key="name" :options="specOptions" />
         <!-- المشرف: فلترا التخصص والفئة فقط -->
-        <select v-if="isSupervisor" v-model="fGender" class="gr-select" aria-label="الفئة">
-          <option value="">طلاب وطالبات</option>
-          <option value="male">طلاب</option>
-          <option value="female">طالبات</option>
-        </select>
+        <BaseSelect v-if="isSupervisor" v-model="fGender" class="tk-filter" placeholder="طلاب وطالبات" include-placeholder-option :options="[{ value: 'male', label: 'طلاب' }, { value: 'female', label: 'طالبات' }]" />
       </div>
 
       <SkeletonLoader v-if="!loaded" variant="cards" :rows="6" />
@@ -293,6 +272,7 @@
 <script>
 import { Check, FileText, Paperclip, CalendarDays, ChevronDown, Columns3, History, List, Megaphone, Plus, Search, Send, Users, X } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import ChannelPicker from '@/components/shared/ChannelPicker.vue'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
 import GroupPicker from '@/components/shared/GroupPicker.vue'
@@ -320,7 +300,7 @@ const emptyForm = () => ({ title: '', description: '', due: '', files: [], assig
 export default {
   name: 'TasksWorkspace',
 
-  components: { BaseModal, ChannelPicker, FileDropzone, GroupPicker, SlideTable, TaskDetailModal, TemplatePicker, Check, FileText, Paperclip, CalendarDays, ChevronDown, Columns3, History, List, Megaphone, Plus, Search, Send, Users, X },
+  components: { BaseModal, BaseSelect, ChannelPicker, FileDropzone, GroupPicker, SlideTable, TaskDetailModal, TemplatePicker, Check, FileText, Paperclip, CalendarDays, ChevronDown, Columns3, History, List, Megaphone, Plus, Search, Send, Users, X },
 
   emits: ['announce'],
 
@@ -464,6 +444,19 @@ export default {
     },
     specOptions() {
       return [...new Map(this.groups.filter((g) => g.specId).map((g) => [g.specId, { id: g.specId, name: g.spec }])).values()]
+    },
+    /** خيارات فلاتر الشريط بصيغة BaseSelect */
+    statusOptions() {
+      return this.stats.map((s) => ({ value: s.value, label: `${s.label} (${s.count})` }))
+    },
+    committeeOptions() {
+      return this.committee.map((m) => ({ value: m.id, label: m.name }))
+    },
+    supervisorOptions() {
+      return this.supervisors.map((s) => ({ value: s.id, label: s.name }))
+    },
+    degreeOptions() {
+      return Object.entries(this.DEGREES).map(([value, label]) => ({ value, label }))
     },
     canCreate() {
       return !!this.form.title && this.targets.length > 0
