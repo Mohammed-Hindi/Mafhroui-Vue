@@ -105,47 +105,44 @@
     <!-- عرض المشاريع: فلاتر بجانب البحث + تبديل معرض/جدول (بنية جداولنا القياسية) -->
     <section v-else class="gr gr-card evp-card">
       <div class="gr-card-title">
-        <h3>معرض المشاريع <span class="dash-chip">{{ visible.length }} مشروع</span></h3>
-        <nav class="ab-toggle" aria-label="طريقة العرض">
-          <button type="button" :class="layout === 'gallery' && 'is-active'" @click="layout = 'gallery'"><LayoutGrid :size="16" /> معرض الأعمال</button>
-          <button type="button" :class="layout === 'table' && 'is-active'" @click="layout = 'table'"><List :size="16" /> جدول</button>
-        </nav>
+        <h3>معرض المشاريع</h3>
+        <span class="dash-chip">{{ visible.length }} مشروع</span>
       </div>
 
       <div class="gr-filters" aria-label="تصفية المشاريع">
         <label class="gr-search"><Search :size="16" /><input v-model.trim="q" type="search" placeholder="بحث بالمشروع أو الشعبة أو المشرف أو الطالب…"></label>
+        <!-- تبديل معرض/جدول: أيقونتان مدمجتان بجانب البحث -->
+        <div class="ab-viewtog" role="group" aria-label="طريقة العرض">
+          <button type="button" :class="['ab-viewtog-btn', layout === 'gallery' && 'is-active']" :aria-pressed="layout === 'gallery'" title="معرض الأعمال" @click="layout = 'gallery'"><LayoutGrid :size="17" /></button>
+          <button type="button" :class="['ab-viewtog-btn', layout === 'table' && 'is-active']" :aria-pressed="layout === 'table'" title="جدول" @click="layout = 'table'"><List :size="17" /></button>
+        </div>
         <label class="gr-pick">
-          <span>العرض</span>
-          <select v-model="view" class="gr-select">
+          <select v-model="view" class="gr-select" aria-label="العرض">
             <option v-for="v in views" :key="v.key" :value="v.key">{{ v.label }} ({{ v.count }})</option>
           </select>
         </label>
         <label class="gr-pick">
-          <span>التخصص</span>
-          <select v-model="f.spec" class="gr-select">
+          <select v-model="f.spec" class="gr-select" aria-label="التخصص">
             <option value="">كل التخصصات</option>
             <option v-for="sp in specs" :key="sp" :value="sp">{{ sp }} ({{ inView.filter((x) => x.spec === sp).length }})</option>
           </select>
         </label>
         <label v-if="!isSup" class="gr-pick">
-          <span>الدرجة</span>
-          <select v-model="f.degree" class="gr-select">
+          <select v-model="f.degree" class="gr-select" aria-label="الدرجة">
             <option value="">دبلوم وبكالوريوس</option>
             <option v-for="(l, k) in DEGREES" :key="k" :value="k">{{ l }}</option>
           </select>
         </label>
         <!-- المشرف: فلترا التخصص والجنس فقط -->
         <label v-else class="gr-pick">
-          <span>الجنس</span>
-          <select v-model="f.gender" class="gr-select">
+          <select v-model="f.gender" class="gr-select" aria-label="الفئة">
             <option value="">طلاب وطالبات</option>
             <option value="male">طلاب</option>
             <option value="female">طالبات</option>
           </select>
         </label>
         <label class="gr-pick gr-pick-rows">
-          <span>عدد الصفوف</span>
-          <select v-model.number="pageSize" class="gr-select">
+          <select v-model.number="pageSize" class="gr-select" aria-label="عدد الصفوف">
             <option :value="25">25</option>
             <option :value="50">50</option>
             <option :value="100">100</option>
@@ -258,7 +255,7 @@
                 </thead>
                 <tbody>
                   <tr v-for="p in pageRows" :key="p.id" class="gr-row" @click="openProject(p)">
-                    <td class="hm-center ad-nowrap"><span class="ev-sec-chip">شعبة {{ p.section }}</span><Star v-if="p.featured" :size="14" fill="currentColor" class="ad-row-star" /></td>
+                    <td class="hm-center ad-nowrap"><span class="ad-sec-cell"><span class="ev-sec-chip">شعبة {{ p.section }}</span><Star v-if="p.featured" :size="13" fill="currentColor" class="ad-row-star" /></span></td>
                     <td class="ad-proj-cell">
                       <b>{{ p.project }}</b>
                       <span class="ad-proj-spec">{{ p.spec }} · {{ DEGREES[p.degree] }}</span>
