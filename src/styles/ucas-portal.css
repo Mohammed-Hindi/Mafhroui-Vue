@@ -6741,3 +6741,66 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
   20%, 70% { background: #FFF6D8; }
 }
 .es-progress-bar > span { background: var(--ucas-green) !important; }
+
+/* ====== الشكاوى والملاحظات — مكتب الدعم الحديث: ريل طوابير جانبي + قائمة + محادثة ====== */
+.tk2 { --tk2-h: clamp(460px, calc(100vh - 220px), 840px); gap: 14px; }
+.tk2-filters { align-items: center; gap: 8px; padding: 10px 12px; }
+.tk2-filters .rv-search { flex: 1 1 280px; max-width: none; height: 42px; font-size: 13.5px; }
+.tk2-filters .gr-select { flex: 0 0 auto; height: 42px; font-size: 13.5px; }
+.tk2-shell { display: grid; grid-template-columns: 198px minmax(0, 360px) minmax(0, 1fr); grid-template-areas: "rail list detail"; gap: 14px; align-items: start; }
+.tk2-shell > .rv-detail { grid-area: detail; }
+.tk2-list { grid-area: list; }
+
+/* الريل: بطاقة طوابير رأسية — بديل نظام الأزرار الأفقي */
+.tk2-rail { grid-area: rail; display: flex; flex-direction: column; gap: 4px; padding: 10px; background: var(--color-surface); border-radius: 4px; box-shadow: var(--shadow-card); overflow-y: auto; }
+.tk2-rail-item { position: relative; display: flex; align-items: center; gap: 10px; width: 100%; height: 42px; padding-inline: 12px; border-radius: 4px; text-align: start; color: var(--color-text-600); transition: background-color .25s var(--ease-standard), color .25s var(--ease-standard); }
+.tk2-rail-ic { flex-shrink: 0; color: var(--color-text-400); transition: color .25s var(--ease-standard); }
+.tk2-rail-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; font-weight: 600; }
+.tk2-rail-count { flex-shrink: 0; display: inline-grid; place-items: center; min-width: 22px; height: 20px; padding-inline: 7px; border-radius: 999px; background: var(--color-bg); color: var(--color-text-600); font-size: 11.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.tk2-rail-item:hover { background: var(--portal-menu-hover); color: var(--color-text-900); }
+.tk2-rail-item:hover .tk2-rail-ic { color: var(--ucas-blue); }
+.tk2-rail-item.is-active { background: linear-gradient(270deg, rgba(98, 187, 70, .14), rgba(0, 91, 170, .08)); color: var(--ucas-blue); }
+.tk2-rail-item.is-active .tk2-rail-ic { color: var(--ucas-green); }
+.tk2-rail-item.is-active .tk2-rail-label { font-weight: 800; }
+.tk2-rail-item.is-active .tk2-rail-count { background: var(--ucas-blue); color: #FFFFFF; }
+.tk2-rail-item.is-active::before { content: ''; position: absolute; inset-block: 7px; inset-inline-start: 0; width: 3px; border-radius: 999px; background: linear-gradient(180deg, var(--ucas-green), var(--ucas-blue)); }
+
+/* رأس القائمة اللاصق (بدل رأس الأزرار القديم) */
+.tk2-list-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 10px; height: 50px; padding-inline: 16px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+:root[data-brand="ucas"] .tk2-list-head .portal-title { font-size: 15px; }
+.tk2-list-head .hd-card-sub { margin-inline-start: auto; }
+
+/* العنصر المختار: شريط أخضر وخلفية تدرّج خفيفة (هوية مسار) */
+.tk2-list .rv-item.is-selected { background: linear-gradient(270deg, rgba(98, 187, 70, .12), rgba(0, 91, 170, .06)); }
+.tk2-list .rv-item.is-selected::before { width: 3px; background: linear-gradient(180deg, var(--ucas-green), var(--ucas-blue)); }
+
+@media (min-width: 1024px) {
+  .tk2-rail { height: var(--tk2-h); }
+  .tk2-list { height: var(--tk2-h); max-height: var(--tk2-h); }
+  .tk2-shell > .hd-detail { position: static; height: var(--tk2-h); max-height: var(--tk2-h); }
+}
+@media (max-width: 1199.98px) {
+  /* الريل أفقي فوق القائمة بدل عمود جانبي (بلا نظام أزرار منفصل) */
+  .tk2-shell { grid-template-columns: minmax(0, 340px) minmax(0, 1fr); grid-template-areas: "rail rail" "list detail"; }
+  .tk2-rail { flex-direction: row; gap: 6px; overflow-x: auto; overflow-y: hidden; }
+  .tk2-rail-item { width: auto; flex: 0 0 auto; }
+}
+@media (max-width: 1023.98px) {
+  .tk2-shell { grid-template-columns: minmax(0, 1fr); grid-template-areas: "rail" "list"; }
+  .tk2-list { height: auto; max-height: calc(100vh - 210px); }
+}
+
+/* أفاتار التذكرة والمحادثة: مربّع حاد مسطّح بلون الهوية (بلا دائرة تدرّج ولا حلقة) */
+.tk2 .hd-avatar { border-radius: 4px; box-shadow: none; letter-spacing: -1px; }
+.tk2 .hd-avatar:not(.is-staff) { background: color-mix(in srgb, var(--ucas-blue) 10%, var(--color-surface)); color: var(--ucas-blue); }
+.tk2 .hd-item.is-unread .hd-avatar { background: color-mix(in srgb, var(--ucas-blue) 16%, var(--color-surface)); color: var(--ucas-blue); }
+/* أيقونة الحالة الفارغة: مربّع تدرّج خفيف وأيقونة بلون الهوية */
+.tk2 .hd-empty svg { border-radius: 8px; background: linear-gradient(270deg, rgba(98, 187, 70, .14), rgba(0, 91, 170, .1)); color: var(--ucas-blue); box-shadow: none; }
+
+/* فقاعة رد فريق الدعم: تدرّج خفيف ونص عادي (بدل التدرّج الصلب الغامق) */
+.tk2 .hd-msg.is-staff .hd-bubble { background: linear-gradient(270deg, rgba(98, 187, 70, .12), rgba(0, 91, 170, .08)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 18%, transparent); }
+.tk2 .hd-msg.is-staff .hd-bubble p { color: var(--color-text-700); }
+.tk2 .hd-msg.is-staff .hd-msg-head b { color: var(--ucas-blue); }
+.tk2 .hd-msg.is-staff .hd-msg-head .hd-role { background: rgba(98, 187, 70, .14); color: #3E8A26; }
+.tk2 .hd-msg.is-staff .hd-msg-head time { color: var(--color-text-400); opacity: 1; }
+:root[data-theme="dark"] .tk2 .hd-msg.is-staff .hd-msg-head .hd-role { color: #7CCB5F; }
