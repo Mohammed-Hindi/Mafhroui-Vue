@@ -6770,9 +6770,9 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 :root[data-brand="ucas"] .tk2-list-head .portal-title { font-size: 15px; }
 .tk2-list-head .hd-card-sub { margin-inline-start: auto; }
 
-/* العنصر المختار: شريط أخضر وخلفية تدرّج خفيفة (هوية مسار) */
-.tk2-list .rv-item.is-selected { background: linear-gradient(270deg, rgba(98, 187, 70, .12), rgba(0, 91, 170, .06)); }
-.tk2-list .rv-item.is-selected::before { width: 3px; background: linear-gradient(180deg, var(--ucas-green), var(--ucas-blue)); }
+/* العنصر المختار: خلفية مسطّحة خفيفة بلا شريط جانبي وحواف حادة */
+.tk2-list .rv-item.is-selected { background: color-mix(in srgb, var(--ucas-blue) 7%, var(--color-surface)); }
+.tk2-list .rv-item.is-selected::before { display: none; }
 
 @media (min-width: 1024px) {
   .tk2-rail { height: var(--tk2-h); }
