@@ -11,6 +11,7 @@
             <button type="button" :class="view === 'list' && 'is-active'" @click="view = 'list'"><List :size="15" /> قائمة</button>
             <button type="button" :class="view === 'board' && 'is-active'" @click="view = 'board'"><Columns3 :size="15" /> لوحة</button>
           </nav>
+          <button v-if="canAnnounce" type="button" class="pbtn is-outline" @click="$emit('announce')"><Megaphone :size="16" /> إعلان جديد</button>
           <button type="button" class="pbtn is-green" @click="openComposer"><Plus :size="16" /> مهمة جديدة</button>
         </div>
       </div>
@@ -292,7 +293,7 @@
 </template>
 
 <script>
-import { Check, FileText, Paperclip, CalendarDays, ChevronDown, Columns3, History, List, Plus, Search, Send, Users, X } from 'lucide-vue-next'
+import { Check, FileText, Paperclip, CalendarDays, ChevronDown, Columns3, History, List, Megaphone, Plus, Search, Send, Users, X } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ChannelPicker from '@/components/shared/ChannelPicker.vue'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
@@ -321,11 +322,15 @@ const emptyForm = () => ({ title: '', description: '', due: '', files: [], assig
 export default {
   name: 'TasksWorkspace',
 
-  components: { BaseModal, ChannelPicker, FileDropzone, GroupPicker, SlideTable, TaskDetailModal, TemplatePicker, Check, FileText, Paperclip, CalendarDays, ChevronDown, Columns3, History, List, Plus, Search, Send, Users, X },
+  components: { BaseModal, ChannelPicker, FileDropzone, GroupPicker, SlideTable, TaskDetailModal, TemplatePicker, Check, FileText, Paperclip, CalendarDays, ChevronDown, Columns3, History, List, Megaphone, Plus, Search, Send, Users, X },
+
+  emits: ['announce'],
 
   props: {
     groups: { type: Array, default: () => [] },
-    composeOnly: { type: Boolean, default: false }
+    composeOnly: { type: Boolean, default: false },
+    /** إظهار زر "إعلان جديد" (صفحة التكليفات) — يرسل حدث announce للأب */
+    canAnnounce: { type: Boolean, default: false }
   },
 
   data() {

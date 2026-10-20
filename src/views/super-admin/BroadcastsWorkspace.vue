@@ -2,6 +2,7 @@
   <!-- مساحة الإعلانات أو الملفات (نفس نظام المهام): ملخص الجهات + فلاتر الخادم + قائمة المرسَلة (المرسل، الجهة، التاريخ، القنوات)
        + تفاصيل الإرسال + نافذة إرسال جديد لمجموعات أو لجنة الإشراف أو المشرفين عبر المنصة وواتساب والبريد -->
   <div class="tk">
+    <template v-if="!composeOnly">
     <section class="hm-stats tk-stats bc-stats" aria-label="ملخص المرسَلة">
       <button v-for="s in stats" :key="s.value" type="button" :class="['hm-stat', fAudience === s.value && 'is-active']" @click="fAudience = fAudience === s.value ? '' : s.value">
         <span class="hm-stat-label"><i :class="['tk-dot', `is-${s.dot}`]" />{{ s.label }}</span>
@@ -113,6 +114,7 @@
         <button v-if="!isSupervisor" type="button" class="pbtn is-red" :disabled="removing" @click="remove"><Trash2 :size="15" /> {{ removing ? 'جارٍ السحب…' : 'سحب الإرسال' }}</button>
       </template>
     </BaseModal>
+    </template>
 
     <!-- إرسال جديد -->
     <BaseModal v-model="composer" :title="isFile ? 'إرسال ملف' : 'إعلان جديد'" size="xl">
@@ -255,8 +257,12 @@ export default {
   props: {
     /** announcement | file */
     type: { type: String, required: true },
-    groups: { type: Array, default: () => [] }
+    groups: { type: Array, default: () => [] },
+    /** الإنشاء فقط: نافذة الإرسال وحدها بلا قائمة (للاستدعاء من صفحة التكليفات) */
+    composeOnly: { type: Boolean, default: false }
   },
+
+  emits: ['close'],
 
   data() {
     return {
@@ -385,11 +391,16 @@ export default {
     fGroup: 'load',
     fSpec: 'load',
     fGender: 'load',
-    fSup: 'load'
+    fSup: 'load',
+    // في وضع الإنشاء فقط: إغلاق النافذة يُنهي الاستدعاء من الصفحة الأم
+    composer(v) {
+      if (this.composeOnly && !v) this.$emit('close')
+    }
   },
 
   async created() {
-    this.load()
+    if (this.composeOnly) this.openComposer()
+    else this.load()
     const people = (role) => api.get('/users', { params: { role } })
       .then(({ data }) => (data.data || data).map((u) => ({ id: u.id, name: u.name, email: u.email || '', whatsapp: u.whatsapp || '' })))
       .catch(() => [])
