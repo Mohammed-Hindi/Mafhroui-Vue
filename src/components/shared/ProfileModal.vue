@@ -96,7 +96,6 @@
                     <span v-for="m in t.team.members" :key="m.id" class="pf-member">
                       <span class="pf-member-av" aria-hidden="true">{{ (m.name || '؟').charAt(0) }}</span>
                       <span class="pf-member-name">{{ m.name }}</span>
-                      <b v-if="m.is_leader" class="pf-leader">قائد</b>
                       <small class="pf-muted">{{ REGIONS[m.region] || '—' }}</small>
                     </span>
                   </div>

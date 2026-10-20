@@ -1182,7 +1182,6 @@
 :root[data-brand="ucas"] [role="dialog"] .pf-member { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 8px; border-radius: 4px; background: var(--color-surface); box-shadow: inset 0 0 0 1px var(--color-border); font-size: 12.5px; }
 :root[data-brand="ucas"] [role="dialog"] .pf-member-av { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 12%, var(--color-surface)); color: var(--ucas-blue); font-weight: 800; font-size: 12px; }
 :root[data-brand="ucas"] [role="dialog"] .pf-member-name { font-weight: 700; color: var(--color-text-900); }
-:root[data-brand="ucas"] [role="dialog"] .pf-leader { padding: 1px 7px; border-radius: 4px; background: color-mix(in srgb, var(--ucas-green) 20%, var(--color-surface)); color: #2F7D1E; font-size: 10.5px; font-weight: 800; }
 :root[data-brand="ucas"] [role="dialog"] .pf-members-empty { padding: 10px 0 2px; }
 @media (max-width: 639.98px) {
   .pf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
