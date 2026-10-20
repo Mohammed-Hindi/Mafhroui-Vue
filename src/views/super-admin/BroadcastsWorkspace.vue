@@ -27,7 +27,7 @@
         </select>
         <select v-if="!isSupervisor" v-model="fSup" class="gr-select" aria-label="المشرف">
           <option value="">كل المشرفين</option>
-          <option v-for="s in supervisors" :key="s.id" :value="s.id">{{ s.name }}</option>
+          <option v-for="s in supOptions" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
         <select v-model="fGroup" class="gr-select" aria-label="المجموعة">
           <option value="">كل المجموعات</option>
@@ -301,13 +301,19 @@ export default {
       return this.type === 'file'
     },
     specNames() {
-      return [...new Set(this.groups.map((g) => g.spec).filter(Boolean))]
+      return [...new Set(this.groupPool('spec').map((g) => g.spec).filter(Boolean))]
     },
     groupById() {
       return Object.fromEntries(this.groups.map((g) => [g.id, g]))
     },
     groupOptions() {
-      return this.groups.map((g) => ({ id: g.id, label: g.section ? `شعبة ${g.section} — ${g.name}` : g.name }))
+      return this.groupPool('group').map((g) => ({ id: g.id, label: g.section ? `شعبة ${g.section} — ${g.name}` : g.name }))
+    },
+    /** المشرفون أصحاب مجموعات مطابِقة للتخصص/الفئة المختارة (وإلا كل المشرفين) */
+    supOptions() {
+      if (!(this.fSpec || this.fGender)) return this.supervisors
+      const ids = new Set(this.groupPool('sup').map((g) => g.sup?.id).filter(Boolean))
+      return this.supervisors.filter((s) => ids.has(s.id))
     },
     /** أعداد الخادم لكل جهة (تتبع كل الفلاتر ما عدا الجهة نفسها) — الضغط على رقم يفلتر بالجهة */
     stats() {
@@ -379,9 +385,9 @@ export default {
     fAudience: 'load',
     fMember: 'load',
     fGroup: 'load',
-    fSpec: 'load',
-    fGender: 'load',
-    fSup: 'load',
+    fSpec: 'cascade',
+    fGender: 'cascade',
+    fSup: 'cascade',
     // في وضع الإنشاء فقط: إغلاق النافذة يُنهي الاستدعاء من الصفحة الأم
     composer(v) {
       if (this.composeOnly && !v) this.$emit('close')
@@ -403,6 +409,27 @@ export default {
   },
 
   methods: {
+    /** المجموعات المطابِقة للفلاتر النشطة (المشرف/التخصص/الفئة) عدا الفلتر المستبعد — أساس الخيارات المتتالية */
+    groupPool(exclude) {
+      return this.groups.filter((g) =>
+        (exclude === 'sup' || !this.fSup || g.sup?.id === this.fSup) &&
+        (exclude === 'spec' || !this.fSpec || g.spec === this.fSpec) &&
+        (exclude === 'gender' || !this.fGender || groupGender(g) === this.fGender))
+    },
+
+    /** إسقاط الفلاتر التي لم تعد ضمن الخيارات المتاحة بعد تغيّر فلتر أعلى */
+    pruneFilters() {
+      if (!this.groups.length) return
+      if (this.fGroup && !this.groupOptions.some((o) => o.id === this.fGroup)) this.fGroup = ''
+      if (this.fSpec && !this.specNames.includes(this.fSpec)) this.fSpec = ''
+    },
+
+    /** فلتر متتالٍ: ينظّف الاختيارات غير المتوافقة ثم يعيد الجلب */
+    cascade() {
+      this.pruneFilters()
+      this.load()
+    },
+
     /** القالب: تعبئة العنوان والنص، الانتقال لخطوة التفاصيل، ولمعة قصيرة على الحقول المعبّأة */
     useTemplate(fields) {
       Object.assign(this.form, fields)

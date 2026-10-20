@@ -386,7 +386,7 @@ export default {
       return Object.fromEntries(this.groups.map((g) => [g.id, g]))
     },
     groupOptions() {
-      return this.groups.map((g) => ({ id: g.id, label: g.section ? `شعبة ${g.section} — ${g.name}` : g.name }))
+      return this.groupPool('group').map((g) => ({ id: g.id, label: g.section ? `شعبة ${g.section} — ${g.name}` : g.name }))
     },
     /** أعداد الحالات من الخادم (meta.counts) — تتبع كل الفلاتر ما عدا الحالة نفسها */
     stats() {
@@ -443,7 +443,7 @@ export default {
       return this.form.assignees.filter((id) => ids.has(id))
     },
     specOptions() {
-      return [...new Map(this.groups.filter((g) => g.specId).map((g) => [g.specId, { id: g.specId, name: g.spec }])).values()]
+      return [...new Map(this.groupPool('spec').filter((g) => g.specId).map((g) => [g.specId, { id: g.specId, name: g.spec }])).values()]
     },
     /** خيارات فلاتر الشريط بصيغة BaseSelect */
     statusOptions() {
@@ -453,10 +453,16 @@ export default {
       return this.committee.map((m) => ({ value: m.id, label: m.name }))
     },
     supervisorOptions() {
-      return this.supervisors.map((s) => ({ value: s.id, label: s.name }))
+      // عند تفعيل درجة/تخصص/فئة: اعرض المشرفين الذين لديهم مجموعات مطابِقة فقط
+      if (!(this.fDegree || this.fSpec || this.fGender)) return this.supervisors.map((s) => ({ value: s.id, label: s.name }))
+      const ids = new Set(this.groupPool('sup').map((g) => g.sup?.id).filter(Boolean))
+      return this.supervisors.filter((s) => ids.has(s.id)).map((s) => ({ value: s.id, label: s.name }))
     },
     degreeOptions() {
-      return Object.entries(this.DEGREES).map(([value, label]) => ({ value, label }))
+      // الدرجات الموجودة فعلًا ضمن المجموعات المطابِقة لباقي الفلاتر (وإلا كل الدرجات)
+      const present = new Set(this.groupPool('degree').map((g) => g.degree).filter(Boolean))
+      const entries = Object.entries(this.DEGREES)
+      return (present.size ? entries.filter(([v]) => present.has(v)) : entries).map(([value, label]) => ({ value, label }))
     },
     canCreate() {
       return !!this.form.title && this.targets.length > 0
@@ -487,10 +493,10 @@ export default {
       this.load()
     },
     fGroup: 'load',
-    fSup: 'load',
-    fDegree: 'load',
-    fSpec: 'load',
-    fGender: 'load',
+    fSup: 'cascade',
+    fDegree: 'cascade',
+    fSpec: 'cascade',
+    fGender: 'cascade',
     fStatus: 'load'
   },
 
@@ -581,6 +587,29 @@ export default {
         group: !t.team_id ? (this.isStaff ? 'لجنة الإشراف' : 'مهمة للمشرف') : section ? `شعبة ${section}` : team.name || g?.name || '—',
         sup: !t.team_id ? (t.assignees || []).map((a) => a.name).join('، ') || '—' : team.supervisor?.name || g?.sup.name || '—'
       }
+    },
+
+    /** المجموعات المطابِقة للفلاتر النشطة (المشرف/الدرجة/التخصص/الفئة) عدا الفلتر المستبعد — أساس الخيارات المتتالية */
+    groupPool(exclude) {
+      return this.groups.filter((g) =>
+        (exclude === 'sup' || !this.fSup || g.sup?.id === this.fSup) &&
+        (exclude === 'degree' || !this.fDegree || g.degree === this.fDegree) &&
+        (exclude === 'spec' || !this.fSpec || g.specId === this.fSpec) &&
+        (exclude === 'gender' || !this.fGender || groupGender(g) === this.fGender))
+    },
+
+    /** إسقاط الفلاتر التي لم تعد ضمن الخيارات المتاحة بعد تغيّر فلتر أعلى (مثلًا مجموعة لا تخص المشرف المختار) */
+    pruneFilters() {
+      if (!this.groups.length) return
+      if (this.fGroup && !this.groupOptions.some((o) => o.id === this.fGroup)) this.fGroup = ''
+      if (this.fSpec && !this.specOptions.some((o) => o.id === this.fSpec)) this.fSpec = ''
+      if (this.fDegree && !this.degreeOptions.some((o) => o.value === this.fDegree)) this.fDegree = ''
+    },
+
+    /** فلتر متتالٍ: ينظّف الاختيارات غير المتوافقة ثم يعيد الجلب */
+    cascade() {
+      this.pruneFilters()
+      this.load()
     },
 
     /** GET /tasks بالفلاتر الحالية؛ تُهمل الاستجابات القديمة إذا تغيّر فلتر قبل وصولها */
