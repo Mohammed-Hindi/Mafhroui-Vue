@@ -342,18 +342,9 @@
   .us-steps { gap: 18px; }
 }
 
-/* ---------- زر الدخول المتوهّج (مرجع 101114): كبسولة كحلية يتحرك داخلها توهّج أخضر←أزرق بشبكة نقاط ---------- */
-@property --gx { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
-.us-glow-btn { position: relative; isolation: isolate; overflow: hidden; border: 1px solid rgba(255, 255, 255, .18); border-radius: 999px; background: #08213D; color: #FFFFFF; box-shadow: 0 6px 18px rgba(2, 30, 60, .28); transition: border-color var(--ucas-color-speed, .8s) ease, background-color var(--ucas-color-speed, .8s) ease; }
-.us-glow-btn::before, .us-glow-btn::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; animation: us-glow 4.5s ease-in-out infinite alternate; }
-.us-glow-btn::before { background: radial-gradient(60% 160% at var(--gx) 50%, rgba(98, 187, 70, .95), rgba(14, 105, 156, .55) 45%, transparent 75%); }
-.us-glow-btn::after { background: radial-gradient(rgba(255, 255, 255, .55) .9px, transparent 1.3px) 0 0 / 5px 5px; -webkit-mask-image: radial-gradient(45% 140% at var(--gx) 50%, #000, transparent 70%); mask-image: radial-gradient(45% 140% at var(--gx) 50%, #000, transparent 70%); }
-.us-glow-btn:hover { border-color: rgba(98, 187, 70, .7); color: #FFFFFF; background: #0A2A4D; }
-@keyframes us-glow { from { --gx: 0%; } to { --gx: 100%; } }
-@media (prefers-reduced-motion: reduce) { .us-glow-btn::before, .us-glow-btn::after { animation: none; --gx: 20%; } }
-/* تحسين زر الدخول: لمعة علوية داخلية، توهّج أوضح، ظل أخضر خفيف عند المرور */
-.us-glow-btn { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 8px 22px rgba(2, 30, 60, .35); }
-.us-glow-btn:hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 8px 26px rgba(98, 187, 70, .35); }
+/* ---------- الزر الأساسي الحاد بهوية صفحة الهبوط: أزرق مصمت بزوايا 4px (بديل زر النيون المتوهّج) ---------- */
+.us-glow-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--ucas-blue); border-radius: 4px; background: var(--ucas-blue); color: #FFFFFF; box-shadow: none; transition: background-color var(--ucas-color-speed, .8s) ease, border-color var(--ucas-color-speed, .8s) ease; }
+.us-glow-btn:hover { border-color: #004A8C; background: #004A8C; color: #FFFFFF; box-shadow: none; }
 .us-flip { transform: scaleX(-1); }
 /* الهيرو والإحصائيات خلفية واحدة، ومطر البيانات يغطي الاثنين */
 .us-hero-wrap { position: relative; overflow: hidden; background: var(--us-grad); }
@@ -505,6 +496,12 @@
 .au-split-alert.is-success { background: rgba(16, 196, 105, .1); color: #0B9A52; }
 .au-split-hint { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 20px; padding: 12px 14px; border-radius: 10px; background: rgba(0, 91, 170, .07); font-size: 13.5px; line-height: 1.8; color: var(--ucas-blue); }
 .au-split-hint svg { flex-shrink: 0; margin-top: 3px; }
+/* شروط كلمة المرور: قائمة حيّة يتحوّل كل شرط للأخضر عند تحققه */
+.au-pass-reqs { list-style: none; margin: 0 0 20px; padding: 12px 14px; border-radius: 10px; background: rgba(0, 91, 170, .06); display: grid; grid-template-columns: 1fr 1fr; gap: 9px 16px; }
+.au-pass-req { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: #8A93A3; transition: color var(--ucas-color-speed, .5s) ease; }
+.au-pass-req svg { flex-shrink: 0; color: currentColor; }
+.au-pass-req.is-ok { color: #2E9E5B; }
+@media (max-width: 440px) { .au-pass-reqs { grid-template-columns: 1fr; } }
 a.au-split-submit { margin-top: 4px; }
 
 /* ---------- أرشيف المشاريع: شبكة معرض أعمال أكاديمي (صورة أولًا، نص هادئ، مسافات واسعة) ---------- */

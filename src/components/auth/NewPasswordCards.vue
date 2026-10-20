@@ -14,7 +14,12 @@
     </template>
 
     <form v-else novalidate @submit.prevent="submit">
-      <p class="au-split-hint"><Info :size="17" /> يجب ألا تقل عن ثمانية أحرف، وأن تحتوي على أرقام ورموز خاصة مثل <bdi dir="ltr">@ % #</bdi></p>
+      <ul class="au-pass-reqs" aria-label="شروط كلمة المرور">
+        <li :class="['au-pass-req', checks.length && 'is-ok']"><component :is="checks.length ? 'CheckCircle2' : 'Circle'" :size="15" /> ٨ أحرف على الأقل</li>
+        <li :class="['au-pass-req', checks.upper && 'is-ok']"><component :is="checks.upper ? 'CheckCircle2' : 'Circle'" :size="15" /> حرف كبير <bdi dir="ltr">(A–Z)</bdi></li>
+        <li :class="['au-pass-req', checks.lower && 'is-ok']"><component :is="checks.lower ? 'CheckCircle2' : 'Circle'" :size="15" /> حرف صغير <bdi dir="ltr">(a–z)</bdi></li>
+        <li :class="['au-pass-req', checks.number && 'is-ok']"><component :is="checks.number ? 'CheckCircle2' : 'Circle'" :size="15" /> رقم <bdi dir="ltr">(0–9)</bdi></li>
+      </ul>
 
       <label class="au-split-field">
         <span>كلمة المرور الجديدة</span>
@@ -46,21 +51,21 @@
 </template>
 
 <script>
-import { AlertCircle, Check, CheckCircle2, Eye, EyeOff, Info, Lock, LogIn, ShieldCheck } from 'lucide-vue-next'
+import { AlertCircle, Check, CheckCircle2, Circle, Eye, EyeOff, Lock, LogIn, ShieldCheck } from 'lucide-vue-next'
 import AuthSplit from '@/components/auth/AuthSplit.vue'
 import PasswordStrengthMeter from '@/components/shared/PasswordStrengthMeter.vue'
-import { required, strongPassword, matches } from '@/utils/validators'
+import { required, strongPassword, matches, passwordStrength } from '@/utils/validators'
 
 export default {
   name: 'NewPasswordCards',
 
-  components: { AlertCircle, AuthSplit, Check, CheckCircle2, Eye, EyeOff, Info, Lock, LogIn, PasswordStrengthMeter, ShieldCheck },
+  components: { AlertCircle, AuthSplit, Check, CheckCircle2, Circle, Eye, EyeOff, Lock, LogIn, PasswordStrengthMeter, ShieldCheck },
 
   props: {
     title: { type: String, default: 'تغيير كلمة المرور' },
     subtitle: { type: String, default: '' },
-    /** رابط العودة أسفل الفورم */
-    back: { type: Object, default: () => ({ to: { name: 'login' }, label: 'العودة إلى تسجيل الدخول' }) },
+    /** رابط العودة أسفل الفورم — للرئيسية (زر الدخول يظهر بالفعل في حالتَي النجاح/الرابط غير الصالح) */
+    back: { type: Object, default: () => ({ to: { name: 'landing' }, label: 'العودة للرئيسية' }) },
     /** نجاح التعيين: يُستبدل الفورم برسالة وزر الدخول */
     done: { type: Boolean, default: false },
     /** رابط غير صالح/مستخدم/منتهٍ: يُخفى الفورم ويُعرض الخطأ مع زر الدخول */
@@ -78,6 +83,13 @@ export default {
       show: false,
       form: { password: '', password_confirmation: '' },
       errors: { password: '', password_confirmation: '' }
+    }
+  },
+
+  computed: {
+    /** تحقق شروط كلمة المرور لحظيًا لتلوين القائمة */
+    checks() {
+      return passwordStrength(this.form.password).checks
     }
   },
 
