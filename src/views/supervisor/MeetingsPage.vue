@@ -124,92 +124,8 @@
       </template>
     </BaseModal>
 
-    <!-- تفاصيل المجموعة: الأعضاء بمعلوماتهم الكاملة + بيانات المشروع -->
-    <BaseModal
-      :model-value="teamOpen"
-      :title="teamDetail?.name || 'تفاصيل المجموعة'"
-      :description="teamSubtitle"
-      size="xl"
-      @update:model-value="!$event && closeTeam()"
-    >
-      <SkeletonLoader v-if="teamLoading" variant="list" :rows="3" />
-      <div v-else-if="teamDetail" class="svm-team">
-        <!-- بطاقات المعلومات: صف أفقي ياخد كل العرض بدل التكديس العمودي -->
-        <div class="svm-meta">
-          <div class="svm-meta-cell">
-            <span class="svm-meta-label">المشروع</span>
-            <span class="svm-meta-value">{{ teamDetail.project?.name || 'لم يُسجَّل مشروع بعد' }}</span>
-          </div>
-          <div class="svm-meta-cell">
-            <span class="svm-meta-label">نوع المشروع</span>
-            <span class="svm-meta-value">{{ teamDetail.project?.types?.join(' · ') || '—' }}</span>
-          </div>
-          <div class="svm-meta-cell">
-            <span class="svm-meta-label">المشرف</span>
-            <button v-if="teamDetail.supervisor?.id" type="button" class="svm-meta-link" @click="openSupervisor">
-              {{ teamDetail.supervisor.name }} <UserRound :size="14" />
-            </button>
-            <span v-else class="svm-meta-value">—</span>
-          </div>
-          <div class="svm-meta-cell">
-            <span class="svm-meta-label">قائد المجموعة</span>
-            <span class="svm-meta-value">{{ teamDetail.leader?.name || '—' }}</span>
-          </div>
-          <div class="svm-meta-cell is-wide">
-            <span class="svm-meta-label">وصف المشروع</span>
-            <span class="svm-meta-desc">{{ teamDetail.project?.description || 'لا يوجد وصف للمشروع' }}</span>
-          </div>
-        </div>
-
-        <!-- الأعضاء بمعلوماتهم الكاملة -->
-        <section class="svm-team-members">
-          <header class="svm-team-members-head">
-            <h4>أعضاء المجموعة <b>{{ teamMembers.length }}</b></h4>
-          </header>
-          <div class="gr-members">
-            <table>
-              <thead>
-                <tr>
-                  <th>الطالب</th>
-                  <th>الرقم الجامعي</th>
-                  <th>مكان التواجد</th>
-                  <th>واتساب</th>
-                  <th>البريد</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="mem in teamMembers" :key="mem.id">
-                  <td>
-                    <span class="svm-member">
-                      <span class="gm-av" aria-hidden="true">{{ (mem.student?.name || '?').charAt(0) }}</span>
-                      <span class="gr-member-name">{{ mem.student?.name || '—' }}</span>
-                      <span v-if="mem.is_leader" class="svm-leader" title="قائد المجموعة" aria-label="قائد المجموعة">
-                        <StarIcon :size="13" fill="currentColor" />
-                      </span>
-                    </span>
-                  </td>
-                  <td><span class="mono">{{ mem.student?.university_number || '—' }}</span></td>
-                  <td>{{ REGIONS[mem.student?.region] || '—' }}</td>
-                  <td><span class="mono">{{ mem.student?.whatsapp || '—' }}</span></td>
-                  <td><span class="mono">{{ mem.student?.email || '—' }}</span></td>
-                </tr>
-                <tr v-if="!teamMembers.length"><td colspan="5" class="gr-empty">لا يوجد أعضاء في هذه المجموعة</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-      <p v-else class="gr-muted">تعذّر تحميل بيانات المجموعة</p>
-    </BaseModal>
-
-    <!-- بروفايل المشرف: يفتح من داخل بوب-أب المجموعة — GET /supervisors/{id}/profile -->
-    <ProfileModal
-      v-model="supervisorOpen"
-      kind="supervisor"
-      :layer="1"
-      :person-id="teamDetail?.supervisor?.id"
-      :name="teamDetail?.supervisor?.name || ''"
-    />
+    <!-- تفاصيل المجموعة (مشتركة مع صفحة المواعيد) -->
+    <TeamDetailsModal v-model="teamOpen" :team-id="teamId" :spec="specOf(teamId)" />
 
     <!-- تأكيد إلغاء الاجتماع: DELETE /meetings/{id} -->
     <BaseModal :model-value="!!cancelTarget" title="إلغاء الاجتماع" size="sm" @update:model-value="!$event && (cancelTarget = null)">
@@ -224,25 +140,23 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { CalendarClock, MessageCircle, Plus, Search, Star as StarIcon, Trash2, UserRound, Users, Video as VideoIcon } from 'lucide-vue-next'
+import { CalendarClock, MessageCircle, Plus, Search, Trash2, Users, Video as VideoIcon } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
-import ProfileModal from '@/components/shared/ProfileModal.vue'
+import TeamDetailsModal from '@/components/shared/TeamDetailsModal.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
 import api, { sendWhatsapp } from '@/services/api'
-import { REGIONS } from '@/utils/progressData'
 
 const DAY = 864e5
 
 export default {
   name: 'SupervisorMeetingsPage',
 
-  components: { BaseModal, BaseSelect, ProfileModal, CalendarClock, MessageCircle, Plus, Search, StarIcon, Trash2, UserRound, Users, VideoIcon },
+  components: { BaseModal, BaseSelect, TeamDetailsModal, CalendarClock, MessageCircle, Plus, Search, Trash2, Users, VideoIcon },
 
   data() {
     return {
-      REGIONS,
       loading: true,
       meetingsLoading: true,
       status: '',
@@ -257,12 +171,10 @@ export default {
       cancelTarget: null,
       cancelling: false,
       form: {},
-      /** بوب-أب تفاصيل المجموعة (أعضاء + مشروع) */
+      /** بوب-أب تفاصيل المجموعة (أعضاء + مشروع) — مشترك مع صفحة المواعيد */
       teamOpen: false,
-      teamLoading: false,
-      teamDetail: null,
-      /** بوب-أب بروفايل المشرف (يفتح من داخل بوب-أب المجموعة) */
-      supervisorOpen: false
+      /** معرّف المجموعة المعروضة في البوب-أب */
+      teamId: null
     }
   },
 
@@ -367,20 +279,9 @@ export default {
     nextMeeting() {      return this.scopedUpcoming[0] || null
     },
 
-    /** أعضاء المجموعة المعروضة في البوب-أب */
-    teamMembers() {
-      return this.teamDetail?.members || []
-    },
-
-    /** سطر العنوان الفرعي: الشعبة والتخصص */
-    teamSubtitle() {
-      if (!this.teamDetail) return ''
-      const t = this.myTeams.find((x) => x.id === this.teamDetail.id)
-      const parts = []
-      if (this.teamDetail.section) parts.push(`شعبة ${this.teamDetail.section}`)
-      if (t?.spec) parts.push(t.spec)
-      parts.push(`${this.teamMembers.length} أعضاء`)
-      return parts.join(' · ')
+    /** تخصص مجموعة معيّنة (لسطر العنوان الفرعي في نافذة التفاصيل) */
+    specOf(teamId) {
+      return this.myTeams.find((x) => x.id === teamId)?.spec || ''
     },
 
     /** هل في فلتر مفعّل؟ (لإظهار زر مسح الفلاتر) */
@@ -444,30 +345,10 @@ export default {
       return this.myTeams.find((t) => t.id === teamId)?.members?.length || 0
     },
 
-    /** فتح بوب-أب تفاصيل المجموعة: GET /teams/{id} */
-    async openTeam(teamId) {
+    /** فتح بوب-أب تفاصيل المجموعة (التحميل جوه المكوّن المشترك) */
+    openTeam(teamId) {
+      this.teamId = teamId
       this.teamOpen = true
-      this.teamLoading = true
-      this.teamDetail = null
-      try {
-        const { data } = await api.get(`/teams/${teamId}`)
-        this.teamDetail = data.data || data
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر تحميل بيانات المجموعة')
-      } finally {
-        this.teamLoading = false
-      }
-    },
-
-    closeTeam() {
-      this.teamOpen = false
-      this.teamDetail = null
-    },
-
-    /** فتح بروفايل المشرف (ProfileModal) من داخل بوب-أب المجموعة */
-    openSupervisor() {
-      if (!this.teamDetail?.supervisor?.id) return
-      this.supervisorOpen = true
     },
 
     /** اجتماعات كل المجموعات — بالتوازي حتى لا تتأخر البطاقة الأولى */
