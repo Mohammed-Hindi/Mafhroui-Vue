@@ -23,11 +23,12 @@
           v-model="status"
           class="sup-select"
           aria-label="الحالة"
-          placeholder="كل الاجتماعات"
+          :placeholder="statusPlaceholder"
           include-placeholder-option
+          :disabled="!scopeCounts.total"
           :options="statusOptions"
         />
-        <BaseSelect v-model="sort" class="sup-select" aria-label="الترتيب" :options="sortOptions" />
+        <BaseSelect v-model="sort" class="sup-select" aria-label="الترتيب" :disabled="!scopeCounts.total" :options="sortOptions" />
       </div>
 
       <!-- جدول الاجتماعات: اسم الاجتماع (والملاحظات تحته) ثم المجموعة ثم الموعد ثم الحالة ثم الإجراءات -->
@@ -193,20 +194,36 @@ export default {
       return this.myTeams.map((t) => ({ value: t.id, label: t.section ? `شعبة ${t.section}` : t.name }))
     },
 
-    statusOptions() {
-      return [
-        { value: 'upcoming', label: 'القادمة' },
-        { value: 'past', label: 'المنتهية' }
-      ]
+    /** ما هو متاح فعليًا داخل النطاق المختار (مجموعة) */
+    scopeCounts() {
+      const list = this.scoped
+      return {
+        total: list.length,
+        upcoming: list.filter((m) => !m.past).length,
+        past: list.filter((m) => m.past).length
+      }
     },
 
+    /** خيارات الحالة حيّة: ما في اجتماعات قادمة في النطاق؟ ما بيظهر خيار "القادمة" */
+    statusOptions() {
+      const opts = []
+      if (this.scopeCounts.upcoming) opts.push({ value: 'upcoming', label: 'القادمة' })
+      if (this.scopeCounts.past) opts.push({ value: 'past', label: 'المنتهية' })
+      return opts
+    },
+
+    statusPlaceholder() {
+      return this.scopeCounts.total ? 'كل الاجتماعات' : 'لا اجتماعات'
+    },
+
+    /** خيارات الترتيب حيّة: "القادمة الأقرب" تظهر فقط إذا في اجتماعات قادمة */
     sortOptions() {
-      return [
-        { value: 'soon', label: 'القادمة الأقرب أولًا' },
-        { value: 'new', label: 'الأحدث أولًا' },
-        { value: 'old', label: 'الأقدم أولًا' },
-        { value: 'title', label: 'العنوان أبجديًا' }
-      ]
+      const opts = []
+      if (this.scopeCounts.upcoming) opts.push({ value: 'soon', label: 'القادمة الأقرب أولًا' })
+      opts.push({ value: 'new', label: 'الأحدث أولًا' })
+      opts.push({ value: 'old', label: 'الأقدم أولًا' })
+      opts.push({ value: 'title', label: 'العنوان أبجديًا' })
+      return opts
     },
 
     /** كل اجتماعات مجموعات المشرف، مرتّبة بالأقرب زمنًا */
@@ -282,6 +299,13 @@ export default {
     }
   },
 
+  watch: {
+    /** تغيير المجموعة يغيّر المتاح فعليًا — نرجّع الاختيار الذي لم يعد متاحًا */
+    group() {
+      this.syncFilters()
+    }
+  },
+
   async created() {
     try {
       await this.fetchTeams()
@@ -291,10 +315,17 @@ export default {
     await this.loadAllMeetings()
     this.loading = false
     this.meetingsLoading = false
+    this.syncFilters()
   },
 
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams', 'createMeeting', 'deleteMeeting']),
+
+    /** مزامنة الفلاتر مع الخيارات المتاحة: الحالة ترجع "الكل" والترتيب يرجع لأول خيار متاح */
+    syncFilters() {
+      if (this.status && !this.statusOptions.some((o) => o.value === this.status)) this.status = ''
+      if (!this.sortOptions.some((o) => o.value === this.sort)) this.sort = this.sortOptions[0]?.value || ''
+    },
 
     leaderOf(teamId) {
       return this.teams.find((t) => t.id === teamId)?.leader || null
@@ -338,7 +369,10 @@ export default {
         await this.createMeeting(f.teamId, { title: f.title, scheduled_at: `${f.at.replace('T', ' ')}:00`, google_meet_link: f.link || null, notes: f.notes || null })
         this.$toast?.success('تم إنشاء الاجتماع')
         this.createOpen = false
+        // لو الفلتر على مجموعة ثانية، ننتقل لمجموعة الاجتماع الجديد حتى يظهر فورًا
+        if (this.group && this.group !== f.teamId) this.group = f.teamId
         this.status = 'upcoming'
+        this.syncFilters()
         await this.refreshTeam(f.teamId)
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء الاجتماع')
