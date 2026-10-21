@@ -7098,5 +7098,9 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sup-tall-card .sup-tall-slide .gr-table-wrap { flex: 1; min-height: 0; overflow: auto; }
 /* رأس الجدول يثبت أثناء التمرير */
 .sup-tall-card .sup-tall-slide .gr-table-wrap .gr-table thead tr { position: sticky; top: 0; z-index: 3; }
+/* المعرض (كروت المشاريع/المجلدات) يتمرّر جوّاه زي الجدول */
+.sup-tall-card .sup-tall-slide .ab-folders,
+.sup-tall-card .sup-tall-slide .ab-gallery { flex: 1; min-height: 0; overflow: auto; }
 /* شريط الملخص وشريط الشرائح: ارتفاع ثابت أسفل البطاقة */
 .sup-tall-card .sup-tall-slide .gr-sumbar, .sup-tall-card .sup-tall-slide .gr-slider { flex: 0 0 auto; }
+.sup-tall-card > .gr-sumbar { flex-shrink: 0; }

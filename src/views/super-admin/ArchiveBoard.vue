@@ -90,7 +90,7 @@
     </section>
 
     <!-- عرض المشاريع: فلاتر بجانب البحث + تبديل معرض/جدول (بنية جداولنا القياسية) -->
-    <section v-else :class="['gr', 'gr-card', 'evp-card', isSup && layout === 'table' && 'sup-tall-card']">
+    <section v-else :class="['gr', 'gr-card', 'evp-card', isSup && 'sup-tall-card']">
       <div class="gr-card-title">
         <h3>معرض المشاريع</h3>
         <span class="dash-chip">{{ visible.length }} مشروع</span>
@@ -140,7 +140,8 @@
         <SkeletonLoader v-if="loading" :rows="5" height="44px" />
         <!-- جدول المشاريع بالسلايدر والشريط الأخضر: موافقة المشرف + موافقة لجنة الإشراف ← أرشفة -->
         <!-- معرض الأعمال: بطاقة لكل مشروع (الشعبة، التخصص، الطلبة، المشرف، حالة الاعتماد)، الضغط يفتح مجلد المشروع -->
-        <template v-else-if="layout === 'gallery'">
+      <template v-else-if="layout === 'gallery'">
+        <div class="sup-tall-slide">
           <!-- مجلد لكل تخصص (كأنظمة إدارة الملفات): العدد، المؤرشفة، المميّزة، والدرجات — الضغط يفتح مشاريع التخصص -->
           <template v-if="!f.spec && !q">
             <p v-if="!folders.length" class="gr-empty">لا توجد مشاريع</p>
@@ -219,11 +220,12 @@
               </template>
             </SlideTable>
           </template>
-          <div class="gr-sumbar">
-            <span>عدد المشاريع: {{ visible.length }}</span>
-            <span v-for="(l, k) in REVIEW" :key="k">{{ l.short }}: {{ visible.filter((p) => stageOf(p) === k).length }}</span>
-          </div>
-        </template>
+        </div>
+        <div class="gr-sumbar">
+          <span>عدد المشاريع: {{ visible.length }}</span>
+          <span v-for="(l, k) in REVIEW" :key="k">{{ l.short }}: {{ visible.filter((p) => stageOf(p) === k).length }}</span>
+        </div>
+      </template>
 
       <div v-else class="sup-tall-slide">
         <SlideTable :rows="visible" :size="pageSize" label="المشاريع">
