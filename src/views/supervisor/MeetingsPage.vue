@@ -134,51 +134,71 @@
       @update:model-value="!$event && closeTeam()"
     >
       <SkeletonLoader v-if="teamLoading" variant="list" :rows="3" />
-      <div v-else-if="teamDetail" class="gr-detail svm-team-detail">
-        <aside class="gr-side">
-          <h4>المشروع</h4>
-          <p class="gr-sup">{{ teamDetail.project?.name || 'لم يُسجَّل مشروع بعد' }}</p>
-          <p class="gr-desc">{{ teamDetail.project?.description || 'لا يوجد وصف للمشروع' }}</p>
-          <h4>نوع المشروع</h4>
-          <p class="gr-desc">{{ teamDetail.project?.types?.join(' · ') || '—' }}</p>
-          <h4>المشرف</h4>
-          <p class="gr-sup">{{ teamDetail.supervisor?.name || '—' }}</p>
-          <h4>قائد المجموعة</h4>
-          <p class="gr-sup">{{ teamDetail.leader?.name || '—' }}</p>
-        </aside>
-
-        <div class="gr-members gr-detail-full">
-          <table>
-            <thead>
-              <tr>
-                <th>الطالب</th>
-                <th>الرقم الجامعي</th>
-                <th>مكان التواجد</th>
-                <th>واتساب</th>
-                <th>البريد</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="mem in teamMembers" :key="mem.id">
-                <td>
-                  <span class="svm-member">
-                    <span class="gm-av" aria-hidden="true">{{ (mem.student?.name || '?').charAt(0) }}</span>
-                    <span class="gr-member-name">{{ mem.student?.name || '—' }}</span>
-                    <span v-if="mem.is_leader" class="svt-leader">قائد المجموعة</span>
-                  </span>
-                </td>
-                <td><span class="mono">{{ mem.student?.university_number || '—' }}</span></td>
-                <td>{{ REGIONS[mem.student?.region] || '—' }}</td>
-                <td><span class="mono">{{ mem.student?.whatsapp || '—' }}</span></td>
-                <td><span class="mono">{{ mem.student?.email || '—' }}</span></td>
-              </tr>
-              <tr v-if="!teamMembers.length"><td colspan="5" class="gr-empty">لا يوجد أعضاء في هذه المجموعة</td></tr>
-            </tbody>
-          </table>
+      <div v-else-if="teamDetail" class="svm-team">
+        <!-- بطاقات المعلومات: صف أفقي ياخد كل العرض بدل التكديس العمودي -->
+        <div class="svm-meta">
+          <div class="svm-meta-cell">
+            <span class="svm-meta-label">المشروع</span>
+            <span class="svm-meta-value">{{ teamDetail.project?.name || 'لم يُسجَّل مشروع بعد' }}</span>
+          </div>
+          <div class="svm-meta-cell">
+            <span class="svm-meta-label">نوع المشروع</span>
+            <span class="svm-meta-value">{{ teamDetail.project?.types?.join(' · ') || '—' }}</span>
+          </div>
+          <div class="svm-meta-cell">
+            <span class="svm-meta-label">المشرف</span>
+            <span class="svm-meta-value">{{ teamDetail.supervisor?.name || '—' }}</span>
+          </div>
+          <div class="svm-meta-cell">
+            <span class="svm-meta-label">قائد المجموعة</span>
+            <span class="svm-meta-value">{{ teamDetail.leader?.name || '—' }}</span>
+          </div>
+          <div class="svm-meta-cell is-wide">
+            <span class="svm-meta-label">وصف المشروع</span>
+            <span class="svm-meta-desc">{{ teamDetail.project?.description || 'لا يوجد وصف للمشروع' }}</span>
+          </div>
         </div>
+
+        <!-- الأعضاء بمعلوماتهم الكاملة -->
+        <section class="svm-team-members">
+          <header class="svm-team-members-head">
+            <h4>أعضاء المجموعة</h4>
+            <b>{{ teamMembers.length }}</b>
+          </header>
+          <div class="gr-members">
+            <table>
+              <thead>
+                <tr>
+                  <th>الطالب</th>
+                  <th>الرقم الجامعي</th>
+                  <th>مكان التواجد</th>
+                  <th>واتساب</th>
+                  <th>البريد</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="mem in teamMembers" :key="mem.id">
+                  <td>
+                    <span class="svm-member">
+                      <span class="gm-av" aria-hidden="true">{{ (mem.student?.name || '?').charAt(0) }}</span>
+                      <span class="gr-member-name">{{ mem.student?.name || '—' }}</span>
+                      <span v-if="mem.is_leader" class="svt-leader">قائد المجموعة</span>
+                    </span>
+                  </td>
+                  <td><span class="mono">{{ mem.student?.university_number || '—' }}</span></td>
+                  <td>{{ REGIONS[mem.student?.region] || '—' }}</td>
+                  <td><span class="mono">{{ mem.student?.whatsapp || '—' }}</span></td>
+                  <td><span class="mono">{{ mem.student?.email || '—' }}</span></td>
+                </tr>
+                <tr v-if="!teamMembers.length"><td colspan="5" class="gr-empty">لا يوجد أعضاء في هذه المجموعة</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
       <p v-else class="gr-muted">تعذّر تحميل بيانات المجموعة</p>
     </BaseModal>
+
 
     <!-- تأكيد إلغاء الاجتماع: DELETE /meetings/{id} -->
     <BaseModal :model-value="!!cancelTarget" title="إلغاء الاجتماع" size="sm" @update:model-value="!$event && (cancelTarget = null)">

@@ -7024,8 +7024,31 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .svm-team-link b { min-width: 20px; padding: 1px 6px; border-radius: 4px; background: var(--ucas-blue); color: #FFFFFF; font-size: 11.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
 /* صف الطالب داخل بوب-أب المجموعة: صورة رمزية + اسم + شارة القائد */
 .svm-member { display: inline-flex; align-items: center; gap: 8px; }
-/* بوب-أب المجموعة: بلا حشوة إضافية (البوابة تحسبها) */
-.svm-team-detail { padding: 0; }
+/* بطاقات معلومات المجموعة داخل البوب-أب: صف أفقي ياخد كل العرض */
+.svm-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.svm-meta-cell {
+  display: flex; flex-direction: column; gap: 6px; padding: 12px 14px;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px;
+}
+.svm-meta-cell.is-wide { grid-column: 1 / -1; }
+.svm-meta-label { font-size: 12px; font-weight: 700; color: var(--color-text-400); }
+.svm-meta-value { font-size: 14px; font-weight: 700; color: var(--color-text-900); line-height: 1.6; }
+.svm-meta-desc { font-size: 13.5px; line-height: 1.8; color: var(--color-text-700); white-space: pre-line; }
+.svm-meta-link {
+  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+  padding: 0; font: inherit; font-size: 14px; font-weight: 700; color: var(--ucas-blue); text-align: start;
+}
+.svm-meta-link:hover { text-decoration: underline; }
+.svm-meta-link:focus-visible { outline: 2px solid var(--ucas-blue); outline-offset: 2px; }
+.svm-meta-link svg { flex-shrink: 0; }
+/* قسم أعضاء المجموعة داخل البوب-أب */
+.svm-team-members { margin-top: 18px; }
+.svm-team-members-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.svm-team-members-head h4 { margin: 0; font-size: 13.5px; font-weight: 800; color: var(--ucas-blue); }
+.svm-team-members-head b {
+  min-width: 22px; padding: 1px 8px; border-radius: 4px; background: var(--ucas-blue); color: #FFFFFF;
+  font-size: 12px; font-weight: 800; text-align: center; font-variant-numeric: tabular-nums;
+}
 /* الموعد: التاريخ ثم الساعة تحته */
 .svm-when { display: block; margin-top: 2px; font-size: 12px; font-weight: 600; color: var(--color-text-400); font-variant-numeric: tabular-nums; }
 /* شريحة الحالة: القادمة سماوية والمنتهية خضراء */
