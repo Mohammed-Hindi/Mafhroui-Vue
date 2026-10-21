@@ -28,7 +28,6 @@
           :options="teamOptions"
           @change="pickTeam"
         />
-        <span v-if="selectedTeam?.projectName" class="svt-team-proj">{{ selectedTeam.projectName }}</span>
         <BaseSelect
           v-model="who"
           class="sup-select"
@@ -105,6 +104,7 @@
         :tasks="shownTasks"
         :loading="tasksLoading"
         :can-create="true"
+        :hint="selectedTeam?.projectName || ''"
         :members="selectedTeam?.members || []"
         :can-drag="false"
         :can-delete="true"

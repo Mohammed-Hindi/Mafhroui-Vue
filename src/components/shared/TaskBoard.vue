@@ -2,7 +2,7 @@
   <div>
     <!-- شريط الأدوات فوق اللوحة: أزرار إضافية من الصفحة المستهلِكة (slot: actions) + إنشاء/أرشفة -->
     <div v-if="canCreate || canDelete || $slots.actions" class="flex items-center justify-between gap-4 mb-5 flex-wrap">
-      <p v-if="canCreate" class="text-body-sm text-text-600">{{ canDrag ? 'اسحب البطاقات أو استخدم القائمة على البطاقة لتحديث الحالة' : 'الطلاب يحرّكون حالة المهام من لوحتهم' }}</p>
+      <p v-if="hint || canCreate" class="text-body-sm text-text-600" :title="hint || undefined">{{ hint || (canDrag ? 'اسحب البطاقات أو استخدم القائمة على البطاقة لتحديث الحالة' : 'الطلاب يحرّكون حالة المهام من لوحتهم') }}</p>
       <div class="flex items-center gap-2 ms-auto">
         <button v-if="canDelete" type="button" class="pbtn is-outline" @click="openArchive"><ArchiveIcon :size="16" /> الأرشيف</button>
         <button v-if="canCreate" type="button" class="pbtn is-green" @click="openCreate()"><Plus :size="16" /> مهمة جديدة</button>
@@ -378,7 +378,9 @@ export default {
     /** إضافة ملاحظات على المهمة (الطالب يقرأ الملاحظات فقط ويحرّك الحالة) */
     canNote: { type: Boolean, default: true },
     /** طلاب المجموعة لاختيار المنتسبين للمهمة الجديدة */
-    members: { type: Array, default: () => [] }
+    members: { type: Array, default: () => [] },
+    /** سطر إرشادي فوق اللوحة (المشرف: اسم مشروع الشعبة المختارة) */
+    hint: { type: String, default: '' }
   },
 
   emits: ['create', 'move', 'archive', 'update', 'open-archive', 'restore', 'force-delete', 'load-notes', 'add-note'],
