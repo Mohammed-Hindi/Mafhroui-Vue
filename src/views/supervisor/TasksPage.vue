@@ -1,28 +1,6 @@
 <template>
-  <!-- مهام المشرف: نظرة سريعة على كل مجموعة (المشروع + نسبة الإنجاز) + شريط فلاتر واحد + عرض المهام أو تفاعل الطلاب -->
+  <!-- مهام المشرف: شريط فلاتر واحد (الشعبة + بحث + المكلّف + الترتيب + مبدّل العرض) فوق لوحة المهام أو تفاعل الطلاب -->
   <div class="dash svt-page">
-    <!-- شريط المجموعات: بطاقة لكل مجموعة — الضغط يختار المجموعة وتُحدَّث اللوحة تحتها -->
-    <section v-if="myTeams.length" class="sup-teams" aria-label="مجموعاتك">
-      <button
-        v-for="t in myTeams"
-        :key="t.id"
-        type="button"
-        :class="['sup-team', t.id === selectedTeamId && 'is-active']"
-        :aria-pressed="t.id === selectedTeamId"
-        @click="pickTeam(t.id)"
-      >
-        <span class="sup-team-head">
-          <b>{{ teamTitle(t) }}</b>
-          <span class="sup-team-count">{{ statsFor(t).total }}</span>
-        </span>
-        <span class="sup-team-proj">{{ t.projectName || 'لم يُسجَّل مشروع بعد' }}</span>
-        <span class="sup-team-bar"><i :style="{ width: statsFor(t).pct + '%' }" /></span>
-        <span class="sup-team-meta">
-          {{ t.members.length }} طالب · {{ statsFor(t).done }} مكتملة · {{ statsFor(t).pct }}%
-        </span>
-      </button>
-    </section>
-
     <SkeletonLoader v-if="!teamsLoaded && !myTeams.length" variant="cards" :rows="3" />
     <EmptyState
       v-else-if="!myTeams.length"
@@ -32,7 +10,7 @@
     />
 
     <template v-else>
-      <!-- شريط الفلاتر: بحث + المكلّف + الترتيب + مبدّل العرض (لوحة المهام / تفاعل الطلاب) -->
+      <!-- شريط الفلاتر: الشعبة (مجموعة المشرف) + بحث + المكلّف + الترتيب + مبدّل العرض (لوحة المهام / تفاعل الطلاب) -->
       <div class="gr-filters svt-filters">
         <label class="gr-search">
           <Search :size="16" />
@@ -42,6 +20,15 @@
             :placeholder="view === 'tasks' ? 'بحث في مهام المجموعة…' : 'بحث باسم الطالب أو رقمه الجامعي…'"
           >
         </label>
+        <!-- الشعبة: قائمة منسدلة بنفس نظام الفلاتر — اختيار المجموعة المعروضة -->
+        <BaseSelect
+          :model-value="selectedTeamId"
+          class="sup-select"
+          aria-label="الشعبة"
+          :options="teamOptions"
+          @change="pickTeam"
+        />
+        <span v-if="selectedTeam?.projectName" class="svt-team-proj">{{ selectedTeam.projectName }}</span>
         <BaseSelect
           v-model="who"
           class="sup-select"
@@ -165,8 +152,6 @@ export default {
       q: '',
       who: '',
       sort: 'newest',
-      /** مهام بقية المجموعات — لعرض نسبة الإنجاز في شريط المجموعات دون تبديل المجموعة */
-      teamTasks: {},
       restoringId: null,
       forceDeletingId: null
     }
@@ -181,7 +166,12 @@ export default {
     },
 
     selectedTeam() {
-      return this.myTeams.find((t) => t.id === this.selectedTeamId) || null
+      return this.myTeams.find((t) => String(t.id) === String(this.selectedTeamId)) || null
+    },
+
+    /** خيارات فلتر الشعبة — مجموعات المشرف */
+    teamOptions() {
+      return this.myTeams.map((t) => ({ value: t.id, label: this.teamTitle(t) }))
     },
 
     views() {
@@ -270,7 +260,6 @@ export default {
     if (this.myTeams.length) {
       this.selectedTeamId = this.myTeams[0].id
       await this.loadTasks()
-      await this.loadTeamStats()
     }
   },
 
@@ -282,17 +271,6 @@ export default {
       return t.section ? `شعبة ${t.section}` : t.name
     },
 
-    /** مهام مجموعة معيّنة — المجموعة الحالية من المخزن، وبقية المجموعات من طلبات خفيفة موازية */
-    tasksOf(t) {
-      return t.id === this.selectedTeamId ? this.tasks : this.teamTasks[t.id] || []
-    },
-
-    statsFor(t) {
-      const list = this.tasksOf(t)
-      const done = list.filter((x) => x.status === 'done').length
-      return { total: list.length, done, pct: list.length ? Math.round((done / list.length) * 100) : 0 }
-    },
-
     setView(v) {
       if (v === this.view) return
       this.view = v
@@ -302,14 +280,13 @@ export default {
     },
 
     async pickTeam(id) {
-      if (id === this.selectedTeamId) return
-      // نُبقي مهام المجموعة الحالية محفوظة قبل التبديل حتى لا تضيع نسب الإنجاز في شريط المجموعات
-      this.teamTasks = { ...this.teamTasks, [this.selectedTeamId]: this.tasks }
-      this.selectedTeamId = id
+      const teamId = Number(id)
+      if (!teamId || teamId === this.selectedTeamId) return
+      this.selectedTeamId = teamId
+      // فلاتر البحث والمكلّف تخصّ المجموعة المختارة — نبدأ من الصفر عند التبديل
       this.q = ''
       this.who = ''
       await this.loadTasks()
-      await this.loadTeamStats()
     },
 
     async loadTasks() {
@@ -319,22 +296,6 @@ export default {
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر تحميل المهام')
       }
-    },
-
-    /** مهام بقية المجموعات — لعرض عدد المهام ونسبة الإنجاز في شريط المجموعات */
-    async loadTeamStats() {
-      const others = this.myTeams.filter((t) => t.id !== this.selectedTeamId)
-      const results = await Promise.all(
-        others.map(async (t) => {
-          try {
-            const { data } = await api.get(`/teams/${t.id}/tasks`)
-            return [t.id, data.data || data]
-          } catch {
-            return [t.id, []]
-          }
-        })
-      )
-      this.teamTasks = { ...this.teamTasks, ...Object.fromEntries(results) }
     },
 
     /** POST /teams/{id}/tasks ثم الملاحظة (POST /tasks/{id}/notes) والملفات (POST /tasks/{id}/files — مُنشئ المهمة يرفق ملفاتها) */
