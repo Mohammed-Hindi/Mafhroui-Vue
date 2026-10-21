@@ -16,7 +16,9 @@
 
     <!-- خلفية شبكية هادئة خلف الأعمدة، بلمسة "لوحة عمل" -->
     <div class="task-board relative rounded-xl p-4 sm:p-5 board-grid-bg">
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 relative">
+      <!-- هيكل تحميل بنفس شكل الأعمدة والبطاقات -->
+      <SkeletonLoader v-if="loading" variant="board" :cols="columns.length" :rows="2" />
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 relative">
         <div
           v-for="column in columns"
           :key="column.id"
@@ -352,6 +354,8 @@ export default {
 
   props: {
     tasks: { type: Array, default: () => [] },
+    /** جارٍ التحميل: تُعرض هيكل لوحة بنفس شكل الأعمدة بدل الكروت */
+    loading: { type: Boolean, default: false },
     canCreate: { type: Boolean, default: false },
     canDrag: { type: Boolean, default: false },
     canDelete: { type: Boolean, default: false },

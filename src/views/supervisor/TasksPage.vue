@@ -63,7 +63,7 @@
       </div>
     </section>
 
-    <SkeletonLoader v-if="!teamsLoaded && !teamOptions.length" variant="cards" :rows="4" />
+    <SkeletonLoader v-if="!teamsLoaded && !teamOptions.length" variant="board" :rows="2" />
     <EmptyState v-else-if="!teamOptions.length" :icon="UsersIcon" title="لا توجد فرق مُسندة إليك" description="عند إسناد مجموعات إليك من لجنة الإشراف ستظهر هنا مهامها وتفاعل طلابها." />
     <TaskBoard
       v-else-if="selectedTeamId && view === 'tasks'"

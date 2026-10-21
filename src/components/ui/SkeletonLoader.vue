@@ -18,6 +18,26 @@
     </div>
   </div>
 
+  <!-- لوحة مهام وهمية: أعمدة كانبان برأس وعدّاد وبطاقات — نفس شكل اللوحة الحقيقية -->
+  <div v-else-if="variant === 'board'" class="sk-board" role="status" aria-label="جارٍ التحميل">
+    <div v-for="c in cols" :key="c" class="sk-col">
+      <div class="sk-col-head">
+        <span class="sk" :style="{ width: `${36 + (c % 3) * 8}%` }" />
+        <span class="sk sk-col-count" />
+      </div>
+      <div class="sk-col-body">
+        <div v-for="n in rows" :key="n" class="sk-task">
+          <span class="sk" :style="{ width: `${88 - (n % 2) * 20}%` }" />
+          <span class="sk" :style="{ width: `${66 - (n % 3) * 12}%` }" />
+          <div class="sk-task-foot">
+            <span class="sk sk-avatar" />
+            <span class="sk" style="width: 30%" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div v-else class="sk-lines" role="status" aria-label="جارٍ التحميل">
     <span
       v-for="n in rows"
@@ -34,7 +54,7 @@ export default {
   props: {
     rows: { type: Number, default: 3 },
     height: { type: String, default: '16px' },
-    // lines | cards | table
+    // lines | cards | table | board
     variant: { type: String, default: 'lines' },
     cols: { type: Number, default: 4 }
   },

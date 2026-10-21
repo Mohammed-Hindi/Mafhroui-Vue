@@ -4112,6 +4112,9 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 
 /* بطاقة المهمة: مسطّحة بلا شريط جانبي — حدّ فاتح واحد وظل بلا */
 .sa-skin .task-card { position: relative; overflow: hidden; }
+/* هيكل تحميل اللوحة يتبع شكل الأعمدة والبطاقات المسطّحة */
+.sa-skin .sk-col { border: 0; border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-bg)); }
+.sa-skin .sk-task { border-color: var(--color-border); border-radius: 4px; }
 .sa-skin .task-card .font-bold { color: var(--ucas-blue); }
 .sa-skin .task-card :is(.border-t, .tb-upload) { border-top-color: color-mix(in srgb, var(--ucas-blue) 10%, transparent) !important; }
 /* القائمة المنسدلة للحالة داخل البطاقة */

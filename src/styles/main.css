@@ -176,6 +176,17 @@ html {
 .sk-card-body { flex: 1; display: flex; flex-direction: column; gap: 10px; }
 .sk-circle { width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0; }
 .sk-tr td { padding: 14px 12px; }
+/* هيكل تحميل لوحة المهام (كانبان): أعمدة برأس وعدّاد وبطاقات — مطابق لشكل اللوحة */
+.sk-board { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.sk-col { display: flex; flex-direction: column; min-height: 440px; overflow: hidden; border: 1px solid var(--color-border-soft); border-radius: 8px; background: var(--color-bg); }
+.sk-col-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px; border-bottom: 1px solid var(--color-border-soft); }
+.sk-col-count { width: 28px; height: 26px; border-radius: 4px; }
+.sk-col-body { display: flex; flex-direction: column; gap: 10px; padding: 12px; }
+.sk-task { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--color-border-soft); border-radius: 8px; background: var(--color-surface); }
+.sk-task-foot { display: flex; align-items: center; gap: 8px; }
+.sk-avatar { width: 20px; height: 20px; border-radius: 50%; }
+@media (min-width: 640px) { .sk-board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1280px) { .sk-board { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @keyframes skShimmer {
   from { background-position: 200% 0; }
   to { background-position: -200% 0; }
