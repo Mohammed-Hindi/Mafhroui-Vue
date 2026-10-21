@@ -91,11 +91,6 @@
 
     <!-- عرض المشاريع: فلاتر بجانب البحث + تبديل معرض/جدول (بنية جداولنا القياسية) -->
     <section v-else :class="['gr', 'gr-card', 'evp-card', isSup && 'sup-tall-card']">
-      <div class="gr-card-title">
-        <h3>معرض المشاريع</h3>
-        <span class="dash-chip">{{ visible.length }} مشروع</span>
-      </div>
-
       <div class="gr-filters" aria-label="تصفية المشاريع">
         <label class="gr-search"><Search :size="16" /><input v-model.trim="q" type="search" placeholder="بحث بالمشروع أو الشعبة أو المشرف أو الطالب…"></label>
         <!-- تبديل معرض/جدول: أيقونتان مدمجتان بجانب البحث -->
