@@ -46,7 +46,7 @@
           v-model="who"
           class="svt-select"
           aria-label="المكلّف"
-          placeholder="كل المهام"
+          :placeholder="view === 'tasks' ? 'كل المهام' : 'كل الطلاب'"
           include-placeholder-option
           :options="whoOptions"
         />
