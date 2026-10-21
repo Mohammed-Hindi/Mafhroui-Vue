@@ -147,7 +147,10 @@
           </div>
           <div class="svm-meta-cell">
             <span class="svm-meta-label">المشرف</span>
-            <span class="svm-meta-value">{{ teamDetail.supervisor?.name || '—' }}</span>
+            <button v-if="teamDetail.supervisor?.id" type="button" class="svm-meta-link" @click="openSupervisor">
+              {{ teamDetail.supervisor.name }} <UserRound :size="14" />
+            </button>
+            <span v-else class="svm-meta-value">—</span>
           </div>
           <div class="svm-meta-cell">
             <span class="svm-meta-label">قائد المجموعة</span>
@@ -199,6 +202,13 @@
       <p v-else class="gr-muted">تعذّر تحميل بيانات المجموعة</p>
     </BaseModal>
 
+    <!-- بروفايل المشرف: يفتح من داخل بوب-أب المجموعة — GET /supervisors/{id}/profile -->
+    <ProfileModal
+      v-model="supervisorOpen"
+      kind="supervisor"
+      :person-id="teamDetail?.supervisor?.id"
+      :name="teamDetail?.supervisor?.name || ''"
+    />
 
     <!-- تأكيد إلغاء الاجتماع: DELETE /meetings/{id} -->
     <BaseModal :model-value="!!cancelTarget" title="إلغاء الاجتماع" size="sm" @update:model-value="!$event && (cancelTarget = null)">
@@ -213,9 +223,10 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { CalendarClock, MessageCircle, Plus, Search, Trash2, Users, Video as VideoIcon } from 'lucide-vue-next'
+import { CalendarClock, MessageCircle, Plus, Search, Trash2, UserRound, Users, Video as VideoIcon } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
+import ProfileModal from '@/components/shared/ProfileModal.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
 import api, { sendWhatsapp } from '@/services/api'
@@ -226,7 +237,7 @@ const DAY = 864e5
 export default {
   name: 'SupervisorMeetingsPage',
 
-  components: { BaseModal, BaseSelect, CalendarClock, MessageCircle, Plus, Search, Trash2, Users, VideoIcon },
+  components: { BaseModal, BaseSelect, ProfileModal, CalendarClock, MessageCircle, Plus, Search, Trash2, UserRound, Users, VideoIcon },
 
   data() {
     return {
@@ -248,7 +259,9 @@ export default {
       /** بوب-أب تفاصيل المجموعة (أعضاء + مشروع) */
       teamOpen: false,
       teamLoading: false,
-      teamDetail: null
+      teamDetail: null,
+      /** بوب-أب بروفايل المشرف (يفتح من داخل بوب-أب المجموعة) */
+      supervisorOpen: false
     }
   },
 
@@ -434,6 +447,12 @@ export default {
     closeTeam() {
       this.teamOpen = false
       this.teamDetail = null
+    },
+
+    /** فتح بروفايل المشرف (ProfileModal) من داخل بوب-أب المجموعة */
+    openSupervisor() {
+      if (!this.teamDetail?.supervisor?.id) return
+      this.supervisorOpen = true
     },
 
     /** اجتماعات كل المجموعات — بالتوازي حتى لا تتأخر البطاقة الأولى */
