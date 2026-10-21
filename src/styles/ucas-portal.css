@@ -7107,3 +7107,18 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* شريط الملخص وشريط الشرائح: ارتفاع ثابت أسفل البطاقة */
 .sup-tall-card .sup-tall-slide .gr-sumbar, .sup-tall-card .sup-tall-slide .gr-slider { flex: 0 0 auto; }
 .sup-tall-card > .gr-sumbar { flex-shrink: 0; }
+
+/* ======================================================================
+   مواعيد المناقشات (المشرف) — هوية البوابة: كارت واحد بجدول يملأ الشاشة،
+   الشعبة كزر يفتح تفاصيل المجموعة، والموعد في خانة واحدة
+   ====================================================================== */
+.aps-page { gap: 16px; }
+/* محاذاة الأعمدة: البداية للمحتوى النصّي والوسط للأعمدة القصيرة (زي جداولنا) */
+:root[data-brand="ucas"] .sa-skin .aps-table :is(th, td):not(.hm-center) { text-align: start; }
+:root[data-brand="ucas"] .sa-skin .aps-table :is(th, td).hm-center { text-align: center; }
+/* الشعبة: زر يفتح تفاصيل المجموعة */
+.aps-sec { border: 0; font-family: inherit; cursor: pointer; transition: background-color .2s var(--ease-standard); }
+.aps-sec:hover { background: color-mix(in srgb, var(--ucas-blue) 16%, transparent); }
+.aps-sec:focus-visible { outline: 2px solid var(--ucas-blue); outline-offset: 2px; }
+/* التاريخ بارز والوقت سطر ثانوي هادئ */
+.aps-date { font-weight: 700; }
