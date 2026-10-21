@@ -3,10 +3,6 @@
        بطاقة واحدة (عنوان + شريط فلاتر + قائمة/تفاصيل مسطّحة)، بلا عنوان مكرّر ولا تبويبات -->
   <div class="dash ads-page">
     <section class="dash-card ads-card">
-      <div class="dash-card-head ads-head">
-        <h3>الإعلانات والملفات</h3>
-      </div>
-
       <div class="gr-filters ads-filters">
         <label class="gr-search">
           <Search :size="16" />
