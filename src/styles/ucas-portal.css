@@ -2418,6 +2418,7 @@
 .an-body { padding: 16px 18px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); }
 .an-body p { font-size: 13.5px; line-height: 1.9; color: var(--color-text-700); white-space: pre-line; overflow-wrap: anywhere; }
 .an-files { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+.an-files-title { font-size: 14px; }
 .an-files ul { display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); }
 .an-files li { display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
 .an-files li + li { border-top: 1px solid var(--color-border); }
@@ -2445,6 +2446,100 @@
   .hd-filters .gr-select { flex: 1 1 calc(50% - 28px); }
   .hd-tools { width: 100%; }
   .hd-tools .pbtn { flex: 1 1 auto; justify-content: center; }
+}
+
+/* ===== الإعلانات والملفات (AnnouncementsDesk) — على نمط لوحة الإدارة العامة =====
+   بطاقة واحدة: تبويبات في رأسها + صف فلاتر + قائمة/تفاصيل مسطّحة (بلا ظلال ولا عناوين مكرّرة) */
+.ads-page { gap: 16px; }
+/* البطاقة بلا حشوة داخلية: التبويبات والفلاتر والقائمة تملأها */
+.dash-card.ads-card { padding: 0; overflow: hidden; }
+.ads-head { flex-wrap: wrap; gap: 12px 16px; margin-bottom: 16px; padding: 20px 24px 0; }
+.ads-head h3 { font-size: 17px; font-weight: 700; color: var(--color-text-900); }
+.ads-tabs { flex-shrink: 0; }
+/* شريط التبويبات يمرّر أفقيًا على الشاشات الضيقة بدل أن يُقصّ */
+.ads-head .ads-tabs { overflow-x: auto; scrollbar-width: thin; }
+/* العدّادات: أزرق صلب (بلا تدرّج) كما في عدّادات لوحة المهام */
+.ads-tabs .rv-count,
+.ads-tabs .rv-tab.is-active .rv-count { background: var(--ucas-blue); color: #FFFFFF; box-shadow: none; }
+
+.ads-filters { padding: 0 24px 18px; background: transparent; border-radius: 0; box-shadow: none; align-items: center; gap: 10px; }
+.ads-filters .gr-search { flex: 1 1 260px; max-width: none; }
+.ads-select { flex: 0 1 190px; }
+.ads-summary { margin-inline-start: auto; font-size: 12.5px; font-weight: 700; color: var(--color-text-400); white-space: nowrap; }
+
+/* القائمة + التفاصيل */
+.ads-layout { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); height: calc(100vh - 272px); min-height: 420px; border-top: 1px solid var(--color-border); }
+.ads-list { display: flex; flex-direction: column; overflow-y: auto; border-inline-end: 1px solid var(--color-border); }
+.ads-list-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 10px; height: 52px; padding-inline: 16px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.ads-list-head .portal-title { font-size: 15px; }
+.ads-item { position: relative; display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 12px 16px; text-align: start; border-bottom: 1px solid var(--color-border); transition: background-color var(--ucas-color-speed) var(--ease-standard); }
+.ads-item:last-child { border-bottom: 0; }
+.ads-item:hover { background: var(--portal-menu-hover); }
+.ads-item.is-selected { background: color-mix(in srgb, var(--ucas-blue) 8%, var(--color-surface)); }
+.ads-item.is-selected::before { content: ''; position: absolute; inset-block: 0; inset-inline-start: 0; width: 3px; background: var(--ucas-blue); }
+.ads-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.ads-item-top { display: flex; align-items: baseline; gap: 8px; }
+.ads-item-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; font-weight: 700; color: var(--color-text-900); }
+.ads-time { flex-shrink: 0; font-size: 11.5px; color: var(--color-text-400); }
+.ads-snippet { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; color: var(--color-text-600); }
+.ads-item-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; font-size: 11.5px; color: var(--color-text-400); }
+.ads-attach { display: inline-flex; align-items: center; gap: 3px; }
+.ads-state { display: inline-flex; align-items: center; height: 20px; padding-inline: 7px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-inline-start: auto; white-space: nowrap; }
+.ads-state.is-awaiting { background: #F9DFE1; color: #E81E63; }
+.ads-state.is-answered { background: #E1F5FC; color: #1A8DB5; }
+.ads-state.is-closed { background: #E2F8ED; color: #0A8A4A; }
+.ads-state.is-archived { background: var(--color-bg); color: var(--color-text-600); }
+:root[data-theme="dark"] .ads-state.is-awaiting { background: rgba(255, 91, 91, 0.15); color: #FF8A8A; }
+:root[data-theme="dark"] .ads-state.is-answered { background: rgba(0, 91, 170, 0.15); color: #71B6F9; }
+:root[data-theme="dark"] .ads-state.is-closed { background: rgba(16, 196, 105, 0.15); color: #4ADE80; }
+
+/* التفاصيل */
+.ads-detail { display: flex; flex-direction: column; min-height: 0; background: var(--color-surface); }
+.ads-detail-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 14px 20px; border-bottom: 1px solid var(--color-border); }
+.ads-detail-title { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; flex: 1 1 240px; min-width: 0; }
+.ads-detail-title .portal-title { font-size: 16px; line-height: 1.5; }
+.ads-detail-meta { display: flex; align-items: center; gap: 8px; }
+.ads-detail-meta .ads-state { margin-inline-start: 0; }
+.ads-tools { display: flex; flex-wrap: wrap; gap: 6px; }
+.ads-tools .pbtn { height: 32px; padding-inline: 10px; font-size: 12.5px; gap: 5px; }
+.ads-body { display: grid; grid-template-columns: minmax(0, 1fr) 240px; flex: 1; min-height: 0; }
+.ads-conv { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.ads-scroll { flex: 1; overflow-y: auto; padding: 18px 20px; background: color-mix(in srgb, var(--color-bg) 45%, var(--color-surface)); }
+.ads-props { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-inline-start: 1px solid var(--color-border); overflow-y: auto; }
+.ads-requester { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--color-border); }
+.ads-requester div { display: flex; flex-direction: column; min-width: 0; font-size: 13.5px; color: var(--color-text-900); }
+.ads-requester .pt-muted { font-size: 12px; }
+.ads-avatar { display: inline-grid; place-items: center; flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--color-surface); border: 1px solid var(--color-border); }
+.ads-data { display: flex; flex-direction: column; margin: 0; }
+.ads-data div { display: flex; flex-wrap: wrap; gap: 2px 6px; padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: 12.5px; color: var(--portal-cyan); }
+.ads-data div:last-child { border-bottom: 0; }
+.ads-data dt { font-weight: 700; }
+.ads-data dd { margin: 0; }
+.ads-empty { align-items: center; justify-content: center; gap: 8px; color: var(--color-text-400); font-size: 13.5px; }
+.ads-back { display: none; }
+.ads-alert { align-items: center; margin: 12px; padding: 10px 14px; font-size: 13px; }
+.ads-ic { display: inline-grid; place-items: center; flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; color: #FFFFFF; font-size: 12px; font-weight: 800; line-height: 1; }
+.ads-ic.is-warning { background: #FF9C39; }
+
+@media (max-width: 1279.98px) {
+  .ads-body { grid-template-columns: minmax(0, 1fr); }
+  .ads-props { display: none; }
+}
+@media (max-width: 1023.98px) {
+  .ads-layout { grid-template-columns: minmax(0, 1fr); height: auto; min-height: 0; }
+  .ads-list { border-inline-end: 0; }
+  .ads-detail { display: none; }
+  .ads-detail.is-open { display: flex; position: fixed; inset: 0; z-index: calc(var(--z-drawer) + 2); }
+  .ads-empty { display: none; }
+  .ads-back { display: inline-flex; align-items: center; gap: 6px; color: var(--portal-cyan); font-size: 14px; font-weight: 700; }
+  .ads-scroll { padding: 14px 16px; }
+}
+@media (max-width: 640px) {
+  .ads-head { padding: 16px 16px 0; }
+  .ads-filters { padding: 0 16px 16px; }
+  .ads-tabs { width: 100%; }
+  .ads-select { flex: 1 1 calc(50% - 5px); }
+  .ads-summary { width: 100%; margin-inline-start: 0; }
 }
 
 

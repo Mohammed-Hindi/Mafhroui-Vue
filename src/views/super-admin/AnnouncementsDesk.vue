@@ -1,144 +1,130 @@
 <template>
-  <!-- الإعلانات والملفات للجنة الإشراف — صندوق وارد بنمط الأنظمة العالمية (Outlook / Gmail) بهوية البوابة:
-       تبويبات الملف (201300) + بطاقة بعنوان ≡ ووسم سماوي بالزاوية (201350) + بيانات "التسمية :" سماوية. نفس نظام صفحة الشكاوى (hd-*) -->
-  <div class="dash hd-page">
-    <header class="dash-head">
-      <h2 class="dash-title">الإعلانات والملفات</h2>
-    </header>
+  <!-- الإعلانات والملفات للجنة الإشراف والمشرف والطالب — على نمط لوحة الإدارة العامة:
+       بطاقة واحدة (تبويبات + فلاتر + قائمة/تفاصيل)، بلا عنوان مكرّر، وعدّادات زرقاء صلبة -->
+  <div class="dash ads-page">
+    <section class="dash-card ads-card">
+      <div class="dash-card-head ads-head">
+        <h3>الإعلانات والملفات</h3>
+        <nav class="rv-tabs ads-tabs" aria-label="نوع المراسلة">
+          <button v-for="t in tabs" :key="t.value" type="button" :class="['rv-tab', tab === t.value && 'is-active']" @click="tab = t.value">
+            {{ t.label }} <span class="rv-count">{{ count(t.value) }}</span>
+          </button>
+        </nav>
+      </div>
 
-    <!-- التبويبات والفلاتر بطاقة واحدة: شريط التبويبات فوق وصف الفلاتر ملتصقًا به -->
-    <section class="hd-toolbar">
-      <nav class="rv-tabs" aria-label="نوع المراسلة">
-        <button v-for="t in tabs" :key="t.value" type="button" :class="['rv-tab', tab === t.value && 'is-active']" @click="tab = t.value">
-          {{ t.label }} <span class="rv-count">{{ count(t.value) }}</span>
-        </button>
-      </nav>
-
-      <div class="gr-filters hd-filters">
-        <label class="rv-search">
+      <div class="gr-filters ads-filters">
+        <label class="gr-search">
           <Search :size="16" />
           <input v-model.trim="q" type="search" placeholder="بحث بالعنوان أو النص أو المرسل أو اسم الملف…">
         </label>
-        <label class="hd-field" title="المرسل">
-          <UserRound :size="16" />
-          <select v-model="sender" aria-label="المرسل">
-            <option value="">كل المرسلين</option>
-            <option v-for="s in senders" :key="s" :value="s">{{ s }}</option>
-          </select>
-        </label>
-        <label class="hd-field" title="الترتيب">
-          <ArrowDownUp :size="16" />
-          <select v-model="sort" aria-label="الترتيب">
-            <option value="newest">الأحدث أولًا</option>
-            <option value="oldest">الأقدم أولًا</option>
-          </select>
-        </label>
+        <BaseSelect v-model="sender" class="ads-select" aria-label="المرسل" placeholder="كل المرسلين" include-placeholder-option :options="senders" />
+        <BaseSelect v-model="sort" class="ads-select" aria-label="الترتيب" :options="sortOptions" />
+        <span class="ads-summary">{{ shown.length }} عنصر</span>
+      </div>
+
+      <div class="ads-layout">
+        <section class="ads-list" aria-label="المراسلات">
+          <header class="ads-list-head">
+            <h4 class="portal-title">{{ tabLabel }}</h4>
+            <span class="dash-chip">{{ shown.length }}</span>
+          </header>
+          <SkeletonLoader v-if="loading" variant="list" :rows="5" />
+          <p v-else-if="!shown.length" class="palert is-warning ads-alert"><span class="ads-ic is-warning">!</span> لا توجد مراسلات في «{{ tabLabel }}»</p>
+          <button
+            v-for="a in shown" :key="a.id" type="button"
+            :class="['ads-item', current?.id === a.id && 'is-selected']" @click="open(a)"
+          >
+            <span :class="['an-icon', `is-${kind(a)}`]" aria-hidden="true"><component :is="TYPE[kind(a)].icon" :size="16" /></span>
+            <span class="ads-item-body">
+              <span class="ads-item-top">
+                <span class="ads-item-title">{{ titleOf(a) }}</span>
+                <span class="ads-time">{{ ago(a.created_at) }}</span>
+              </span>
+              <span class="ads-snippet">{{ snippetOf(a) }}</span>
+              <span class="ads-item-meta">
+                <span>{{ a.author?.name || '—' }}</span>
+                <span v-if="a.attachments?.length" class="ads-attach"><Paperclip :size="13" /> {{ a.attachments.length }}</span>
+                <span :class="['ads-state', TYPE[kind(a)].cls]">{{ TYPE[kind(a)].label }}</span>
+              </span>
+            </span>
+          </button>
+        </section>
+
+        <section v-if="current" :class="['ads-detail', mobileOpen && 'is-open']">
+          <header class="ads-detail-head">
+            <button type="button" class="ads-back" @click="mobileOpen = false"><ArrowRight :size="18" /> رجوع للقائمة</button>
+            <div class="ads-detail-title">
+              <h3 class="portal-title">{{ titleOf(current) }}</h3>
+              <span class="ads-detail-meta">
+                <span :class="['ads-state', TYPE[kind(current)].cls]">{{ TYPE[kind(current)].label }}</span>
+                <span class="dash-chip">من {{ current.author?.name || '—' }} · {{ when(current.created_at) }}</span>
+              </span>
+            </div>
+            <div v-if="current.attachments?.length > 1" class="ads-tools">
+              <button type="button" class="pbtn is-cyan is-sm" @click="downloadAll"><Download :size="15" /> تنزيل الكل ({{ current.attachments.length }})</button>
+            </div>
+          </header>
+
+          <div class="ads-body">
+            <div class="ads-conv">
+              <div class="ads-scroll">
+                <div v-if="current.rating" class="an-rating" :aria-label="`${current.rating} من 5`">
+                  <Star v-for="n in 5" :key="n" :size="20" :fill="n <= current.rating ? 'currentColor' : 'none'" :class="n > current.rating && 'is-off'" />
+                  <b>{{ current.rating }} من 5</b>
+                </div>
+                <article class="an-body">
+                  <p v-if="current.body">{{ current.body }}</p>
+                  <p v-else class="pt-muted">بلا نص مرفق.</p>
+                </article>
+                <router-link v-if="current.type === 'task'" :to="{ name: tasksRoute }" class="pbtn is-cyan is-sm"><ListTodo :size="15" /> فتح في لوحة المهام</router-link>
+
+                <section v-if="current.attachments?.length" class="an-files" aria-label="المرفقات">
+                  <h4 class="portal-title an-files-title">المرفقات</h4>
+                  <ul>
+                    <li v-for="f in current.attachments" :key="f.id">
+                      <span class="an-file-ic" aria-hidden="true"><FileText :size="18" /></span>
+                      <span class="an-file-main"><b><bdi>{{ f.name }}</bdi></b><span class="pt-muted">{{ formatFileSize(f.size) }}</span></span>
+                      <button type="button" class="pbtn is-outline is-sm" :title="`تنزيل ${f.name}`" @click="download(f)"><Download :size="15" /> تنزيل</button>
+                    </li>
+                  </ul>
+                </section>
+              </div>
+            </div>
+
+            <aside class="ads-props" aria-label="بيانات المراسلة">
+              <div class="ads-requester">
+                <span class="ads-avatar" aria-hidden="true"><UcasLogo :size="24" /></span>
+                <div><b>{{ current.author?.name || '—' }}</b><span class="pt-muted">{{ ROLE_LABELS[current.author?.role] || '' }}</span></div>
+              </div>
+              <h4 class="portal-title an-files-title">بيانات المراسلة</h4>
+              <dl class="ads-data">
+                <div><dt>النوع :</dt><dd>{{ TYPE[kind(current)].label }}</dd></div>
+                <div><dt>التاريخ :</dt><dd>{{ when(current.created_at) }}</dd></div>
+                <template v-if="current.type === 'task'">
+                  <div><dt>موعد التسليم :</dt><dd class="mono">{{ current.due_date || 'بلا موعد' }}</dd></div>
+                  <div><dt>الحالة :</dt><dd>{{ STATUS[current.status] || current.status }}</dd></div>
+                </template>
+                <div v-if="current.team"><dt>المجموعة :</dt><dd>{{ current.team.section ? `شعبة ${current.team.section}` : current.team.name }}</dd></div>
+                <div><dt>المرفقات :</dt><dd>{{ current.attachments?.length || 0 }}</dd></div>
+              </dl>
+            </aside>
+          </div>
+        </section>
+
+        <section v-else class="ads-detail ads-empty">
+          <Inbox :size="40" />
+          <p>اختر إعلانًا أو ملفًا من القائمة لعرضه</p>
+        </section>
       </div>
     </section>
-
-    <div class="rv-layout hd-layout">
-      <section class="rv-list hd-list" aria-label="المراسلات">
-        <header class="hd-card-head">
-          <h3 class="portal-title">{{ tabLabel }}</h3>
-          <span class="hd-card-sub">{{ shown.length }}</span>
-          <button v-if="tab !== 'file'" type="button" class="hd-corner" @click="tab = 'file'"><Paperclip :size="16" /> الملفات</button>
-          <button v-else type="button" class="hd-corner" @click="tab = ''"><Inbox :size="16" /> كل الوارد</button>
-        </header>
-        <SkeletonLoader v-if="loading" variant="cards" :rows="4" />
-        <p v-else-if="!shown.length" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لا توجد مراسلات في «{{ tabLabel }}»</p>
-        <button
-          v-for="a in shown" :key="a.id" type="button"
-          :class="['rv-item hd-item', current?.id === a.id && 'is-selected']" @click="open(a)"
-        >
-          <span :class="['an-icon', `is-${kind(a)}`]" aria-hidden="true"><component :is="TYPE[kind(a)].icon" :size="16" /></span>
-          <span class="rv-item-body">
-            <span class="hd-item-top">
-              <span class="rv-item-title">{{ titleOf(a) }}</span>
-              <span class="hd-time">{{ ago(a.created_at) }}</span>
-            </span>
-            <span class="hd-snippet">{{ a.body || (a.attachments?.length ? a.attachments.map((f) => f.name).join('، ') : '—') }}</span>
-            <span class="hd-item-meta">
-              <span>{{ a.author?.name || '—' }}</span>
-              <span v-if="a.attachments?.length" class="hd-replies"><Paperclip :size="13" /> {{ a.attachments.length }}</span>
-              <span :class="['hd-state', TYPE[kind(a)].cls]">{{ TYPE[kind(a)].label }}</span>
-            </span>
-          </span>
-        </button>
-      </section>
-
-      <section v-if="current" :class="['rv-detail hd-detail', mobileOpen && 'is-open']">
-        <header class="hd-detail-head">
-          <button type="button" class="rv-back" @click="mobileOpen = false"><ArrowRight :size="18" /> رجوع للقائمة</button>
-          <div class="hd-detail-title">
-            <h3 class="portal-title">{{ titleOf(current) }}</h3>
-            <span class="hd-detail-meta">
-              <span :class="['hd-state', TYPE[kind(current)].cls]">{{ TYPE[kind(current)].label }}</span>
-              <span class="hd-card-sub">من {{ current.author?.name || '—' }} · {{ when(current.created_at) }}</span>
-            </span>
-          </div>
-          <div v-if="current.attachments?.length > 1" class="hd-tools">
-            <button type="button" class="pbtn is-cyan is-sm" @click="downloadAll"><Download :size="15" /> تنزيل الكل ({{ current.attachments.length }})</button>
-          </div>
-        </header>
-
-        <div class="hd-body">
-          <div class="hd-conv">
-            <div class="rv-detail-scroll">
-              <div v-if="current.rating" class="an-rating" :aria-label="`${current.rating} من 5`">
-                <Star v-for="n in 5" :key="n" :size="20" :fill="n <= current.rating ? 'currentColor' : 'none'" :class="n > current.rating && 'is-off'" />
-                <b>{{ current.rating }} من 5</b>
-              </div>
-              <article class="an-body">
-                <p v-if="current.body">{{ current.body }}</p>
-                <p v-else class="pt-muted">بلا نص مرفق.</p>
-              </article>
-              <router-link v-if="current.type === 'task'" :to="{ name: 'student-tasks' }" class="pbtn is-cyan is-sm"><ListTodo :size="15" /> فتح في لوحة المهام</router-link>
-
-              <section v-if="current.attachments?.length" class="an-files" aria-label="المرفقات">
-                <h4 class="portal-title hd-props-title">المرفقات</h4>
-                <ul>
-                  <li v-for="f in current.attachments" :key="f.id">
-                    <span class="an-file-ic" aria-hidden="true"><FileText :size="18" /></span>
-                    <span class="an-file-main"><b><bdi>{{ f.name }}</bdi></b><span class="pt-muted">{{ formatFileSize(f.size) }}</span></span>
-                    <button type="button" class="pbtn is-outline is-sm" :title="`تنزيل ${f.name}`" @click="download(f)"><Download :size="15" /> تنزيل</button>
-                  </li>
-                </ul>
-              </section>
-            </div>
-          </div>
-
-          <aside class="hd-props" aria-label="بيانات المراسلة">
-            <div class="hd-requester">
-              <span class="hd-avatar is-lg is-staff" aria-hidden="true"><UcasLogo :size="24" /></span>
-              <div><b>{{ current.author?.name || '—' }}</b><span class="pt-muted">{{ ROLE_LABELS[current.author?.role] || '' }}</span></div>
-            </div>
-            <h4 class="portal-title hd-props-title">بيانات المراسلة</h4>
-            <dl class="hd-data">
-              <div><dt>النوع :</dt><dd>{{ TYPE[kind(current)].label }}</dd></div>
-              <div><dt>التاريخ :</dt><dd>{{ when(current.created_at) }}</dd></div>
-              <template v-if="current.type === 'task'">
-                <div><dt>موعد التسليم :</dt><dd class="mono">{{ current.due_date || 'بلا موعد' }}</dd></div>
-                <div><dt>الحالة :</dt><dd>{{ STATUS[current.status] || current.status }}</dd></div>
-              </template>
-              <div v-if="current.team"><dt>المجموعة :</dt><dd>{{ current.team.section ? `شعبة ${current.team.section}` : current.team.name }}</dd></div>
-              <div><dt>المرفقات :</dt><dd>{{ current.attachments?.length || 0 }}</dd></div>
-            </dl>
-          </aside>
-        </div>
-      </section>
-
-      <section v-else class="rv-detail hd-detail hd-empty">
-        <Inbox :size="40" />
-        <p>اختر إعلانًا أو ملفًا من القائمة لعرضه</p>
-      </section>
-    </div>
   </div>
 </template>
 
 <script>
 import { markRaw } from 'vue'
-import { ArrowDownUp, ArrowRight, Download, FileText, Inbox, Layers, ListTodo, Megaphone, Paperclip, Search, Star, UserRound, X } from 'lucide-vue-next'
+import { ArrowRight, Download, FileText, Inbox, Layers, ListTodo, Megaphone, Paperclip, Search, Star } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import api from '@/services/api'
 import { downloadAttachment } from '@/services/announcements'
 import { ROLE_LABELS } from '@/utils/constants'
@@ -161,7 +147,7 @@ const rtf = new Intl.RelativeTimeFormat('ar', { numeric: 'auto' })
 export default {
   name: 'AnnouncementsDesk',
 
-  components: { ArrowDownUp, ArrowRight, Download, FileText, Inbox, ListTodo, Paperclip, Search, Star, UcasLogo, UserRound, X },
+  components: { ArrowRight, BaseSelect, Download, FileText, Inbox, ListTodo, Paperclip, Search, Star, UcasLogo },
 
   data() {
     return {
@@ -198,6 +184,18 @@ export default {
     },
     senders() {
       return [...new Set(this.items.map((a) => a.author?.name).filter(Boolean))]
+    },
+    sortOptions() {
+      return [
+        { value: 'newest', label: 'الأحدث أولًا' },
+        { value: 'oldest', label: 'الأقدم أولًا' }
+      ]
+    },
+    // زر "فتح في لوحة المهام" يذهب لصفحة مهام صاحب الحساب
+    tasksRoute() {
+      if (this.userRole === 'student') return 'student-tasks'
+      if (this.userRole === 'supervisor') return 'supervisor-my-tasks'
+      return 'committee-my-tasks'
     },
     shown() {
       const q = this.q
@@ -271,6 +269,11 @@ export default {
 
     titleOf(a) {
       return a.title || TYPE[this.kind(a)].label
+    },
+
+    /** سطر مختصر أسفل العنوان: نص الإعلان، وإلا أسماء المرفقات */
+    snippetOf(a) {
+      return a.body || (a.attachments?.length ? a.attachments.map((f) => f.name).join('، ') : '—')
     },
 
     count(type) {
