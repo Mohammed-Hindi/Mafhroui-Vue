@@ -6989,6 +6989,15 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* تنبيه الاجتماع القادم: تحت الفلاتر */
 .svm-next { align-items: flex-start; margin: 0; flex-shrink: 0; }
 .svm-next svg { flex-shrink: 0; margin-top: 4px; }
+/* مسطّح كما هو أسلوبنا: شريط أزرق صلب على جهة البداية بدل التدرّج، وخلفية ناعمة بلا تدرّج */
+.palert.is-info.svm-next {
+  color: var(--ucas-blue);
+  background: color-mix(in srgb, var(--ucas-blue) 6%, var(--color-surface));
+  border-inline-start: 4px solid var(--ucas-blue);
+  border-image: none;
+  box-shadow: none;
+}
+:root[data-theme="dark"] .palert.is-info.svm-next { background: color-mix(in srgb, var(--ucas-blue) 14%, var(--color-surface)); }
 /* الجدول: ياخذ باقي ارتفاع البطاقة والتمرير جوّاه */
 .svm-table-wrap { flex: 1; min-height: 0; overflow: auto; }
 /* رأس الجدول يثبت أثناء التمرير */
