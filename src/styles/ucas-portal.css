@@ -5446,6 +5446,9 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .ab-fan-ph svg { padding: 4px; border-radius: 4px; background: #FFFFFF; }
 .ab-fan-ph b { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 11.5px; font-weight: 800; line-height: 1.5; }
 .ab-folder-body strong { font-size: 16px; color: var(--ucas-blue); }
+/* اسم التخصص يبقى جنب الأيقونة (ما ينزل تحتها مهما طال) وزر "نافذة جديدة" ينزل سطر مستقل */
+.ab-folder-body { flex: 1 1 0; }
+.ab-break { flex-basis: 100%; height: 0; }
 /* زر النافذة الجديدة */
 .ab-newtab { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 7px 14px; border-radius: 4px; font-size: 12.5px; font-weight: 700; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 8%, transparent); transition: background-color .25s ease, color .25s ease; position: relative; z-index: 1; }
 .ab-newtab:hover { color: #FFFFFF; background: var(--ucas-blue); }

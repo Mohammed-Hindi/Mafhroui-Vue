@@ -166,6 +166,7 @@
                   </span>
                 </span>
                 <span class="ab-folder-bar" aria-hidden="true"><span :style="{ width: `${fd.count ? (fd.archived / fd.count) * 100 : 0}%` }" /></span>
+                <span class="ab-break" aria-hidden="true" />
                 <button type="button" class="ab-newtab" title="فتح في نافذة جديدة" @click.stop="openInNewTab({ spec: fd.spec })"><ExternalLink :size="15" /> فتح في نافذة جديدة</button>
               </div>
             </div>
