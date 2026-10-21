@@ -1,51 +1,24 @@
 <template>
-  <!-- اجتماعات المشرف: شريط المجموعات (كلها أو مجموعة بعينها) ← فلاتر (بحث + حالة + ترتيب) ← جدول مسطّح بأسلوب البوابة -->
+  <!-- اجتماعات المشرف: الجدول فيه كل اجتماعات المشرف، والفلاتر (مجموعة + حالة + بحث + ترتيب) تضيّق المعروض -->
   <div class="dash svm-page">
-    <!-- شريط المجموعات: بطاقة لكل مجموعة + بطاقة "كل المجموعات" — الضغط يحدّد نطاق الجدول -->
-    <section v-if="myTeams.length" class="sup-teams" aria-label="المجموعات">
-      <button
-        type="button"
-        :class="['sup-team', !selectedTeamId && 'is-active']"
-        :aria-pressed="!selectedTeamId"
-        @click="pickTeam(null)"
-      >
-        <span class="sup-team-head">
-          <b>كل المجموعات</b>
-          <span class="sup-team-count">{{ overall.total }}</span>
-        </span>
-        <span class="sup-team-proj">{{ myTeams.length }} مجموعة مُسندة إليك</span>
-        <span class="sup-team-meta">{{ overall.upcoming }} قادمة · {{ overall.done }} منتهية</span>
-        <span v-if="nextMeeting" class="sup-team-next">الموعد القادم: {{ nextMeeting.date }}</span>
-      </button>
-
-      <button
-        v-for="t in myTeams"
-        :key="t.id"
-        type="button"
-        :class="['sup-team', t.id === selectedTeamId && 'is-active']"
-        :aria-pressed="t.id === selectedTeamId"
-        @click="pickTeam(t.id)"
-      >
-        <span class="sup-team-head">
-          <b>{{ teamTitle(t) }}</b>
-          <span class="sup-team-count">{{ statsFor(t).total }}</span>
-        </span>
-        <span class="sup-team-proj">{{ t.projectName || 'لم يُسجَّل مشروع بعد' }}</span>
-        <span class="sup-team-meta">{{ statsFor(t).upcoming }} قادمة · {{ statsFor(t).done }} منتهية</span>
-        <span v-if="statsFor(t).next" class="sup-team-next">الموعد القادم: {{ statsFor(t).next }}</span>
-      </button>
-    </section>
-
-    <SkeletonLoader v-if="loading" variant="cards" :rows="3" />
+    <SkeletonLoader v-if="loading" variant="table" :cols="5" :rows="4" />
     <p v-else-if="!myTeams.length" class="palert is-info"><CalendarDays :size="18" /><span>لا توجد مجموعات مُسندة إليك</span></p>
 
     <template v-else>
-      <!-- فلاتر: بحث + حالة + ترتيب (المجموعة تُختار من شريط المجموعات فوق) -->
+      <!-- فلاتر: المجموعة + الحالة + البحث + الترتيب — والجدول يعرض كل الاجتماعات -->
       <div class="gr-filters svm-filters">
         <label class="gr-search">
           <Search :size="16" />
           <input v-model.trim="q" type="search" placeholder="بحث باسم الاجتماع أو في الملاحظات…">
         </label>
+        <BaseSelect
+          v-model="group"
+          class="sup-select"
+          aria-label="المجموعة"
+          placeholder="كل المجموعات"
+          include-placeholder-option
+          :options="groupOptions"
+        />
         <BaseSelect
           v-model="status"
           class="sup-select"
@@ -79,7 +52,7 @@
             <thead>
               <tr>
                 <th>اسم الاجتماع</th>
-                <th v-if="!selectedTeamId">المجموعة</th>
+                <th v-if="!group">المجموعة</th>
                 <th>الموعد</th>
                 <th>الحالة</th>
                 <th>الإجراءات</th>
@@ -92,7 +65,7 @@
                   {{ m.title }}
                   <span v-if="m.notes" class="svm-note">{{ m.notes }}</span>
                 </td>
-                <td v-if="!selectedTeamId" class="pt-muted">{{ m.teamLabel }}</td>
+                <td v-if="!group" class="pt-muted">{{ m.teamLabel }}</td>
                 <td class="mono">
                   {{ m.date }}
                   <span class="svm-when">{{ m.time }}</span>
@@ -108,7 +81,7 @@
                 </td>
               </tr>
               <tr v-if="!meetingsLoading && !rows.length">
-                <td :colspan="selectedTeamId ? 4 : 5" class="gr-empty">
+                <td :colspan="group ? 4 : 5" class="gr-empty">
                   {{ status === 'upcoming' ? 'لا توجد اجتماعات قادمة حاليًا' : status === 'past' ? 'لا توجد اجتماعات منتهية بعد' : 'لا توجد اجتماعات مطابقة للفلاتر' }}
                 </td>
               </tr>
@@ -191,8 +164,9 @@ export default {
       status: '',
       q: '',
       sort: 'soon',
-      selectedTeamId: null,
-      /** اجتماعات كل مجموعة — لعرض العدد والموعد القادم في شريط المجموعات ولعرض "كل المجموعات" */
+      /** فلتر المجموعة — فارغ = كل المجموعات (والجدول يعرض كل الاجتماعات) */
+      group: '',
+      /** اجتماعات كل مجموعة — لجمع كل اجتماعات المشرف في جدول واحد */
       teamMeetings: {},
       createOpen: false,
       saving: false,
@@ -212,6 +186,11 @@ export default {
 
     teamOptions() {
       return this.myTeams.map((t) => ({ value: t.id, label: t.section ? `شعبة ${t.section}` : t.name, name: t.name }))
+    },
+
+    /** خيارات فلتر المجموعة في شريط الفلاتر */
+    groupOptions() {
+      return this.myTeams.map((t) => ({ value: t.id, label: t.section ? `شعبة ${t.section}` : t.name }))
     },
 
     statusOptions() {
@@ -252,9 +231,9 @@ export default {
         .sort((a, b) => a.at - b.at)
     },
 
-    /** نطاق العرض: مجموعة بعينها أو كل المجموعات */
+    /** نطاق العرض: كل المجموعات أو مجموعة بعينها (فلتر المجموعة) */
     scoped() {
-      return this.selectedTeamId ? this.allMeetings.filter((m) => m.teamId === this.selectedTeamId) : this.allMeetings
+      return this.group ? this.allMeetings.filter((m) => m.teamId === this.group) : this.allMeetings
     },
 
     scopedUpcoming() {
@@ -279,12 +258,7 @@ export default {
       return [...list].sort((a, b) => (a.past === b.past ? (a.past ? b.at - a.at : a.at - b.at) : a.past ? 1 : -1))
     },
 
-    overall() {
-      return { total: this.allMeetings.length, upcoming: this.allMeetings.filter((m) => !m.past).length, done: this.allMeetings.filter((m) => m.past).length }
-    },
-
-    nextMeeting() {
-      return this.scopedUpcoming[0] || null
+    nextMeeting() {      return this.scopedUpcoming[0] || null
     },
 
     listTitle() {
@@ -294,7 +268,7 @@ export default {
     },
 
     scopeName() {
-      const t = this.myTeams.find((x) => x.id === this.selectedTeamId)
+      const t = this.myTeams.find((x) => x.id === this.group)
       return t ? (t.section ? `شعبة ${t.section}` : t.name) : 'كل المجموعات'
     },
 
@@ -321,23 +295,6 @@ export default {
 
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams', 'createMeeting', 'deleteMeeting']),
-
-    teamTitle(t) {
-      return t.section ? `شعبة ${t.section}` : t.name
-    },
-
-    /** إحصاء مجموعة: العدد الكلي والقادمة والمنتهية والموعد القادم */
-    statsFor(t) {
-      const list = this.allMeetings.filter((m) => m.teamId === t.id)
-      const upcoming = list.filter((m) => !m.past)
-      const next = upcoming[0]
-      return {
-        total: list.length,
-        upcoming: upcoming.length,
-        done: list.length - upcoming.length,
-        next: next ? next.date : ''
-      }
-    },
 
     leaderOf(teamId) {
       return this.teams.find((t) => t.id === teamId)?.leader || null
@@ -368,13 +325,8 @@ export default {
       }
     },
 
-    pickTeam(id) {
-      if (id === this.selectedTeamId) return
-      this.selectedTeamId = id
-    },
-
     openCreate() {
-      this.form = { teamId: this.selectedTeamId ?? this.teamOptions[0]?.value, title: '', at: '', link: '', notes: '' }
+      this.form = { teamId: this.group || this.teamOptions[0]?.value, title: '', at: '', link: '', notes: '' }
       this.createOpen = true
     },
 
