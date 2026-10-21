@@ -1,8 +1,8 @@
 <template>
-  <div class="dash hd-page">
-    <header class="dash-head"><h2 class="dash-title">المساعد الآلي</h2></header>
+  <!-- المساعد الآلي للمشرف: نفس تصميم المساعد تبع السوبر أدمن (بطاقة بوابة تملأ الشاشة + شريط أسئلة) -->
+  <div class="dash hd-page ac-page">
     <AssistantChat
-      title="المساعد الآلي للمشرف"
+      title="مساعدك الذكي لمتابعة مشاريع فرقك"
       empty-hint="اسأل عن حالة فرقك، صياغة ملاحظات على مقترح، أو التحضير لاجتماع مناقشة."
       :suggestions="suggestions"
     />
