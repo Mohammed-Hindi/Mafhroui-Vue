@@ -85,7 +85,7 @@
               <!-- لمن أُسندت المهمة: دائرة بالحرف الأول + الاسم الأول؛ بلا مكلّفين = كل الفريق -->
               <div class="tb-assignees">
                 <template v-if="(task.assignees || []).length">
-                  <span v-for="a in task.assignees" :key="a.id" class="tb-assignee" :title="a.name"><i>{{ (a.name || '؟').charAt(0) }}</i>{{ (a.name || '').split(' ')[0] }}</span>
+                  <span v-for="a in task.assignees" :key="a.id" class="tb-assignee" :title="a.name"><i>{{ shortName(a.name).charAt(0) }}</i>{{ shortName(a.name) }}</span>
                 </template>
                 <span v-else class="tb-assignee is-team"><i><Users :size="11" /></i>كل الفريق</span>
               </div>
@@ -336,7 +336,7 @@ import { ROLE_LABELS } from '@/utils/constants'
 import { useAuthStore } from '@/stores/auth.store'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
-import { formatRelativeTime } from '@/utils/formatters'
+import { formatRelativeTime, shortName } from '@/utils/formatters'
 
 const COLUMNS = [
   { id: 'pending', label: 'قيد الانتظار', dot: 'bg-text-400', headBg: '' },
@@ -392,6 +392,7 @@ export default {
       Pencil,
       Trash2,
       formatRelativeTime,
+      shortName,
       columns: COLUMNS,
       mobileStatus: COLUMNS[0].id,
       modalOpen: false,

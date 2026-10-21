@@ -78,3 +78,16 @@ export function initials(fullName) {
   if (!fullName) return '؟'
   return fullName.trim().charAt(0)
 }
+
+/** الألقاب الأكاديمية التي تسبق الاسم ("أ.د." / "د." / "م." …) — تُتجاهل عند عرض الاسم المختصر */
+const HONORIFICS = new Set([
+  'أ', 'ا', 'د', 'م', 'ب', 'ام', 'أد', 'المهندس', 'الأستاذ', 'الدكتور', 'دكتور', 'أستاذ', 'أستاذة', 'ماجستير'
+])
+
+/** الاسم الأول بلا اللقب — "أ. منار حمدان" ⇒ "منار" (وإلا يظهر اللقب وحده على الكروت) */
+export function shortName(fullName) {
+  if (!fullName) return '؟'
+  const parts = String(fullName).trim().split(/\s+/).filter(Boolean)
+  const first = parts.find((part) => !HONORIFICS.has(part.replace(/[.،,]/g, '')))
+  return first || parts[0] || '؟'
+}
