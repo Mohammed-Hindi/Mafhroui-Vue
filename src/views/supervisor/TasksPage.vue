@@ -2,22 +2,22 @@
   <!-- مهام المشرف: نظرة سريعة على كل مجموعة (المشروع + نسبة الإنجاز) + شريط فلاتر واحد + عرض المهام أو تفاعل الطلاب -->
   <div class="dash svt-page">
     <!-- شريط المجموعات: بطاقة لكل مجموعة — الضغط يختار المجموعة وتُحدَّث اللوحة تحتها -->
-    <section v-if="myTeams.length" class="svt-teams" aria-label="مجموعاتك">
+    <section v-if="myTeams.length" class="sup-teams" aria-label="مجموعاتك">
       <button
         v-for="t in myTeams"
         :key="t.id"
         type="button"
-        :class="['svt-team', t.id === selectedTeamId && 'is-active']"
+        :class="['sup-team', t.id === selectedTeamId && 'is-active']"
         :aria-pressed="t.id === selectedTeamId"
         @click="pickTeam(t.id)"
       >
-        <span class="svt-team-head">
+        <span class="sup-team-head">
           <b>{{ teamTitle(t) }}</b>
-          <span class="svt-team-count">{{ statsFor(t).total }}</span>
+          <span class="sup-team-count">{{ statsFor(t).total }}</span>
         </span>
-        <span class="svt-team-proj">{{ t.projectName || 'لم يُسجَّل مشروع بعد' }}</span>
-        <span class="svt-team-bar"><i :style="{ width: statsFor(t).pct + '%' }" /></span>
-        <span class="svt-team-meta">
+        <span class="sup-team-proj">{{ t.projectName || 'لم يُسجَّل مشروع بعد' }}</span>
+        <span class="sup-team-bar"><i :style="{ width: statsFor(t).pct + '%' }" /></span>
+        <span class="sup-team-meta">
           {{ t.members.length }} طالب · {{ statsFor(t).done }} مكتملة · {{ statsFor(t).pct }}%
         </span>
       </button>
@@ -44,13 +44,13 @@
         </label>
         <BaseSelect
           v-model="who"
-          class="svt-select"
+          class="sup-select"
           aria-label="المكلّف"
           :placeholder="view === 'tasks' ? 'كل المهام' : 'كل الطلاب'"
           include-placeholder-option
           :options="whoOptions"
         />
-        <BaseSelect v-model="sort" class="svt-select" aria-label="الترتيب" :options="sortOptions" />
+        <BaseSelect v-model="sort" class="sup-select" aria-label="الترتيب" :options="sortOptions" />
         <div class="svt-views" role="tablist" aria-label="طريقة العرض">
           <button
             v-for="v in views"
