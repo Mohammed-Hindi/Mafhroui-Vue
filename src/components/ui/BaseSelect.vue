@@ -143,7 +143,10 @@ const handleOutsideClick = (event) => {
 }
 
 const openDropdown = () => {
-  panelZ.value = root.value?.closest('[role="dialog"]') ? 120 : 39
+  // القائمة فوق النافذة اللي فيها (مع احترام طبقة النافذة حتى ما تختفي خلف نافذة فوقها)
+  const dialog = root.value?.closest('[role="dialog"]')
+  const dialogZ = dialog ? parseInt(getComputedStyle(dialog).zIndex, 10) : 0
+  panelZ.value = dialog ? (Number.isFinite(dialogZ) ? dialogZ : 110) + 10 : 39
   const button = root.value?.querySelector('button')
   if (button && window.innerHeight - button.getBoundingClientRect().bottom < 200) button.scrollIntoView({ block: 'center' })
   isOpen.value = true

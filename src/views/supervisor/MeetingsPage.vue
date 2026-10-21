@@ -27,6 +27,7 @@
             :options="statusOptions"
           />
           <BaseSelect v-model="sort" class="sup-select" aria-label="الترتيب" :disabled="!scopeCounts.total" :options="sortOptions" />
+          <button v-if="hasFilters" type="button" class="gr-clear svm-clear" @click="resetFilters">مسح الفلاتر</button>
           <button type="button" class="pbtn is-green svm-add" :disabled="!myTeams.length" @click="openCreate"><Plus :size="16" /> اجتماع جديد</button>
         </div>
       </div>
@@ -94,20 +95,21 @@
 
     <!-- اجتماع جديد: POST /teams/{id}/meetings — المجموعة، الاسم، الموعد، الرابط، الملاحظات -->
     <BaseModal v-model="createOpen" title="اجتماع جديد" size="md">
-      <form id="sup-meeting-form" class="sp-form" @submit.prevent="create">
-        <label class="pfield">
+      <form id="sup-meeting-form" class="sp-form svm-form" @submit.prevent="create">
+        <div class="pfield">
           <span>المجموعة <b class="as-req">*</b></span>
-          <select v-model="form.teamId" class="gr-select">
-            <option v-for="o in teamOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-          </select>
-        </label>
+          <BaseSelect v-model="form.teamId" aria-label="المجموعة" placeholder="اختر المجموعة" :options="teamOptions" />
+        </div>
         <label class="pfield">
           <span>اسم الاجتماع <b class="as-req">*</b></span>
           <input v-model.trim="form.title" type="text" maxlength="200" placeholder="مثال: مراجعة الفصل الثاني">
         </label>
         <label class="pfield">
           <span>موعد الاجتماع <b class="as-req">*</b></span>
-          <input v-model="form.at" type="datetime-local" :min="minAt">
+          <span class="svm-dt">
+            <span class="svm-dt-emoji" aria-hidden="true">📅</span>
+            <input v-model="form.at" type="datetime-local" :min="minAt">
+          </span>
         </label>
         <label class="pfield">
           <span>رابط الاجتماع</span>
@@ -384,6 +386,11 @@ export default {
       return parts.join(' · ')
     },
 
+    /** هل في فلتر مفعّل؟ (لإظهار زر مسح الفلاتر) */
+    hasFilters() {
+      return !!(this.q || this.group || this.status)
+    },
+
     canCreate() {
       return !!this.form.teamId && !!this.form.title && !!this.form.at
     },
@@ -420,6 +427,15 @@ export default {
     syncFilters() {
       if (this.status && !this.statusOptions.some((o) => o.value === this.status)) this.status = ''
       if (!this.sortOptions.some((o) => o.value === this.sort)) this.sort = this.sortOptions[0]?.value || ''
+    },
+
+    /** إعادة الفلاتر لحالتها الافتراضية (كل المجموعات + كل الاجتماعات + القادمة الأقرب) */
+    resetFilters() {
+      this.q = ''
+      this.group = ''
+      this.status = ''
+      this.sort = 'soon'
+      this.syncFilters()
     },
 
     leaderOf(teamId) {

@@ -6946,9 +6946,17 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sup-team-next { font-size: 12px; font-weight: 700; color: var(--ucas-blue); }
 :root[data-theme="dark"] .sup-team-next { color: #35B8E0; }
 
-/* المحدّد داخل شريط الفلاتر (مشرك بين صفحات المشرف) */
+/* المحدّد داخل شريط الفلاتر (مشرك بين صفحات المشرف) — مسطّح بنفس شكل حقل البحث تبع البوابة */
 .sup-select { flex: 0 1 200px; }
-.sup-select > button { height: 44px; }
+.sup-select > button {
+  height: 42px;
+  border-radius: 4px;
+  border-color: #CED4DA;
+  background: var(--color-surface);
+  font-size: 14px;
+}
+.sup-select > button:hover:not(:disabled) { border-color: color-mix(in srgb, var(--ucas-blue) 42%, var(--color-border)); }
+:root[data-theme="dark"] .sup-select > button { border-color: var(--color-border); }
 
 /* ======================================================================
    مهام المشرف (SupervisorTasksPage) — شريط فلاتر واحد (بحث + مكلّف + ترتيب)
@@ -7067,3 +7075,16 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 :root[data-theme="dark"] .svm-pill.is-done { background: rgba(16, 196, 105, .15); color: #34D399; }
 /* أزرار الإجراءات في صف واحد */
 .svm-acts { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+/* فورم اجتماع جديد: تسميات الحقول بشكل موحّد + زر مسح الفلاتر */
+.svm-form .pfield > span { display: flex; align-items: center; gap: 6px; }
+.svm-clear { flex: 0 0 auto; }
+/* حقل الموعد: أيقونة كلندر ملوّنة بهوية البوابة */
+.svm-dt { position: relative; display: block; }
+.svm-dt input { padding-inline-start: 46px !important; }
+.svm-dt-emoji {
+  position: absolute; inset-inline-start: 12px; top: 50%; transform: translateY(-50%);
+  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 4px;
+  background: color-mix(in srgb, var(--ucas-blue) 10%, var(--color-surface));
+  font-size: 14px; line-height: 1; pointer-events: none;
+  filter: saturate(1.5) hue-rotate(-8deg);
+}
