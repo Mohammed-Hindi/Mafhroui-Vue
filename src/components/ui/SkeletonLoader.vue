@@ -18,6 +18,18 @@
     </div>
   </div>
 
+  <!-- قائمة وهمية: صفوف المراسلات (دائرة + عنوان + مقتطف) — نفس شكل الصف الحقيقي -->
+  <div v-else-if="variant === 'list'" class="sk-list" role="status" aria-label="جارٍ التحميل">
+    <div v-for="n in rows" :key="n" class="sk-list-row">
+      <span class="sk sk-dot" />
+      <div class="sk-list-body">
+        <span class="sk" :style="{ width: `${72 - (n % 3) * 14}%` }" />
+        <span class="sk" style="width: 92%" />
+        <span class="sk sk-thin" />
+      </div>
+    </div>
+  </div>
+
   <!-- لوحة مهام وهمية: أعمدة كانبان برأس وعدّاد وبطاقات — نفس شكل اللوحة الحقيقية -->
   <div v-else-if="variant === 'board'" class="sk-board" role="status" aria-label="جارٍ التحميل">
     <div v-for="c in cols" :key="c" class="sk-col">
@@ -54,7 +66,7 @@ export default {
   props: {
     rows: { type: Number, default: 3 },
     height: { type: String, default: '16px' },
-    // lines | cards | table | board
+    // lines | cards | table | board | list
     variant: { type: String, default: 'lines' },
     cols: { type: Number, default: 4 }
   },
