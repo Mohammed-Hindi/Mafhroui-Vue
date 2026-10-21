@@ -55,7 +55,13 @@
                 {{ m.title }}
                 <span v-if="m.notes" class="svm-note">{{ m.notes }}</span>
               </td>
-              <td v-if="!group" class="pt-muted">{{ m.teamLabel }}</td>
+              <td v-if="!group" class="pt-muted">
+                <button type="button" class="svm-team-link" @click="openTeam(m.teamId)">
+                  <Users :size="14" />
+                  <span>{{ m.teamLabel }}</span>
+                  <b>{{ membersCount(m.teamId) }}</b>
+                </button>
+              </td>
               <td class="mono">
                 {{ m.date }}
                 <span class="svm-when">{{ m.time }}</span>
@@ -119,6 +125,61 @@
       </template>
     </BaseModal>
 
+    <!-- تفاصيل المجموعة: الأعضاء بمعلوماتهم الكاملة + بيانات المشروع -->
+    <BaseModal
+      :model-value="teamOpen"
+      :title="teamDetail?.name || 'تفاصيل المجموعة'"
+      :description="teamSubtitle"
+      size="xl"
+      @update:model-value="!$event && closeTeam()"
+    >
+      <SkeletonLoader v-if="teamLoading" variant="list" :rows="3" />
+      <div v-else-if="teamDetail" class="gr-detail svm-team-detail">
+        <aside class="gr-side">
+          <h4>المشروع</h4>
+          <p class="gr-sup">{{ teamDetail.project?.name || 'لم يُسجَّل مشروع بعد' }}</p>
+          <p class="gr-desc">{{ teamDetail.project?.description || 'لا يوجد وصف للمشروع' }}</p>
+          <h4>نوع المشروع</h4>
+          <p class="gr-desc">{{ teamDetail.project?.types?.join(' · ') || '—' }}</p>
+          <h4>المشرف</h4>
+          <p class="gr-sup">{{ teamDetail.supervisor?.name || '—' }}</p>
+          <h4>قائد المجموعة</h4>
+          <p class="gr-sup">{{ teamDetail.leader?.name || '—' }}</p>
+        </aside>
+
+        <div class="gr-members gr-detail-full">
+          <table>
+            <thead>
+              <tr>
+                <th>الطالب</th>
+                <th>الرقم الجامعي</th>
+                <th>مكان التواجد</th>
+                <th>واتساب</th>
+                <th>البريد</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="mem in teamMembers" :key="mem.id">
+                <td>
+                  <span class="svm-member">
+                    <span class="gm-av" aria-hidden="true">{{ (mem.student?.name || '?').charAt(0) }}</span>
+                    <span class="gr-member-name">{{ mem.student?.name || '—' }}</span>
+                    <span v-if="mem.is_leader" class="svt-leader">قائد المجموعة</span>
+                  </span>
+                </td>
+                <td><span class="mono">{{ mem.student?.university_number || '—' }}</span></td>
+                <td>{{ REGIONS[mem.student?.region] || '—' }}</td>
+                <td><span class="mono">{{ mem.student?.whatsapp || '—' }}</span></td>
+                <td><span class="mono">{{ mem.student?.email || '—' }}</span></td>
+              </tr>
+              <tr v-if="!teamMembers.length"><td colspan="5" class="gr-empty">لا يوجد أعضاء في هذه المجموعة</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p v-else class="gr-muted">تعذّر تحميل بيانات المجموعة</p>
+    </BaseModal>
+
     <!-- تأكيد إلغاء الاجتماع: DELETE /meetings/{id} -->
     <BaseModal :model-value="!!cancelTarget" title="إلغاء الاجتماع" size="sm" @update:model-value="!$event && (cancelTarget = null)">
       <p>سيُلغى اجتماع «{{ cancelTarget?.title }}» ({{ cancelTarget?.date }} الساعة {{ cancelTarget?.time }}).</p>
@@ -132,22 +193,24 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { CalendarClock, MessageCircle, Plus, Search, Trash2, Video as VideoIcon } from 'lucide-vue-next'
+import { CalendarClock, MessageCircle, Plus, Search, Trash2, Users, Video as VideoIcon } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
 import api, { sendWhatsapp } from '@/services/api'
+import { REGIONS } from '@/utils/progressData'
 
 const DAY = 864e5
 
 export default {
   name: 'SupervisorMeetingsPage',
 
-  components: { BaseModal, BaseSelect, CalendarClock, MessageCircle, Plus, Search, Trash2, VideoIcon },
+  components: { BaseModal, BaseSelect, CalendarClock, MessageCircle, Plus, Search, Trash2, Users, VideoIcon },
 
   data() {
     return {
+      REGIONS,
       loading: true,
       meetingsLoading: true,
       status: '',
@@ -161,7 +224,11 @@ export default {
       saving: false,
       cancelTarget: null,
       cancelling: false,
-      form: {}
+      form: {},
+      /** بوب-أب تفاصيل المجموعة (أعضاء + مشروع) */
+      teamOpen: false,
+      teamLoading: false,
+      teamDetail: null
     }
   },
 
@@ -266,6 +333,22 @@ export default {
     nextMeeting() {      return this.scopedUpcoming[0] || null
     },
 
+    /** أعضاء المجموعة المعروضة في البوب-أب */
+    teamMembers() {
+      return this.teamDetail?.members || []
+    },
+
+    /** سطر العنوان الفرعي: الشعبة والتخصص */
+    teamSubtitle() {
+      if (!this.teamDetail) return ''
+      const t = this.myTeams.find((x) => x.id === this.teamDetail.id)
+      const parts = []
+      if (this.teamDetail.section) parts.push(`شعبة ${this.teamDetail.section}`)
+      if (t?.spec) parts.push(t.spec)
+      parts.push(`${this.teamMembers.length} أعضاء`)
+      return parts.join(' · ')
+    },
+
     canCreate() {
       return !!this.form.teamId && !!this.form.title && !!this.form.at
     },
@@ -306,6 +389,31 @@ export default {
 
     leaderOf(teamId) {
       return this.teams.find((t) => t.id === teamId)?.leader || null
+    },
+
+    /** عدد أعضاء المجموعة (من بيانات المجموعات المحمّلة) */
+    membersCount(teamId) {
+      return this.myTeams.find((t) => t.id === teamId)?.members?.length || 0
+    },
+
+    /** فتح بوب-أب تفاصيل المجموعة: GET /teams/{id} */
+    async openTeam(teamId) {
+      this.teamOpen = true
+      this.teamLoading = true
+      this.teamDetail = null
+      try {
+        const { data } = await api.get(`/teams/${teamId}`)
+        this.teamDetail = data.data || data
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحميل بيانات المجموعة')
+      } finally {
+        this.teamLoading = false
+      }
+    },
+
+    closeTeam() {
+      this.teamOpen = false
+      this.teamDetail = null
     },
 
     /** اجتماعات كل المجموعات — بالتوازي حتى لا تتأخر البطاقة الأولى */

@@ -7011,6 +7011,21 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 
 /* اسم الاجتماع: العنوان بارز والملاحظات سطر ثانوي هادئ */
 .svm-note { display: block; margin-top: 3px; font-size: 12.5px; font-weight: 400; color: var(--color-text-600); }
+/* اسم المجموعة في الجدول: زر يفتح بوب-أب تفاصيل المجموعة — مسطّح وعدّاد أزرق solid */
+.svm-team-link {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 4px;
+  background: color-mix(in srgb, var(--ucas-blue) 8%, transparent); color: var(--ucas-blue);
+  font-size: 13px; font-weight: 700; white-space: nowrap;
+  transition: background-color .2s var(--ease-standard), color .2s var(--ease-standard);
+}
+.svm-team-link:hover { background: color-mix(in srgb, var(--ucas-blue) 15%, transparent); }
+.svm-team-link:focus-visible { outline: 2px solid var(--ucas-blue); outline-offset: 2px; }
+.svm-team-link svg { flex-shrink: 0; }
+.svm-team-link b { min-width: 20px; padding: 1px 6px; border-radius: 4px; background: var(--ucas-blue); color: #FFFFFF; font-size: 11.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
+/* صف الطالب داخل بوب-أب المجموعة: صورة رمزية + اسم + شارة القائد */
+.svm-member { display: inline-flex; align-items: center; gap: 8px; }
+/* بوب-أب المجموعة: بلا حشوة إضافية (البوابة تحسبها) */
+.svm-team-detail { padding: 0; }
 /* الموعد: التاريخ ثم الساعة تحته */
 .svm-when { display: block; margin-top: 2px; font-size: 12px; font-weight: 600; color: var(--color-text-400); font-variant-numeric: tabular-nums; }
 /* شريحة الحالة: القادمة سماوية والمنتهية خضراء */
