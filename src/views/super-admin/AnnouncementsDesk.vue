@@ -5,7 +5,6 @@
     <section class="dash-card ads-card">
       <div class="dash-card-head ads-head">
         <h3>الإعلانات والملفات</h3>
-        <span class="dash-chip">{{ items.length }} عنصر</span>
       </div>
 
       <div class="gr-filters ads-filters">
