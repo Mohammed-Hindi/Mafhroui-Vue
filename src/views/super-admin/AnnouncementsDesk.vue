@@ -72,7 +72,7 @@
                   <p v-if="current.body">{{ current.body }}</p>
                   <p v-else class="pt-muted">بلا نص مرفق.</p>
                 </article>
-                <router-link v-if="current.type === 'task'" :to="{ name: tasksRoute }" class="pbtn is-cyan is-sm"><ListTodo :size="15" /> فتح في لوحة المهام</router-link>
+                <router-link v-if="current.type === 'task'" :to="{ name: tasksRoute }" class="pbtn is-cyan is-sm ads-task-link"><ListTodo :size="15" /> فتح في لوحة المهام</router-link>
 
                 <section v-if="current.attachments?.length" class="an-files" aria-label="المرفقات">
                   <h4 class="portal-title an-files-title">المرفقات</h4>
