@@ -191,9 +191,10 @@ export default {
       ]
     },
 
-    /** خيارات فلتر المكلّف: مهام المجموعة (بلا مكلّفين) + أفراد المجموعة */
+    /** خيارات فلتر المكلّف: في لوحة المهام تشمل مهام المجموعة (بلا مكلّفين)، وفي جدول الطلاب تقتصر على الأفراد */
     whoOptions() {
-      const opts = [{ value: 'team', label: 'مهام المجموعة (بلا مكلّفين)' }]
+      const opts = []
+      if (this.view === 'tasks') opts.push({ value: 'team', label: 'مهام المجموعة (بلا مكلّفين)' })
       for (const m of this.selectedTeam?.members || []) opts.push({ value: String(m.id), label: m.name })
       return opts
     },
@@ -296,6 +297,8 @@ export default {
       if (v === this.view) return
       this.view = v
       this.sort = this.sortOptions[0].value
+      // خيار "مهام المجموعة" لا معنى له في جدول الطلاب — نُصفّره عند التبديل
+      if (v === 'engagement' && this.who === 'team') this.who = ''
     },
 
     async pickTeam(id) {
