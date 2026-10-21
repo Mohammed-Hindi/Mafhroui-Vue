@@ -1,101 +1,151 @@
 <template>
-  <div class="dash hd-page">
-    <header class="dash-head">
-      <h2 class="dash-title">المهام</h2>
-    </header>
+  <!-- مهام المشرف: نظرة سريعة على كل مجموعة (المشروع + نسبة الإنجاز) + شريط فلاتر واحد + عرض المهام أو تفاعل الطلاب -->
+  <div class="dash svt-page">
+    <!-- شريط المجموعات: بطاقة لكل مجموعة — الضغط يختار المجموعة وتُحدَّث اللوحة تحتها -->
+    <section v-if="myTeams.length" class="svt-teams" aria-label="مجموعاتك">
+      <button
+        v-for="t in myTeams"
+        :key="t.id"
+        type="button"
+        :class="['svt-team', t.id === selectedTeamId && 'is-active']"
+        :aria-pressed="t.id === selectedTeamId"
+        @click="pickTeam(t.id)"
+      >
+        <span class="svt-team-head">
+          <b>{{ teamTitle(t) }}</b>
+          <span class="svt-team-count">{{ statsFor(t).total }}</span>
+        </span>
+        <span class="svt-team-proj">{{ t.projectName || 'لم يُسجَّل مشروع بعد' }}</span>
+        <span class="svt-team-bar"><i :style="{ width: statsFor(t).pct + '%' }" /></span>
+        <span class="svt-team-meta">
+          {{ t.members.length }} طالب · {{ statsFor(t).done }} مكتملة · {{ statsFor(t).pct }}%
+        </span>
+      </button>
+    </section>
 
-    <!-- فلتر الفرق بنمط تصنيف البوابة (شريط مقسّم بعدد طلاب كل فرقة) + سطر تعريف بالفرقة المختارة -->
-    <section v-if="teamOptions.length" class="dash-card tk-teambar">
-      <div class="gr-class" role="radiogroup" aria-label="المجموعة">
-        <span class="gr-class-label">المجموعة</span>
-        <div class="gr-seg">
-          <button
-            v-for="t in myTeams" :key="t.id" type="button" role="radio"
-            :class="selectedTeamId === t.id && 'is-active'" :aria-checked="selectedTeamId === t.id" :title="t.name"
-            @click="pickTeam(t.id)"
+    <SkeletonLoader v-if="!teamsLoaded && !myTeams.length" variant="cards" :rows="3" />
+    <EmptyState
+      v-else-if="!myTeams.length"
+      :icon="UsersIcon"
+      title="لا توجد فرق مُسندة إليك"
+      description="عند إسناد مجموعات إليك من لجنة الإشراف ستظهر هنا مهامها وتفاعل طلابها."
+    />
+
+    <template v-else>
+      <!-- شريط الفلاتر: بحث + المكلّف + الترتيب + مبدّل العرض (لوحة المهام / تفاعل الطلاب) -->
+      <div class="gr-filters svt-filters">
+        <label class="gr-search">
+          <Search :size="16" />
+          <input
+            v-model.trim="q"
+            type="search"
+            :placeholder="view === 'tasks' ? 'بحث في مهام المجموعة…' : 'بحث باسم الطالب أو رقمه الجامعي…'"
           >
-            {{ t.section ? `شعبة ${t.section}` : t.name }} <b>{{ t.members.length }}</b>
+        </label>
+        <BaseSelect
+          v-model="who"
+          class="svt-select"
+          aria-label="المكلّف"
+          placeholder="كل المهام"
+          include-placeholder-option
+          :options="whoOptions"
+        />
+        <BaseSelect v-model="sort" class="svt-select" aria-label="الترتيب" :options="sortOptions" />
+        <div class="svt-views" role="tablist" aria-label="طريقة العرض">
+          <button
+            v-for="v in views"
+            :key="v.key"
+            type="button"
+            role="tab"
+            :class="view === v.key && 'is-active'"
+            :aria-selected="view === v.key"
+            @click="setView(v.key)"
+          >
+            <component :is="v.icon" :size="15" /> {{ v.label }} <b>{{ v.count }}</b>
           </button>
         </div>
       </div>
-      <dl v-if="selectedTeam" class="tk-teammeta">
-        <div><dt>الفرقة</dt><dd>{{ selectedTeam.name }}</dd></div>
-        <div><dt>المشروع</dt><dd>{{ selectedTeam.projectName || 'لم يُسجَّل بعد' }}</dd></div>
-        <div><dt>الطلاب</dt><dd>{{ selectedTeam.members.map((m) => m.name).join('، ') || '—' }}</dd></div>
-      </dl>
-    </section>
 
-    <!-- ستيبر العروض بنمط الإدارة العامة: المهام (اللوحة) · تفاعل الطلاب وتقييمهم -->
-    <PortalStepper v-if="selectedTeam" v-model="view" :items="views" label="عرض المهام" />
+      <!-- تفاعل الطلاب: توزيع المهام على أفراد المجموعة ونسبة إنجاز كل طالب -->
+      <section v-if="view === 'engagement'" class="gr gr-card">
+        <header class="gr-card-head">
+          <div class="gr-card-title"><h3>تفاعل الطلاب</h3><span>{{ selectedTeam?.name }}</span></div>
+        </header>
+        <div class="gr-table-wrap">
+          <table class="gr-table sh-table">
+            <thead>
+              <tr>
+                <th>الطالب</th>
+                <th>الرقم الجامعي</th>
+                <th>الدور</th>
+                <th>المهام الموكلة</th>
+                <th>المنجزة</th>
+                <th>المتبقية</th>
+                <th>نسبة الإنجاز</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="s in engagement" :key="s.id" class="gr-row">
+                <td class="pt-strong">{{ s.name }}</td>
+                <td class="mono">{{ s.uid }}</td>
+                <td>
+                  <span v-if="s.leader" class="svt-leader">قائد المجموعة</span>
+                  <span v-else class="svt-muted">عضو</span>
+                </td>
+                <td>{{ s.total }}</td>
+                <td>{{ s.done }}</td>
+                <td>{{ s.total - s.done }}</td>
+                <td class="sh-progress">
+                  <span class="gr-progress"><span :class="level(s.pct)" :style="{ width: s.pct + '%' }" /></span>
+                  <span class="gr-pct">{{ s.pct }}%</span>
+                </td>
+              </tr>
+              <tr v-if="!engagement.length"><td colspan="7" class="gr-empty">لا يوجد طلاب في هذه المجموعة</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="gr-sumbar">
+          <span>الطلاب: {{ group.students }}</span>
+          <span>مهام المجموعة: {{ group.tasks }}</span>
+          <span>المنجزة: {{ group.done }}</span>
+          <span>متوسط إنجاز الطلاب: {{ group.avg }}%</span>
+        </div>
+      </section>
 
-    <!-- تفاعل الطلاب: المهام الموكلة والمنجزة لكل طالب (مهمة بلا مكلّفين = لكل أعضاء المجموعة) -->
-    <section v-if="selectedTeam && view === 'engagement'" class="gr gr-card">
-      <header class="gr-card-head">
-        <div class="gr-card-title"><h3>تفاعل الطلاب وتقييمهم</h3><span>{{ selectedTeam.name }}</span></div>
-      </header>
-      <div class="gr-table-wrap">
-        <table class="gr-table sh-table">
-          <thead><tr><th>الطالب</th><th>الرقم الجامعي</th><th>المهام الموكلة</th><th>المنجزة</th><th>المتبقية</th><th>نسبة الإنجاز</th><th>تاريخ آخر إنجاز</th><th>ملاحظات المشرف</th></tr></thead>
-          <tbody>
-            <tr v-for="s in engagement" :key="s.id" class="gr-row">
-              <td class="pt-strong">{{ s.name }}</td>
-              <td class="mono">{{ s.uid }}</td>
-              <td>{{ s.total }}</td>
-              <td>{{ s.done }}</td>
-              <td>{{ s.total - s.done }}</td>
-              <td class="sh-progress">
-                <span class="gr-progress"><span :class="level(s.pct)" :style="{ width: s.pct + '%' }" /></span>
-                <span class="gr-pct">{{ s.pct }}%</span>
-              </td>
-              <!-- ponytail: تاريخ آخر إنجاز وعدد ملاحظات المشرف placeholder — متاحان حاليًا من "سجل الحركة" و"الملاحظات" على كل بطاقة -->
-              <td class="pt-muted">—</td>
-              <td class="pt-muted">—</td>
-            </tr>
-            <tr v-if="!engagement.length"><td colspan="8" class="gr-empty">لا يوجد طلاب في هذه المجموعة</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="gr-sumbar">
-        <span>الطلاب: {{ engagement.length }}</span>
-        <span>مهام المجموعة: {{ tasks.length }}</span>
-        <span>المنجزة: {{ tasks.filter((t) => t.status === 'done').length }}</span>
-        <span>متوسط إنجاز الطلاب: {{ engagement.length ? Math.round(engagement.reduce((n, s) => n + s.pct, 0) / engagement.length) : 0 }}%</span>
-      </div>
-    </section>
-
-    <SkeletonLoader v-if="!teamsLoaded && !teamOptions.length" variant="board" :rows="2" />
-    <EmptyState v-else-if="!teamOptions.length" :icon="UsersIcon" title="لا توجد فرق مُسندة إليك" description="عند إسناد مجموعات إليك من لجنة الإشراف ستظهر هنا مهامها وتفاعل طلابها." />
-    <TaskBoard
-      v-else-if="selectedTeamId && view === 'tasks'"
-      :tasks="tasks"
-      :can-create="true"
-      :members="selectedTeam?.members || []"
-      :can-drag="false"
-      :can-delete="true"
-      :trashed-tasks="trashedTasks"
-      :trashed-loading="trashedTasksLoading"
-      :restoring-id="restoringId"
-      :force-deleting-id="forceDeletingId"
-      :notes-by-task="taskNotes"
-      :notes-loading-by-task="taskNotesLoading"
-      @create="onCreate"
-      @archive="onArchive"
-      @update="onUpdate"
-      @open-archive="onOpenArchive"
-      @restore="onRestore"
-      @force-delete="onForceDelete"
-      @load-notes="onLoadNotes"
-      @add-note="onAddNote"
-    />
+      <!-- لوحة المهام (كانبان) للمجموعة المختارة -->
+      <TaskBoard
+        v-else
+        :tasks="shownTasks"
+        :loading="tasksLoading"
+        :can-create="true"
+        :members="selectedTeam?.members || []"
+        :can-drag="false"
+        :can-delete="true"
+        :trashed-tasks="trashedTasks"
+        :trashed-loading="trashedTasksLoading"
+        :restoring-id="restoringId"
+        :force-deleting-id="forceDeletingId"
+        :notes-by-task="taskNotes"
+        :notes-loading-by-task="taskNotesLoading"
+        @create="onCreate"
+        @archive="onArchive"
+        @update="onUpdate"
+        @open-archive="onOpenArchive"
+        @restore="onRestore"
+        @force-delete="onForceDelete"
+        @load-notes="onLoadNotes"
+        @add-note="onAddNote"
+      />
+    </template>
   </div>
 </template>
 
 <script>
 import { mapState, mapActions } from 'pinia'
 import { markRaw } from 'vue'
-import { ListTodo, Users } from 'lucide-vue-next'
+import { ListTodo, Users, Search } from 'lucide-vue-next'
 import TaskBoard from '@/components/shared/TaskBoard.vue'
-import PortalStepper from '@/components/shared/PortalStepper.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { level } from '@/utils/progressData'
 import { useTeamsStore } from '@/stores/teams.store'
@@ -105,48 +155,112 @@ import api from '@/services/api'
 export default {
   name: 'SupervisorTasksPage',
 
-  components: { TaskBoard, EmptyState, PortalStepper },
+  components: { TaskBoard, EmptyState, BaseSelect, Search },
 
   data() {
     return {
       UsersIcon: markRaw(Users),
       selectedTeamId: null,
       view: 'tasks',
+      q: '',
+      who: '',
+      sort: 'newest',
+      /** مهام بقية المجموعات — لعرض نسبة الإنجاز في شريط المجموعات دون تبديل المجموعة */
+      teamTasks: {},
       restoringId: null,
       forceDeletingId: null
     }
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['teamsForDisplay', 'teamsLoaded', 'tasks', 'trashedTasks', 'trashedTasksLoading', 'taskNotes', 'taskNotesLoading']),
+    ...mapState(useTeamsStore, ['teamsForDisplay', 'teamsLoaded', 'tasks', 'tasksLoading', 'trashedTasks', 'trashedTasksLoading', 'taskNotes', 'taskNotesLoading']),
     ...mapState(useAuthStore, ['user']),
 
     myTeams() {
       return this.teamsForDisplay.filter((t) => t.supId === this.user?.id)
     },
 
-    teamOptions() {
-      return this.myTeams.map((t) => ({ value: t.id, label: t.name }))
-    },
-
-    views() {
-      return [
-        { key: 'tasks', label: 'المهام', icon: markRaw(ListTodo), count: this.tasks.length },
-        { key: 'engagement', label: 'تفاعل الطلاب وتقييمهم', icon: markRaw(Users), count: this.selectedTeam?.members.length || 0 }
-      ]
-    },
-
     selectedTeam() {
       return this.myTeams.find((t) => t.id === this.selectedTeamId) || null
     },
 
+    views() {
+      return [
+        { key: 'tasks', label: 'المهام', icon: markRaw(ListTodo), count: this.shownTasks.length },
+        { key: 'engagement', label: 'تفاعل الطلاب', icon: markRaw(Users), count: this.engagement.length }
+      ]
+    },
+
+    /** خيارات فلتر المكلّف: مهام المجموعة (بلا مكلّفين) + أفراد المجموعة */
+    whoOptions() {
+      const opts = [{ value: 'team', label: 'مهام المجموعة (بلا مكلّفين)' }]
+      for (const m of this.selectedTeam?.members || []) opts.push({ value: String(m.id), label: m.name })
+      return opts
+    },
+
+    /** الترتيب يتبع العرض المعروض: زمني/أبجدي للمهام، ونِسَب للطلاب */
+    sortOptions() {
+      return this.view === 'tasks'
+        ? [
+            { value: 'newest', label: 'الأحدث أولًا' },
+            { value: 'oldest', label: 'الأقدم أولًا' },
+            { value: 'title', label: 'العنوان أبجديًا' }
+          ]
+        : [
+            { value: 'name', label: 'الاسم أبجديًا' },
+            { value: 'high', label: 'الأعلى إنجازًا' },
+            { value: 'low', label: 'الأقل إنجازًا' }
+          ]
+    },
+
+    /** مهام المجموعة بعد الفلترة والترتيب — تُمرَّر للوحة فتعكس أعمدتها العدّادات الصحيحة */
+    shownTasks() {
+      const q = this.q.toLowerCase()
+      const list = this.tasks.filter((t) => {
+        const assignees = t.assignees || []
+        if (this.who === 'team' && assignees.length) return false
+        if (this.who && this.who !== 'team' && !assignees.some((a) => String(a.id) === this.who)) return false
+        if (!q) return true
+        const hay = `${t.title || ''} ${t.description || ''} ${assignees.map((a) => a.name).join(' ')}`.toLowerCase()
+        return hay.includes(q)
+      })
+      const byDate = (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+      if (this.sort === 'oldest') return [...list].sort(byDate)
+      if (this.sort === 'title') return [...list].sort((a, b) => (a.title || '').localeCompare(b.title || '', 'ar'))
+      return [...list].sort((a, b) => -byDate(a, b))
+    },
+
     /** لكل طالب: مهامه = المسندة له أو مهام المجموعة بلا مكلّفين */
-    engagement() {
+    teamRows() {
       return (this.selectedTeam?.members || []).map((m) => {
-        const mine = this.tasks.filter((t) => !(t.assignees || []).length || t.assignees.some((a) => a.id === m.id))
+        const mine = this.tasks.filter((t) => !(t.assignees || []).length || t.assignees.some((a) => String(a.id) === String(m.id)))
         const done = mine.filter((t) => t.status === 'done').length
         return { ...m, total: mine.length, done, pct: mine.length ? Math.round((done / mine.length) * 100) : 0 }
       })
+    },
+
+    /** صفوف تفاعل الطلاب بعد الفلترة والترتيب */
+    engagement() {
+      const q = this.q.toLowerCase()
+      let rows = this.teamRows.filter((r) => {
+        if (this.who && this.who !== 'team' && String(r.id) !== this.who) return false
+        if (!q) return true
+        return `${r.name} ${r.uid}`.toLowerCase().includes(q)
+      })
+      if (this.sort === 'high') return [...rows].sort((a, b) => b.pct - a.pct)
+      if (this.sort === 'low') return [...rows].sort((a, b) => a.pct - b.pct)
+      return [...rows].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'))
+    },
+
+    /** ملخّص المجموعة كاملًا (لا يتأثر بالفلاتر) */
+    group() {
+      const rows = this.teamRows
+      return {
+        students: rows.length,
+        tasks: this.tasks.length,
+        done: this.tasks.filter((t) => t.status === 'done').length,
+        avg: rows.length ? Math.round(rows.reduce((n, r) => n + r.pct, 0) / rows.length) : 0
+      }
     }
   },
 
@@ -155,6 +269,7 @@ export default {
     if (this.myTeams.length) {
       this.selectedTeamId = this.myTeams[0].id
       await this.loadTasks()
+      await this.loadTeamStats()
     }
   },
 
@@ -162,10 +277,36 @@ export default {
     ...mapActions(useTeamsStore, ['fetchTeams', 'fetchTasks', 'createTask', 'deleteTask', 'updateTask', 'fetchTrashedTasks', 'restoreTask', 'forceDeleteTask', 'fetchTaskNotes', 'addTaskNote']),
     level,
 
-    pickTeam(id) {
+    teamTitle(t) {
+      return t.section ? `شعبة ${t.section}` : t.name
+    },
+
+    /** مهام مجموعة معيّنة — المجموعة الحالية من المخزن، وبقية المجموعات من طلبات خفيفة موازية */
+    tasksOf(t) {
+      return t.id === this.selectedTeamId ? this.tasks : this.teamTasks[t.id] || []
+    },
+
+    statsFor(t) {
+      const list = this.tasksOf(t)
+      const done = list.filter((x) => x.status === 'done').length
+      return { total: list.length, done, pct: list.length ? Math.round((done / list.length) * 100) : 0 }
+    },
+
+    setView(v) {
+      if (v === this.view) return
+      this.view = v
+      this.sort = this.sortOptions[0].value
+    },
+
+    async pickTeam(id) {
       if (id === this.selectedTeamId) return
+      // نُبقي مهام المجموعة الحالية محفوظة قبل التبديل حتى لا تضيع نسب الإنجاز في شريط المجموعات
+      this.teamTasks = { ...this.teamTasks, [this.selectedTeamId]: this.tasks }
       this.selectedTeamId = id
-      this.loadTasks()
+      this.q = ''
+      this.who = ''
+      await this.loadTasks()
+      await this.loadTeamStats()
     },
 
     async loadTasks() {
@@ -175,6 +316,22 @@ export default {
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر تحميل المهام')
       }
+    },
+
+    /** مهام بقية المجموعات — لعرض عدد المهام ونسبة الإنجاز في شريط المجموعات */
+    async loadTeamStats() {
+      const others = this.myTeams.filter((t) => t.id !== this.selectedTeamId)
+      const results = await Promise.all(
+        others.map(async (t) => {
+          try {
+            const { data } = await api.get(`/teams/${t.id}/tasks`)
+            return [t.id, data.data || data]
+          } catch {
+            return [t.id, []]
+          }
+        })
+      )
+      this.teamTasks = { ...this.teamTasks, ...Object.fromEntries(results) }
     },
 
     /** POST /teams/{id}/tasks ثم الملاحظة (POST /tasks/{id}/notes) والملفات (POST /tasks/{id}/files — مُنشئ المهمة يرفق ملفاتها) */
@@ -260,8 +417,9 @@ export default {
     async onAddNote({ id, note }) {
       try {
         await this.addTaskNote(id, note)
+        this.$toast?.success('تم حفظ الملاحظة')
       } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر إضافة الملاحظة')
+        this.$toast?.error(err.normalized?.message || 'تعذّر حفظ الملاحظة')
       }
     }
   }
