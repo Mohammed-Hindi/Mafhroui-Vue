@@ -2453,22 +2453,18 @@
 .ads-page { gap: 16px; }
 /* البطاقة بلا حشوة داخلية: التبويبات والفلاتر والقائمة تملأها */
 .dash-card.ads-card { padding: 0; overflow: hidden; }
-.ads-head { flex-wrap: wrap; gap: 12px 16px; margin-bottom: 16px; padding: 20px 24px 0; }
+.ads-head { flex-wrap: wrap; gap: 12px 16px; margin-bottom: 0; padding: 20px 24px 16px; }
 .ads-head h3 { font-size: 17px; font-weight: 700; color: var(--color-text-900); }
-.ads-tabs { flex-shrink: 0; }
-/* شريط التبويبات يمرّر أفقيًا على الشاشات الضيقة بدل أن يُقصّ */
-.ads-head .ads-tabs { overflow-x: auto; scrollbar-width: thin; }
-/* العدّادات: أزرق صلب (بلا تدرّج) كما في عدّادات لوحة المهام */
-.ads-tabs .rv-count,
-.ads-tabs .rv-tab.is-active .rv-count { background: var(--ucas-blue); color: #FFFFFF; box-shadow: none; }
 
-.ads-filters { padding: 0 24px 18px; background: transparent; border-radius: 0; box-shadow: none; align-items: center; gap: 10px; }
+.ads-filters { align-items: center; gap: 10px; }
 .ads-filters .gr-search { flex: 1 1 260px; max-width: none; }
 .ads-select { flex: 0 1 190px; }
 .ads-summary { margin-inline-start: auto; font-size: 12.5px; font-weight: 700; color: var(--color-text-400); white-space: nowrap; }
+/* شريط الفلاتر: باند كامل العرض بلون البوابة (تحت عنوان البطاقة) */
+.ucas-portal.sa-skin .ads-filters { padding: 14px 24px; border-radius: 0; border-bottom: 1px solid var(--color-border); }
 
 /* القائمة + التفاصيل */
-.ads-layout { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); height: calc(100vh - 272px); min-height: 420px; border-top: 1px solid var(--color-border); }
+.ads-layout { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); height: calc(100vh - 246px); min-height: 420px; border-top: 0; }
 .ads-list { display: flex; flex-direction: column; overflow-y: auto; border-inline-end: 1px solid var(--color-border); }
 .ads-list-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 10px; height: 52px; padding-inline: 16px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
 .ads-list-head .portal-title { font-size: 15px; }
@@ -2535,9 +2531,8 @@
   .ads-scroll { padding: 14px 16px; }
 }
 @media (max-width: 640px) {
-  .ads-head { padding: 16px 16px 0; }
-  .ads-filters { padding: 0 16px 16px; }
-  .ads-tabs { width: 100%; }
+  .ads-head { padding: 16px 16px 14px; }
+  .ucas-portal.sa-skin .ads-filters { padding: 12px 16px; }
   .ads-select { flex: 1 1 calc(50% - 5px); }
   .ads-summary { width: 100%; margin-inline-start: 0; }
 }

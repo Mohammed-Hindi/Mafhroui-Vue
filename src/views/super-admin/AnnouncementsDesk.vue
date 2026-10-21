@@ -1,15 +1,11 @@
 <template>
   <!-- الإعلانات والملفات للجنة الإشراف والمشرف والطالب — على نمط لوحة الإدارة العامة:
-       بطاقة واحدة (تبويبات + فلاتر + قائمة/تفاصيل)، بلا عنوان مكرّر، وعدّادات زرقاء صلبة -->
+       بطاقة واحدة (عنوان + شريط فلاتر + قائمة/تفاصيل مسطّحة)، بلا عنوان مكرّر ولا تبويبات -->
   <div class="dash ads-page">
     <section class="dash-card ads-card">
       <div class="dash-card-head ads-head">
         <h3>الإعلانات والملفات</h3>
-        <nav class="rv-tabs ads-tabs" aria-label="نوع المراسلة">
-          <button v-for="t in tabs" :key="t.value" type="button" :class="['rv-tab', tab === t.value && 'is-active']" @click="tab = t.value">
-            {{ t.label }} <span class="rv-count">{{ count(t.value) }}</span>
-          </button>
-        </nav>
+        <span class="dash-chip">{{ items.length }} عنصر</span>
       </div>
 
       <div class="gr-filters ads-filters">
@@ -17,6 +13,7 @@
           <Search :size="16" />
           <input v-model.trim="q" type="search" placeholder="بحث بالعنوان أو النص أو المرسل أو اسم الملف…">
         </label>
+        <BaseSelect v-model="kindFilter" class="ads-select" aria-label="النوع" placeholder="كل الأنواع" :options="typeOptions" />
         <BaseSelect v-model="sender" class="ads-select" aria-label="المرسل" placeholder="كل المرسلين" include-placeholder-option :options="senders" />
         <BaseSelect v-model="sort" class="ads-select" aria-label="الترتيب" :options="sortOptions" />
         <span class="ads-summary">{{ shown.length }} عنصر</span>
@@ -25,11 +22,11 @@
       <div class="ads-layout">
         <section class="ads-list" aria-label="المراسلات">
           <header class="ads-list-head">
-            <h4 class="portal-title">{{ tabLabel }}</h4>
+            <h4 class="portal-title">{{ typeLabel }}</h4>
             <span class="dash-chip">{{ shown.length }}</span>
           </header>
           <SkeletonLoader v-if="loading" variant="list" :rows="5" />
-          <p v-else-if="!shown.length" class="palert is-warning ads-alert"><span class="ads-ic is-warning">!</span> لا توجد مراسلات في «{{ tabLabel }}»</p>
+          <p v-else-if="!shown.length" class="palert is-warning ads-alert"><span class="ads-ic is-warning">!</span> لا توجد مراسلات في «{{ typeLabel }}»</p>
           <button
             v-for="a in shown" :key="a.id" type="button"
             :class="['ads-item', current?.id === a.id && 'is-selected']" @click="open(a)"
@@ -122,7 +119,7 @@
 
 <script>
 import { markRaw } from 'vue'
-import { ArrowRight, Download, FileText, Inbox, Layers, ListTodo, Megaphone, Paperclip, Search, Star } from 'lucide-vue-next'
+import { ArrowRight, Download, FileText, Inbox, ListTodo, Megaphone, Paperclip, Search, Star } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import api from '@/services/api'
@@ -154,7 +151,7 @@ export default {
       ROLE_LABELS,
       TYPE,
       STATUS,
-      tab: '',
+      kindFilter: '',
       q: '',
       sender: '',
       sort: 'newest',
@@ -168,19 +165,26 @@ export default {
   computed: {
     ...mapState(useAuthStore, ['userRole', 'user']),
     ...mapState(useTeamsStore, ['teams']),
-    // نفس تبويبات الطالب للجميع (الوارد، الإعلانات، الملفات، المهام)؛ لجنة الإشراف والإدارة تحتفظان بالتقييمات
-    tabs() {
+    // أنواع المراسلة (بديل التبويبات): مُرشّح "النوع" بعدد كل نوع
+    types() {
       const ratings = !['student', 'supervisor'].includes(this.userRole)
       return [
-        { value: '', label: 'كل الوارد', icon: markRaw(Layers) },
-        { value: 'announcement', label: 'الإعلانات', icon: markRaw(Megaphone) },
-        { value: 'file', label: 'الملفات', icon: markRaw(FileText) },
-        { value: 'task', label: 'المهام', icon: markRaw(ListTodo) },
-        ...(ratings ? [{ value: 'rating', label: 'التقييمات', icon: markRaw(Star) }] : [])
+        { value: '', label: 'كل الوارد' },
+        { value: 'announcement', label: 'الإعلانات' },
+        { value: 'file', label: 'الملفات' },
+        { value: 'task', label: 'المهام' },
+        ...(ratings ? [{ value: 'rating', label: 'التقييمات' }] : [])
       ]
     },
-    tabLabel() {
-      return this.tabs.find((t) => t.value === this.tab)?.label
+    // خيارات مُرشّح النوع مع عدد كل نوع
+    typeOptions() {
+      return this.types.map((t) => ({
+        value: t.value,
+        label: t.value ? `${t.label} (${this.count(t.value)})` : `كل الوارد (${this.items.length})`
+      }))
+    },
+    typeLabel() {
+      return this.types.find((t) => t.value === this.kindFilter)?.label
     },
     senders() {
       return [...new Set(this.items.map((a) => a.author?.name).filter(Boolean))]
@@ -200,7 +204,7 @@ export default {
     shown() {
       const q = this.q
       return this.items
-        .filter((a) => (!this.tab || this.kind(a) === this.tab) && (!this.sender || a.author?.name === this.sender) &&
+        .filter((a) => (!this.kindFilter || this.kind(a) === this.kindFilter) && (!this.sender || a.author?.name === this.sender) &&
           (!q || `${a.title || ''} ${a.body || ''} ${a.author?.name || ''} ${(a.attachments || []).map((f) => f.name).join(' ')}`.includes(q)))
         .sort((x, y) => (this.sort === 'oldest' ? 1 : -1) * (new Date(x.created_at) - new Date(y.created_at)))
     }
