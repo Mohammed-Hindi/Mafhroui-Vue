@@ -1,102 +1,90 @@
 <template>
-  <!-- اجتماعات المشرف: الجدول فيه كل اجتماعات المشرف، والفلاتر (مجموعة + حالة + بحث + ترتيب) تضيّق المعروض -->
+  <!-- اجتماعات المشرف: بطاقة واحدة تجمع الفلاتر والجدول، والجدول يملأ ارتفاع الشاشة -->
   <div class="dash svm-page">
-    <SkeletonLoader v-if="loading" variant="table" :cols="5" :rows="4" />
-    <p v-else-if="!myTeams.length" class="palert is-info"><CalendarDays :size="18" /><span>لا توجد مجموعات مُسندة إليك</span></p>
-
-    <template v-else>
-      <!-- فلاتر: المجموعة + الحالة + البحث + الترتيب — والجدول يعرض كل الاجتماعات -->
-      <div class="gr-filters svm-filters">
-        <label class="gr-search">
-          <Search :size="16" />
-          <input v-model.trim="q" type="search" placeholder="بحث باسم الاجتماع أو في الملاحظات…">
-        </label>
-        <BaseSelect
-          v-model="group"
-          class="sup-select"
-          aria-label="المجموعة"
-          placeholder="كل المجموعات"
-          include-placeholder-option
-          :options="groupOptions"
-        />
-        <BaseSelect
-          v-model="status"
-          class="sup-select"
-          aria-label="الحالة"
-          :placeholder="statusPlaceholder"
-          include-placeholder-option
-          :disabled="!scopeCounts.total"
-          :options="statusOptions"
-        />
-        <BaseSelect v-model="sort" class="sup-select" aria-label="الترتيب" :disabled="!scopeCounts.total" :options="sortOptions" />
+    <section class="gr gr-card svm-card">
+      <!-- فلاتر: بحث + مجموعة + حالة + ترتيب + زر الإضافة -->
+      <div class="svm-toolbar">
+        <div class="gr-filters svm-filters">
+          <label class="gr-search">
+            <Search :size="16" />
+            <input v-model.trim="q" type="search" placeholder="بحث باسم الاجتماع أو في الملاحظات…">
+          </label>
+          <BaseSelect
+            v-model="group"
+            class="sup-select"
+            aria-label="المجموعة"
+            placeholder="كل المجموعات"
+            include-placeholder-option
+            :options="groupOptions"
+          />
+          <BaseSelect
+            v-model="status"
+            class="sup-select"
+            aria-label="الحالة"
+            :placeholder="statusPlaceholder"
+            include-placeholder-option
+            :disabled="!scopeCounts.total"
+            :options="statusOptions"
+          />
+          <BaseSelect v-model="sort" class="sup-select" aria-label="الترتيب" :disabled="!scopeCounts.total" :options="sortOptions" />
+          <button type="button" class="pbtn is-green svm-add" :disabled="!myTeams.length" @click="openCreate"><Plus :size="16" /> اجتماع جديد</button>
+        </div>
       </div>
 
+      <p v-if="nextMeeting && status !== 'past'" class="palert is-info svm-next">
+        <CalendarClock :size="18" />
+        <span><b>الاجتماع القادم:</b> {{ nextMeeting.title }} — {{ nextMeeting.date }} الساعة {{ nextMeeting.time }} ({{ nextMeeting.when }})</span>
+      </p>
+
       <!-- جدول الاجتماعات: اسم الاجتماع (والملاحظات تحته) ثم المجموعة ثم الموعد ثم الحالة ثم الإجراءات -->
-      <section class="gr gr-card">
-        <header class="gr-card-head">
-          <div class="gr-card-title">
-            <h3>{{ listTitle }}</h3>
-            <span>{{ scopeName }}</span>
-          </div>
-          <div class="gr-card-actions">
-            <button type="button" class="pbtn is-green" @click="openCreate"><Plus :size="16" /> اجتماع جديد</button>
-          </div>
-        </header>
+      <div class="gr-table-wrap svm-table-wrap">
+        <table class="gr-table">
+          <thead>
+            <tr>
+              <th>اسم الاجتماع</th>
+              <th v-if="!group">المجموعة</th>
+              <th>الموعد</th>
+              <th>الحالة</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            <SkeletonLoader v-if="loading || meetingsLoading" variant="table" :cols="5" :rows="4" />
+            <tr v-for="m in rows" :key="m.id" class="gr-row">
+              <td class="pt-strong">
+                {{ m.title }}
+                <span v-if="m.notes" class="svm-note">{{ m.notes }}</span>
+              </td>
+              <td v-if="!group" class="pt-muted">{{ m.teamLabel }}</td>
+              <td class="mono">
+                {{ m.date }}
+                <span class="svm-when">{{ m.time }}</span>
+              </td>
+              <td><span :class="['svm-pill', m.past ? 'is-done' : 'is-next']">{{ m.past ? 'منتهٍ' : m.when }}</span></td>
+              <td>
+                <span v-if="m.past" class="pt-muted">—</span>
+                <span v-else class="svm-acts">
+                  <a v-if="m.link" :href="m.link" target="_blank" rel="noopener" class="pbtn is-cyan is-sm"><VideoIcon :size="15" /> انضمام</a>
+                  <button v-if="leaderOf(m.teamId)?.whatsapp" type="button" class="pbtn is-outline is-sm" @click="sendReminder(m)"><MessageCircle :size="15" /> تذكير</button>
+                  <button type="button" class="pbtn is-outline is-sm is-red-text" @click="cancelTarget = m"><Trash2 :size="15" /> إلغاء</button>
+                </span>
+              </td>
+            </tr>
+            <tr v-if="!loading && !meetingsLoading && !rows.length">
+              <td :colspan="group ? 4 : 5" class="gr-empty">
+                {{ !myTeams.length ? 'لا توجد مجموعات مُسندة إليك' : status === 'upcoming' ? 'لا توجد اجتماعات قادمة حاليًا' : status === 'past' ? 'لا توجد اجتماعات منتهية بعد' : 'لا توجد اجتماعات مطابقة للفلاتر' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-        <p v-if="nextMeeting && status !== 'past'" class="palert is-info svm-next">
-          <CalendarClock :size="18" />
-          <span><b>الاجتماع القادم:</b> {{ nextMeeting.title }} — {{ nextMeeting.date }} الساعة {{ nextMeeting.time }} ({{ nextMeeting.when }})</span>
-        </p>
-
-        <div class="gr-table-wrap">
-          <table class="gr-table">
-            <thead>
-              <tr>
-                <th>اسم الاجتماع</th>
-                <th v-if="!group">المجموعة</th>
-                <th>الموعد</th>
-                <th>الحالة</th>
-                <th>الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              <SkeletonLoader v-if="meetingsLoading" variant="table" :cols="5" :rows="3" />
-              <tr v-for="m in rows" :key="m.id" class="gr-row">
-                <td class="pt-strong">
-                  {{ m.title }}
-                  <span v-if="m.notes" class="svm-note">{{ m.notes }}</span>
-                </td>
-                <td v-if="!group" class="pt-muted">{{ m.teamLabel }}</td>
-                <td class="mono">
-                  {{ m.date }}
-                  <span class="svm-when">{{ m.time }}</span>
-                </td>
-                <td><span :class="['svm-pill', m.past ? 'is-done' : 'is-next']">{{ m.past ? 'منتهٍ' : m.when }}</span></td>
-                <td>
-                  <span v-if="m.past" class="pt-muted">—</span>
-                  <span v-else class="svm-acts">
-                    <a v-if="m.link" :href="m.link" target="_blank" rel="noopener" class="pbtn is-cyan is-sm"><VideoIcon :size="15" /> انضمام</a>
-                    <button v-if="leaderOf(m.teamId)?.whatsapp" type="button" class="pbtn is-outline is-sm" @click="sendReminder(m)"><MessageCircle :size="15" /> تذكير</button>
-                    <button type="button" class="pbtn is-outline is-sm is-red-text" @click="cancelTarget = m"><Trash2 :size="15" /> إلغاء</button>
-                  </span>
-                </td>
-              </tr>
-              <tr v-if="!meetingsLoading && !rows.length">
-                <td :colspan="group ? 4 : 5" class="gr-empty">
-                  {{ status === 'upcoming' ? 'لا توجد اجتماعات قادمة حاليًا' : status === 'past' ? 'لا توجد اجتماعات منتهية بعد' : 'لا توجد اجتماعات مطابقة للفلاتر' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="gr-sumbar">
-          <span>عدد الاجتماعات: {{ scoped.length }}</span>
-          <span>القادمة: {{ scopedUpcoming.length }}</span>
-          <span>المنتهية: {{ scopedDone.length }}</span>
-        </div>
-      </section>
-    </template>
+      <div class="gr-sumbar">
+        <span>عدد الاجتماعات: {{ scoped.length }}</span>
+        <span>القادمة: {{ scopedUpcoming.length }}</span>
+        <span>المنتهية: {{ scopedDone.length }}</span>
+      </div>
+    </section>
 
     <!-- اجتماع جديد: POST /teams/{id}/meetings — المجموعة، الاسم، الموعد، الرابط، الملاحظات -->
     <BaseModal v-model="createOpen" title="اجتماع جديد" size="md">
@@ -144,7 +132,7 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { CalendarClock, CalendarDays, MessageCircle, Plus, Search, Trash2, Video as VideoIcon } from 'lucide-vue-next'
+import { CalendarClock, MessageCircle, Plus, Search, Trash2, Video as VideoIcon } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import { useTeamsStore } from '@/stores/teams.store'
@@ -156,7 +144,7 @@ const DAY = 864e5
 export default {
   name: 'SupervisorMeetingsPage',
 
-  components: { BaseModal, BaseSelect, CalendarClock, CalendarDays, MessageCircle, Plus, Search, Trash2, VideoIcon },
+  components: { BaseModal, BaseSelect, CalendarClock, MessageCircle, Plus, Search, Trash2, VideoIcon },
 
   data() {
     return {
@@ -276,17 +264,6 @@ export default {
     },
 
     nextMeeting() {      return this.scopedUpcoming[0] || null
-    },
-
-    listTitle() {
-      if (this.status === 'upcoming') return 'الاجتماعات القادمة'
-      if (this.status === 'past') return 'الاجتماعات المنتهية'
-      return 'كل الاجتماعات'
-    },
-
-    scopeName() {
-      const t = this.myTeams.find((x) => x.id === this.group)
-      return t ? (t.section ? `شعبة ${t.section}` : t.name) : 'كل المجموعات'
     },
 
     canCreate() {

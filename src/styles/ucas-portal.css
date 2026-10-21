@@ -6976,12 +6976,29 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 }
 
 /* ======================================================================
-   اجتماعات المشرف (SupervisorMeetingsPage) — نفس بنية صفحة المهام:
-   شريط المجموعات ← شريط فلاتر واحد (بحث + حالة + ترتيب) ← جدول مسطّح
+   اجتماعات المشرف (SupervisorMeetingsPage) — بطاقة واحدة تجمع الفلاتر
+   والجدول، والجدول يملأ ارتفاع الشاشة ورأسه يثبت أثناء التمرير
    ====================================================================== */
 .svm-page { gap: 16px; }
-.svm-filters { align-items: center; gap: 10px; }
+/* البطاقة تملأ المساحة المتبقية من الشاشة (فوق الشريط العلوي 72px + حشو الصفحة 48px + الفوتر ~60px) */
+.svm-card { min-height: max(420px, calc(100vh - 180px)); }
+/* شريط الفلاتر داخل البطاقة: خط فاصل تحته وزر الإضافة على الطرف المقابل */
+.svm-toolbar { flex-shrink: 0; padding-bottom: 14px; border-bottom: 1px solid var(--color-border); }
 .svm-filters .gr-search { flex: 1 1 260px; max-width: none; }
+.svm-add { margin-inline-start: auto; }
+/* تنبيه الاجتماع القادم: تحت الفلاتر */
+.svm-next { align-items: flex-start; margin: 0; flex-shrink: 0; }
+.svm-next svg { flex-shrink: 0; margin-top: 4px; }
+/* الجدول: ياخذ باقي ارتفاع البطاقة والتمرير جوّاه */
+.svm-table-wrap { flex: 1; min-height: 0; overflow: auto; }
+/* رأس الجدول يثبت أثناء التمرير */
+.svm-table-wrap .gr-table thead tr { position: sticky; top: 0; z-index: 3; }
+/* شريط الملخص في أسفل البطاقة */
+.svm-card .gr-sumbar { flex-shrink: 0; }
+/* على التابلت: الفلاتر تتراكم بعرض كامل مثل باقي شريط فلاتر البوابة */
+@media (max-width: 1023.98px) {
+  .svm-filters .gr-search { flex: 1 1 100%; max-width: none; }
+}
 
 /* اسم الاجتماع: العنوان بارز والملاحظات سطر ثانوي هادئ */
 .svm-note { display: block; margin-top: 3px; font-size: 12.5px; font-weight: 400; color: var(--color-text-600); }
@@ -6995,6 +7012,3 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 :root[data-theme="dark"] .svm-pill.is-done { background: rgba(16, 196, 105, .15); color: #34D399; }
 /* أزرار الإجراءات في صف واحد */
 .svm-acts { display: inline-flex; flex-wrap: wrap; gap: 6px; }
-/* تنبيه الاجتماع القادم */
-.svm-next { align-items: flex-start; margin: 0 0 14px; }
-.svm-next svg { flex-shrink: 0; margin-top: 4px; }
