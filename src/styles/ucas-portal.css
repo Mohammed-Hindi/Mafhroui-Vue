@@ -6921,3 +6921,52 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .ucas-portal .portal-page.ac-page .ac-bar .ac-input:focus { border: 0; background: transparent; box-shadow: none; }
 .ucas-portal .portal-page.ac-page .ac-bar .ac-send { width: 42px; height: 42px; border-radius: 12px; box-shadow: 0 6px 16px rgba(4, 40, 80, .22); }
 .ucas-portal .portal-page.ac-page .ac-msg { max-width: 82%; }
+
+/* ======================================================================
+   مهام المشرف (SupervisorTasksPage) — نظرة أفقية على المجموعات أولًا:
+   بطاقة لكل مجموعة (المشروع + عدد المهام + نسبة الإنجاز) بدل قائمة مسطّحة،
+   ثم شريط فلاتر واحد (بحث + مكلّف + ترتيب) ومبدّل عرض (لوحة المهام / تفاعل الطلاب)
+   ====================================================================== */
+.svt-page { gap: 16px; }
+
+/* شريط المجموعات: بطاقة لكل مجموعة — الضغط يختار المجموعة وتُحدَّث اللوحة تحتها */
+.svt-teams { display: grid; grid-template-columns: repeat(auto-fit, minmax(232px, 1fr)); gap: 12px; }
+.svt-team {
+  display: flex; flex-direction: column; gap: 7px; padding: 14px 16px; text-align: start;
+  border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  transition: border-color .25s var(--ease-standard), background-color .25s var(--ease-standard), box-shadow .25s var(--ease-standard);
+}
+.svt-team:hover { border-color: color-mix(in srgb, var(--ucas-blue) 42%, var(--color-border)); }
+.svt-team:focus-visible { outline: 2px solid var(--ucas-blue); outline-offset: 2px; }
+.svt-team.is-active { border-color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 4%, var(--color-surface)); box-shadow: inset 0 -3px 0 var(--ucas-blue), var(--shadow-card); }
+.svt-team-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.svt-team-head b { font-size: 14.5px; font-weight: 800; color: var(--color-text-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.svt-team-count { display: inline-grid; place-items: center; flex-shrink: 0; min-width: 26px; height: 24px; padding-inline: 7px; border-radius: 4px; background: var(--ucas-blue); color: #FFFFFF; font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.svt-team-proj { font-size: 12.5px; font-weight: 600; color: var(--color-text-600); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.svt-team-bar { display: block; height: 6px; border-radius: 3px; background: var(--color-bg); overflow: hidden; }
+.svt-team-bar i { display: block; height: 100%; border-radius: 3px; background: var(--ucas-green); transition: width .6s var(--ease-standard); }
+.svt-team-meta { font-size: 11.5px; color: var(--color-text-400); font-variant-numeric: tabular-nums; }
+
+/* شريط الفلاتر: البحث يتمدّد، المحدّدات بعرض ثابت، ومبدّل العرض على الطرف المقابل */
+.svt-filters { align-items: center; gap: 10px; }
+.svt-filters .gr-search { flex: 1 1 260px; max-width: none; }
+.svt-select { flex: 0 1 200px; }
+.svt-select > button { height: 44px; }
+.svt-views { display: inline-flex; flex-wrap: wrap; gap: 3px; margin-inline-start: auto; padding: 3px; border-radius: 4px; background: var(--color-bg); }
+.svt-views button { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding-inline: 12px; border-radius: 3px; font-size: 13.5px; font-weight: 700; color: var(--color-text-600); white-space: nowrap; transition: background-color .25s var(--ease-standard), color .25s var(--ease-standard); }
+.svt-views button b { min-width: 20px; padding: 1px 6px; border-radius: 4px; background: var(--color-surface); font-size: 11.5px; font-weight: 800; color: var(--color-text-600); font-variant-numeric: tabular-nums; }
+.svt-views button:hover:not(.is-active) { color: var(--ucas-blue); }
+.svt-views button.is-active { background: var(--ucas-blue); color: #FFFFFF; }
+.svt-views button.is-active b { background: rgba(255, 255, 255, .25); color: #FFFFFF; }
+.svt-views button:focus-visible { outline: 2px solid var(--ucas-blue); outline-offset: 1px; }
+
+/* جدول تفاعل الطلاب: شارة القائد بدل عمود تواريخ فارغ */
+.svt-leader { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 10%, transparent); color: var(--ucas-blue); font-size: 12px; font-weight: 800; }
+.svt-muted { font-size: 12.5px; color: var(--color-text-400); }
+
+@media (max-width: 767.98px) {
+  .svt-views { margin-inline-start: 0; width: 100%; }
+  .svt-views button { flex: 1; justify-content: center; }
+  .svt-select { flex: 1 1 140px; }
+}
