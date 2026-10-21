@@ -2,7 +2,7 @@
   <!-- تقدّم المشاريع — جدول موحّد للمجموعات، والمشرف/التخصص/الدرجة/الفئة/المستوى فلاتر متتالية منطقية.
        كل صف قابل للفتح: طلاب المجموعة ثم مهامها. العنوان من التوب بار فلا يتكرّر هنا. -->
   <div class="dash">
-    <section class="gr gr-card">
+    <section :class="['gr', 'gr-card', isSup && 'sup-tall-card']">
       <!-- فلاتر مجتمعة ومتتالية + تصدير -->
       <div class="gr-filters" aria-label="تصفية تقدّم المشاريع">
         <label class="gr-search">
@@ -50,95 +50,97 @@
         <BaseButton class="pb-export" variant="outline" size="md" :icon="FileDown" :loading="exporting" :disabled="loading" @click="exportPdf">تصدير PDF</BaseButton>
       </div>
 
-      <SlideTable :rows="grpRows" :size="pageSize" label="المجموعات">
-        <template #default="{ rows: shown }">
-          <div class="gr-table-wrap">
-            <table class="gr-table pb-table">
-              <thead>
-                <tr>
-                  <th class="hm-center">الشعبة</th>
-                  <th data-rt-title>المجموعة</th>
-                  <th v-if="!isSup">المشرف</th>
-                  <th class="hm-center">الطلاب</th>
-                  <th class="hm-center">المهام</th>
-                  <th class="hm-center">المتأخرة</th>
-                  <th>الإنجاز</th>
-                  <th aria-label="تفاصيل" />
-                </tr>
-              </thead>
-              <tbody v-if="loading">
-                <SkeletonLoader variant="table" :cols="isSup ? 7 : 8" :rows="6" />
-              </tbody>
-              <tbody v-else-if="!grpRows.length">
-                <tr><td :colspan="isSup ? 7 : 8" class="gr-empty">لا توجد مجموعات مطابقة للفلاتر</td></tr>
-              </tbody>
-              <tbody v-else>
-                <template v-for="g in shown" :key="g.id">
-                  <tr :class="['gr-row', openGrp === g.id && 'is-open']" :aria-expanded="openGrp === g.id" @click="toggleGrp(g)">
-                    <td class="hm-center"><span class="ev-sec-chip">{{ g.section ? `شعبة ${g.section}` : '—' }}</span></td>
-                    <td class="gr-name-cell">
-                      <span class="gr-name">{{ g.name }}</span>
-                      <span class="gr-types">{{ g.project?.name || 'بلا مشروع' }}</span>
-                    </td>
-                    <td v-if="!isSup">{{ g.sup.name || '—' }}</td>
-                    <td class="hm-center">{{ g.members.length }}</td>
-                    <td class="hm-center"><span class="mono">{{ g.tasksDone }}/{{ g.tasksTotal }}</span></td>
-                    <td class="hm-center"><span :class="lateClass(lateOf(g.id))">{{ lateOf(g.id) ?? '—' }}</span></td>
-                    <td>
-                      <span class="gr-progress"><span :class="level(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
-                      <span class="gr-pct">{{ g.percentage }}%</span>
-                    </td>
-                    <td class="hm-center"><ChevronDown :size="16" :class="['pb-caret', openGrp === g.id && 'is-open']" /></td>
+      <div class="sup-tall-slide">
+        <SlideTable :rows="grpRows" :size="pageSize" label="المجموعات">
+          <template #default="{ rows: shown }">
+            <div class="gr-table-wrap">
+              <table class="gr-table pb-table">
+                <thead>
+                  <tr>
+                    <th class="hm-center">الشعبة</th>
+                    <th data-rt-title>المجموعة</th>
+                    <th v-if="!isSup">المشرف</th>
+                    <th class="hm-center">الطلاب</th>
+                    <th class="hm-center">المهام</th>
+                    <th class="hm-center">المتأخرة</th>
+                    <th>الإنجاز</th>
+                    <th aria-label="تفاصيل" />
                   </tr>
-                  <tr v-if="openGrp === g.id" class="pt-sub">
-                    <td :colspan="isSup ? 7 : 8">
-                      <div class="pb-drop">
-                        <h5 class="pb-drop-title"><Users :size="15" /> الطلاب <small>{{ g.members.length }}</small></h5>
-                        <table class="ev-students">
-                          <thead><tr><th>الطالب</th><th>الموكلة</th><th>المنجزة</th><th>المتأخرة</th><th>نسبة الإنجاز</th><th>آخر نشاط</th></tr></thead>
-                          <tbody>
-                            <tr v-for="m in g.members" :key="m.id">
-                              <td class="pt-strong"><button type="button" class="pb-link" @click.stop="openStudent(g, m)">{{ m.name }}</button></td>
-                              <td>{{ m.total }}</td>
-                              <td>{{ m.done }}</td>
-                              <td><span :class="lateClass(studentLate(g.id, m.id))">{{ studentLate(g.id, m.id) ?? '…' }}</span></td>
-                              <td>
-                                <span class="gr-progress is-sm"><span :class="level(m.percentage)" :style="{ width: m.percentage + '%' }" /></span>
-                                <span class="gr-pct">{{ m.percentage }}%</span>
-                              </td>
-                              <td class="ad-nowrap" :title="m.lastActive ? formatDateTime(m.lastActive) : ''">{{ m.lastActive ? formatRelativeTime(m.lastActive) : 'لم يدخل بعد' }}</td>
-                            </tr>
-                            <tr v-if="!g.members.length"><td colspan="6" class="pt-muted">لا يوجد طلاب</td></tr>
-                          </tbody>
-                        </table>
-                        <h5 class="pb-drop-title"><ListTodo :size="15" /> المهام <small>{{ tasks[g.id]?.length ?? '…' }}</small></h5>
-                        <SkeletonLoader v-if="!tasks[g.id]" :rows="2" />
-                        <p v-else-if="!tasks[g.id].length" class="pt-muted">لا توجد مهام لهذه المجموعة</p>
-                        <ul v-else class="pb-tasks">
-                          <li v-for="t in tasks[g.id]" :key="t.id" class="pb-task-li" role="button" tabindex="0" @click="openTask(t)" @keydown.enter="openTask(t)">
-                            <span :class="['rv-pill', t.status === 'done' ? 'is-approved' : isLate(t) ? 'is-rejected' : 'is-pending']">{{ isLate(t) ? 'متأخرة' : TASK_STATUS[t.status] || t.status }}</span>
-                            <b>{{ t.title }}</b>
-                            <span class="pt-muted">{{ (t.assignees || []).map((a) => a.name).join('، ') || 'كل الفريق' }}<template v-if="t.due_date"> · التسليم {{ formatDate(t.due_date) }}</template></span>
-                            <ChevronLeft :size="16" class="pb-task-go" />
-                          </li>
-                        </ul>
-                      </div>
-                    </td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
-          </div>
-        </template>
-        <template #after>
-          <div class="gr-sumbar">
-            <span>عدد المجموعات: {{ grpRows.length }}</span>
-            <span>الطلاب: {{ grpRows.reduce((n, g) => n + g.members.length, 0) }}</span>
-            <span>المهام المنجزة: {{ grpRows.reduce((n, g) => n + g.tasksDone, 0) }} / {{ grpRows.reduce((n, g) => n + g.tasksTotal, 0) }}</span>
-            <span>متوسط الإنجاز: {{ avgOf(grpRows.map((g) => g.percentage)) }}%</span>
-          </div>
-        </template>
-      </SlideTable>
+                </thead>
+                <tbody v-if="loading">
+                  <SkeletonLoader variant="table" :cols="isSup ? 7 : 8" :rows="6" />
+                </tbody>
+                <tbody v-else-if="!grpRows.length">
+                  <tr><td :colspan="isSup ? 7 : 8" class="gr-empty">لا توجد مجموعات مطابقة للفلاتر</td></tr>
+                </tbody>
+                <tbody v-else>
+                  <template v-for="g in shown" :key="g.id">
+                    <tr :class="['gr-row', openGrp === g.id && 'is-open']" :aria-expanded="openGrp === g.id" @click="toggleGrp(g)">
+                      <td class="hm-center"><span class="ev-sec-chip">{{ g.section ? `شعبة ${g.section}` : '—' }}</span></td>
+                      <td class="gr-name-cell">
+                        <span class="gr-name">{{ g.name }}</span>
+                        <span class="gr-types">{{ g.project?.name || 'بلا مشروع' }}</span>
+                      </td>
+                      <td v-if="!isSup">{{ g.sup.name || '—' }}</td>
+                      <td class="hm-center">{{ g.members.length }}</td>
+                      <td class="hm-center"><span class="mono">{{ g.tasksDone }}/{{ g.tasksTotal }}</span></td>
+                      <td class="hm-center"><span :class="lateClass(lateOf(g.id))">{{ lateOf(g.id) ?? '—' }}</span></td>
+                      <td>
+                        <span class="gr-progress"><span :class="level(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
+                        <span class="gr-pct">{{ g.percentage }}%</span>
+                      </td>
+                      <td class="hm-center"><ChevronDown :size="16" :class="['pb-caret', openGrp === g.id && 'is-open']" /></td>
+                    </tr>
+                    <tr v-if="openGrp === g.id" class="pt-sub">
+                      <td :colspan="isSup ? 7 : 8">
+                        <div class="pb-drop">
+                          <h5 class="pb-drop-title"><Users :size="15" /> الطلاب <small>{{ g.members.length }}</small></h5>
+                          <table class="ev-students">
+                            <thead><tr><th>الطالب</th><th>الموكلة</th><th>المنجزة</th><th>المتأخرة</th><th>نسبة الإنجاز</th><th>آخر نشاط</th></tr></thead>
+                            <tbody>
+                              <tr v-for="m in g.members" :key="m.id">
+                                <td class="pt-strong"><button type="button" class="pb-link" @click.stop="openStudent(g, m)">{{ m.name }}</button></td>
+                                <td>{{ m.total }}</td>
+                                <td>{{ m.done }}</td>
+                                <td><span :class="lateClass(studentLate(g.id, m.id))">{{ studentLate(g.id, m.id) ?? '…' }}</span></td>
+                                <td>
+                                  <span class="gr-progress is-sm"><span :class="level(m.percentage)" :style="{ width: m.percentage + '%' }" /></span>
+                                  <span class="gr-pct">{{ m.percentage }}%</span>
+                                </td>
+                                <td class="ad-nowrap" :title="m.lastActive ? formatDateTime(m.lastActive) : ''">{{ m.lastActive ? formatRelativeTime(m.lastActive) : 'لم يدخل بعد' }}</td>
+                              </tr>
+                              <tr v-if="!g.members.length"><td colspan="6" class="pt-muted">لا يوجد طلاب</td></tr>
+                            </tbody>
+                          </table>
+                          <h5 class="pb-drop-title"><ListTodo :size="15" /> المهام <small>{{ tasks[g.id]?.length ?? '…' }}</small></h5>
+                          <SkeletonLoader v-if="!tasks[g.id]" :rows="2" />
+                          <p v-else-if="!tasks[g.id].length" class="pt-muted">لا توجد مهام لهذه المجموعة</p>
+                          <ul v-else class="pb-tasks">
+                            <li v-for="t in tasks[g.id]" :key="t.id" class="pb-task-li" role="button" tabindex="0" @click="openTask(t)" @keydown.enter="openTask(t)">
+                              <span :class="['rv-pill', t.status === 'done' ? 'is-approved' : isLate(t) ? 'is-rejected' : 'is-pending']">{{ isLate(t) ? 'متأخرة' : TASK_STATUS[t.status] || t.status }}</span>
+                              <b>{{ t.title }}</b>
+                              <span class="pt-muted">{{ (t.assignees || []).map((a) => a.name).join('، ') || 'كل الفريق' }}<template v-if="t.due_date"> · التسليم {{ formatDate(t.due_date) }}</template></span>
+                              <ChevronLeft :size="16" class="pb-task-go" />
+                            </li>
+                          </ul>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </template>
+          <template #after>
+            <div class="gr-sumbar">
+              <span>عدد المجموعات: {{ grpRows.length }}</span>
+              <span>الطلاب: {{ grpRows.reduce((n, g) => n + g.members.length, 0) }}</span>
+              <span>المهام المنجزة: {{ grpRows.reduce((n, g) => n + g.tasksDone, 0) }} / {{ grpRows.reduce((n, g) => n + g.tasksTotal, 0) }}</span>
+              <span>متوسط الإنجاز: {{ avgOf(grpRows.map((g) => g.percentage)) }}%</span>
+            </div>
+          </template>
+        </SlideTable>
+      </div>
     </section>
 
     <!-- بطاقة الطالب: معلوماته وإحصاؤه ومهامه — للقراءة فقط -->

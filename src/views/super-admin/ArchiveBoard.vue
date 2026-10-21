@@ -90,7 +90,7 @@
     </section>
 
     <!-- عرض المشاريع: فلاتر بجانب البحث + تبديل معرض/جدول (بنية جداولنا القياسية) -->
-    <section v-else class="gr gr-card evp-card">
+    <section v-else :class="['gr', 'gr-card', 'evp-card', isSup && layout === 'table' && 'sup-tall-card']">
       <div class="gr-card-title">
         <h3>معرض المشاريع</h3>
         <span class="dash-chip">{{ visible.length }} مشروع</span>
@@ -225,7 +225,8 @@
           </div>
         </template>
 
-        <SlideTable v-else :rows="visible" :size="pageSize" label="المشاريع">
+      <div v-else class="sup-tall-slide">
+        <SlideTable :rows="visible" :size="pageSize" label="المشاريع">
           <template #default="{ rows: pageRows }">
             <div class="gr-table-wrap">
               <table class="gr-table evp-table ad-table">
@@ -279,6 +280,7 @@
             </div>
           </template>
         </SlideTable>
+      </div>
     </section>
 
     <FileViewer :file="viewing" @close="viewing = null" />

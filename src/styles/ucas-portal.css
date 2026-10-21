@@ -7081,3 +7081,22 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* فورم اجتماع جديد: تسميات الحقول بشكل موحّد + زر مسح الفلاتر */
 .svm-form .pfield > span { display: flex; align-items: center; gap: 6px; }
 .svm-clear { flex: 0 0 auto; }
+
+/* ======================================================================
+   صفحات المشرف — الجدول يملأ ارتفاع الشاشة (زي صفحة الاجتماعات):
+   تقدّم المشاريع + أرشيف المشاريع (عرض الجدول)
+   ====================================================================== */
+/* البطاقة عمود مرن يملأ المساحة المتبقية من الشاشة */
+.sup-tall-card { display: flex; flex-direction: column; min-height: max(420px, calc(100vh - 180px)); }
+.sup-tall-card > .gr-card-title, .sup-tall-card > .gr-filters { flex-shrink: 0; }
+/* حاوية السلايدر: الشريحة تتمدّد، والملخص + شريط الشرائح يثبتان أسفلها */
+.sup-tall-card .sup-tall-slide { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.sup-tall-card .sup-tall-slide > div { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* محتوى الشريحة (أول ابن) هو اللي يتمدّد؛ الملخص وشريط الشرائح بارتفاعهما */
+.sup-tall-card .sup-tall-slide > div > div:first-child { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* الجدول: ياخذ باقي ارتفاع البطاقة والتمرير جوّاه */
+.sup-tall-card .sup-tall-slide .gr-table-wrap { flex: 1; min-height: 0; overflow: auto; }
+/* رأس الجدول يثبت أثناء التمرير */
+.sup-tall-card .sup-tall-slide .gr-table-wrap .gr-table thead tr { position: sticky; top: 0; z-index: 3; }
+/* شريط الملخص وشريط الشرائح: ارتفاع ثابت أسفل البطاقة */
+.sup-tall-card .sup-tall-slide .gr-sumbar, .sup-tall-card .sup-tall-slide .gr-slider { flex: 0 0 auto; }
