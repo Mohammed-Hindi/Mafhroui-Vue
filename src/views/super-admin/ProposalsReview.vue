@@ -2,7 +2,7 @@
   <!-- مقترحات مشاريع التخرج للإدارة العامة — بطاقة بنمط البوابة:
        تبويبات الحالة بعدّادات ← فلاتر منفصلة تُرسل للخادم (GET /proposals) ← جدول برأس سماوي
        ← "عرض المقترح": نافذة منبثقة (المقترح / محاولات الرفض / التقارير) مع لوحة جانبية بالقرار -->
-  <section class="gr gr-card">
+  <section :class="['gr', 'gr-card', isSupervisor && 'sup-tall-card']">
     <!-- فلاتر مستقلة (الحالة + الدرجة/التخصص + الفئة + المشرف) ثم عدد الصفوف — بلا عنوان مكرّر فالتوب بار يعرضه -->
     <div class="gr-filters" aria-label="تصفية المقترحات">
       <label class="gr-search">
@@ -48,46 +48,49 @@
       </label>
     </div>
 
-    <SlideTable :rows="rows" :size="pageSize" label="المقترحات">
-      <template #default="{ rows: slideRows }">
-        <div class="gr-table-wrap">
-          <table class="gr-table pr-table">
-            <thead>
-              <tr>
-                <th class="hm-center">الشعبة</th><th data-rt-title>المشروع</th><th data-rt-show>الفريق</th><th v-if="!isSupervisor">المشرف</th><th>الدرجة</th><th>تاريخ التقديم</th>
-                <th>الحالة</th><th>مرات الرفض</th><th>التقارير</th><th aria-label="عرض" />
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="p in slideRows" :key="p.id" class="gr-row" @click="open(p)">
-                <td class="hm-center"><span class="ev-sec-chip">{{ p.team?.section ? `شعبة ${p.team.section}` : '—' }}</span></td>
-                <td><span class="gr-name">{{ p.name }}</span></td>
-                <td>{{ p.team?.name || '—' }}</td>
-                <td v-if="!isSupervisor">{{ p.supervisor?.name || '—' }}</td>
-                <td>{{ DEGREES[p.degree] || '—' }}</td>
-                <td><span class="mono">{{ day(p.created_at) }}</span></td>
-                <td><span :class="['rv-pill', STATUS[p.status].pill]">{{ STATUS[p.status].label }}</span></td>
-                <td><span :class="['pr-count', rejectCount(p) && 'is-bad']">{{ rejectCount(p) }}</span></td>
-                <td><span class="pr-count">{{ p.final_reports.length }}</span></td>
-                <td @click.stop><button type="button" class="pbtn is-cyan is-sm" @click="openFile(`/proposals/${p.id}/download`)"><Eye :size="15" /> عرض المقترح</button></td>
-              </tr>
-              <SkeletonLoader v-if="loading && !rows.length" variant="table" :cols="isSupervisor ? 9 : 10" :rows="5" />
-              <tr v-else-if="!rows.length"><td :colspan="isSupervisor ? 9 : 10" class="gr-empty">لا توجد مقترحات مطابقة</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </template>
+    <!-- المشرف: الجدول يملأ ارتفاع الشاشة ورأسه يثبت أثناء التمرير -->
+    <div :class="isSupervisor && 'sup-tall-slide'">
+      <SlideTable :rows="rows" :size="pageSize" label="المقترحات">
+        <template #default="{ rows: slideRows }">
+          <div class="gr-table-wrap">
+            <table class="gr-table pr-table">
+              <thead>
+                <tr>
+                  <th class="hm-center">الشعبة</th><th data-rt-title>المشروع</th><th data-rt-show>الفريق</th><th v-if="!isSupervisor">المشرف</th><th>الدرجة</th><th>تاريخ التقديم</th>
+                  <th>الحالة</th><th>مرات الرفض</th><th>التقارير</th><th aria-label="عرض" />
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="p in slideRows" :key="p.id" class="gr-row" @click="open(p)">
+                  <td class="hm-center"><span class="ev-sec-chip">{{ p.team?.section ? `شعبة ${p.team.section}` : '—' }}</span></td>
+                  <td><span class="gr-name">{{ p.name }}</span></td>
+                  <td>{{ p.team?.name || '—' }}</td>
+                  <td v-if="!isSupervisor">{{ p.supervisor?.name || '—' }}</td>
+                  <td>{{ DEGREES[p.degree] || '—' }}</td>
+                  <td><span class="mono">{{ day(p.created_at) }}</span></td>
+                  <td><span :class="['rv-pill', STATUS[p.status].pill]">{{ STATUS[p.status].label }}</span></td>
+                  <td><span :class="['pr-count', rejectCount(p) && 'is-bad']">{{ rejectCount(p) }}</span></td>
+                  <td><span class="pr-count">{{ p.final_reports.length }}</span></td>
+                  <td @click.stop><button type="button" class="pbtn is-cyan is-sm" @click="openFile(`/proposals/${p.id}/download`)"><Eye :size="15" /> عرض المقترح</button></td>
+                </tr>
+                <SkeletonLoader v-if="loading && !rows.length" variant="table" :cols="isSupervisor ? 9 : 10" :rows="5" />
+                <tr v-else-if="!rows.length"><td :colspan="isSupervisor ? 9 : 10" class="gr-empty">لا توجد مقترحات مطابقة</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
 
-      <!-- شريط الملخص الأخضر أسفل الجدول (نفس سجل المجموعات) — يتبع الفلاتر -->
-      <template #after>
-        <div class="gr-sumbar">
-          <span>عدد المقترحات: {{ rows.length }}</span>
-          <span>بانتظار المراجعة: {{ rows.filter((p) => p.status === 'pending').length }}</span>
-          <span>المعتمدة: {{ rows.filter((p) => p.status === 'approved').length }}</span>
-          <span>مرات الرفض: {{ rows.reduce((n, p) => n + rejectCount(p), 0) }}</span>
-        </div>
-      </template>
-    </SlideTable>
+        <!-- شريط الملخص الأخضر أسفل الجدول (نفس سجل المجموعات) — يتبع الفلاتر -->
+        <template #after>
+          <div class="gr-sumbar">
+            <span>عدد المقترحات: {{ rows.length }}</span>
+            <span>بانتظار المراجعة: {{ rows.filter((p) => p.status === 'pending').length }}</span>
+            <span>المعتمدة: {{ rows.filter((p) => p.status === 'approved').length }}</span>
+            <span>مرات الرفض: {{ rows.reduce((n, p) => n + rejectCount(p), 0) }}</span>
+          </div>
+        </template>
+      </SlideTable>
+    </div>
 
     <!-- عرض المقترح: نافذة منبثقة (رأس بالحالة والتنقّل ← المحتوى + لوحة جانبية بالقرار) -->
     <BaseModal :model-value="!!view.p" :title="view.p?.name || ''" size="xl" @update:model-value="!$event && close()">
