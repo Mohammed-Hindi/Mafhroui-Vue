@@ -57,7 +57,7 @@
               <thead>
                 <tr>
                   <th class="hm-center">الشعبة</th><th data-rt-title>المشروع</th><th data-rt-show>الفريق</th><th v-if="!isSupervisor">المشرف</th><th>الدرجة</th><th>تاريخ التقديم</th>
-                  <th>الحالة</th><th>مرات الرفض</th><th>التقارير</th><th aria-label="عرض" />
+                  <th>الحالة</th><th>مرات الرفض</th><th v-if="!isSupervisor">التقارير</th><th aria-label="عرض" />
                 </tr>
               </thead>
               <tbody>
@@ -70,11 +70,11 @@
                   <td><span class="mono">{{ day(p.created_at) }}</span></td>
                   <td><span :class="['rv-pill', STATUS[p.status].pill]">{{ STATUS[p.status].label }}</span></td>
                   <td><span :class="['pr-count', rejectCount(p) && 'is-bad']">{{ rejectCount(p) }}</span></td>
-                  <td><span class="pr-count">{{ p.final_reports.length }}</span></td>
+                  <td v-if="!isSupervisor"><span class="pr-count">{{ p.final_reports.length }}</span></td>
                   <td @click.stop><button type="button" class="pbtn is-cyan is-sm" @click="openFile(`/proposals/${p.id}/download`)"><Eye :size="15" /> عرض المقترح</button></td>
                 </tr>
-                <SkeletonLoader v-if="loading && !rows.length" variant="table" :cols="isSupervisor ? 9 : 10" :rows="5" />
-                <tr v-else-if="!rows.length"><td :colspan="isSupervisor ? 9 : 10" class="gr-empty">لا توجد مقترحات مطابقة</td></tr>
+                <SkeletonLoader v-if="loading && !rows.length" variant="table" :cols="isSupervisor ? 8 : 10" :rows="5" />
+                <tr v-else-if="!rows.length"><td :colspan="isSupervisor ? 8 : 10" class="gr-empty">لا توجد مقترحات مطابقة</td></tr>
               </tbody>
             </table>
           </div>
