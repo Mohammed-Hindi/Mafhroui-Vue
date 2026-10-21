@@ -5208,13 +5208,16 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .tk-filters .tk-filter > button { height: 42px; }
 .sa-skin .tk-filters .gr-select { flex: 0 1 150px; min-width: 128px; max-width: 180px; }
 /* شكل كلندر موعد التسليم داخل الفورم — أيقونة الكلندر بلون الهوية (أزرق UCAS) مثل صفحة المناقشات */
-[role="dialog"] .pfield input[type="date"] { color: var(--color-text-900); font-weight: 600; }
-[role="dialog"] .pfield input[type="date"]::-webkit-calendar-picker-indicator {
+[role="dialog"] .pfield input[type="date"],
+[role="dialog"] .pfield input[type="datetime-local"] { color: var(--color-text-900); font-weight: 600; }
+[role="dialog"] .pfield input[type="date"]::-webkit-calendar-picker-indicator,
+[role="dialog"] .pfield input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   padding: 6px; border-radius: 4px; cursor: pointer; opacity: 1;
   filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(185deg) brightness(97%) contrast(101%);
   transition: background-color .2s ease, filter .2s ease;
 }
-[role="dialog"] .pfield input[type="date"]::-webkit-calendar-picker-indicator:hover { background-color: color-mix(in srgb, var(--ucas-blue) 14%, transparent); }
+[role="dialog"] .pfield input[type="date"]::-webkit-calendar-picker-indicator:hover,
+[role="dialog"] .pfield input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover { background-color: color-mix(in srgb, var(--ucas-blue) 14%, transparent); }
 /* فورم الإنشاء المكدّس (مهمة/إعلان): أقسام مسطّحة فوق بعض بفراغات واضحة */
 [role="dialog"] .as-form { display: flex; flex-direction: column; gap: 18px; }
 [role="dialog"] .as-form .tk-sec { border: 1px solid var(--color-border); border-radius: 4px; box-shadow: none; background: var(--color-surface); animation: none; }
@@ -7078,13 +7081,3 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* فورم اجتماع جديد: تسميات الحقول بشكل موحّد + زر مسح الفلاتر */
 .svm-form .pfield > span { display: flex; align-items: center; gap: 6px; }
 .svm-clear { flex: 0 0 auto; }
-/* حقل الموعد: أيقونة كلندر ملوّنة بهوية البوابة */
-.svm-dt { position: relative; display: block; }
-.svm-dt input { padding-inline-start: 46px !important; }
-.svm-dt-emoji {
-  position: absolute; inset-inline-start: 12px; top: 50%; transform: translateY(-50%);
-  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 4px;
-  background: color-mix(in srgb, var(--ucas-blue) 10%, var(--color-surface));
-  font-size: 14px; line-height: 1; pointer-events: none;
-  filter: saturate(1.5) hue-rotate(-8deg);
-}

@@ -106,10 +106,7 @@
         </label>
         <label class="pfield">
           <span>موعد الاجتماع <b class="as-req">*</b></span>
-          <span class="svm-dt">
-            <span class="svm-dt-emoji" aria-hidden="true">📅</span>
-            <input v-model="form.at" type="datetime-local" :min="minAt">
-          </span>
+          <input v-model="form.at" type="datetime-local" :min="minAt">
         </label>
         <label class="pfield">
           <span>رابط الاجتماع</span>
