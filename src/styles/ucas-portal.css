@@ -2163,8 +2163,8 @@
 .ucas-portal .portal-page .task-col { border: 0; border-radius: 4px; background: var(--color-bg); box-shadow: none; backdrop-filter: none; }
 .ucas-portal .portal-page .task-col-head { padding: 12px 14px; background: transparent; border-bottom: 3px solid var(--color-border); font-size: 14px; }
 .ucas-portal .portal-page .task-col-head > span:last-child { border-radius: 4px; box-shadow: none; }
-.ucas-portal .portal-page .task-card { border-radius: 4px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); transform: none; transition: border-color var(--ucas-color-speed) var(--ease-standard); }
-.ucas-portal .portal-page .task-card:hover { transform: none; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); border-color: color-mix(in srgb, var(--portal-cyan) 50%, var(--color-border)); }
+.ucas-portal .portal-page .task-card { border-radius: 4px; border-color: var(--color-border); box-shadow: none; transform: none; transition: border-color var(--ucas-color-speed) var(--ease-standard); }
+.ucas-portal .portal-page .task-card:hover { transform: none; box-shadow: none; border-color: color-mix(in srgb, var(--portal-cyan) 50%, var(--color-border)); }
 .ucas-portal .portal-page .task-card p.font-bold { font-size: 14px; }
 /* رفع ملفات على بطاقات مهامي (placeholder) */
 .tb-upload-drop { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; height: 34px; border: 1px dashed var(--portal-cyan, var(--color-primary-600)); border-radius: 4px; font-size: 12px; font-weight: 700; color: var(--portal-cyan, var(--color-primary-600)); cursor: pointer; transition: background-color .3s ease; }
@@ -4027,8 +4027,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .task-col:nth-child(3) .task-col-head { --tc: linear-gradient(270deg, #F9C851, #F89E32); }
 .sa-skin .task-col:nth-child(4) .task-col-head { --tc: linear-gradient(270deg, #62BB46, #0E699C); }
 .sa-skin .task-col-head > span:first-child { color: var(--ucas-blue); }
-.sa-skin .task-card { border-radius: 4px; border-color: transparent; box-shadow: 0 4px 14px rgba(4, 40, 80, .08); }
-.sa-skin .task-card:hover { box-shadow: 0 10px 26px rgba(4, 40, 80, .14); }
+.sa-skin .task-card { border-radius: 4px; border-color: var(--color-border); box-shadow: none; }
+.sa-skin .task-card:hover { box-shadow: none; border-color: color-mix(in srgb, var(--ucas-blue) 45%, var(--color-border)); }
 /* الجداول gr-table (الاجتماعات وغيرها): رأس متدرّج */
 :root[data-brand="ucas"] .sa-skin .gr-table thead tr { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); }
 :root[data-brand="ucas"] .sa-skin .gr-table thead th { background: transparent; color: #FFFFFF; }
@@ -4110,12 +4110,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .task-col-head > span:last-child, .sa-skin .task-col-head .rounded-pill { border: 0; border-radius: 4px; background: linear-gradient(270deg, rgba(98, 187, 70, .18), rgba(0, 91, 170, .12)); color: var(--ucas-blue); box-shadow: none; }
 .sa-skin .task-col > div:not(.task-col-head) { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ucas-blue) 30%, transparent) transparent; }
 
-/* بطاقة المهمة: شريط حالة جانبي متدرّج بدل الحد الملوّن، وأقسام داخلية مرتبة */
-.sa-skin .task-card { position: relative; overflow: hidden; border-width: 0 !important; padding-inline-start: 18px !important; }
-.sa-skin .task-card::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: 0; width: 4px; background: var(--tc, #98A6AD); }
-.sa-skin .task-col:nth-child(2) .task-card { --tc: linear-gradient(180deg, #35B8E0, #0E699C); }
-.sa-skin .task-col:nth-child(3) .task-card { --tc: linear-gradient(180deg, #F9C851, #F89E32); }
-.sa-skin .task-col:nth-child(4) .task-card { --tc: linear-gradient(180deg, #62BB46, #0E699C); }
+/* بطاقة المهمة: مسطّحة بلا شريط جانبي — حدّ فاتح واحد وظل بلا */
+.sa-skin .task-card { position: relative; overflow: hidden; }
 .sa-skin .task-card .font-bold { color: var(--ucas-blue); }
 .sa-skin .task-card :is(.border-t, .tb-upload) { border-top-color: color-mix(in srgb, var(--ucas-blue) 10%, transparent) !important; }
 /* القائمة المنسدلة للحالة داخل البطاقة */
@@ -4144,8 +4140,6 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .task-col-head > span:last-child { min-width: 28px; height: 26px; border: 0 !important; border-radius: 4px !important; background: var(--ucas-blue) !important; color: #FFFFFF !important; box-shadow: none !important; }
 .sa-skin .task-col-head > span:first-child > span { width: 9px; height: 9px; background: var(--tdot, #98A6AD) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--tdot, #98A6AD) 25%, transparent); }
 .sa-skin .task-col:nth-child(2) { --tdot: #0E699C; } .sa-skin .task-col:nth-child(3) { --tdot: #F89E32; } .sa-skin .task-col:nth-child(4) { --tdot: #62BB46; }
-.sa-skin .task-card::before { inset-inline-start: auto; right: 0; }
-.sa-skin .task-card { padding-inline-start: 14px !important; padding-right: 18px !important; }
 
 /* تفاصيل المهمة في البوب اب */
 .td { display: flex; flex-direction: column; gap: 16px; }

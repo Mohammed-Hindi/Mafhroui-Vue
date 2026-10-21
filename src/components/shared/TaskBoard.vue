@@ -47,8 +47,8 @@
               v-for="task in tasksByColumn(column.id)"
               :key="task.id"
               :draggable="canDrag && acts(task)"
-              class="task-card bg-surface rounded-lg border border-border shadow-card p-3.5 border-s-[3px] transition-all duration-fast hover:shadow-card-hover hover:-translate-y-0.5 cursor-pointer"
-              :class="[column.accentBorder, canDrag && acts(task) && 'cursor-grab active:cursor-grabbing']"
+              class="task-card bg-surface rounded-lg border border-border shadow-card p-3.5 transition-colors duration-fast hover:shadow-card-hover hover:-translate-y-0.5 cursor-pointer"
+              :class="[canDrag && acts(task) && 'cursor-grab active:cursor-grabbing']"
               @dragstart="onDragStart(task)"
               @dragend="dragOverColumn = null"
               @click="openDetail(task)"
@@ -339,10 +339,10 @@ import FileDropzone from '@/components/shared/FileDropzone.vue'
 import { formatRelativeTime } from '@/utils/formatters'
 
 const COLUMNS = [
-  { id: 'pending', label: 'قيد الانتظار', dot: 'bg-text-400', headBg: '', accentBorder: 'border-s-border' },
-  { id: 'in_progress', label: 'قيد التنفيذ', dot: 'bg-primary-500', headBg: 'bg-primary-50/50', accentBorder: 'border-s-primary-400' },
-  { id: 'review', label: 'مراجعة', dot: 'bg-warning', headBg: 'bg-warning-bg/50', accentBorder: 'border-s-warning' },
-  { id: 'done', label: 'مكتمل', dot: 'bg-success', headBg: 'bg-success-bg/50', accentBorder: 'border-s-success' }
+  { id: 'pending', label: 'قيد الانتظار', dot: 'bg-text-400', headBg: '' },
+  { id: 'in_progress', label: 'قيد التنفيذ', dot: 'bg-primary-500', headBg: 'bg-primary-50/50' },
+  { id: 'review', label: 'مراجعة', dot: 'bg-warning', headBg: 'bg-warning-bg/50' },
+  { id: 'done', label: 'مكتمل', dot: 'bg-success', headBg: 'bg-success-bg/50' }
 ]
 
 export default {
