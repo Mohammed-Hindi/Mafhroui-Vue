@@ -1,25 +1,31 @@
 <template>
   <!-- مهامي — مهام الإدارة العامة المسندة لعضو لجنة الإشراف أو للمشرف: لوحة حالات يحرّكها صاحبها بنفسه + ملاحظات -->
   <div :class="usesPortal && 'dash hd-page'">
-    <!-- الإدارة العامة واللجنة: رأس صفحة بطاقة بوابة كباقي الصفحات -->
-    <header v-if="usesPortal" class="dash-head">
-      <h2 class="dash-title">مهامي</h2>
-      <!-- إرسال مهمة للمجموعات أو مجموعات محددة أو المشرفين (نفس أداة الإدارة العامة) -->
-      <button v-if="!isSup" type="button" class="pbtn is-green" @click="openComposer"><Plus :size="16" /> مهمة جديدة</button>
-    </header>
+    <!-- نافذة "مهمة جديدة" (بوب أب) من أداة الإدارة العامة — بلا قائمة مهام -->
     <TasksWorkspace v-if="usesPortal && !isSup" ref="composer" compose-only :groups="groups" />
     <SkeletonLoader v-if="loading" variant="cards" :rows="4" />
-    <EmptyState v-else-if="!tasks.length" title="لا توجد مهام مسندة لك" description="عندما ترسل لك الإدارة العامة أو لجنة الإشراف مهمة ستظهر هنا." />
-    <TaskBoard
-      v-else
-      :tasks="tasks"
-      :can-create="false" :can-drag="true" :can-delete="false" uploads
-      :notes-by-task="taskNotes"
-      :notes-loading-by-task="taskNotesLoading"
-      @move="onMove"
-      @load-notes="onLoadNotes"
-      @add-note="onAddNote"
-    />
+    <template v-else>
+      <EmptyState v-if="!tasks.length" title="لا توجد مهام مسندة لك" description="عندما ترسل لك الإدارة العامة أو لجنة الإشراف مهمة ستظهر هنا.">
+        <template v-if="!isSup" #action>
+          <button type="button" class="pbtn is-green" @click="openComposer"><Plus :size="16" /> مهمة جديدة</button>
+        </template>
+      </EmptyState>
+      <TaskBoard
+        v-else
+        :tasks="tasks"
+        :can-create="false" :can-drag="true" :can-delete="false" uploads
+        :notes-by-task="taskNotes"
+        :notes-loading-by-task="taskNotesLoading"
+        @move="onMove"
+        @load-notes="onLoadNotes"
+        @add-note="onAddNote"
+      >
+        <!-- زر "مهمة جديدة" داخل شريط لوحة الكانبان نفسه -->
+        <template v-if="!isSup" #actions>
+          <button type="button" class="pbtn is-green" @click="openComposer"><Plus :size="16" /> مهمة جديدة</button>
+        </template>
+      </TaskBoard>
+    </template>
   </div>
 </template>
 
