@@ -6943,7 +6943,6 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sup-team-bar { display: block; height: 6px; border-radius: 3px; background: var(--color-bg); overflow: hidden; }
 .sup-team-bar i { display: block; height: 100%; border-radius: 3px; background: var(--ucas-green); transition: width .6s var(--ease-standard); }
 .sup-team-meta { font-size: 11.5px; color: var(--color-text-400); font-variant-numeric: tabular-nums; }
-
 .sup-team-next { font-size: 12px; font-weight: 700; color: var(--ucas-blue); }
 :root[data-theme="dark"] .sup-team-next { color: #35B8E0; }
 
@@ -6975,3 +6974,27 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
   .svt-views button { flex: 1; justify-content: center; }
   .sup-select { flex: 1 1 140px; }
 }
+
+/* ======================================================================
+   اجتماعات المشرف (SupervisorMeetingsPage) — نفس بنية صفحة المهام:
+   شريط المجموعات ← شريط فلاتر واحد (بحث + حالة + ترتيب) ← جدول مسطّح
+   ====================================================================== */
+.svm-page { gap: 16px; }
+.svm-filters { align-items: center; gap: 10px; }
+.svm-filters .gr-search { flex: 1 1 260px; max-width: none; }
+
+/* اسم الاجتماع: العنوان بارز والملاحظات سطر ثانوي هادئ */
+.svm-note { display: block; margin-top: 3px; font-size: 12.5px; font-weight: 400; color: var(--color-text-600); }
+/* الموعد: التاريخ ثم الساعة تحته */
+.svm-when { display: block; margin-top: 2px; font-size: 12px; font-weight: 600; color: var(--color-text-400); font-variant-numeric: tabular-nums; }
+/* شريحة الحالة: القادمة سماوية والمنتهية خضراء */
+.svm-pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.svm-pill.is-next { background: #E1F5FC; color: #1A8DB5; }
+.svm-pill.is-done { background: #E2F8ED; color: #0A8A4A; }
+:root[data-theme="dark"] .svm-pill.is-next { background: rgba(53, 184, 224, .15); color: #35B8E0; }
+:root[data-theme="dark"] .svm-pill.is-done { background: rgba(16, 196, 105, .15); color: #34D399; }
+/* أزرار الإجراءات في صف واحد */
+.svm-acts { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+/* تنبيه الاجتماع القادم */
+.svm-next { align-items: flex-start; margin: 0 0 14px; }
+.svm-next svg { flex-shrink: 0; margin-top: 4px; }

@@ -1,69 +1,125 @@
 <template>
-  <!-- الاجتماعات للمشرف بنمط صفحة الطالب: اختيار المجموعة ← شريط عروض (القادمة / المنتهية) ← جدول البوابة + شريط ملخص أخضر -->
-  <div class="dash hd-page">
-    <header class="dash-head">
-      <h2 class="dash-title">الاجتماعات</h2>
-      <button v-if="selectedTeamId" type="button" class="pbtn is-green" @click="openCreate"><Plus :size="16" /> اجتماع جديد</button>
-    </header>
+  <!-- اجتماعات المشرف: شريط المجموعات (كلها أو مجموعة بعينها) ← فلاتر (بحث + حالة + ترتيب) ← جدول مسطّح بأسلوب البوابة -->
+  <div class="dash svm-page">
+    <!-- شريط المجموعات: بطاقة لكل مجموعة + بطاقة "كل المجموعات" — الضغط يحدّد نطاق الجدول -->
+    <section v-if="myTeams.length" class="sup-teams" aria-label="المجموعات">
+      <button
+        type="button"
+        :class="['sup-team', !selectedTeamId && 'is-active']"
+        :aria-pressed="!selectedTeamId"
+        @click="pickTeam(null)"
+      >
+        <span class="sup-team-head">
+          <b>كل المجموعات</b>
+          <span class="sup-team-count">{{ overall.total }}</span>
+        </span>
+        <span class="sup-team-proj">{{ myTeams.length }} مجموعة مُسندة إليك</span>
+        <span class="sup-team-meta">{{ overall.upcoming }} قادمة · {{ overall.done }} منتهية</span>
+        <span v-if="nextMeeting" class="sup-team-next">الموعد القادم: {{ nextMeeting.date }}</span>
+      </button>
 
-    <!-- فلتر الفرق بنفس شريط صفحة المهام -->
-    <section v-if="teamOptions.length" class="dash-card tk-teambar">
-      <div class="gr-class" role="radiogroup" aria-label="المجموعة">
-        <span class="gr-class-label">المجموعة</span>
-        <div class="gr-seg">
-          <button
-            v-for="o in teamOptions" :key="o.value" type="button" role="radio"
-            :class="selectedTeamId === o.value && 'is-active'" :aria-checked="selectedTeamId === o.value" :title="o.name"
-            @click="pickTeam(o.value)"
-          >
-            {{ o.label }}
-          </button>
-        </div>
-      </div>
+      <button
+        v-for="t in myTeams"
+        :key="t.id"
+        type="button"
+        :class="['sup-team', t.id === selectedTeamId && 'is-active']"
+        :aria-pressed="t.id === selectedTeamId"
+        @click="pickTeam(t.id)"
+      >
+        <span class="sup-team-head">
+          <b>{{ teamTitle(t) }}</b>
+          <span class="sup-team-count">{{ statsFor(t).total }}</span>
+        </span>
+        <span class="sup-team-proj">{{ t.projectName || 'لم يُسجَّل مشروع بعد' }}</span>
+        <span class="sup-team-meta">{{ statsFor(t).upcoming }} قادمة · {{ statsFor(t).done }} منتهية</span>
+        <span v-if="statsFor(t).next" class="sup-team-next">الموعد القادم: {{ statsFor(t).next }}</span>
+      </button>
     </section>
 
-    <SkeletonLoader v-if="loading" :rows="4" height="40px" />
-    <p v-else-if="!teamOptions.length" class="palert is-info"><CalendarDays :size="18" /><span>لا توجد مجموعات مُسندة إليك</span></p>
+    <SkeletonLoader v-if="loading" variant="cards" :rows="3" />
+    <p v-else-if="!myTeams.length" class="palert is-info"><CalendarDays :size="18" /><span>لا توجد مجموعات مُسندة إليك</span></p>
+
     <template v-else>
-      <PortalStepper v-model="view" :items="views" label="عرض الاجتماعات" />
+      <!-- فلاتر: بحث + حالة + ترتيب (المجموعة تُختار من شريط المجموعات فوق) -->
+      <div class="gr-filters svm-filters">
+        <label class="gr-search">
+          <Search :size="16" />
+          <input v-model.trim="q" type="search" placeholder="بحث باسم الاجتماع أو في الملاحظات…">
+        </label>
+        <BaseSelect
+          v-model="status"
+          class="sup-select"
+          aria-label="الحالة"
+          placeholder="كل الاجتماعات"
+          include-placeholder-option
+          :options="statusOptions"
+        />
+        <BaseSelect v-model="sort" class="sup-select" aria-label="الترتيب" :options="sortOptions" />
+      </div>
 
-      <section class="dash-card">
-        <div class="dash-card-head"><h3 class="portal-title">{{ view === 'upcoming' ? 'الاجتماعات القادمة' : 'الاجتماعات المنتهية' }}</h3></div>
+      <!-- جدول الاجتماعات: اسم الاجتماع (والملاحظات تحته) ثم المجموعة ثم الموعد ثم الحالة ثم الإجراءات -->
+      <section class="gr gr-card">
+        <header class="gr-card-head">
+          <div class="gr-card-title">
+            <h3>{{ listTitle }}</h3>
+            <span>{{ scopeName }}</span>
+          </div>
+          <div class="gr-card-actions">
+            <button type="button" class="pbtn is-green" @click="openCreate"><Plus :size="16" /> اجتماع جديد</button>
+          </div>
+        </header>
 
-        <p v-if="view === 'upcoming' && upcoming[0]" class="palert is-info mt-meet-next">
+        <p v-if="nextMeeting && status !== 'past'" class="palert is-info svm-next">
           <CalendarClock :size="18" />
-          <span><b>الاجتماع القادم:</b> {{ upcoming[0].title }} — {{ upcoming[0].date }} الساعة {{ upcoming[0].time }} ({{ upcoming[0].when }})</span>
+          <span><b>الاجتماع القادم:</b> {{ nextMeeting.title }} — {{ nextMeeting.date }} الساعة {{ nextMeeting.time }} ({{ nextMeeting.when }})</span>
         </p>
 
         <div class="gr-table-wrap">
-          <table class="gr-table mt-table">
-            <thead><tr><th>#</th><th>اسم الاجتماع</th><th>التاريخ</th><th>الساعة</th><th>الملاحظات</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+          <table class="gr-table">
+            <thead>
+              <tr>
+                <th>اسم الاجتماع</th>
+                <th v-if="!selectedTeamId">المجموعة</th>
+                <th>الموعد</th>
+                <th>الحالة</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr v-for="(m, i) in rows" :key="m.id" class="gr-row">
-                <td>{{ i + 1 }}</td>
-                <td class="pt-strong">{{ m.title }}</td>
-                <td class="mono">{{ m.date }}</td>
-                <td class="mono">{{ m.time }}</td>
-                <td class="pt-muted">{{ m.notes || '—' }}</td>
-                <td><span :class="['rv-pill', m.past ? 'is-approved' : 'is-pending']">{{ m.past ? 'منتهٍ' : m.when }}</span></td>
+              <SkeletonLoader v-if="meetingsLoading" variant="table" :cols="5" :rows="3" />
+              <tr v-for="m in rows" :key="m.id" class="gr-row">
+                <td class="pt-strong">
+                  {{ m.title }}
+                  <span v-if="m.notes" class="svm-note">{{ m.notes }}</span>
+                </td>
+                <td v-if="!selectedTeamId" class="pt-muted">{{ m.teamLabel }}</td>
+                <td class="mono">
+                  {{ m.date }}
+                  <span class="svm-when">{{ m.time }}</span>
+                </td>
+                <td><span :class="['svm-pill', m.past ? 'is-done' : 'is-next']">{{ m.past ? 'منتهٍ' : m.when }}</span></td>
                 <td>
                   <span v-if="m.past" class="pt-muted">—</span>
-                  <span v-else class="mt-acts">
-                    <a v-if="m.link" :href="m.link" target="_blank" rel="noopener" class="pbtn is-cyan is-sm"><Video :size="15" /> انضمام</a>
-                    <button v-if="remindNumber" type="button" class="pbtn is-outline is-sm" @click="sendReminder(m)"><MessageCircle :size="15" /> تذكير</button>
+                  <span v-else class="svm-acts">
+                    <a v-if="m.link" :href="m.link" target="_blank" rel="noopener" class="pbtn is-cyan is-sm"><VideoIcon :size="15" /> انضمام</a>
+                    <button v-if="leaderOf(m.teamId)?.whatsapp" type="button" class="pbtn is-outline is-sm" @click="sendReminder(m)"><MessageCircle :size="15" /> تذكير</button>
                     <button type="button" class="pbtn is-outline is-sm is-red-text" @click="cancelTarget = m"><Trash2 :size="15" /> إلغاء</button>
                   </span>
                 </td>
               </tr>
-              <tr v-if="!rows.length"><td colspan="7" class="gr-empty">{{ view === 'upcoming' ? 'لا توجد اجتماعات قادمة حاليًا' : 'لا توجد اجتماعات منتهية بعد' }}</td></tr>
+              <tr v-if="!meetingsLoading && !rows.length">
+                <td :colspan="selectedTeamId ? 4 : 5" class="gr-empty">
+                  {{ status === 'upcoming' ? 'لا توجد اجتماعات قادمة حاليًا' : status === 'past' ? 'لا توجد اجتماعات منتهية بعد' : 'لا توجد اجتماعات مطابقة للفلاتر' }}
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
 
         <div class="gr-sumbar">
-          <span>عدد الاجتماعات: {{ all.length }}</span>
-          <span>القادمة: {{ upcoming.length }}</span>
-          <span>المنتهية: {{ completed.length }}</span>
+          <span>عدد الاجتماعات: {{ scoped.length }}</span>
+          <span>القادمة: {{ scopedUpcoming.length }}</span>
+          <span>المنتهية: {{ scopedDone.length }}</span>
         </div>
       </section>
     </template>
@@ -106,7 +162,7 @@
       <p>سيُلغى اجتماع «{{ cancelTarget?.title }}» ({{ cancelTarget?.date }} الساعة {{ cancelTarget?.time }}).</p>
       <template #footer>
         <button type="button" class="pbtn is-outline" @click="cancelTarget = null">رجوع</button>
-        <button type="button" class="pbtn is-red" :disabled="cancelling" @click="cancel"><Trash2 :size="16" /> {{ cancelling ? 'جارٍ الإلغاء…' : 'تأكيد الإلغاء' }}</button>
+        <button type="button" class="pbtn is-red" :disabled="cancelling" @click="cancel"><Trash2 :size="15" /> {{ cancelling ? 'جارٍ الإلغاء…' : 'تأكيد الإلغاء' }}</button>
       </template>
     </BaseModal>
   </div>
@@ -114,43 +170,76 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { CalendarClock, CalendarDays, CheckCircle2, MessageCircle, Plus, Trash2, Video } from 'lucide-vue-next'
+import { CalendarClock, CalendarDays, MessageCircle, Plus, Search, Trash2, Video as VideoIcon } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
-import PortalStepper from '@/components/shared/PortalStepper.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
-import { sendWhatsapp } from '@/services/api'
+import api, { sendWhatsapp } from '@/services/api'
 
 const DAY = 864e5
 
 export default {
   name: 'SupervisorMeetingsPage',
 
-  components: { BaseModal, CalendarClock, CalendarDays, MessageCircle, Plus, PortalStepper, Trash2, Video },
+  components: { BaseModal, BaseSelect, CalendarClock, CalendarDays, MessageCircle, Plus, Search, Trash2, VideoIcon },
 
   data() {
-    return { loading: true, view: 'upcoming', selectedTeamId: null, createOpen: false, saving: false, cancelTarget: null, cancelling: false, form: {} }
+    return {
+      loading: true,
+      meetingsLoading: true,
+      status: '',
+      q: '',
+      sort: 'soon',
+      selectedTeamId: null,
+      /** اجتماعات كل مجموعة — لعرض العدد والموعد القادم في شريط المجموعات ولعرض "كل المجموعات" */
+      teamMeetings: {},
+      createOpen: false,
+      saving: false,
+      cancelTarget: null,
+      cancelling: false,
+      form: {}
+    }
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['teamsForDisplay', 'teams', 'meetings']),
+    ...mapState(useTeamsStore, ['teamsForDisplay', 'teams']),
     ...mapState(useAuthStore, ['user']),
 
+    myTeams() {
+      return this.teamsForDisplay.filter((t) => t.supId === this.user?.id)
+    },
+
     teamOptions() {
-      return this.teamsForDisplay.filter((t) => t.supId === this.user?.id).map((t) => ({ value: t.id, label: t.section ? `شعبة ${t.section}` : t.name, name: t.name }))
+      return this.myTeams.map((t) => ({ value: t.id, label: t.section ? `شعبة ${t.section}` : t.name, name: t.name }))
     },
-    remindNumber() {
-      return this.teams.find((t) => t.id === this.selectedTeamId)?.leader?.whatsapp || ''
+
+    statusOptions() {
+      return [
+        { value: 'upcoming', label: 'القادمة' },
+        { value: 'past', label: 'المنتهية' }
+      ]
     },
-    all() {
+
+    sortOptions() {
+      return [
+        { value: 'soon', label: 'القادمة الأقرب أولًا' },
+        { value: 'new', label: 'الأحدث أولًا' },
+        { value: 'old', label: 'الأقدم أولًا' },
+        { value: 'title', label: 'العنوان أبجديًا' }
+      ]
+    },
+
+    /** كل اجتماعات مجموعات المشرف، مرتّبة بالأقرب زمنًا */
+    allMeetings() {
       const now = Date.now()
-      return this.meetings
+      return this.myTeams
+        .flatMap((t) => (this.teamMeetings[t.id] || []).map((m) => ({ ...m, teamId: m.team_id ?? t.id, teamLabel: t.section ? `شعبة ${t.section}` : t.name })))
         .map((m) => {
           const at = new Date(m.scheduled_at)
-          const days = Math.ceil((at - now) / DAY)
+          const days = Math.ceil((at.getTime() - now) / DAY)
           return {
-            id: m.id,
-            title: m.title,
+            ...m,
             at: at.getTime(),
             date: at.toLocaleDateString('en-CA'),
             time: at.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
@@ -162,28 +251,60 @@ export default {
         })
         .sort((a, b) => a.at - b.at)
     },
-    upcoming() {
-      return this.all.filter((m) => !m.past)
+
+    /** نطاق العرض: مجموعة بعينها أو كل المجموعات */
+    scoped() {
+      return this.selectedTeamId ? this.allMeetings.filter((m) => m.teamId === this.selectedTeamId) : this.allMeetings
     },
-    // المنتهية: الأحدث أولًا
-    completed() {
-      return this.all.filter((m) => m.past).reverse()
+
+    scopedUpcoming() {
+      return this.scoped.filter((m) => !m.past)
     },
+
+    scopedDone() {
+      return this.scoped.filter((m) => m.past)
+    },
+
+    /** الصفوف المعروضة: النطاق + حالة + بحث + ترتيب */
     rows() {
-      return this.view === 'upcoming' ? this.upcoming : this.completed
+      let list = this.scoped
+      if (this.status === 'upcoming') list = list.filter((m) => !m.past)
+      else if (this.status === 'past') list = list.filter((m) => m.past)
+      const q = this.q.toLowerCase()
+      if (q) list = list.filter((m) => `${m.title} ${m.notes} ${m.teamLabel}`.toLowerCase().includes(q))
+      if (this.sort === 'new') return [...list].sort((a, b) => b.at - a.at)
+      if (this.sort === 'old') return [...list].sort((a, b) => a.at - b.at)
+      if (this.sort === 'title') return [...list].sort((a, b) => (a.title || '').localeCompare(b.title || '', 'ar'))
+      // الافتراضي: القادمة الأقرب أولًا ثم المنتهية الأحدث أولًا
+      return [...list].sort((a, b) => (a.past === b.past ? (a.past ? b.at - a.at : a.at - b.at) : a.past ? 1 : -1))
     },
+
+    overall() {
+      return { total: this.allMeetings.length, upcoming: this.allMeetings.filter((m) => !m.past).length, done: this.allMeetings.filter((m) => m.past).length }
+    },
+
+    nextMeeting() {
+      return this.scopedUpcoming[0] || null
+    },
+
+    listTitle() {
+      if (this.status === 'upcoming') return 'الاجتماعات القادمة'
+      if (this.status === 'past') return 'الاجتماعات المنتهية'
+      return 'كل الاجتماعات'
+    },
+
+    scopeName() {
+      const t = this.myTeams.find((x) => x.id === this.selectedTeamId)
+      return t ? (t.section ? `شعبة ${t.section}` : t.name) : 'كل المجموعات'
+    },
+
     canCreate() {
       return !!this.form.teamId && !!this.form.title && !!this.form.at
     },
+
     minAt() {
       const d = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4)
       return d.toISOString().slice(0, 16)
-    },
-    views() {
-      return [
-        { key: 'upcoming', label: 'القادمة', icon: CalendarDays, count: this.upcoming.length },
-        { key: 'completed', label: 'المنتهية', icon: CheckCircle2, count: this.completed.length }
-      ]
     }
   },
 
@@ -192,33 +313,68 @@ export default {
       await this.fetchTeams()
     } catch {
       this.$toast?.error('تعذّر تحميل المجموعات')
-    } finally {
-      this.loading = false
     }
-    this.selectedTeamId = this.teamOptions[0]?.value ?? null
-    this.loadMeetings()
+    await this.loadAllMeetings()
+    this.loading = false
+    this.meetingsLoading = false
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchMeetings', 'createMeeting', 'deleteMeeting']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'createMeeting', 'deleteMeeting']),
+
+    teamTitle(t) {
+      return t.section ? `شعبة ${t.section}` : t.name
+    },
+
+    /** إحصاء مجموعة: العدد الكلي والقادمة والمنتهية والموعد القادم */
+    statsFor(t) {
+      const list = this.allMeetings.filter((m) => m.teamId === t.id)
+      const upcoming = list.filter((m) => !m.past)
+      const next = upcoming[0]
+      return {
+        total: list.length,
+        upcoming: upcoming.length,
+        done: list.length - upcoming.length,
+        next: next ? next.date : ''
+      }
+    },
+
+    leaderOf(teamId) {
+      return this.teams.find((t) => t.id === teamId)?.leader || null
+    },
+
+    /** اجتماعات كل المجموعات — بالتوازي حتى لا تتأخر البطاقة الأولى */
+    async loadAllMeetings() {
+      const results = await Promise.all(
+        this.myTeams.map(async (t) => {
+          try {
+            const { data } = await api.get(`/teams/${t.id}/meetings`)
+            return [t.id, data.data || data]
+          } catch {
+            return [t.id, []]
+          }
+        })
+      )
+      this.teamMeetings = Object.fromEntries(results)
+    },
+
+    /** إعادة تحميل اجتماعات مجموعة واحدة (بعد إنشاء أو إلغاء) */
+    async refreshTeam(teamId) {
+      try {
+        const { data } = await api.get(`/teams/${teamId}/meetings`)
+        this.teamMeetings = { ...this.teamMeetings, [teamId]: data.data || data }
+      } catch {
+        /* البقية تُعرض من آخر تحميل */
+      }
+    },
 
     pickTeam(id) {
       if (id === this.selectedTeamId) return
       this.selectedTeamId = id
-      this.loadMeetings()
-    },
-
-    async loadMeetings() {
-      if (!this.selectedTeamId) return
-      try {
-        await this.fetchMeetings(this.selectedTeamId)
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر تحميل الاجتماعات')
-      }
     },
 
     openCreate() {
-      this.form = { teamId: this.selectedTeamId, title: '', at: '', link: '', notes: '' }
+      this.form = { teamId: this.selectedTeamId ?? this.teamOptions[0]?.value, title: '', at: '', link: '', notes: '' }
       this.createOpen = true
     },
 
@@ -230,11 +386,8 @@ export default {
         await this.createMeeting(f.teamId, { title: f.title, scheduled_at: `${f.at.replace('T', ' ')}:00`, google_meet_link: f.link || null, notes: f.notes || null })
         this.$toast?.success('تم إنشاء الاجتماع')
         this.createOpen = false
-        this.view = 'upcoming'
-        if (f.teamId !== this.selectedTeamId) {
-          this.selectedTeamId = f.teamId
-          await this.loadMeetings()
-        }
+        this.status = 'upcoming'
+        await this.refreshTeam(f.teamId)
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إنشاء الاجتماع')
       } finally {
@@ -244,10 +397,12 @@ export default {
 
     async cancel() {
       this.cancelling = true
+      const target = this.cancelTarget
       try {
-        await this.deleteMeeting(this.cancelTarget.id)
+        await this.deleteMeeting(target.id)
         this.cancelTarget = null
         this.$toast?.success('تم إلغاء الاجتماع')
+        await this.refreshTeam(target.teamId)
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إلغاء الاجتماع')
       } finally {
@@ -256,8 +411,8 @@ export default {
     },
 
     async sendReminder(m) {
-      const leader = this.teams.find((t) => t.id === this.selectedTeamId)?.leader
-      if (!leader?.whatsapp) return
+      const leader = this.leaderOf(m.teamId)
+      if (!leader?.whatsapp) return this.$toast?.error('رقم واتساب قائد المجموعة غير متاح')
       const text = [`تذكير باجتماع: ${m.title}`, `التاريخ: ${m.date}`, `الوقت: ${m.time}`, m.link && `الرابط: ${m.link}`, m.notes && `الملاحظات: ${m.notes}`].filter(Boolean).join('\n')
       try {
         const res = await sendWhatsapp({ whats: leader.whatsapp, name: leader.name, user_id: leader.id }, text, 'meeting')
