@@ -1,6 +1,6 @@
 <template>
   <!-- بروفايل طالب أو مشرف (نافذة منبثقة) — GET /students/{id}/profile و /supervisors/{id}/profile -->
-  <BaseModal :model-value="modelValue" :title="title" size="lg" @update:model-value="$emit('update:modelValue', $event)">
+  <BaseModal :model-value="modelValue" :title="title" size="lg" :layer="layer" @update:model-value="$emit('update:modelValue', $event)">
     <SkeletonLoader v-if="loading" :rows="4" />
     <p v-else-if="!data" class="pf-muted">تعذّر تحميل البيانات</p>
 
@@ -141,7 +141,9 @@ export default {
     /** إتاحة تعديل تفاصيل مشروع الطالب (للمشرف) */
     editProject: { type: Boolean, default: false },
     /** بيانات جاهزة تُعرض مباشرة بلا طلب (عضو اللجنة — لا يوجد مسار بروفايل له) */
-    preset: { type: Object, default: null }
+    preset: { type: Object, default: null },
+    /** طبقة النافذة — 1 فوق نافذة أخرى مفتوحة (بوب-أب فوق بوب-أب) */
+    layer: { type: Number, default: 0 }
   },
 
   emits: ['update:modelValue'],

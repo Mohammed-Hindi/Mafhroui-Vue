@@ -206,6 +206,7 @@
     <ProfileModal
       v-model="supervisorOpen"
       kind="supervisor"
+      :layer="1"
       :person-id="teamDetail?.supervisor?.id"
       :name="teamDetail?.supervisor?.name || ''"
     />

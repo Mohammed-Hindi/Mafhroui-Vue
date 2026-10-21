@@ -6,7 +6,7 @@
       leave-active-class="transition-opacity duration-fast"
       leave-to-class="opacity-0"
     >
-      <div v-if="modelValue" class="fixed inset-0 z-modal-overlay bg-text-900/50 backdrop-blur-[2px]" @click="handleOverlayClick" />
+      <div v-if="modelValue" class="fixed inset-0 z-modal-overlay bg-text-900/50 backdrop-blur-[2px]" :style="overlayStyle" @click="handleOverlayClick" />
     </transition>
 
     <transition
@@ -18,6 +18,7 @@
       <div
         v-if="modelValue"
         class="fixed inset-0 z-modal flex items-center justify-center p-4 pointer-events-none"
+        :style="dialogStyle"
         role="dialog"
         aria-modal="true"
         :aria-label="title"
@@ -58,6 +59,9 @@
 import { X } from 'lucide-vue-next'
 import { lockScroll, unlockScroll } from '@/utils/scrollLock'
 
+/** النوافذ المفتوحة (ترتيب الفتح) — زر Escape يغلق النافذة الأحدث فقط */
+const openModals = []
+
 export default {
   name: 'BaseModal',
 
@@ -68,7 +72,9 @@ export default {
     title: { type: String, default: '' },
     description: { type: String, default: '' },
     size: { type: String, default: 'md', validator: (v) => ['sm', 'md', 'lg', 'xl'].includes(v) },
-    closeOnOverlay: { type: Boolean, default: true }
+    closeOnOverlay: { type: Boolean, default: true },
+    /** طبقة النافذة — 0 = الطبقة الأساسية، وكل طبقة ترفعها فوق النافذة التي تحتها */
+    layer: { type: Number, default: 0 }
   },
 
   emits: ['update:modelValue', 'close'],
@@ -76,27 +82,51 @@ export default {
   computed: {
     widthClass() {
       return { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' }[this.size]
+    },
+    /** طبقة الخلفية: تعلو نافذة الطبقة السابقة حتى يلتقط النقر خارج النافذة */
+    overlayStyle() {
+      return { zIndex: `calc(var(--z-modal-overlay) + ${this.layer} * 30)` }
+    },
+    /** طبقة جسم النافذة: فوق خلفيتها وفوق نوافذ الطبقات الأدنى */
+    dialogStyle() {
+      return { zIndex: `calc(var(--z-modal) + ${this.layer} * 30)` }
     }
   },
 
   watch: {
     modelValue(open) {
-      if (open) lockScroll()
-      else unlockScroll()
+      if (open) {
+        this.register()
+        lockScroll()
+      } else {
+        this.unregister()
+        unlockScroll()
+      }
     }
   },
 
   mounted() {
     document.addEventListener('keydown', this.handleEscape)
-    if (this.modelValue) lockScroll()
+    if (this.modelValue) {
+      this.register()
+      lockScroll()
+    }
   },
 
   beforeUnmount() {
     document.removeEventListener('keydown', this.handleEscape)
+    this.unregister()
     if (this.modelValue) unlockScroll()
   },
 
   methods: {
+    register() {
+      if (!openModals.includes(this)) openModals.push(this)
+    },
+    unregister() {
+      const i = openModals.indexOf(this)
+      if (i !== -1) openModals.splice(i, 1)
+    },
     close() {
       this.$emit('update:modelValue', false)
       this.$emit('close')
@@ -105,7 +135,10 @@ export default {
       if (this.closeOnOverlay) this.close()
     },
     handleEscape(event) {
-      if (event.key === 'Escape' && this.modelValue) this.close()
+      if (event.key !== 'Escape' || !this.modelValue) return
+      // النوافذ المتداخلة: Escape يغلق الأحدث فوقها فقط
+      if (openModals[openModals.length - 1] !== this) return
+      this.close()
     }
   }
 }
