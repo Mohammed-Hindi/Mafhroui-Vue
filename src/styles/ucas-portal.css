@@ -4141,7 +4141,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 :root[data-brand="ucas"] [role="dialog"] :is(label, .text-label).font-semibold { color: var(--ucas-blue); }
 /* تصحيحات لوحة المهام: الحاوية، العدّاد، النقاط، وموضع شريط الحالة (يمين البطاقة في RTL) */
 .sa-skin .task-board { border-radius: 20px; background: linear-gradient(270deg, rgba(98, 187, 70, .06), rgba(0, 91, 170, .04)), var(--color-surface); box-shadow: 0 10px 30px rgba(4, 40, 80, .08); }
-.sa-skin .task-col-head > span:last-child { min-width: 28px; height: 26px; border: 0 !important; border-radius: 4px !important; background: linear-gradient(270deg, #62BB46, #0E699C) !important; color: #FFFFFF !important; box-shadow: 0 3px 8px rgba(4, 40, 80, .2) !important; }
+.sa-skin .task-col-head > span:last-child { min-width: 28px; height: 26px; border: 0 !important; border-radius: 4px !important; background: var(--ucas-blue) !important; color: #FFFFFF !important; box-shadow: none !important; }
 .sa-skin .task-col-head > span:first-child > span { width: 9px; height: 9px; background: var(--tdot, #98A6AD) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--tdot, #98A6AD) 25%, transparent); }
 .sa-skin .task-col:nth-child(2) { --tdot: #0E699C; } .sa-skin .task-col:nth-child(3) { --tdot: #F89E32; } .sa-skin .task-col:nth-child(4) { --tdot: #62BB46; }
 .sa-skin .task-card::before { inset-inline-start: auto; right: 0; }
