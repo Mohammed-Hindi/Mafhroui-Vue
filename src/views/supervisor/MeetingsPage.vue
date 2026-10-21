@@ -279,11 +279,6 @@ export default {
     nextMeeting() {      return this.scopedUpcoming[0] || null
     },
 
-    /** تخصص مجموعة معيّنة (لسطر العنوان الفرعي في نافذة التفاصيل) */
-    specOf(teamId) {
-      return this.myTeams.find((x) => x.id === teamId)?.spec || ''
-    },
-
     /** هل في فلتر مفعّل؟ (لإظهار زر مسح الفلاتر) */
     hasFilters() {
       return !!(this.q || this.group || this.status)
@@ -343,6 +338,11 @@ export default {
     /** عدد أعضاء المجموعة (من بيانات المجموعات المحمّلة) */
     membersCount(teamId) {
       return this.myTeams.find((t) => t.id === teamId)?.members?.length || 0
+    },
+
+    /** تخصص مجموعة معيّنة (لسطر العنوان الفرعي في نافذة التفاصيل) */
+    specOf(teamId) {
+      return this.myTeams.find((x) => x.id === teamId)?.spec || ''
     },
 
     /** فتح بوب-أب تفاصيل المجموعة (التحميل جوه المكوّن المشترك) */

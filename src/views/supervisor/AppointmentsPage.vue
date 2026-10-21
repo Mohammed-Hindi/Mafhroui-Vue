@@ -108,11 +108,6 @@ export default {
           }
         })
         .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`))
-    },
-
-    /** تخصص المجموعة (لسطر العنوان الفرعي في نافذة التفاصيل) */
-    specOf(teamId) {
-      return this.groups.find((g) => g.id === teamId)?.spec || ''
     }
   },
 
@@ -124,6 +119,11 @@ export default {
 
   methods: {
     ...mapActions(useDiscussionsStore, ['fetchDiscussions']),
+
+    /** تخصص المجموعة (لسطر العنوان الفرعي في نافذة التفاصيل) */
+    specOf(teamId) {
+      return this.groups.find((g) => g.id === teamId)?.spec || ''
+    },
 
     /** فتح تفاصيل المجموعة (النافذة المشتركة مع صفحة الاجتماعات) */
     openTeam(teamId) {
