@@ -2,7 +2,7 @@
   <!-- سجل المجموعات للإدارة العامة — بيانات تجريبية (placeholder) بلا ربط بالخادم، بنمط بوابة الكلية (200639 → 200940):
        بطاقة بيضاء واحدة: عنوان + الفصل ← أزرار الإدارة ← التصنيف ← "حدد …" ← جدول برأس سماوي ← شريط ملخص أخضر ← أزرار الملفات
        رقم المجموعة = رقم الشعبة من ملف الاستيراد، والفرز الأساسي حسب التخصص -->
-  <section class="gr gr-card">
+  <section :class="['gr', 'gr-card', isSupervisor && 'sup-tall-card']">
     <header class="gr-card-head">
       <div class="gr-card-title">
         <span class="dash-chip">{{ semesterName }}</span>
@@ -38,169 +38,172 @@
       <BaseSelect v-model="pageSize" class="min-w-[110px]" aria-label="عدد الصفوف" :options="pageSizeOptions" />
     </div>
 
-    <SlideTable :rows="rows" :size="pageSize" label="المجموعات">
-      <template #default="{ rows: pageRows }">
-        <div class="gr-table-wrap">
-          <table class="gr-table">
-            <thead>
-              <tr>
-                <th class="w-12" aria-label="فتح" />
-                <th data-rt-title>رقم المجموعة</th>
-                <th data-rt-show>المشروع</th>
-                <th>حالة المشروع</th>
-                <th v-if="!isSupervisor" data-rt-show>المشرف</th>
-                <th class="gr-hide-md">التخصص</th>
-                <th class="gr-hide-md">عدد الطلاب</th>
-                <th>التقدّم</th>
-              </tr>
-            </thead>
-            <tbody v-if="!rows.length">
-              <SkeletonLoader v-if="loading" variant="table" :cols="isSupervisor ? 7 : 8" :rows="8" />
-              <tr v-else><td :colspan="isSupervisor ? 7 : 8" class="gr-empty">لا توجد مجموعات مطابقة للفلاتر</td></tr>
-            </tbody>
-            <template v-else>
-              <tbody v-for="g in pageRows" :key="g.id" :class="['gr-group', isOpen(g.id) && 'is-open']">
-                <tr class="gr-row" @click="toggle(g)">
-                  <td>
-                    <button type="button" class="gr-toggle" :aria-expanded="isOpen(g.id)" :aria-label="`تفاصيل ${g.name}`" @click.stop="toggle(g)">
-                      <ChevronLeft :size="16" />
-                    </button>
-                  </td>
-                  <td><span class="gr-section">{{ g.section }}</span></td>
-                  <td class="gr-name-cell">
-                    <span class="gr-name">{{ g.project }}</span>
-                    <span v-if="g.types.length" class="gr-types">{{ g.types.join(' · ') }}</span>
-                  </td>
-                  <td>
-                    <span v-if="g.projectStatus" :class="['gm-chip', STATUS_CLASS[g.projectStatus]]">{{ STATUS[g.projectStatus] }}</span>
-                    <span v-else class="gr-muted">غير محدّد</span>
-                  </td>
-                  <td v-if="!isSupervisor">{{ g.supName }}</td>
-                  <td class="gr-hide-md">
-                    <span class="gr-spec">{{ g.spec }}</span>
-                    <span class="gr-degree">{{ DEGREES[g.degree] }}</span>
-                  </td>
-                  <td class="gr-hide-md">
-                    <span class="gr-count">
-                      <span class="gr-count-n">{{ g.shown.length }}</span>
-                      <span v-if="g.members.length !== g.shown.length" class="gr-count-unit">/ {{ g.members.length }}</span>
-                    </span>
-                  </td>
-                  <td>
-                    <span class="gr-progress"><span :class="levelClass(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
-                    <span class="gr-pct">{{ g.percentage }}%</span>
-                  </td>
+    <!-- المشرف: الجدول يملأ ارتفاع الشاشة ورأسه يثبت أثناء التمرير -->
+    <div :class="isSupervisor && 'sup-tall-slide'">
+      <SlideTable :rows="rows" :size="pageSize" label="المجموعات">
+        <template #default="{ rows: pageRows }">
+          <div class="gr-table-wrap">
+            <table class="gr-table">
+              <thead>
+                <tr>
+                  <th class="w-12" aria-label="فتح" />
+                  <th data-rt-title>رقم المجموعة</th>
+                  <th data-rt-show>المشروع</th>
+                  <th>حالة المشروع</th>
+                  <th v-if="!isSupervisor" data-rt-show>المشرف</th>
+                  <th class="gr-hide-md">التخصص</th>
+                  <th class="gr-hide-md">عدد الطلاب</th>
+                  <th>التقدّم</th>
                 </tr>
-  
-                <tr v-if="isOpen(g.id)" class="gr-detail-row">
-                  <td :colspan="isSupervisor ? 7 : 8">
-                    <div class="gr-detail">
-                      <div class="gr-members gr-detail-full">
-                        <table>
-                          <thead>
-                            <tr><th>الطالب</th><th>الرقم الجامعي</th><th>الجنس</th><th>مكان التواجد</th><th v-if="isSupervisor">واتساب</th><th v-if="isSupervisor">البريد</th><th>المهام</th><th>التقدّم</th></tr>
-                          </thead>
-                          <tbody>
-                            <tr v-for="m in g.shown" :key="m.id">
-                              <td><button type="button" class="gr-member-name gr-link" title="عرض بروفايل الطالب" @click="openPerson('student', m.id, m.name)"><span class="gm-av" aria-hidden="true">{{ m.name.charAt(0) }}</span>{{ m.name }}</button></td>
-                              <td><span class="mono">{{ m.uni }}</span></td>
-                              <td><span :class="['gm-chip', m.gender === 'female' && 'is-f']">{{ GENDERS[m.gender] || '—' }}</span></td>
-                              <td>{{ REGIONS[m.region] || '—' }}</td>
-                              <td v-if="isSupervisor"><span class="mono">{{ m.whatsapp || '—' }}</span></td>
-                              <td v-if="isSupervisor"><span class="mono">{{ m.email || '—' }}</span></td>
-                              <td><span class="mono">{{ m.done }}/{{ m.total }}</span></td>
-                              <td>
-                                <span class="gr-progress is-sm"><span :class="levelClass(m.percentage)" :style="{ width: m.percentage + '%' }" /></span>
-                                <span class="gr-pct">{{ m.percentage }}%</span>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <aside class="gr-side">
-                        <!-- المشرف: الشعبة ووصف المشروع (المطلوب في صفحة المجموعات) -->
-                        <template v-if="isSupervisor">
-                          <h4>الشعبة</h4>
-                          <p class="gr-sup">{{ g.section }}</p>
-                          <h4>وصف المشروع</h4>
-                          <p class="gr-desc">{{ g.description || 'لا يوجد وصف' }}</p>
-                        </template>
-                        <h4>مهام المجموعة</h4>
-                        <div class="gr-stats">
-                          <div><b>{{ g.tasksTotal }}</b><span>موكلة</span></div>
-                          <div><b>{{ g.done }}</b><span>منجزة</span></div>
-                          <div><b>{{ g.tasksTotal - g.done }}</b><span>متبقية</span></div>
-                        </div>
-  
-                        <h4>نوع المشروع</h4>
-                        <!-- يحدده الطالب مع المقترح ويعدّله المشرف فقط (الخادم يقصر تعديل النوع عليه) -->
-                        <ProjectTypes
-                          class="gr-ptypes" :project-id="g.projectId" :types="g.types" :editable="userRole === 'supervisor' && !!g.projectId"
-                          @saved="(types) => { g.types = types; g.type = types.join('، ') }"
-                        />
-
-                        <!-- نفس تفاصيل الإدارة العامة للمشرف أيضًا، على مجموعاته فقط -->
-                        <h4>{{ isSupervisor ? 'تفاعلي مع المجموعة' : 'تفاعل المشرف مع المجموعة' }}</h4>
-                        <p v-if="!isSupervisor" class="gr-sup">
-                          <button type="button" class="gr-link" title="عرض بروفايل المشرف" @click="openPerson('supervisor', g.supId, g.supName)">{{ g.supName }}</button>
-                        </p>
-                        <template v-if="g.act">
-                          <div class="gr-activity">
-                            <span class="gr-progress"><span :class="levelClass(g.act.activity_score)" :style="{ width: g.act.activity_score + '%' }" /></span>
-                            <span class="gr-pct">{{ g.act.activity_score }}%</span>
-                          </div>
-                          <dl class="gr-kv">
-                            <div><dt>الاجتماعات</dt><dd>{{ g.act.meetings_count ?? 0 }}</dd></div>
-                            <div><dt>الملاحظات على المهام</dt><dd>{{ g.act.notes_count ?? 0 }}</dd></div>
-                            <div><dt>الملفات المرفوعة</dt><dd>{{ g.act.files_count ?? 0 }}</dd></div>
-                          </dl>
-                        </template>
-                        <SkeletonLoader v-else-if="supLoading[g.supId]" :rows="3" />
-                        <p v-else class="gr-muted">لا تتوفر بيانات نشاط</p>
-  
-                      </aside>
-                      <div class="gr-members gr-timeline">
-                        <header class="tl-head">
-                          <h4>المهام والإعلانات</h4>
-                          <span class="tl-count">{{ g.timeline.length }}</span>
-                        </header>
-                        <div class="tl-scroll">
-                          <ul v-if="timelines[g.id] && !timelines[g.id].loading && g.timeline.length" class="tl-list">
-                            <li v-for="i in g.timeline" :key="i.key" :class="['tl-row', 'is-' + i.type, 'is-clickable']" role="button" tabindex="0" @click="openTlItem(i)" @keydown.enter="openTlItem(i)">
-                              <span class="tl-ic"><component :is="ITEM_TYPES[i.type].icon" :size="13" /></span>
-                              <div class="tl-info">
-                                <b :title="i.title">{{ i.title }}</b>
-                                <span class="tl-meta">
-                                  <span>{{ i.kind }}</span>
-                                  <span class="mono">{{ i.date }}</span>
-                                  <span v-if="i.due" class="tl-due mono">{{ i.due }}</span>
-                                </span>
-                              </div>
-                              <span v-if="i.status" :class="['rv-pill', i.status.pill]">{{ i.status.label }}</span>
-                            </li>
-                          </ul>
-                          <SkeletonLoader v-else-if="!timelines[g.id] || timelines[g.id].loading" :rows="4" height="46px" />
-                          <p v-else class="tl-empty">لا توجد مهام أو إعلانات بعد</p>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
+              </thead>
+              <tbody v-if="!rows.length">
+                <SkeletonLoader v-if="loading" variant="table" :cols="isSupervisor ? 7 : 8" :rows="8" />
+                <tr v-else><td :colspan="isSupervisor ? 7 : 8" class="gr-empty">لا توجد مجموعات مطابقة للفلاتر</td></tr>
               </tbody>
-            </template>
-          </table>
-        </div>
-      </template>
+              <template v-else>
+                <tbody v-for="g in pageRows" :key="g.id" :class="['gr-group', isOpen(g.id) && 'is-open']">
+                  <tr class="gr-row" @click="toggle(g)">
+                    <td>
+                      <button type="button" class="gr-toggle" :aria-expanded="isOpen(g.id)" :aria-label="`تفاصيل ${g.name}`" @click.stop="toggle(g)">
+                        <ChevronLeft :size="16" />
+                      </button>
+                    </td>
+                    <td><span class="gr-section">{{ g.section }}</span></td>
+                    <td class="gr-name-cell">
+                      <span class="gr-name">{{ g.project }}</span>
+                      <span v-if="g.types.length" class="gr-types">{{ g.types.join(' · ') }}</span>
+                    </td>
+                    <td>
+                      <span v-if="g.projectStatus" :class="['gm-chip', STATUS_CLASS[g.projectStatus]]">{{ STATUS[g.projectStatus] }}</span>
+                      <span v-else class="gr-muted">غير محدّد</span>
+                    </td>
+                    <td v-if="!isSupervisor">{{ g.supName }}</td>
+                    <td class="gr-hide-md">
+                      <span class="gr-spec">{{ g.spec }}</span>
+                      <span class="gr-degree">{{ DEGREES[g.degree] }}</span>
+                    </td>
+                    <td class="gr-hide-md">
+                      <span class="gr-count">
+                        <span class="gr-count-n">{{ g.shown.length }}</span>
+                        <span v-if="g.members.length !== g.shown.length" class="gr-count-unit">/ {{ g.members.length }}</span>
+                      </span>
+                    </td>
+                    <td>
+                      <span class="gr-progress"><span :class="levelClass(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
+                      <span class="gr-pct">{{ g.percentage }}%</span>
+                    </td>
+                  </tr>
+  
+                  <tr v-if="isOpen(g.id)" class="gr-detail-row">
+                    <td :colspan="isSupervisor ? 7 : 8">
+                      <div class="gr-detail">
+                        <div class="gr-members gr-detail-full">
+                          <table>
+                            <thead>
+                              <tr><th>الطالب</th><th>الرقم الجامعي</th><th>الجنس</th><th>مكان التواجد</th><th v-if="isSupervisor">واتساب</th><th v-if="isSupervisor">البريد</th><th>المهام</th><th>التقدّم</th></tr>
+                            </thead>
+                            <tbody>
+                              <tr v-for="m in g.shown" :key="m.id">
+                                <td><button type="button" class="gr-member-name gr-link" title="عرض بروفايل الطالب" @click="openPerson('student', m.id, m.name)"><span class="gm-av" aria-hidden="true">{{ m.name.charAt(0) }}</span>{{ m.name }}</button></td>
+                                <td><span class="mono">{{ m.uni }}</span></td>
+                                <td><span :class="['gm-chip', m.gender === 'female' && 'is-f']">{{ GENDERS[m.gender] || '—' }}</span></td>
+                                <td>{{ REGIONS[m.region] || '—' }}</td>
+                                <td v-if="isSupervisor"><span class="mono">{{ m.whatsapp || '—' }}</span></td>
+                                <td v-if="isSupervisor"><span class="mono">{{ m.email || '—' }}</span></td>
+                                <td><span class="mono">{{ m.done }}/{{ m.total }}</span></td>
+                                <td>
+                                  <span class="gr-progress is-sm"><span :class="levelClass(m.percentage)" :style="{ width: m.percentage + '%' }" /></span>
+                                  <span class="gr-pct">{{ m.percentage }}%</span>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <aside class="gr-side">
+                          <!-- المشرف: الشعبة ووصف المشروع (المطلوب في صفحة المجموعات) -->
+                          <template v-if="isSupervisor">
+                            <h4>الشعبة</h4>
+                            <p class="gr-sup">{{ g.section }}</p>
+                            <h4>وصف المشروع</h4>
+                            <p class="gr-desc">{{ g.description || 'لا يوجد وصف' }}</p>
+                          </template>
+                          <h4>مهام المجموعة</h4>
+                          <div class="gr-stats">
+                            <div><b>{{ g.tasksTotal }}</b><span>موكلة</span></div>
+                            <div><b>{{ g.done }}</b><span>منجزة</span></div>
+                            <div><b>{{ g.tasksTotal - g.done }}</b><span>متبقية</span></div>
+                          </div>
+  
+                          <h4>نوع المشروع</h4>
+                          <!-- يحدده الطالب مع المقترح ويعدّله المشرف فقط (الخادم يقصر تعديل النوع عليه) -->
+                          <ProjectTypes
+                            class="gr-ptypes" :project-id="g.projectId" :types="g.types" :editable="userRole === 'supervisor' && !!g.projectId"
+                            @saved="(types) => { g.types = types; g.type = types.join('، ') }"
+                          />
 
-      <!-- شريط الملخص الأخضر أسفل الجدول (نمط "المعدل الفصلي" في البوابة) -->
-      <template #after>
-        <div class="gr-sumbar">
-          <span>عدد المجموعات: {{ rows.length }}</span>
-          <span>عدد الطلاب: {{ studentsCount }}</span>
-          <span>متوسط التقدّم: {{ avgProgress }}%</span>
-        </div>
-      </template>
-    </SlideTable>
+                          <!-- نفس تفاصيل الإدارة العامة للمشرف أيضًا، على مجموعاته فقط -->
+                          <h4>{{ isSupervisor ? 'تفاعلي مع المجموعة' : 'تفاعل المشرف مع المجموعة' }}</h4>
+                          <p v-if="!isSupervisor" class="gr-sup">
+                            <button type="button" class="gr-link" title="عرض بروفايل المشرف" @click="openPerson('supervisor', g.supId, g.supName)">{{ g.supName }}</button>
+                          </p>
+                          <template v-if="g.act">
+                            <div class="gr-activity">
+                              <span class="gr-progress"><span :class="levelClass(g.act.activity_score)" :style="{ width: g.act.activity_score + '%' }" /></span>
+                              <span class="gr-pct">{{ g.act.activity_score }}%</span>
+                            </div>
+                            <dl class="gr-kv">
+                              <div><dt>الاجتماعات</dt><dd>{{ g.act.meetings_count ?? 0 }}</dd></div>
+                              <div><dt>الملاحظات على المهام</dt><dd>{{ g.act.notes_count ?? 0 }}</dd></div>
+                              <div><dt>الملفات المرفوعة</dt><dd>{{ g.act.files_count ?? 0 }}</dd></div>
+                            </dl>
+                          </template>
+                          <SkeletonLoader v-else-if="supLoading[g.supId]" :rows="3" />
+                          <p v-else class="gr-muted">لا تتوفر بيانات نشاط</p>
+  
+                        </aside>
+                        <div class="gr-members gr-timeline">
+                          <header class="tl-head">
+                            <h4>المهام والإعلانات</h4>
+                            <span class="tl-count">{{ g.timeline.length }}</span>
+                          </header>
+                          <div class="tl-scroll">
+                            <ul v-if="timelines[g.id] && !timelines[g.id].loading && g.timeline.length" class="tl-list">
+                              <li v-for="i in g.timeline" :key="i.key" :class="['tl-row', 'is-' + i.type, 'is-clickable']" role="button" tabindex="0" @click="openTlItem(i)" @keydown.enter="openTlItem(i)">
+                                <span class="tl-ic"><component :is="ITEM_TYPES[i.type].icon" :size="13" /></span>
+                                <div class="tl-info">
+                                  <b :title="i.title">{{ i.title }}</b>
+                                  <span class="tl-meta">
+                                    <span>{{ i.kind }}</span>
+                                    <span class="mono">{{ i.date }}</span>
+                                    <span v-if="i.due" class="tl-due mono">{{ i.due }}</span>
+                                  </span>
+                                </div>
+                                <span v-if="i.status" :class="['rv-pill', i.status.pill]">{{ i.status.label }}</span>
+                              </li>
+                            </ul>
+                            <SkeletonLoader v-else-if="!timelines[g.id] || timelines[g.id].loading" :rows="4" height="46px" />
+                            <p v-else class="tl-empty">لا توجد مهام أو إعلانات بعد</p>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </template>
+            </table>
+          </div>
+        </template>
+
+        <!-- شريط الملخص الأخضر أسفل الجدول (نمط "المعدل الفصلي" في البوابة) -->
+        <template #after>
+          <div class="gr-sumbar">
+            <span>عدد المجموعات: {{ rows.length }}</span>
+            <span>عدد الطلاب: {{ studentsCount }}</span>
+            <span>متوسط التقدّم: {{ avgProgress }}%</span>
+          </div>
+        </template>
+      </SlideTable>
+    </div>
 
 
     <ProfileModal v-model="profile.open" :kind="profile.kind" :person-id="profile.id" :name="profile.name" />

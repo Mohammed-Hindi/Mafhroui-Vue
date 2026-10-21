@@ -7070,7 +7070,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
    ====================================================================== */
 /* البطاقة عمود مرن يملأ المساحة المتبقية من الشاشة */
 .sup-tall-card { display: flex; flex-direction: column; min-height: max(420px, calc(100vh - 180px)); }
-.sup-tall-card > .gr-card-title, .sup-tall-card > .gr-filters { flex-shrink: 0; }
+.sup-tall-card > .gr-card-title, .sup-tall-card > .gr-filters, .sup-tall-card > .gr-card-head { flex-shrink: 0; }
 /* حاوية السلايدر: الشريحة تتمدّد، والملخص + شريط الشرائح يثبتان أسفلها */
 .sup-tall-card .sup-tall-slide { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .sup-tall-card .sup-tall-slide > div { flex: 1; min-height: 0; display: flex; flex-direction: column; }
