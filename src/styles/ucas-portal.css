@@ -2510,10 +2510,12 @@
 .ads-requester .pt-muted { font-size: 12px; }
 .ads-avatar { display: inline-grid; place-items: center; flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--color-surface); border: 1px solid var(--color-border); }
 .ads-data { display: flex; flex-direction: column; margin: 0; }
-.ads-data div { display: flex; flex-wrap: wrap; gap: 2px 6px; padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: 12.5px; color: var(--portal-cyan); }
+/* بيانات المراسلة: العنوان رمادي هادئ والقيمة بأزرق باهت */
+.ads-data div { display: flex; flex-wrap: wrap; gap: 2px 6px; padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: 12.5px; color: var(--color-text-600); }
 .ads-data div:last-child { border-bottom: 0; }
-.ads-data dt { font-weight: 700; }
-.ads-data dd { margin: 0; }
+.ads-data dt { font-weight: 700; color: var(--color-text-600); }
+.ads-data dd { margin: 0; font-weight: 700; color: color-mix(in srgb, var(--ucas-blue) 52%, var(--color-surface)); }
+:root[data-theme="dark"] .ads-data dd { color: color-mix(in srgb, var(--ucas-blue) 55%, var(--color-text-900)); }
 .ads-empty { align-items: center; justify-content: center; gap: 8px; color: var(--color-text-400); font-size: 13.5px; }
 .ads-back { display: none; }
 .ads-alert { align-items: center; margin: 12px; padding: 10px 14px; font-size: 13px; }
