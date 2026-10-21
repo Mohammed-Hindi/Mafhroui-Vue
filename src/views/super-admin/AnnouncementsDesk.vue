@@ -16,7 +16,6 @@
         <BaseSelect v-model="kindFilter" class="ads-select" aria-label="النوع" placeholder="كل الأنواع" :options="typeOptions" />
         <BaseSelect v-model="sender" class="ads-select" aria-label="المرسل" placeholder="كل المرسلين" include-placeholder-option :options="senders" />
         <BaseSelect v-model="sort" class="ads-select" aria-label="الترتيب" :options="sortOptions" />
-        <span class="ads-summary">{{ shown.length }} عنصر</span>
       </div>
 
       <div class="ads-layout">
