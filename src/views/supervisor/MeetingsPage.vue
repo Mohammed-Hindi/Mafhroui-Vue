@@ -165,8 +165,7 @@
         <!-- الأعضاء بمعلوماتهم الكاملة -->
         <section class="svm-team-members">
           <header class="svm-team-members-head">
-            <h4>أعضاء المجموعة</h4>
-            <b>{{ teamMembers.length }}</b>
+            <h4>أعضاء المجموعة <b>{{ teamMembers.length }}</b></h4>
           </header>
           <div class="gr-members">
             <table>
@@ -185,7 +184,9 @@
                     <span class="svm-member">
                       <span class="gm-av" aria-hidden="true">{{ (mem.student?.name || '?').charAt(0) }}</span>
                       <span class="gr-member-name">{{ mem.student?.name || '—' }}</span>
-                      <span v-if="mem.is_leader" class="svt-leader">قائد المجموعة</span>
+                      <span v-if="mem.is_leader" class="svm-leader" title="قائد المجموعة" aria-label="قائد المجموعة">
+                        <StarIcon :size="13" fill="currentColor" />
+                      </span>
                     </span>
                   </td>
                   <td><span class="mono">{{ mem.student?.university_number || '—' }}</span></td>
@@ -224,7 +225,7 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { CalendarClock, MessageCircle, Plus, Search, Trash2, UserRound, Users, Video as VideoIcon } from 'lucide-vue-next'
+import { CalendarClock, MessageCircle, Plus, Search, Star as StarIcon, Trash2, UserRound, Users, Video as VideoIcon } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import ProfileModal from '@/components/shared/ProfileModal.vue'
@@ -238,7 +239,7 @@ const DAY = 864e5
 export default {
   name: 'SupervisorMeetingsPage',
 
-  components: { BaseModal, BaseSelect, ProfileModal, CalendarClock, MessageCircle, Plus, Search, Trash2, UserRound, Users, VideoIcon },
+  components: { BaseModal, BaseSelect, ProfileModal, CalendarClock, MessageCircle, Plus, Search, StarIcon, Trash2, UserRound, Users, VideoIcon },
 
   data() {
     return {

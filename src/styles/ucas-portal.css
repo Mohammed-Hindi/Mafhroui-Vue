@@ -7043,11 +7043,19 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .svm-meta-link svg { flex-shrink: 0; }
 /* قسم أعضاء المجموعة داخل البوب-أب */
 .svm-team-members { margin-top: 18px; }
-.svm-team-members-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-.svm-team-members-head h4 { margin: 0; font-size: 13.5px; font-weight: 800; color: var(--ucas-blue); }
+.svm-team-members-head { margin-bottom: 10px; }
+.svm-team-members-head h4 { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 13.5px; font-weight: 800; color: var(--ucas-blue); }
+/* عدّاد الأعضاء: شارة زرقاء solid ملاصقة لعنوان القسم (نفس السطر) */
 .svm-team-members-head b {
-  min-width: 22px; padding: 1px 8px; border-radius: 4px; background: var(--ucas-blue); color: #FFFFFF;
-  font-size: 12px; font-weight: 800; text-align: center; font-variant-numeric: tabular-nums;
+  display: inline-grid; place-items: center; min-width: 22px; height: 20px; padding: 0 8px;
+  border-radius: 4px; background: var(--ucas-blue); color: #FFFFFF;
+  font-size: 12px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums;
+}
+/* شارة قائد المجموعة: نجمة بدل النص الطويل */
+.svm-leader {
+  display: inline-grid; place-items: center; flex-shrink: 0; width: 22px; height: 22px;
+  border: 1px solid var(--color-warning-border); border-radius: 4px;
+  background: var(--color-warning-bg); color: var(--color-warning-text);
 }
 /* الموعد: التاريخ ثم الساعة تحته */
 .svm-when { display: block; margin-top: 2px; font-size: 12px; font-weight: 600; color: var(--color-text-400); font-variant-numeric: tabular-nums; }
