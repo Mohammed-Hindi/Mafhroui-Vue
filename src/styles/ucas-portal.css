@@ -4309,6 +4309,23 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .td-note-add button { flex-shrink: 0; min-width: 84px; height: 38px !important; padding-inline: 16px !important; border: 0 !important; border-radius: 4px !important; font-size: 13px !important; font-weight: 800 !important; color: #FFFFFF !important; background: var(--ucas-blue) !important; box-shadow: none; }
 .td-note-add button:hover { background: var(--ucas-blue-deep) !important; filter: none; }
 
+/* ===== بوب اب المهمة (إضافة/تعديل/تفاصيل): طافي مينيمال بلا تدرّجات =====
+   مقصوص على نافذتي المهمة بخطاف فريد (.td للتعديل، #tb-create-form للإضافة) —
+   بقية النوافذ في البوابة (المجموعات، الاجتماعات، الإدارة…) تبقى على رأسها الأزرق كما هي */
+:root[data-brand="ucas"] [role="dialog"] .td :is(h3, h4)::after,
+:root[data-brand="ucas"] [role="dialog"] #tb-create-form :is(h3, h4)::after { content: none; }
+/* شريط التمرير داخل نافذة المهمة: لون واحد بدل التدرّج الأخضر→الأزرق */
+:root[data-brand="ucas"] [role="dialog"]:is(:has(.td), :has(#tb-create-form)) > div > header + div::-webkit-scrollbar-thumb { background: var(--color-border); }
+/* الرأس: أبيض بخط داكن (بهية البوابة الطافية) بدل الشريط الأزرق */
+:root[data-brand="ucas"] [role="dialog"]:is(:has(.td), :has(#tb-create-form)) > div > header { background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+:root[data-brand="ucas"] [role="dialog"]:is(:has(.td), :has(#tb-create-form)) > div > header :is(h2, p) { color: var(--color-text-900); }
+:root[data-brand="ucas"] [role="dialog"]:is(:has(.td), :has(#tb-create-form)) > div > header p { color: var(--color-text-600); }
+:root[data-brand="ucas"] [role="dialog"]:is(:has(.td), :has(#tb-create-form)) > div > header > button[aria-label="إغلاق"] { background: var(--color-bg); color: var(--color-text-600); }
+:root[data-brand="ucas"] [role="dialog"]:is(:has(.td), :has(#tb-create-form)) > div > header > button[aria-label="إغلاق"]:hover { background: var(--color-border-soft); color: var(--color-text-900); }
+/* زر الملاحظات: أزرق سادة بلا تدرّج ولا ظل عميق */
+:root[data-brand="ucas"] [role="dialog"] .td .td-note-add > button { background: var(--ucas-blue) !important; box-shadow: none; }
+:root[data-brand="ucas"] [role="dialog"] .td .td-note-add > button:hover:not(:disabled) { background: var(--ucas-blue-deep) !important; filter: none; box-shadow: none; }
+
 /* ======================================================================
    صفحة المقترحات (كل اللوحات): عنوان القسم، الجدول، الترقيم، وتفاصيل الطالب
    ====================================================================== */
