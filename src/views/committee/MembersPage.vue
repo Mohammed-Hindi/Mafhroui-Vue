@@ -26,14 +26,6 @@
         </template>
         <BaseSelect v-if="memberKind === 'supervisor'" v-model="supSpecFilter" class="min-w-[150px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specializationOptions" />
         <BaseSelect v-model="pageSize" class="min-w-[110px]" aria-label="عدد الصفوف" :options="pageSizeOptions" />
-        <div class="mb-toolbar-end">
-          <button type="button" class="mb-bulk-btn is-whats" :disabled="!whatsCount" :title="`إرسال رسالة واتساب إلى ${whatsCount} عضو`" @click="sendWhatsAll(activeList)">
-            <MessageCircle :size="15" /> واتساب <b>{{ whatsCount }}</b>
-          </button>
-          <button type="button" class="mb-bulk-btn is-mail" :disabled="!mailCount" :title="`إرسال بريد إلى ${mailCount} عضو`" @click="sendMailAll(activeEmails)">
-            <Mail :size="15" /> بريد <b>{{ mailCount }}</b>
-          </button>
-        </div>
       </div>
 
       <div class="mb-12">
@@ -706,12 +698,6 @@ export default {
       const entries = Object.entries(REGIONS)
       return (present.size ? entries.filter(([v]) => present.has(v)) : entries).map(([value, label]) => ({ value, label }))
     },
-    whatsCount() {
-      return this.activeList.filter((m) => m.whats).length
-    },
-    mailCount() {
-      return this.activeList.filter((m) => m.mail).length
-    },
     studentEmails() {
       return this.students.map((s) => s.mail)
     },
@@ -750,17 +736,11 @@ export default {
         ...tail
       ]
     },
-    activeList() {
-      return this.listOf(this.memberKind)
-    },
     activeFiltered() {
       return this.memberKind === 'student' ? this.filteredStudents : this.listOf(this.memberKind)
     },
     activeLoading() {
       return { student: this.studentsLoading, supervisor: this.supervisorsLoading, committee: this.committeeLoading }[this.memberKind]
-    },
-    activeEmails() {
-      return this.activeList.map((s) => s.mail)
     },
 
     trashedTabs() {
@@ -1251,16 +1231,6 @@ export default {
       this.emailComposeTarget = mail
       this.emailComposeOpen = true
     },
-    sendWhatsAll(list) {
-      const contacts = list.filter((c) => c.whats)
-      if (!contacts.length) return
-      if (!window.confirm(`سيتم فتح ${contacts.length} محادثة واتساب في تبويبات منفصلة. متابعة؟`)) return
-      contacts.forEach((c, i) => setTimeout(() => this.sendWhats(c.whats), i * 300))
-    },
-    sendMailAll(emails) {
-      const url = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${encodeURIComponent(emails.join(','))}&su=${encodeURIComponent('تعميم من لجنة الإشراف')}`
-      window.open(url, '_blank')
-    },
 
     /** إرسال بيانات الدخول الجماعي — سوبر أدمن فقط */
     async loadNotifyDirectory() {
@@ -1383,13 +1353,4 @@ export default {
 .mb-tag.is-region { background: var(--color-bg); color: var(--color-text-600); box-shadow: inset 0 0 0 1px var(--color-border); }
 .mb-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .mb-toolbar-search { flex: 1 1 240px; min-width: 200px; }
-.mb-toolbar-end { display: flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
-.mb-bulk-btn { display: inline-flex; align-items: center; gap: 7px; height: 38px; padding-inline: 14px; border-radius: 4px; border: 1px solid; background: var(--color-surface); font-size: 13px; font-weight: 700; cursor: pointer; transition: background-color .2s ease, color .2s ease, border-color .2s ease; }
-.mb-bulk-btn b { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding-inline: 5px; border-radius: 4px; font-size: 12px; font-weight: 800; background: color-mix(in srgb, currentColor 14%, transparent); }
-.mb-bulk-btn.is-whats { border-color: color-mix(in srgb, #25D366 50%, var(--color-border)); color: #1DA851; }
-.mb-bulk-btn.is-whats:not(:disabled):hover { background: #25D366; border-color: #25D366; color: #FFFFFF; }
-.mb-bulk-btn.is-mail { border-color: color-mix(in srgb, var(--ucas-blue) 45%, var(--color-border)); color: var(--ucas-blue); }
-.mb-bulk-btn.is-mail:not(:disabled):hover { background: var(--ucas-blue); border-color: var(--ucas-blue); color: #FFFFFF; }
-.mb-bulk-btn:disabled { opacity: .45; cursor: not-allowed; }
-@media (max-width: 639.98px) { .mb-toolbar-end { width: 100%; margin-inline-start: 0; } .mb-bulk-btn { flex: 1; justify-content: center; } }
 </style>
