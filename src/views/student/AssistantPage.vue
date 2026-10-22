@@ -1,6 +1,6 @@
 <template>
-  <div class="dash hd-page">
-    <header class="dash-head"><h2 class="dash-title">المساعد الآلي</h2></header>
+  <!-- المساعد الآلي للطالب: نفس تصميم المساعد تبع المشرف (بطاقة بوابة تملأ الشاشة + شريط أسئلة) -->
+  <div class="dash hd-page ac-page">
     <AssistantChat
       title="المساعد الآلي للطالب"
       empty-hint="اسأل عن صياغة وصف المشروع، تجهيز التقرير النهائي، أو مهامك ضمن الفريق."
