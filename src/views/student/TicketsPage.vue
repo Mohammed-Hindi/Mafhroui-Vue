@@ -12,11 +12,7 @@
           <input v-model.trim="q" type="search" placeholder="بحث بالموضوع…">
         </label>
         <BaseSelect v-model="view" class="tk-filter" aria-label="الحالة" :options="viewOptions" />
-        <select v-model="sort" class="gr-select" aria-label="الترتيب">
-          <option value="activity">آخر نشاط</option>
-          <option value="newest">الأحدث</option>
-          <option value="oldest">الأقدم</option>
-        </select>
+        <BaseSelect v-model="sort" class="tk-filter" aria-label="الترتيب" :options="sortOptions" />
       </div>
       <div class="tk-filters-actions">
         <button type="button" class="pbtn is-green" @click="compose"><PenSquare :size="16" /> رسالة جديدة</button>
@@ -28,7 +24,6 @@
         <header class="tk2-list-head">
           <h3 class="portal-title">{{ viewLabel }}</h3>
           <span class="hd-card-sub">{{ filtered.length }} رسالة</span>
-          <button type="button" class="pbtn is-green is-sm" @click="compose"><PenSquare :size="15" /> رسالة جديدة</button>
         </header>
         <SkeletonLoader v-if="loading" variant="cards" :rows="4" />
         <p v-else-if="!filtered.length" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لا توجد رسائل في «{{ viewLabel }}»</p>
@@ -36,7 +31,6 @@
           v-for="t in filtered" v-else :key="t.id" type="button"
           :class="['rv-item hd-item', current?.id === t.id && !composing && 'is-selected']" @click="open(t)"
         >
-          <span class="hd-avatar is-staff" aria-hidden="true"><UcasLogo :size="20" /></span>
           <span class="rv-item-body">
             <span class="hd-item-top">
               <span class="rv-item-title">{{ t.subject }}</span>
@@ -173,6 +167,11 @@ export default {
       ],
       q: '',
       sort: 'activity',
+      sortOptions: [
+        { value: 'activity', label: 'آخر نشاط' },
+        { value: 'newest', label: 'الأحدث' },
+        { value: 'oldest', label: 'الأقدم' }
+      ],
       tickets: [],
       loading: true,
       current: null,
@@ -189,9 +188,6 @@ export default {
   computed: {
     ...mapState(useAuthStore, ['user']),
 
-    counts() {
-      return Object.fromEntries(this.viewOptions.map((v) => [v.value, this.tickets.filter((t) => this.inView(t, v.value)).length]))
-    },
     viewLabel() {
       return this.viewOptions.find((v) => v.value === this.view)?.label
     },

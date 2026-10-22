@@ -7087,6 +7087,9 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .stmeet-page .tk-toolbar > .gr-filters { flex: 0 0 auto; margin-inline-start: auto; }
 
 /* ── الشكاوى والملاحظات للطالب (sttickets-page): نفس مكتب الدعم تبع الإدارة العامة (tk2) ──────── */
+/* فلترا الشريط (الحالة/الترتيب) بتنسيق واحد: BaseSelectان متطابقان ومطابقان لارتفاع وخط شريط tk2 (42/13.5/4px مثل البحث) */
+.sttickets-page .tk2-filters .tk-filter { flex: 0 1 150px; min-width: 128px; }
+.sttickets-page .tk2-filters .tk-filter > button { height: 42px; font-size: 13.5px; border-radius: 4px; }
 /* بلا ريل طوابير: الحالة صارت BaseSelect بالشريط — القائمة والتفاصيل بعمودين (وعند الجوال عمود واحد مثل الأدمن) */
 .sttickets-page .tk2-shell { grid-template-columns: minmax(0, 360px) minmax(0, 1fr); grid-template-areas: "list detail"; }
 @media (max-width: 1199.98px) { .sttickets-page .tk2-shell { grid-template-columns: minmax(0, 340px) minmax(0, 1fr); grid-template-areas: "list detail"; } }
