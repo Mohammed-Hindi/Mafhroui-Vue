@@ -1,91 +1,146 @@
 <template>
-  <!-- الشكاوى والملاحظات للطالب بنمط البريد (لا محادثة ولا أرقام تذاكر): رسالة جديدة بـ"إلى/الموضوع/الرسالة"،
-       صندوق رسائلي، وقراءة المراسلة كرسائل بريد متتالية مع "رد". الخادم يعيد للطالب مراسلاته فقط:
-       GET/POST /tickets · GET /tickets/{id} · POST /tickets/{id}/replies · POST /tickets/{id}/close
-       بلا رأس صفحة وبلا سكشن تواصل — نظام التيكتس فقط، وزر الرسالة الجديدة داخل رأس صندوق الرسائل -->
-  <div class="dash hd-page sttickets-page">
+  <!-- الشكاوى والملاحظات للطالب: نفس مكتب الدعم تبع الإدارة العامة (tk2) — ريل طوابير بعدّادات،
+       قائمة رسائلي، ومحادثة بفقاعات مع محرّر أسفلها وبيانات الرسالة جانبًا.
+       الخادم يعيد للطالب مراسلاته فقط: GET/POST /tickets · GET /tickets/{id} ·
+       POST /tickets/{id}/replies · POST /tickets/{id}/close -->
+  <div class="dash hd-page tk2 sttickets-page">
+    <div class="gr-filters tk2-filters">
+      <label class="rv-search">
+        <Search :size="16" />
+        <input v-model.trim="q" type="search" placeholder="بحث بالموضوع…">
+      </label>
+      <select v-model="sort" class="gr-select" aria-label="الترتيب">
+        <option value="activity">آخر نشاط</option>
+        <option value="newest">الأحدث</option>
+        <option value="oldest">الأقدم</option>
+      </select>
+    </div>
 
-    <div class="rv-layout hd-layout">
-      <!-- صندوق الرسائل -->
-      <section class="rv-list hd-list" aria-label="رسائلي">
-        <header class="hd-card-head">
-          <h3 class="portal-title">رسائلي</h3>
-          <span class="hd-card-sub">{{ tickets.length }}</span>
+    <div class="tk2-shell">
+      <!-- ريل الطوابير: كل الرسائل / مفتوحة / مغلقة بعدّاداتها -->
+      <nav class="tk2-rail" aria-label="طوابير رسائلي">
+        <button
+          v-for="v in views" :key="v.value" type="button"
+          :class="['tk2-rail-item', view === v.value && 'is-active']" @click="view = v.value"
+        >
+          <component :is="v.icon" :size="17" class="tk2-rail-ic" />
+          <span class="tk2-rail-label">{{ v.label }}</span>
+          <span class="tk2-rail-count">{{ counts[v.value] }}</span>
+        </button>
+      </nav>
+
+      <section class="rv-list hd-list tk2-list" aria-label="رسائلي">
+        <header class="tk2-list-head">
+          <h3 class="portal-title">{{ viewLabel }}</h3>
+          <span class="hd-card-sub">{{ filtered.length }} رسالة</span>
           <button type="button" class="pbtn is-green is-sm" @click="compose"><PenSquare :size="15" /> رسالة جديدة</button>
         </header>
         <SkeletonLoader v-if="loading" variant="cards" :rows="4" />
-        <p v-else-if="!tickets.length" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لم ترسل أي رسالة بعد</p>
+        <p v-else-if="!filtered.length" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لا توجد رسائل في «{{ viewLabel }}»</p>
         <button
-          v-for="t in tickets" :key="t.id" type="button"
-          :class="['em-item', current?.id === t.id && !composing && 'is-selected']" @click="open(t)"
+          v-for="t in filtered" v-else :key="t.id" type="button"
+          :class="['rv-item hd-item', current?.id === t.id && !composing && 'is-selected']" @click="open(t)"
         >
-          <span class="em-item-top">
-            <b class="em-subject">{{ t.subject }}</b>
-            <time class="em-date">{{ short(t.last_reply_at || t.created_at) }}</time>
-          </span>
-          <span class="em-item-meta">
-            <span>إلى: الإدارة العامة</span>
-            <span v-if="t.replies_count > 1" class="em-count"><Mail :size="13" /> {{ t.replies_count }}</span>
-            <span v-if="t.status !== 'open'" class="em-closed">مغلقة</span>
+          <span class="hd-avatar is-staff" aria-hidden="true"><UcasLogo :size="20" /></span>
+          <span class="rv-item-body">
+            <span class="hd-item-top">
+              <span class="rv-item-title">{{ t.subject }}</span>
+              <span class="hd-time">{{ ago(t.last_reply_at || t.created_at) }}</span>
+            </span>
+            <span class="hd-snippet">{{ snippet(t) }}</span>
+            <span class="hd-item-meta">
+              <span>إلى: الإدارة العامة</span>
+              <span v-if="t.id > 0" class="hd-num">#{{ t.id }}</span>
+              <span class="hd-replies"><MessageSquare :size="13" /> {{ t.replies_count }}</span>
+              <span :class="['hd-state', stateOf(t).cls]">{{ stateOf(t).label }}</span>
+            </span>
           </span>
         </button>
       </section>
 
-      <!-- رسالة جديدة -->
+      <!-- رسالة جديدة: نفس هيكل التفاصيل — محرّر أسفل مساحة القراءة -->
       <section v-if="composing" class="rv-detail hd-detail is-open">
         <header class="hd-detail-head">
-          <button type="button" class="rv-back" @click="composing = false"><ArrowRight :size="18" /> رجوع</button>
+          <button type="button" class="rv-back" @click="composing = false"><ArrowRight :size="18" /> رجوع للقائمة</button>
           <div class="hd-detail-title"><h3 class="portal-title">رسالة جديدة</h3></div>
         </header>
-        <div class="rv-detail-scroll em-compose">
-          <div class="em-field"><span>إلى</span><b>الإدارة العامة — منصة مسار</b></div>
-          <label class="em-field"><span>الموضوع</span><input v-model.trim="draft.subject" type="text" maxlength="200" placeholder="مثال: تعذّر رفع ملف المقترح"></label>
-          <textarea v-model.trim="draft.body" class="em-text" rows="10" maxlength="4000" placeholder="اكتب رسالتك بوضوح…" />
-          <div class="hd-composer-bar">
-            <button type="button" class="pbtn is-outline is-sm" @click="composing = false">إلغاء</button>
-            <button type="button" class="pbtn is-green is-sm" :disabled="!draft.subject || !draft.body || busy" @click="create"><Send :size="15" /> إرسال</button>
+        <div class="hd-conv">
+          <div class="rv-detail-scroll">
+            <p class="palert is-info hd-alert"><span class="hd-ic is-info">!</span> اكتب موضوع رسالتك ونصّها بالمحرّر أسفل — تصلك الإدارة العامة مباشرة.</p>
           </div>
+          <footer class="hd-composer">
+            <input v-model.trim="draft.subject" type="text" maxlength="200" placeholder="الموضوع — مثال: تعذّر رفع ملف المقترح">
+            <textarea v-model.trim="draft.body" rows="4" maxlength="4000" placeholder="اكتب رسالتك بوضوح… (Ctrl + Enter للإرسال)" aria-label="نص الرسالة" @keydown.ctrl.enter.prevent="create"></textarea>
+            <div class="hd-composer-bar">
+              <span class="pt-muted">{{ draft.body.length }} / 4000</span>
+              <button type="button" class="pbtn is-outline is-sm" @click="composing = false">إلغاء</button>
+              <button type="button" class="pbtn is-green is-sm" :disabled="!draft.subject || !draft.body || busy" @click="create"><Send :size="15" /> إرسال</button>
+            </div>
+          </footer>
         </div>
       </section>
 
-      <!-- قراءة المراسلة: رسائل بريد متتالية -->
+      <!-- قراءة المراسلة: محادثة بفقاعات + محرّر رد + لوحة بيانات الرسالة -->
       <section v-else-if="current" :class="['rv-detail hd-detail', mobileOpen && 'is-open']">
         <header class="hd-detail-head">
           <button type="button" class="rv-back" @click="mobileOpen = false"><ArrowRight :size="18" /> رجوع للقائمة</button>
           <div class="hd-detail-title">
             <h3 class="portal-title">{{ current.subject }}</h3>
-            <span v-if="current.status !== 'open'" class="hd-card-sub">مغلقة</span>
+            <span class="hd-detail-meta">
+              <span :class="['hd-state', stateOf(current).cls]">{{ stateOf(current).label }}</span>
+              <span class="hd-card-sub">رسالة <bdi>#{{ current.id }}</bdi></span>
+            </span>
           </div>
           <div v-if="current.status === 'open'" class="hd-tools">
             <button type="button" class="pbtn is-outline is-sm" :disabled="busy" @click="close"><CheckCircle2 :size="15" /> إغلاق</button>
           </div>
         </header>
-        <div class="rv-detail-scroll em-read">
-          <article v-for="r in thread" :key="r.id" class="em-mail">
-            <header class="em-mail-head">
-              <span :class="['em-avatar', mine(r) && 'is-me']" aria-hidden="true"><UcasLogo v-if="!mine(r)" :size="20" /><template v-else>أنا</template></span>
-              <span class="em-mail-who">
-                <b>{{ mine(r) ? 'أنت' : r.user?.name }}</b>
-                <small class="pt-muted">إلى: {{ mine(r) ? 'الإدارة العامة' : 'أنت' }}</small>
-              </span>
-              <time class="em-date">{{ when(r.created_at) }}</time>
-            </header>
-            <p class="em-mail-body">{{ r.body }}</p>
-          </article>
 
-          <!-- رد (بريد): زر يفتح نموذج الرد أسفل الرسائل -->
-          <template v-if="current.status === 'open'">
-            <button v-if="!replying" type="button" class="pbtn is-outline em-reply-btn" @click="replying = true"><Reply :size="16" /> رد</button>
-            <div v-else class="em-reply">
-              <div class="em-field"><span>إلى</span><b>الإدارة العامة</b></div>
-              <textarea v-model.trim="reply" class="em-text" rows="6" maxlength="4000" placeholder="اكتب ردك…" />
-              <div class="hd-composer-bar">
-                <button type="button" class="pbtn is-outline is-sm" @click="replying = false">إلغاء</button>
-                <button type="button" class="pbtn is-green is-sm" :disabled="!reply || busy" @click="sendReply"><Send :size="15" /> إرسال</button>
-              </div>
+        <div class="hd-body">
+          <div class="hd-conv">
+            <div ref="scroller" class="rv-detail-scroll">
+              <SkeletonLoader v-if="threadLoading" :rows="3" height="36px" />
+              <ol v-else class="hd-thread">
+                <li v-for="r in thread" :key="r.id" :class="['hd-msg', mine(r) ? 'is-sender' : 'is-staff']">
+                  <!-- فريق الدعم بشعار الكلية في دائرة بيضاء كما في باقي صفحات البوابة -->
+                  <span v-if="!mine(r)" class="hd-avatar is-staff" aria-hidden="true"><UcasLogo :size="22" /></span>
+                  <span v-else class="hd-avatar" aria-hidden="true">{{ initials(user?.name) }}</span>
+                  <div class="hd-bubble">
+                    <div class="hd-msg-head">
+                      <b>{{ mine(r) ? 'أنت' : (r.user?.name || 'الإدارة العامة') }}</b>
+                      <span class="hd-role">{{ mine(r) ? 'طالب' : 'فريق الدعم' }}</span>
+                      <time class="pt-muted" :datetime="r.created_at">{{ when(r.created_at) }}</time>
+                    </div>
+                    <p>{{ r.body }}</p>
+                  </div>
+                </li>
+              </ol>
+              <p v-if="current.status !== 'open'" class="palert is-success hd-alert hd-note"><span class="hd-ic is-success">✓</span> أُغلقت هذه المراسلة.</p>
             </div>
-          </template>
-          <p v-else class="palert is-success hd-alert hd-note"><span class="hd-ic is-success">✓</span> أُغلقت هذه المراسلة.</p>
+
+            <footer v-if="current.status === 'open'" class="hd-composer">
+              <textarea v-model.trim="reply" rows="3" maxlength="4000" placeholder="اكتب ردك… (Ctrl + Enter للإرسال)" aria-label="الرد" @keydown.ctrl.enter.prevent="sendReply()"></textarea>
+              <div class="hd-composer-bar">
+                <span class="pt-muted">{{ reply.length }} / 4000</span>
+                <button type="button" class="pbtn is-green is-sm" :disabled="!reply || busy" @click="sendReply()"><Send :size="15" /> إرسال الرد</button>
+              </div>
+            </footer>
+          </div>
+
+          <aside class="hd-props" aria-label="بيانات الرسالة">
+            <div class="hd-requester">
+              <span class="hd-avatar is-staff is-lg" aria-hidden="true"><UcasLogo :size="26" /></span>
+              <div><b>الإدارة العامة</b><span class="pt-muted">منصة مسار</span></div>
+            </div>
+            <h4 class="portal-title hd-props-title">بيانات الرسالة</h4>
+            <dl class="hd-data">
+              <div><dt>الرقم</dt><dd><bdi>#{{ current.id }}</bdi></dd></div>
+              <div><dt>الحالة</dt><dd>{{ stateOf(current).label }}</dd></div>
+              <div><dt>أُرسلت</dt><dd>{{ when(current.created_at) }}</dd></div>
+              <div><dt>آخر نشاط</dt><dd>{{ when(current.last_reply_at || current.created_at) }}</dd></div>
+              <div><dt>الرسائل</dt><dd>{{ thread.length }}</dd></div>
+            </dl>
+          </aside>
         </div>
       </section>
 
@@ -97,20 +152,61 @@
   </div>
 </template>
 
-
 <script>
-import { ArrowRight, CheckCircle2, Inbox, Mail, PenSquare, Reply, Send } from 'lucide-vue-next'
+import { markRaw } from 'vue'
+import { mapState } from 'pinia'
+import { ArrowRight, CheckCircle2, Inbox, Layers, MessageSquare, PenSquare, Search, Send } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
 import api from '@/services/api'
 import { isPlaceholder, placeholderTickets } from '@/utils/studentPlaceholders'
+import { useAuthStore } from '@/stores/auth.store'
+
+const rtf = new Intl.RelativeTimeFormat('ar', { numeric: 'auto' })
 
 export default {
   name: 'StudentTicketsPage',
 
-  components: { ArrowRight, CheckCircle2, Inbox, Mail, PenSquare, Reply, Send, UcasLogo },
+  components: { ArrowRight, CheckCircle2, Inbox, Layers, MessageSquare, PenSquare, Search, Send, UcasLogo },
 
   data() {
-    return { tickets: [], loading: true, current: null, thread: [], composing: false, mobileOpen: false, draft: { subject: '', body: '' }, reply: '', replying: false, busy: false }
+    return {
+      view: 'all',
+      q: '',
+      sort: 'activity',
+      views: [
+        { value: 'all', label: 'كل الرسائل', icon: markRaw(Layers) },
+        { value: 'open', label: 'مفتوحة', icon: markRaw(Inbox) },
+        { value: 'closed', label: 'مغلقة', icon: markRaw(CheckCircle2) }
+      ],
+      tickets: [],
+      loading: true,
+      current: null,
+      thread: [],
+      threadLoading: false,
+      composing: false,
+      mobileOpen: false,
+      draft: { subject: '', body: '' },
+      reply: '',
+      busy: false
+    }
+  },
+
+  computed: {
+    ...mapState(useAuthStore, ['user']),
+
+    counts() {
+      return Object.fromEntries(this.views.map((v) => [v.value, this.tickets.filter((t) => this.inView(t, v.value)).length]))
+    },
+    viewLabel() {
+      return this.views.find((v) => v.value === this.view)?.label
+    },
+    filtered() {
+      const q = this.q.replace(/^#/, '')
+      const key = { activity: (t) => t.last_reply_at || t.created_at, newest: (t) => t.created_at, oldest: (t) => t.created_at }[this.sort]
+      return this.tickets
+        .filter((t) => this.inView(t, this.view) && (!q || `${t.id} ${t.subject}`.includes(q)))
+        .sort((a, b) => (this.sort === 'oldest' ? 1 : -1) * (new Date(key(a)) - new Date(key(b))))
+    }
   },
 
   created() {
@@ -132,30 +228,64 @@ export default {
       }
     },
 
+    inView(t, v) {
+      if (v === 'open') return t.status === 'open'
+      if (v === 'closed') return t.status !== 'open'
+      return true
+    },
+
+    /** بانتظار الرد = مفتوحة وآخر رسالة من صاحبها (الطالب) */
+    awaiting(t) {
+      return t.status === 'open' && t.last_reply_user_id === t.user_id
+    },
+
+    stateOf(t) {
+      if (t.status === 'closed') return { label: 'مغلقة', cls: 'is-closed' }
+      return this.awaiting(t) ? { label: 'بانتظار الرد', cls: 'is-awaiting' } : { label: 'تم الرد', cls: 'is-answered' }
+    },
+
+    snippet(t) {
+      return t.last_reply_body || t.replies?.[t.replies.length - 1]?.body || '—'
+    },
+
     async open(t) {
       this.composing = false
-      this.replying = false
+      this.reply = ''
       this.current = t
       this.mobileOpen = true
       if (isPlaceholder(t)) {
         this.thread = t.replies
         return
       }
+      this.threadLoading = true
       try {
         const { data } = await api.get(`/tickets/${t.id}`)
         this.current = { ...t, ...data }
         this.thread = data.replies || []
+        this.$nextTick(() => this.$refs.scroller?.scrollTo({ top: this.$refs.scroller.scrollHeight }))
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر تحميل الرسالة')
+      } finally {
+        this.threadLoading = false
       }
     },
 
+    /** يعيد تحميل القائمة والرسالة المفتوحة بعد أي إجراء */
+    async refresh() {
+      await this.load()
+      const t = this.tickets.find((x) => x.id === this.current?.id)
+      if (t) await this.open(t)
+      else this.current = null
+    },
+
     async create() {
+      if (!this.draft.subject || !this.draft.body || this.busy) return
       this.busy = true
       try {
         const { data } = await api.post('/tickets', this.draft)
         this.$toast?.success('تم إرسال الرسالة')
         this.draft = { subject: '', body: '' }
+        this.composing = false
         await this.load()
         await this.open(this.tickets.find((x) => x.id === data.id) || data)
       } catch (err) {
@@ -171,9 +301,8 @@ export default {
       try {
         await api.post(`/tickets/${this.current.id}/replies`, { body: this.reply })
         this.reply = ''
-        this.replying = false
-        await this.open(this.current)
-        this.load()
+        this.$toast?.success('تم إرسال الرد')
+        await this.refresh()
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إرسال الرد')
       } finally {
@@ -185,8 +314,8 @@ export default {
       this.busy = true
       try {
         await api.post(`/tickets/${this.current.id}/close`)
-        await this.load()
-        await this.open(this.tickets.find((x) => x.id === this.current.id) || this.current)
+        this.$toast?.success('أُغلقت المراسلة')
+        await this.refresh()
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر إغلاق المراسلة')
       } finally {
@@ -204,15 +333,21 @@ export default {
       return r.user?.id === this.current.user_id
     },
 
-    /** تاريخ مختصر لقائمة الرسائل: الوقت لليوم، وإلا اليوم والشهر */
-    short(d) {
-      if (!d) return ''
-      const x = new Date(d)
-      return x.toDateString() === new Date().toDateString() ? x.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : x.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })
+    initials(name) {
+      return (name || '؟').replace(/^(م|د|أ)\.\s*/, '').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join(' ')
     },
 
     when(d) {
       return d ? new Date(d).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' }) : ''
+    },
+
+    ago(d) {
+      if (!d) return ''
+      const mins = Math.round((new Date(d) - Date.now()) / 60000)
+      if (Math.abs(mins) < 60) return rtf.format(mins, 'minute')
+      if (Math.abs(mins) < 1440) return rtf.format(Math.round(mins / 60), 'hour')
+      if (Math.abs(mins) < 10080) return rtf.format(Math.round(mins / 1440), 'day')
+      return new Date(d).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })
     }
   }
 }

@@ -7086,18 +7086,14 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* الفلتر: بعرض محتواه ويُزاح لآخر الشريط (اليسار بالعربي) بجانب زر اجتماع جديد */
 .stmeet-page .tk-toolbar > .gr-filters { flex: 0 0 auto; margin-inline-start: auto; }
 
-/* ── الشكاوى والملاحظات للطالب (sttickets-page): نظام بريد بلا رأس صفحة ────────────────────────── */
-/* التفاصيل تملأ ما تبقّى من الشاشة بعد التوب بار (بلا dash-head) — وعند الجوال ترجع بارتفاع محتواها */
-.sttickets-page .hd-detail { height: max(420px, calc(100vh - 100px)); }
-@media (max-width: 1023.98px) { .sttickets-page .hd-detail { height: auto; } }
-/* زر "رسالة جديدة" داخل رأس صندوق الرسائل بآخره (اليسار بالعربي) */
-.sttickets-page .hd-card-head .pbtn { margin-inline-start: auto; }
-/* هوية مسطّحة: رؤوس القائمة والتفاصيل والعنصر المحدّد بلا تدرّج — سكوب أطول من قواعد sa-skin العامة لحتى يغلبها */
-.sa-skin .sttickets-page .hd-card-head { background: var(--color-surface); }
-.sa-skin .sttickets-page .hd-detail-head { background: var(--color-surface); }
-.sa-skin .sttickets-page .em-item.is-selected { background: color-mix(in srgb, var(--ucas-blue) 6%, var(--color-surface)); box-shadow: inset -4px 0 0 var(--ucas-blue); }
-/* كاونتر عدد الردود: لون البوابة (أزرق صلب) بدل التدرّج الأخضر-السماوي */
-.sa-skin .sttickets-page .em-count { background: var(--ucas-blue); color: #FFFFFF; }
+/* ── الشكاوى والملاحظات للطالب (sttickets-page): نفس مكتب الدعم تبع الإدارة العامة (tk2) ──────── */
+/* زر "رسالة جديدة" داخل رأس القائمة بعددّاد الرسائل */
+.sttickets-page .tk2-list-head .pbtn { margin-inline-start: 10px; }
+/* المحرّر (رسالة جديدة/رد): نفس ستايل نص الرد */
+.sttickets-page .hd-composer input { width: 100%; padding: 8px 12px; border: 1px solid #CED4DA; border-radius: 4px; background: var(--color-surface); color: var(--color-text-900); font-size: 13.5px; }
+.sttickets-page .hd-composer input:focus { outline: 0; border-color: var(--portal-cyan); box-shadow: 0 0 0 3px rgba(0, 91, 170, 0.15); }
+/* رسالة جديدة بلا لوحة بيانات جانبية: المحادثة تملأ عرض التفاصيل */
+.sttickets-page .hd-conv { flex: 1; min-height: 0; }
 
 /* ======================================================================
    مواعيد المناقشات (المشرف) — هوية البوابة: كارت واحد بجدول يملأ الشاشة،
