@@ -2589,34 +2589,11 @@
 .sp-card { display: flex; flex-direction: column; gap: 18px; }
 .sp-card > .dash-card-head { margin-bottom: 0; }
 .sp-card > .dash-card-head .rv-pill { align-self: flex-start; width: fit-content; }
-.sp-track { display: flex; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.sp-track li { flex: 1; display: flex; align-items: center; gap: 8px; padding: 8px 6px 10px; border-radius: 4px 4px 0 0; border-bottom: 3px solid var(--color-border); font-size: 13.5px; font-weight: 700; color: var(--color-text-400); }
-.sp-track b { display: inline-grid; place-items: center; flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--color-border); color: var(--color-text-600); font-size: 13px; }
-.sp-track .is-done { border-color: #62BB46; color: var(--color-text-700); }
-.sp-track .is-done b { background: #62BB46; color: #FFFFFF; }
-.sp-track .is-active { border-color: var(--portal-cyan); color: var(--color-text-900); }
-.sp-track .is-active b { background: var(--portal-cyan); color: #FFFFFF; }
-.sp-track .is-rejected { border-color: #FF5B5B; color: #FF5B5B; }
-.sp-track .is-rejected b { background: #FF5B5B; color: #FFFFFF; }
-.sp-track li > button { display: flex; align-items: center; gap: 8px; width: 100%; font: inherit; color: inherit; }
-.sp-track li.is-open { background: color-mix(in srgb, var(--portal-cyan) 8%, transparent); }
-.sp-track li > button:focus-visible { outline: 2px solid var(--portal-cyan); outline-offset: 2px; }
-/* نموذج المقترح المضغوط: حقول أقصر، و"فكرة المشروع" شبكة 2×2 */
-.sp-split .tk-sec-body { gap: 14px; padding: 14px 16px; }
 .sp-card .tk-review dd.mono { text-align: right; }
-.sp-split .pfield input { height: 40px; }
-.sp-split .pfield textarea { min-height: 72px; }
-.sp-idea { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-@media (max-width: 639.98px) { .sp-idea { grid-template-columns: minmax(0, 1fr); } }
 .sp-card .palert { align-items: flex-start; margin: 0; }
 .sp-card .palert svg { flex-shrink: 0; margin-top: 4px; }
 .sp-form { display: flex; flex-direction: column; gap: 18px; }
-.sp-split { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
-.sp-main, .sp-side { display: flex; flex-direction: column; gap: 16px; }
-.sp-side { position: sticky; top: 88px; }
-.sp-side .pbtn { justify-content: center; width: 100%; }
 .sp-retry { align-self: flex-start; }
-.sp-hint { grid-column: 1 / -1; }
 .mt-meet-next { align-items: flex-start; margin: 0 0 14px; }
 .mt-meet-next svg { flex-shrink: 0; margin-top: 4px; }
 /* جدول الاجتماعات: كل قيمة في وسط عمودها تحت عنوانها */
@@ -2655,34 +2632,17 @@
 :root[data-theme="dark"] .em-item.is-selected { background: rgba(0, 91, 170, 0.1); }
 :root[data-theme="dark"] .em-text { border-color: var(--color-border); }
 
-/* تسليم التقرير النهائي بخطوات: دوائر مرقّمة يصل بينها خط، الحالية سماوية والمكتملة خضراء بعلامة ✓ */
-.sp-wizard { display: flex; flex-direction: column; gap: 18px; }
-.sp-steps { display: flex; margin: 0; padding: 4px 0 0; list-style: none; counter-reset: none; }
-.sp-steps li { position: relative; flex: 1; }
-.sp-steps li + li::before { content: ''; position: absolute; top: 19px; inset-inline-end: 50%; width: 100%; height: 3px; background: var(--color-border); transition: background-color .35s var(--ease-standard, ease); }
-.sp-steps li.is-done + li::before, .sp-steps li.is-done + li.is-current::before { background: #62BB46; }
-.sp-steps button { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; font: inherit; }
-.sp-steps b { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--color-border); background: var(--color-surface); color: var(--color-text-400); font-size: 15px; transition: background-color .35s var(--ease-standard, ease), border-color .35s var(--ease-standard, ease), color .35s var(--ease-standard, ease); }
-.sp-steps span { font-size: 13.5px; font-weight: 700; color: var(--color-text-400); text-align: center; }
-.sp-steps .is-done b { border-color: #62BB46; background: #62BB46; color: #FFFFFF; }
-.sp-steps .is-done span { color: var(--color-text-700); }
-.sp-steps .is-current b { border-color: var(--portal-cyan); background: var(--portal-cyan); color: #FFFFFF; box-shadow: 0 0 0 5px rgba(0, 91, 170, 0.18); }
-.sp-steps .is-current span { color: var(--color-text-900); }
-.sp-steps button:focus-visible b { outline: 2px solid var(--portal-cyan); outline-offset: 3px; }
-@media (prefers-reduced-motion: reduce) { .sp-steps li::before, .sp-steps b { transition: none; } }
-.sp-step-body .tk-sec-head .pt-muted { font-size: 12.5px; font-weight: 600; }
+/* تسليم التقرير النهائي: مكدّس بلا خطوات — أقسام tk فوق بعضها وشريط إجراءات أسفل النموذج */
 .sp-link { overflow-wrap: anywhere; }
 .sp-files { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .sp-files li { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 4px; color: var(--portal-cyan); }
 .sp-files li > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; color: var(--color-text-900); font-size: 14px; }
 .sp-files li small { font-size: 12px; }
-@media (max-width: 639.98px) { .sp-steps span { font-size: 11.5px; } .sp-steps b { width: 34px; height: 34px; } .sp-steps li + li::before { top: 16px; } }
 .sp-review { padding: 14px 16px; border: 1px solid var(--color-border); border-radius: 4px; }
 .sp-text .pr-h { margin: 0 0 4px; }
 .sp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-top: 16px; border-top: 1px solid var(--color-border); }
 .sp-form .tk-chip:disabled { opacity: 0.4; cursor: not-allowed; }
-@media (max-width: 1023.98px) { .sp-split, .st-slots { grid-template-columns: minmax(0, 1fr); } .sp-side { position: static; } }
-@media (max-width: 639.98px) { .sp-track { flex-wrap: wrap; } .sp-track li { flex: 1 1 45%; } }
+@media (max-width: 1023.98px) { .st-slots { grid-template-columns: minmax(0, 1fr); } }
 .st-flow { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .st-flow li { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 4px; background: var(--color-bg); font-size: 12.5px; font-weight: 700; color: var(--color-text-600); }
 .st-flow li.is-done { background: #E2F8ED; color: #0A8A4A; }
@@ -4092,11 +4052,6 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .tk-card { border-radius: 4px; box-shadow: 0 4px 14px rgba(4, 40, 80, .08); transition: box-shadow .35s ease; animation: saFadeUp .45s ease backwards; }
 .sa-skin .tk-card:hover { box-shadow: 0 10px 26px rgba(4, 40, 80, .14); }
 
-/* خطوات التسليم (المقترح/التقرير): التدرّج للحالية والمكتملة */
-.sa-skin .sp-steps .is-current b { border-color: transparent; background: var(--sa-grad); box-shadow: 0 0 0 5px rgba(0, 91, 170, .14); }
-.sa-skin .sp-steps .is-done b { border-color: #62BB46; background: #62BB46; }
-.sa-skin .sp-steps li.is-done + li::before { background: linear-gradient(270deg, #62BB46, #0E699C); }
-
 /* الملف الشخصي: تبويبات بتدرّج الهوية */
 .sa-skin .profile-tabs { overflow: hidden; border-radius: 4px; background: var(--sa-grad); box-shadow: 0 10px 30px rgba(4, 40, 80, .15); }
 .sa-skin .profile-tab { background: transparent; transition: background-color .35s ease; }
@@ -4135,11 +4090,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .tk-chip { border-radius: 4px; }
 .sa-skin .tk-chip.is-on { border-color: transparent; background: var(--sa-grad); }
 .sa-skin .hd-corner, .sa-skin .an-tag, .sa-skin .rv-count { border-radius: 4px; }
-/* مراحل المقترح والصورة في الملف الشخصي وبطاقة الملف */
-.sa-skin .sp-track li { border-radius: 4px 12px 0 0; }
-.sa-skin .sp-track li.is-open { border-bottom-color: transparent; background: var(--sa-soft); box-shadow: inset 0 -3px 0 #0E699C; }
-.sa-skin .sp-track li.is-open b, .sa-skin .sp-track .is-current b { background: var(--sa-grad); color: #FFFFFF; }
-.sa-skin .sp-track .is-done b { background: #62BB46; }
+/* الصورة في الملف الشخصي وبطاقة الملف */
 .sa-skin .pf-photo-img { border: 0 !important; background: var(--sa-grad) !important; color: #FFFFFF !important; box-shadow: 0 0 0 4px rgba(98, 187, 70, .22); }
 .sa-skin .profile-card { border-radius: 4px; box-shadow: 0 10px 30px rgba(4, 40, 80, .08); animation: saFadeUp .5s ease backwards; }
 .sa-skin .profile-card .pf-row input, .sa-skin .profile-card :is(input, select, textarea) { border-radius: 4px; }
@@ -4346,7 +4297,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .sp-files li:hover { box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 30%, transparent), 0 8px 20px rgba(4, 40, 80, .08); }
 .sa-skin .sp-files li > svg { display: grid; width: 38px; height: 38px; padding: 9px; border-radius: 50%; background: linear-gradient(270deg, #62BB46, #0E699C); color: #FFFFFF; flex-shrink: 0; }
 .sa-skin .sp-files b { color: var(--ucas-blue); }
-.sa-skin .sp-wizard, .sa-skin .sp-form { border-radius: 4px; }
+.sa-skin .sp-form { border-radius: 4px; }
 .sa-skin .sp-actions { border-top-color: color-mix(in srgb, var(--ucas-blue) 12%, transparent); }
 .sa-skin .tk-review { border-radius: 4px; background: linear-gradient(270deg, rgba(98, 187, 70, .07), rgba(0, 91, 170, .04)); }
 .sa-skin .tk-review dt { color: var(--ucas-green); }
@@ -4432,24 +4383,6 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
   .hd-layout > .hd-list, .hd-layout > .hd-detail { height: clamp(460px, calc(100vh - 300px), 820px); max-height: none; }
 }
 
-/* ======================================================================
-   ستيبر خطوات التسليم (المقترح / التقرير النهائي): شريط ناعم، دوائر بتدرّج الهوية، خط تقدّم متدرّج
-   ====================================================================== */
-.sa-skin .sp-steps { padding: 18px 10px 14px; border-radius: 4px; background: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .05)); }
-.sa-skin .sp-steps li + li::before { top: 23px; height: 4px; border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 12%, var(--color-surface)); }
-.sa-skin .sp-steps li.is-done + li::before, .sa-skin .sp-steps li.is-done + li.is-current::before { background: linear-gradient(270deg, #62BB46, #0E699C); }
-.sa-skin .sp-steps b { width: 46px; height: 46px; border: 0; background: var(--color-surface); color: var(--color-text-400); font-size: 16px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--ucas-blue) 15%, transparent), 0 4px 12px rgba(4, 40, 80, .08); transition: transform .35s ease, box-shadow .35s ease, background-color .35s ease; }
-.sa-skin .sp-steps button:hover b { box-shadow: 0 0 0 2px color-mix(in srgb, var(--ucas-blue) 40%, transparent), 0 6px 16px rgba(4, 40, 80, .12); }
-.sa-skin .sp-steps .is-done b { background: #62BB46; color: #FFFFFF; box-shadow: 0 4px 12px rgba(98, 187, 70, .35); }
-.sa-skin .sp-steps .is-current b { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); color: #FFFFFF; box-shadow: 0 0 0 6px rgba(0, 91, 170, .12), 0 8px 20px rgba(4, 40, 80, .25); }
-.sa-skin .sp-steps span { color: var(--color-text-500, #6F6F6F); }
-.sa-skin .sp-steps .is-done span { color: #2F7F1E; }
-.sa-skin .sp-steps .is-current span { color: var(--ucas-blue); font-weight: 800; }
-
-/* خطوة "التسليم/الإرسال": بطاقة مراجعة بهوية المنصة */
-.sa-skin .sp-step-body { overflow: hidden; border: 0; border-radius: 4px; box-shadow: 0 10px 30px rgba(4, 40, 80, .08); }
-.sa-skin .sp-step-body > .tk-sec-head { padding: 14px 20px; background: linear-gradient(270deg, rgba(98, 187, 70, .14), rgba(0, 91, 170, .08)); }
-.sa-skin .sp-step-body > .tk-sec-body { background: var(--color-surface); }
 .sa-skin .tk-review { display: grid; grid-template-columns: max-content 1fr; gap: 0; overflow: hidden; padding: 0; border-radius: 4px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent); }
 .sa-skin .tk-review :is(dt, dd) { margin: 0; padding: 13px 18px; border-bottom: 1px solid color-mix(in srgb, var(--ucas-blue) 8%, transparent); }
 .sa-skin .tk-review dt { background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .05)); font-size: 13.5px; font-weight: 800; color: var(--ucas-green); }
@@ -6238,7 +6171,6 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* ======================================================================
    مواعيد المناقشات (DiscussionsTools) والتقييمات: ستيبر الهوية + الجدول والشبكة والملفات
    ====================================================================== */
-.sa-skin .sp-steps button:disabled { cursor: not-allowed; opacity: .55; }
 .sa-skin .dp-steps, .sa-skin .ev-flow { margin-bottom: 4px; }
 
 /* قائمة الجدول: صف التعارض بأحمر الهوية الخفيف وشريط جانبي، وسببه بنص أحمر هادئ */
