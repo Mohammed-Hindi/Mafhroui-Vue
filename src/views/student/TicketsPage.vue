@@ -1,22 +1,9 @@
 <template>
   <!-- الشكاوى والملاحظات للطالب بنمط البريد (لا محادثة ولا أرقام تذاكر): رسالة جديدة بـ"إلى/الموضوع/الرسالة"،
        صندوق رسائلي، وقراءة المراسلة كرسائل بريد متتالية مع "رد". الخادم يعيد للطالب مراسلاته فقط:
-       GET/POST /tickets · GET /tickets/{id} · POST /tickets/{id}/replies · POST /tickets/{id}/close -->
-  <div class="dash hd-page">
-    <header class="dash-head">
-      <h2 class="dash-title">الشكاوى والملاحظات</h2>
-      <button type="button" class="pbtn is-green" @click="compose"><PenSquare :size="16" /> رسالة جديدة</button>
-    </header>
-
-    <!-- ponytail: بيانات المشرف العام ثابتة (placeholder) — الطالب لا يملك صلاحية قراءة المستخدمين؛ تُجلب من الخادم عند توفير endpoint عام -->
-    <section class="dash-card st-contact">
-      <div class="dash-card-head"><h3 class="portal-title">التواصل مع المشرف العام</h3></div>
-      <dl class="sv-info">
-        <div><dt>المشرف العام :</dt><dd>{{ ADMIN.name }}</dd></div>
-        <div><dt>واتساب :</dt><dd dir="ltr"><a :href="`https://wa.me/${ADMIN.whatsapp}`" target="_blank" rel="noopener">{{ ADMIN.whatsapp }}</a></dd></div>
-        <div><dt>البريد :</dt><dd dir="ltr">{{ ADMIN.email }}</dd></div>
-      </dl>
-    </section>
+       GET/POST /tickets · GET /tickets/{id} · POST /tickets/{id}/replies · POST /tickets/{id}/close
+       بلا رأس صفحة وبلا سكشن تواصل — نظام التيكتس فقط، وزر الرسالة الجديدة داخل رأس صندوق الرسائل -->
+  <div class="dash hd-page sttickets-page">
 
     <div class="rv-layout hd-layout">
       <!-- صندوق الرسائل -->
@@ -24,6 +11,7 @@
         <header class="hd-card-head">
           <h3 class="portal-title">رسائلي</h3>
           <span class="hd-card-sub">{{ tickets.length }}</span>
+          <button type="button" class="pbtn is-green is-sm" @click="compose"><PenSquare :size="15" /> رسالة جديدة</button>
         </header>
         <SkeletonLoader v-if="loading" variant="cards" :rows="4" />
         <p v-else-if="!tickets.length" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لم ترسل أي رسالة بعد</p>
@@ -116,15 +104,13 @@ import UcasLogo from '@/components/icons/UcasLogo.vue'
 import api from '@/services/api'
 import { isPlaceholder, placeholderTickets } from '@/utils/studentPlaceholders'
 
-const ADMIN = { name: 'الإدارة العامة — منصة مسار', whatsapp: '972597302452', email: 'admin@mashroui.local' }
-
 export default {
   name: 'StudentTicketsPage',
 
   components: { ArrowRight, CheckCircle2, Inbox, Mail, PenSquare, Reply, Send, UcasLogo },
 
   data() {
-    return { ADMIN, tickets: [], loading: true, current: null, thread: [], composing: false, mobileOpen: false, draft: { subject: '', body: '' }, reply: '', replying: false, busy: false }
+    return { tickets: [], loading: true, current: null, thread: [], composing: false, mobileOpen: false, draft: { subject: '', body: '' }, reply: '', replying: false, busy: false }
   },
 
   created() {

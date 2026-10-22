@@ -4429,8 +4429,6 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* ======================================================================
    الشكاوى والملاحظات (كل اللوحات): بطاقة التواصل، قائمة الرسائل، المحادثة بنمط البريد، والكتابة
    ====================================================================== */
-/* بطاقة التواصل مع المشرف العام: ثلاث خانات ناعمة بأيقونة خط تدرّج */
-.sa-skin .st-contact { background: linear-gradient(270deg, rgba(98, 187, 70, .08), rgba(0, 91, 170, .04)), var(--color-surface); }
 .sa-skin .sv-info { gap: 12px; }
 .sa-skin .sv-info div { align-items: center; padding: 14px 16px; border: 0; border-radius: 4px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent), 0 6px 16px rgba(4, 40, 80, .05); }
 .sa-skin .sv-info dt { color: var(--ucas-green); font-weight: 800; }
@@ -7087,6 +7085,19 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 :root[data-brand="ucas"] .sa-skin .stmeet-page .gr-table thead th { background: transparent; color: var(--color-text-600); }
 /* الفلتر: بعرض محتواه ويُزاح لآخر الشريط (اليسار بالعربي) بجانب زر اجتماع جديد */
 .stmeet-page .tk-toolbar > .gr-filters { flex: 0 0 auto; margin-inline-start: auto; }
+
+/* ── الشكاوى والملاحظات للطالب (sttickets-page): نظام بريد بلا رأس صفحة ────────────────────────── */
+/* التفاصيل تملأ ما تبقّى من الشاشة بعد التوب بار (بلا dash-head) — وعند الجوال ترجع بارتفاع محتواها */
+.sttickets-page .hd-detail { height: max(420px, calc(100vh - 100px)); }
+@media (max-width: 1023.98px) { .sttickets-page .hd-detail { height: auto; } }
+/* زر "رسالة جديدة" داخل رأس صندوق الرسائل بآخره (اليسار بالعربي) */
+.sttickets-page .hd-card-head .pbtn { margin-inline-start: auto; }
+/* هوية مسطّحة: رؤوس القائمة والتفاصيل والعنصر المحدّد بلا تدرّج — سكوب أطول من قواعد sa-skin العامة لحتى يغلبها */
+.sa-skin .sttickets-page .hd-card-head { background: var(--color-surface); }
+.sa-skin .sttickets-page .hd-detail-head { background: var(--color-surface); }
+.sa-skin .sttickets-page .em-item.is-selected { background: color-mix(in srgb, var(--ucas-blue) 6%, var(--color-surface)); box-shadow: inset -4px 0 0 var(--ucas-blue); }
+/* كاونتر عدد الردود: لون البوابة (أزرق صلب) بدل التدرّج الأخضر-السماوي */
+.sa-skin .sttickets-page .em-count { background: var(--ucas-blue); color: #FFFFFF; }
 
 /* ======================================================================
    مواعيد المناقشات (المشرف) — هوية البوابة: كارت واحد بجدول يملأ الشاشة،
