@@ -133,13 +133,8 @@
     <template v-if="isSuperAdmin && mode === 'credentials'">
      <div class="cr-layout">
       <section class="dash-card cr-card cr-send">
-        <!-- الفئة + طريقة الإرسال + الإرسال في صف واحد -->
+        <!-- طريقة الإرسال + الإرسال في صف واحد (الفئة صارت فلتراً مع مستلمين) -->
         <div class="cr-setup">
-          <div class="cr-field">
-            <span class="cr-label">الفئة</span>
-            <!-- فلتر الفئة بدل شريط الأزرار: الكل أو إحدى الفئات الثلاث -->
-            <BaseSelect class="min-w-[170px]" aria-label="الفئة" placeholder="الكل" include-placeholder-option :model-value="notifyRoleFilter" :options="crRoles" @update:model-value="setNotifyRole" />
-          </div>
           <div class="cr-field">
             <span class="cr-label">طريقة الإرسال</span>
             <nav class="hm-tabs" aria-label="طريقة الإرسال">
@@ -152,12 +147,14 @@
         </div>
         <hr class="cr-sep">
 
-        <!-- المستلمون: بحث + تخصص -->
+        <!-- المستلمون: بحث + فئة + تخصص -->
         <div class="cr-tools" aria-label="تصفية المستلمين">
           <label class="gr-search cr-search">
             <Search :size="16" />
             <input v-model.trim="notifySearch" type="search" placeholder="بحث بالاسم أو البريد أو الواتساب…">
           </label>
+          <!-- فئة المستلمين: الكل أو إحدى الفئات الثلاث — بجانب التخصص -->
+          <BaseSelect class="min-w-[170px]" aria-label="الفئة" placeholder="الكل" include-placeholder-option :model-value="notifyRoleFilter" :options="crRoles" @update:model-value="setNotifyRole" />
           <BaseSelect v-model="notifySpecFilter" class="min-w-[160px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specializationOptions" />
         </div>
 
