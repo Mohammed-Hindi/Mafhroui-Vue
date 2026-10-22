@@ -4,31 +4,26 @@
        الخادم يعيد للطالب مراسلاته فقط: GET/POST /tickets · GET /tickets/{id} ·
        POST /tickets/{id}/replies · POST /tickets/{id}/close -->
   <div class="dash hd-page tk2 sttickets-page">
-    <div class="gr-filters tk2-filters">
-      <label class="rv-search">
-        <Search :size="16" />
-        <input v-model.trim="q" type="search" placeholder="بحث بالموضوع…">
-      </label>
-      <select v-model="sort" class="gr-select" aria-label="الترتيب">
-        <option value="activity">آخر نشاط</option>
-        <option value="newest">الأحدث</option>
-        <option value="oldest">الأقدم</option>
-      </select>
+    <!-- شريط الفلاتر: بحث + الحالة (بديل الريل) + ترتيب، وزر الرسالة الجديدة بأقصى اليسار بجانبهن -->
+    <div class="tk-toolbar">
+      <div class="gr-filters tk2-filters">
+        <label class="rv-search">
+          <Search :size="16" />
+          <input v-model.trim="q" type="search" placeholder="بحث بالموضوع…">
+        </label>
+        <BaseSelect v-model="view" class="tk-filter" aria-label="الحالة" :options="viewOptions" />
+        <select v-model="sort" class="gr-select" aria-label="الترتيب">
+          <option value="activity">آخر نشاط</option>
+          <option value="newest">الأحدث</option>
+          <option value="oldest">الأقدم</option>
+        </select>
+      </div>
+      <div class="tk-filters-actions">
+        <button type="button" class="pbtn is-green" @click="compose"><PenSquare :size="16" /> رسالة جديدة</button>
+      </div>
     </div>
 
     <div class="tk2-shell">
-      <!-- ريل الطوابير: كل الرسائل / مفتوحة / مغلقة بعدّاداتها -->
-      <nav class="tk2-rail" aria-label="طوابير رسائلي">
-        <button
-          v-for="v in views" :key="v.value" type="button"
-          :class="['tk2-rail-item', view === v.value && 'is-active']" @click="view = v.value"
-        >
-          <component :is="v.icon" :size="17" class="tk2-rail-ic" />
-          <span class="tk2-rail-label">{{ v.label }}</span>
-          <span class="tk2-rail-count">{{ counts[v.value] }}</span>
-        </button>
-      </nav>
-
       <section class="rv-list hd-list tk2-list" aria-label="رسائلي">
         <header class="tk2-list-head">
           <h3 class="portal-title">{{ viewLabel }}</h3>
@@ -153,10 +148,10 @@
 </template>
 
 <script>
-import { markRaw } from 'vue'
 import { mapState } from 'pinia'
-import { ArrowRight, CheckCircle2, Inbox, Layers, MessageSquare, PenSquare, Search, Send } from 'lucide-vue-next'
+import { ArrowRight, CheckCircle2, Inbox, MessageSquare, PenSquare, Search, Send } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import api from '@/services/api'
 import { isPlaceholder, placeholderTickets } from '@/utils/studentPlaceholders'
 import { useAuthStore } from '@/stores/auth.store'
@@ -166,18 +161,18 @@ const rtf = new Intl.RelativeTimeFormat('ar', { numeric: 'auto' })
 export default {
   name: 'StudentTicketsPage',
 
-  components: { ArrowRight, CheckCircle2, Inbox, Layers, MessageSquare, PenSquare, Search, Send, UcasLogo },
+  components: { ArrowRight, CheckCircle2, Inbox, MessageSquare, PenSquare, Search, Send, UcasLogo, BaseSelect },
 
   data() {
     return {
       view: 'all',
+      viewOptions: [
+        { value: 'all', label: 'كل الرسائل' },
+        { value: 'open', label: 'مفتوحة' },
+        { value: 'closed', label: 'مغلقة' }
+      ],
       q: '',
       sort: 'activity',
-      views: [
-        { value: 'all', label: 'كل الرسائل', icon: markRaw(Layers) },
-        { value: 'open', label: 'مفتوحة', icon: markRaw(Inbox) },
-        { value: 'closed', label: 'مغلقة', icon: markRaw(CheckCircle2) }
-      ],
       tickets: [],
       loading: true,
       current: null,
@@ -195,10 +190,10 @@ export default {
     ...mapState(useAuthStore, ['user']),
 
     counts() {
-      return Object.fromEntries(this.views.map((v) => [v.value, this.tickets.filter((t) => this.inView(t, v.value)).length]))
+      return Object.fromEntries(this.viewOptions.map((v) => [v.value, this.tickets.filter((t) => this.inView(t, v.value)).length]))
     },
     viewLabel() {
-      return this.views.find((v) => v.value === this.view)?.label
+      return this.viewOptions.find((v) => v.value === this.view)?.label
     },
     filtered() {
       const q = this.q.replace(/^#/, '')

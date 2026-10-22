@@ -7087,8 +7087,10 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .stmeet-page .tk-toolbar > .gr-filters { flex: 0 0 auto; margin-inline-start: auto; }
 
 /* ── الشكاوى والملاحظات للطالب (sttickets-page): نفس مكتب الدعم تبع الإدارة العامة (tk2) ──────── */
-/* زر "رسالة جديدة" داخل رأس القائمة بعددّاد الرسائل */
-.sttickets-page .tk2-list-head .pbtn { margin-inline-start: 10px; }
+/* بلا ريل طوابير: الحالة صارت BaseSelect بالشريط — القائمة والتفاصيل بعمودين (وعند الجوال عمود واحد مثل الأدمن) */
+.sttickets-page .tk2-shell { grid-template-columns: minmax(0, 360px) minmax(0, 1fr); grid-template-areas: "list detail"; }
+@media (max-width: 1199.98px) { .sttickets-page .tk2-shell { grid-template-columns: minmax(0, 340px) minmax(0, 1fr); grid-template-areas: "list detail"; } }
+@media (max-width: 1023.98px) { .sttickets-page .tk2-shell { grid-template-columns: minmax(0, 1fr); grid-template-areas: "list"; } }
 /* المحرّر (رسالة جديدة/رد): نفس ستايل نص الرد */
 .sttickets-page .hd-composer input { width: 100%; padding: 8px 12px; border: 1px solid #CED4DA; border-radius: 4px; background: var(--color-surface); color: var(--color-text-900); font-size: 13.5px; }
 .sttickets-page .hd-composer input:focus { outline: 0; border-color: var(--portal-cyan); box-shadow: 0 0 0 3px rgba(0, 91, 170, 0.15); }
