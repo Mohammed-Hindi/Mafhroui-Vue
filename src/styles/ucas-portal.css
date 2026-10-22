@@ -7081,6 +7081,11 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .svt-page .sup-tall-card { min-height: max(420px, calc(100vh - 232px)); }
 /* اجتماعات الطالب: بلا رأس صفحة ولا عنوان كارت — البطاقة تحت الشريط العلوي مباشرة (فوقها توب بار + حشو الصفحة فقط) */
 .stmeet-page .sup-tall-card { min-height: max(420px, calc(100vh - 88px)); }
+/* رأس الجدول بتدرّج جداول البوابة (نفس ما يُطبَّق على باقي صفحات البوابة) */
+.stmeet-page .gr-table thead tr { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); }
+.stmeet-page .gr-table thead th { background: transparent; color: #FFFFFF; }
+/* الفلتر: بعرض محتواه ويُزاح لآخر الشريط (اليسار بالعربي) بجانب زر اجتماع جديد */
+.stmeet-page .tk-toolbar > .gr-filters { flex: 0 0 auto; margin-inline-start: auto; }
 
 /* ======================================================================
    مواعيد المناقشات (المشرف) — هوية البوابة: كارت واحد بجدول يملأ الشاشة،
