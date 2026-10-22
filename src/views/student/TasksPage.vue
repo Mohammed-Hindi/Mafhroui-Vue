@@ -1,8 +1,8 @@
 <template>
-  <!-- مهام الطالب: ملاحظات على كل مهام الفريق (مهامه ومهام زملائه)، ورفع الملفات وتغيير الحالة للمهام المنتسب لها فقط (نفس قيود الخادم) -->
-  <div class="dash hd-page">
-    <header class="dash-head"><h2 class="dash-title">المهام</h2></header>
+  <!-- مهام الطالب: لوحة tk نفسها (بلا dash-head — اللوحة تبدأ من الأعلى) — سحب تغيير الحالة + ملاحظات ومرفقات بالبطاقة -->
+  <div class="dash hd-page stasks-page">
     <TaskBoard
+      variant="tk"
       :loading="loading"
       :tasks="boardTasks"
       :can-create="false" :can-drag="true" :can-delete="false" uploads uploads-live :can-act="isMine" show-source

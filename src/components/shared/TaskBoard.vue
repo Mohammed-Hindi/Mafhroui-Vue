@@ -19,12 +19,23 @@
       <div :class="['tk-board', loading && 'tk-busy']">
         <section v-for="column in columns" :key="column.id" class="tk-col">
           <header class="tk-col-head"><i :class="['tk-dot', `is-${column.id}`]" />{{ column.label }} <span>{{ tasksByColumn(column.id).length }}</span></header>
-          <div class="tk-col-body">
+          <!-- جسم العمود: وجهة السحب (نفس منطق الكانبان — تمييز أثناء السحب ثم الإفلات) -->
+          <div
+            class="tk-col-body"
+            :class="dragOverColumn === column.id && 'is-over'"
+            @dragover.prevent
+            @dragenter="dragOverColumn = column.id"
+            @dragleave="dragOverColumn = null"
+            @drop="onDrop(column.id)"
+          >
             <article
               v-for="task in tasksByColumn(column.id)"
               :key="task.id"
               class="tk-card"
               tabindex="0"
+              :draggable="canDrag && acts(task)"
+              @dragstart="onDragStart(task)"
+              @dragend="dragOverColumn = null"
               @click="openDetail(task)"
               @keydown.enter="openDetail(task)"
             >
@@ -32,7 +43,17 @@
               <span v-if="showSource && staffSource(task)" class="pt-muted">من {{ staffSource(task) }}</span>
               <span class="tk-card-who"><Users :size="13" /> {{ whoNames(task) }}</span>
               <footer>
-                <span :class="['tk-status', `is-${task.status}`]">{{ columnLabel(task.status) }}</span>
+                <!-- الحالة: مبدّل لمن يملك تغييرها (نفس بوابة السحب في الكانبان) وإلا الشارة -->
+                <BaseSelect
+                  v-if="canDrag && acts(task)"
+                  class="tk-statussel"
+                  :model-value="task.status"
+                  :options="columnOptions"
+                  aria-label="حالة المهمة"
+                  @click.stop
+                  @update:model-value="(val) => $emit('move', { id: task.id, status: val })"
+                />
+                <span v-else :class="['tk-status', `is-${task.status}`]">{{ columnLabel(task.status) }}</span>
                 <span v-if="canEditTask || canDelete" class="tk-card-acts" @click.stop>
                   <button v-if="canEditTask" type="button" aria-label="تعديل المهمة" title="تعديل المهمة" @click="openDetail(task)"><Pencil :size="13" /></button>
                   <button v-if="canDelete" type="button" aria-label="أرشفة المهمة" title="أرشفة المهمة" @click="$emit('archive', task.id)"><ArchiveIcon :size="13" /></button>
@@ -50,6 +71,21 @@
                     <li v-for="f in shownFiles[task.id]" :key="f.id" :title="f.name"><FileText :size="14" /> <bdi>{{ f.name }}</bdi></li>
                   </ul>
                   <p v-else class="tk-info-empty">لا توجد مرفقات</p>
+                  <!-- رفع ملفات (uploads): فعلي عند uploads-live — نفس منطق الكانبان وبوابته -->
+                  <div v-if="uploads" class="tb-upload mt-2" @click.stop>
+                    <label v-if="acts(task)" class="tb-upload-drop" @dragover.prevent @drop.prevent="addFiles(task.id, $event.dataTransfer.files)">
+                      <input type="file" multiple class="sr-only" @change="addFiles(task.id, $event.target.files); $event.target.value = ''">
+                      <Paperclip :size="14" /> إضافة ملف
+                    </label>
+                    <button v-if="uploadsLive && !isPlaceholderTask(task) && !shownFiles[task.id]" type="button" class="tb-upload-more" @click="loadFiles(task.id)">عرض الملفات المرفوعة</button>
+                    <ul v-if="(files[task.id] || []).length" class="tb-upload-list">
+                      <li v-for="(f, i) in files[task.id]" :key="i">
+                        <span class="tb-upload-name"><bdi>{{ f.name }}</bdi></span>
+                        <span v-if="f.state" class="pt-muted">{{ f.state }}</span>
+                        <button v-if="!uploadsLive || isPlaceholderTask(task)" type="button" :aria-label="`إزالة ${f.name}`" @click="files[task.id].splice(i, 1)"><X :size="12" /></button>
+                      </li>
+                    </ul>
+                  </div>
 
                   <h5 class="tk-info-title"><MessageSquare :size="14" /> الملاحظات <span>{{ (notesByTask[task.id] || []).length }}</span></h5>
                   <p v-if="notesLoadingByTask[task.id]" class="tk-info-empty">جارٍ التحميل…</p>

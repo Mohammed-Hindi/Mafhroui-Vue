@@ -4244,8 +4244,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .tk-card-acts button:hover { color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 8%, transparent); }
 .tk-card-acts button + button:hover { color: var(--color-error); background: var(--color-error-bg); }
 /* نموذج الملاحظة داخل بطاقة المهام: زر أزرق سادة بلا تدرّج (يطابق أزرار ملاحظات باقي صفحات المشرف) */
-.svt-page .tk-card-info .tk-note-form > button { background: var(--ucas-blue) !important; box-shadow: none; }
-.svt-page .tk-card-info .tk-note-form > button:hover:not(:disabled) { background: var(--ucas-blue-deep) !important; filter: none; box-shadow: none; }
+:is(.svt-page, .stasks-page) .tk-card-info .tk-note-form > button { background: var(--ucas-blue) !important; box-shadow: none; }
+:is(.svt-page, .stasks-page) .tk-card-info .tk-note-form > button:hover:not(:disabled) { background: var(--ucas-blue-deep) !important; filter: none; box-shadow: none; }
 
 /* ===== تفاصيل المهمة في البوب اب: ستايل البوابة الطافي المينيمال (بلا تدرّجات) ===== */
 .td { display: flex; flex-direction: column; gap: 12px; }
@@ -5182,9 +5182,9 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .tk-card:hover, .tk-card:focus-visible { box-shadow: 0 10px 26px rgba(4, 40, 80, .13); }
 .tk-card .tk-card-who { color: var(--color-text-600); }
 /* كروت المهام: مسطّحة بسيطة بإطار كامل بلا شريط جانبي ولا ظل عائم — التكليفات وصفحة مهام المشرف (نفس اللوحة) */
-.sa-skin :is(.as-page, .svt-page) .tk-card { border: 1px solid var(--color-border); box-shadow: none; padding-inline-start: 14px; animation: none; }
-.sa-skin :is(.as-page, .svt-page) .tk-card::before { display: none; }
-.sa-skin :is(.as-page, .svt-page) .tk-card:hover, .sa-skin :is(.as-page, .svt-page) .tk-card:focus-visible { box-shadow: none; border-color: color-mix(in srgb, var(--ucas-blue) 45%, var(--color-border)); background: color-mix(in srgb, var(--ucas-blue) 3%, var(--color-surface)); }
+.sa-skin :is(.as-page, .svt-page, .stasks-page) .tk-card { border: 1px solid var(--color-border); box-shadow: none; padding-inline-start: 14px; animation: none; }
+.sa-skin :is(.as-page, .svt-page, .stasks-page) .tk-card::before { display: none; }
+.sa-skin :is(.as-page, .svt-page, .stasks-page) .tk-card:hover, .sa-skin :is(.as-page, .svt-page, .stasks-page) .tk-card:focus-visible { box-shadow: none; border-color: color-mix(in srgb, var(--ucas-blue) 45%, var(--color-border)); background: color-mix(in srgb, var(--ucas-blue) 3%, var(--color-surface)); }
 /* زر المرفقات والسجل: كبسولة */
 .tk-card-more { justify-content: flex-start; margin-top: 4px; padding: 7px 12px; border: 0; border-radius: 4px; font-size: 12.5px; font-weight: 700; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 7%, transparent); transition: background-color .25s ease; }
 .tk-card-more:hover, .tk-card-more[aria-expanded="true"] { background: color-mix(in srgb, var(--ucas-blue) 13%, transparent); }
@@ -5210,7 +5210,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .tk-card-log time { font-family: 'Tajawal', sans-serif; font-size: 11.5px; font-variant-numeric: tabular-nums; color: var(--color-text-400); }
 
 /* ===== لوحة المهام: ملء الشاشة بدرجات الهوية (أبيض/دارك مود) — التكليفات وصفحة مهام المشرف ===== */
-.sa-skin :is(.as-page, .svt-page) .tk-board {
+.sa-skin :is(.as-page, .svt-page, .stasks-page) .tk-board {
   min-height: calc(100vh - 232px);
   align-items: stretch;
   align-content: stretch;
@@ -5220,15 +5220,22 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
   box-shadow: inset 0 0 0 1px var(--color-border);
 }
 /* الأعمدة تمتدّ لكامل ارتفاع اللوحة والجسم يمرَّر داخله */
-.sa-skin :is(.as-page, .svt-page) .tk-board .tk-col {
+.sa-skin :is(.as-page, .svt-page, .stasks-page) .tk-board .tk-col {
   background: var(--color-surface);
   box-shadow: inset 0 0 0 1px var(--color-border);
 }
-.sa-skin :is(.as-page, .svt-page) .tk-board .tk-col-body {
+.sa-skin :is(.as-page, .svt-page, .stasks-page) .tk-board .tk-col-body {
   flex: 1;
   height: auto;
   min-height: 0;
 }
+/* مهام الطالب: لا فلاتر ولا رأس فوق اللوحة — الميزانية أقصر بنفس المبدأ (232 ناقص شريط فلاتر المشرف) */
+.sa-skin .stasks-page .tk-board { min-height: max(420px, calc(100vh - 148px)); }
+/* تمييز العمود أثناء سحب بطاقة — لا يظهر إلا بوجود سحب (بقيمة can-drag) */
+.tk-col-body.is-over { background: color-mix(in srgb, var(--ucas-blue) 6%, var(--color-surface)); transition: background-color var(--ucas-color-speed) var(--ease-standard); }
+/* مبدّل الحالة داخل بطاقة tk (صفحات السحب كالطالب): بصمة شارة الحالة ومقاسها */
+.tk-card footer .tk-statussel { min-width: 116px; }
+.tk-card footer .tk-statussel > button { height: 24px; padding-inline: 8px; font-size: 11.5px; font-weight: 700; }
 /* إطار القائمة بدرجات الهوية */
 /* جدول المهام: رأس رمادي مسطّح بلا تدرّج وصفوف بلا تخطيط — مطابق لجدول السجل/المجموعات/التقييمات (داخل .gr-card) */
 .tk-table .tk-nowrap { white-space: nowrap; }
