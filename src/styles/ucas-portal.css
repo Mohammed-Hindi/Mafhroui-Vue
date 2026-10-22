@@ -7079,6 +7079,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sup-tall-card > .gr-table-wrap .gr-table thead tr { position: sticky; top: 0; z-index: 3; }
 /* تفاعل الطلاب في صفحة مهام المشرف: نفس ميزانية ارتفاع اللوحة (tk-board) حتى يبقى بذبذبة العرض واحدة */
 .svt-page .sup-tall-card { min-height: max(420px, calc(100vh - 232px)); }
+/* اجتماعات الطالب: بلا رأس صفحة ولا عنوان كارت — البطاقة تحت الشريط العلوي مباشرة (فوقها توب بار + حشو الصفحة فقط) */
+.stmeet-page .sup-tall-card { min-height: max(420px, calc(100vh - 88px)); }
 
 /* ======================================================================
    مواعيد المناقشات (المشرف) — هوية البوابة: كارت واحد بجدول يملأ الشاشة،

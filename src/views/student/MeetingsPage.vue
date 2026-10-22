@@ -1,23 +1,22 @@
 <template>
-  <!-- الاجتماعات للطالب بنمط البوابة (كصفحات الإدارة العامة): شريط عروض بالأعداد (القادمة / المنتهية)
-       ← تنبيه الاجتماع القادم ← جدول برأس سماوي + شريط ملخص أخضر — بيانات تجريبية حين لا توجد اجتماعات -->
-  <div class="dash hd-page">
-    <header class="dash-head">
-      <h2 class="dash-title">الاجتماعات</h2>
-      <button v-if="myTeam" type="button" class="pbtn is-green" @click="openCreate"><Plus :size="16" /> اجتماع جديد</button>
-    </header>
-
-    <PortalStepper v-model="view" :items="views" label="عرض الاجتماعات" />
-
-    <section class="dash-card">
-      <div class="dash-card-head"><h3 class="portal-title">{{ view === 'upcoming' ? 'الاجتماعات القادمة' : 'الاجتماعات المنتهية' }}</h3></div>
+  <!-- اجتماعات الطالب: بلا رأس صفحة — شريط واحد (فلتر الحالة + اجتماع جديد) وجدول يملأ الشاشة برأس ثابت وشريط ملخص أخضر -->
+  <div class="dash hd-page stmeet-page">
+    <section class="dash-card sup-tall-card">
+      <div class="tk-toolbar">
+        <div class="gr-filters tk-filters">
+          <BaseSelect v-model="view" class="tk-filter" aria-label="حالة الاجتماع" :options="viewOptions" />
+        </div>
+        <div class="tk-filters-actions">
+          <button v-if="myTeam" type="button" class="pbtn is-green" @click="openCreate"><Plus :size="16" /> اجتماع جديد</button>
+        </div>
+      </div>
 
       <p v-if="view === 'upcoming' && next" class="palert is-info mt-meet-next">
         <CalendarClock :size="18" />
         <span><b>الاجتماع القادم:</b> {{ next.title }} — {{ next.date }} الساعة {{ next.time }} ({{ next.when }})</span>
       </p>
 
-      <!-- جدول الاجتماعات بنمط سجلات البوابة (gr-table): رأس سماوي + صفوف -->
+      <!-- جدول الاجتماعات بنمط سجلات البوابة (gr-table): رأس سماوي + صفوف — يتمرّر داخل البطاقة ورأسه ثابت -->
       <div class="gr-table-wrap">
         <table class="gr-table mt-table">
           <thead><tr><th>#</th><th>اسم الاجتماع</th><th>التاريخ</th><th>الساعة</th><th>الملاحظات</th><th>الحالة</th><th>الرابط</th></tr></thead>
@@ -30,7 +29,7 @@
               <td class="pt-muted">{{ m.notes || '—' }}</td>
               <td><span :class="['rv-pill', m.past ? 'is-approved' : 'is-pending']">{{ m.past ? 'منتهٍ' : m.when }}</span></td>
               <td>
-                <a v-if="m.link && !m.past" :href="m.link" target="_blank" rel="noopener" class="pbtn is-cyan is-sm"><Video :size="15" /> انضمام</a>
+                <a v-if="m.link && !m.past" :href="m.link" target="_blank" rel="noopener" class="pbtn is-cyan is-sm"><VideoIcon :size="15" /> انضمام</a>
                 <span v-else class="pt-muted">—</span>
               </td>
             </tr>
@@ -41,9 +40,9 @@
       </div>
 
       <div class="gr-sumbar">
-        <span>عدد الاجتماعات: {{ all.length }}</span>
         <span>القادمة: {{ upcoming.length }}</span>
         <span>المنتهية: {{ completed.length }}</span>
+        <span>الإجمالي: {{ all.length }}</span>
       </div>
     </section>
 
@@ -78,9 +77,9 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { CalendarClock, CalendarDays, CheckCircle2, Plus, Video } from 'lucide-vue-next'
+import { CalendarClock, Plus, Video as VideoIcon } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
-import PortalStepper from '@/components/shared/PortalStepper.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import { placeholderMeetings } from '@/utils/studentPlaceholders'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
@@ -90,10 +89,17 @@ const DAY = 864e5
 export default {
   name: 'StudentMeetingsPage',
 
-  components: { BaseModal, CalendarClock, PortalStepper, Plus, Video },
+  components: { BaseModal, BaseSelect, CalendarClock, Plus, VideoIcon },
 
   data() {
-    return { loading: true, view: 'upcoming', createOpen: false, saving: false, form: { title: '', at: '', link: '', notes: '' } }
+    return {
+      loading: true,
+      view: 'upcoming',
+      viewOptions: [{ value: 'upcoming', label: 'القادمة' }, { value: 'completed', label: 'المنتهية' }],
+      createOpen: false,
+      saving: false,
+      form: { title: '', at: '', link: '', notes: '' }
+    }
   },
 
   computed: {
@@ -146,12 +152,6 @@ export default {
     minAt() {
       const d = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4)
       return d.toISOString().slice(0, 16)
-    },
-    views() {
-      return [
-        { key: 'upcoming', label: 'القادمة', icon: CalendarDays, count: this.upcoming.length },
-        { key: 'completed', label: 'المنتهية', icon: CheckCircle2, count: this.completed.length }
-      ]
     }
   },
 
