@@ -52,8 +52,8 @@
         </div>
       </div>
 
-      <!-- تفاعل الطلاب: توزيع المهام على أفراد المجموعة ونسبة إنجاز كل طالب -->
-      <section v-if="view === 'engagement'" class="gr gr-card">
+      <!-- تفاعل الطلاب: توزيع المهام على أفراد المجموعة ونسبة إنجاز كل طالب — بطاقة طويلة تملأ الشاشة -->
+      <section v-if="view === 'engagement'" class="gr gr-card sup-tall-card">
         <header class="gr-card-head">
           <div class="gr-card-title"><h3>تفاعل الطلاب</h3><span>{{ selectedTeam?.name }}</span></div>
         </header>

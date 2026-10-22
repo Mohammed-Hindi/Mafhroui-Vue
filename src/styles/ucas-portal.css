@@ -7122,6 +7122,11 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* شريط الملخص وشريط الشرائح: ارتفاع ثابت أسفل البطاقة */
 .sup-tall-card .sup-tall-slide .gr-sumbar, .sup-tall-card .sup-tall-slide .gr-slider { flex: 0 0 auto; }
 .sup-tall-card > .gr-sumbar { flex-shrink: 0; }
+/* بطاقة طويلة بجدول مباشر (بلا SlideTable): الجدول يملأ الارتفاع والمقرّرات تعلو فوق الصفوف */
+.sup-tall-card > .gr-table-wrap { flex: 1; min-height: 0; overflow: auto; }
+.sup-tall-card > .gr-table-wrap .gr-table thead tr { position: sticky; top: 0; z-index: 3; }
+/* تفاعل الطلاب في صفحة مهام المشرف: نفس ميزانية ارتفاع اللوحة (tk-board) حتى يبقى بذبذبة العرض واحدة */
+.svt-page .sup-tall-card { min-height: max(420px, calc(100vh - 232px)); }
 
 /* ======================================================================
    مواعيد المناقشات (المشرف) — هوية البوابة: كارت واحد بجدول يملأ الشاشة،
