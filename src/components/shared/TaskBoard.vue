@@ -162,7 +162,7 @@
                 >
                   <MessageSquare :size="12" />
                   الملاحظات
-                  <span v-if="(notesByTask[task.id] || []).length" class="text-text-400 font-normal">({{ (notesByTask[task.id] || []).length }})</span>
+                  <span v-if="(notesByTask[task.id] || []).length" class="tb-count">{{ (notesByTask[task.id] || []).length }}</span>
                   <ChevronDown :size="12" :class="['transition-transform duration-fast', isNotesOpen(task.id) && 'rotate-180']" />
                 </button>
 

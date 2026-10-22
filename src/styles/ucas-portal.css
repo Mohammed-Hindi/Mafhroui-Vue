@@ -5329,10 +5329,13 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* زر "عرض التقرير" بأعلى بطاقة النسخة لا في وسطها */
 .prd-modal .pr-reports li { align-items: flex-start; }
 .prd-modal .pr-report-file { align-self: flex-start; }
-/* مرفقات المهمة على بطاقة الكانبان */
+/* مرفقات المهمة على بطاقة الكانبان: كبسولة زرقاء solid والعدّاد شارة خضراء */
 .tb-files-wrap { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-border-soft); }
-.tb-files-btn { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 7%, transparent); }
-.tb-files-btn > span { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 4px; font-size: 11px; line-height: 18px; text-align: center; color: #FFFFFF; background: linear-gradient(270deg, #62BB46, #005BAA); }
+.tb-files-btn { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; padding: 5px 12px; border: 0; border-radius: 4px; font-size: 12px; font-weight: 700; color: #FFFFFF; background: var(--ucas-blue); transition: background-color .25s var(--ease-standard); }
+.tb-files-btn:hover { background: var(--ucas-blue-deep); }
+.tb-files-btn > span { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 4px; font-size: 11px; font-weight: 800; line-height: 18px; text-align: center; color: #FFFFFF; background: var(--ucas-green); }
+/* عدّاد الملاحظات على البطاقة: شارة بلون الهوية (لا رمادي جرادنيت) */
+.tb-count { min-width: 18px; padding: 1px 6px; border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 14%, transparent); color: var(--ucas-blue); font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .tb-files-caret { transition: transform .25s ease; }
 .tb-files-caret.is-open { transform: rotate(180deg); }
 .tb-files li bdi { overflow: hidden; text-overflow: ellipsis; }
