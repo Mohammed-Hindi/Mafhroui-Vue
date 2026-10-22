@@ -4,8 +4,8 @@
     <div v-if="canCreate || canDelete || $slots.actions" class="flex items-center justify-between gap-4 mb-5 flex-wrap">
       <p v-if="hint || canCreate" class="text-body-sm text-text-600" :title="hint || undefined">{{ hint || (canDrag ? 'اسحب البطاقات أو استخدم القائمة على البطاقة لتحديث الحالة' : 'الطلاب يحرّكون حالة المهام من لوحتهم') }}</p>
       <div class="flex items-center gap-2 ms-auto">
-        <button v-if="canDelete" type="button" class="pbtn is-outline" @click="openArchive"><ArchiveIcon :size="16" /> الأرشيف</button>
-        <button v-if="canCreate" type="button" class="pbtn is-green" @click="openCreate()"><Plus :size="16" /> مهمة جديدة</button>
+        <button v-if="canDelete" type="button" class="pbtn is-outline tb-archive" @click="openArchive"><ArchiveIcon :size="16" /> الأرشيف</button>
+        <button v-if="canCreate" type="button" class="pbtn is-green tb-add" @click="openCreate()"><Plus :size="16" /> مهمة جديدة</button>
         <slot name="actions" />
       </div>
     </div>
@@ -241,8 +241,13 @@
          من يملك صلاحية التعديل يعدّل العنوان والوصف من نفس النافذة -->
     <BaseModal v-model="detailModalOpen" :title="canEditTask ? 'تعديل المهمة' : 'تفاصيل المهمة'" size="lg">
       <div v-if="detailTask" class="td">
+        <!-- رأس البوب اب: عنوان المهمة (للقراءة) وحالة المهمة -->
+        <header class="td-head">
+          <h3 v-if="!canEditTask" class="td-title">{{ detailTask.title }}</h3>
+          <span :class="['td-status', `is-${detailTask.status}`]">{{ columnLabel(detailTask.status) }}</span>
+        </header>
+
         <dl class="td-meta">
-          <div><dt>الحالة</dt><dd><span :class="['td-status', `is-${detailTask.status}`]">{{ columnLabel(detailTask.status) }}</span></dd></div>
           <div><dt>المكلّفون</dt><dd>{{ (detailTask.assignees || []).map((a) => a.name).join('، ') || 'كل الفريق' }}</dd></div>
           <div><dt>أضافها</dt><dd>{{ detailTask.created_by?.name || '—' }}<small v-if="staffSource(detailTask)"> · {{ staffSource(detailTask) }}</small></dd></div>
           <div><dt>تاريخ الإضافة</dt><dd class="mono">{{ shortDate(detailTask.created_at) }}</dd></div>
@@ -250,13 +255,12 @@
         </dl>
 
         <section class="td-sec">
-          <h4>{{ canEditTask ? 'العنوان والوصف' : 'وصف المهمة' }}</h4>
+          <h4>{{ canEditTask ? 'العنوان والوصف' : 'الوصف' }}</h4>
           <template v-if="canEditTask">
             <BaseInput v-model="detailForm.title" label="عنوان المهمة" required />
             <BaseTextarea v-model="detailForm.description" label="الوصف" placeholder="لا يوجد وصف" :rows="4" class="mt-3" />
           </template>
           <template v-else>
-            <p class="td-title">{{ detailTask.title }}</p>
             <p class="td-text">{{ detailTask.description || 'لا يوجد وصف لهذه المهمة.' }}</p>
           </template>
         </section>

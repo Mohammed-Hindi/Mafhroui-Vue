@@ -4234,20 +4234,22 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .task-col-head > span:first-child > span { width: 9px; height: 9px; background: var(--tdot, #98A6AD) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--tdot, #98A6AD) 25%, transparent); }
 .sa-skin .task-col:nth-child(2) { --tdot: #0E699C; } .sa-skin .task-col:nth-child(3) { --tdot: #F89E32; } .sa-skin .task-col:nth-child(4) { --tdot: #62BB46; }
 
-/* تفاصيل المهمة في البوب اب */
-.td { display: flex; flex-direction: column; gap: 16px; }
-.td-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 0; }
-.td-meta > div { padding: 12px 14px; border-radius: 4px; background: linear-gradient(135deg, rgba(98, 187, 70, .09), rgba(0, 91, 170, .06)); }
-.td-meta dt { font-size: 12.5px; font-weight: 700; color: var(--ucas-green); }
-.td-meta dd { margin: 4px 0 0; font-size: 14px; font-weight: 700; color: var(--ucas-blue); }
-.td-meta dd small { font-weight: 600; color: var(--color-text-500, #6F6F6F); }
-.td-status { display: inline-flex; padding: 2px 12px; border-radius: 4px; font-size: 13px; color: #FFFFFF; background: #98A6AD; }
-.td-status.is-in_progress { background: linear-gradient(270deg, #35B8E0, #0E699C); }
-.td-status.is-review { background: linear-gradient(270deg, #F9C851, #F89E32); }
-.td-status.is-done { background: linear-gradient(270deg, #62BB46, #0E699C); }
-.td-sec { padding: 14px 16px; border-radius: 4px; background: var(--color-surface); box-shadow: 0 0 0 1px var(--color-border); }
-.td-sec h4 { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; padding-bottom: 8px; border-bottom: 2px solid transparent; border-image: linear-gradient(270deg, #62BB46, #005BAA) 1; font-size: 14.5px; font-weight: 800; color: var(--ucas-blue); }
-.td-sec h4 small { font-weight: 600; color: var(--color-text-500, #6F6F6F); }
+/* ===== تفاصيل المهمة في البوب اب: ستايل البوابة الطافي المينيمال (بلا تدرّجات) ===== */
+.td { display: flex; flex-direction: column; gap: 12px; }
+.td-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.td-head .td-title { margin: 0; }
+.td-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 0; }
+.td-meta > div { padding: 10px 12px; border: 1px solid var(--color-border-soft); border-radius: 4px; background: var(--color-bg); }
+.td-meta dt { font-size: 12px; font-weight: 700; color: var(--color-text-600); }
+.td-meta dd { margin: 4px 0 0; font-size: 13.5px; font-weight: 700; color: var(--color-text-900); }
+.td-meta dd small { font-weight: 600; color: var(--color-text-400); }
+.td-status { display: inline-flex; align-items: center; padding: 3px 12px; border-radius: 4px; font-size: 12.5px; font-weight: 700; color: #FFFFFF; background: #6C757D; }
+.td-status.is-in_progress { background: #0E699C; }
+.td-status.is-review { background: #F89E32; }
+.td-status.is-done { background: #2F7F1E; }
+.td-sec { padding: 14px 16px; border: 1px solid var(--color-border-soft); border-radius: 4px; background: var(--color-surface); }
+.td-sec h4 { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; padding-bottom: 8px; border-bottom: 1px solid var(--color-border-soft); font-size: 14px; font-weight: 800; color: var(--ucas-blue); }
+.td-sec h4 small { font-weight: 800; color: var(--ucas-blue); }
 .td-title { margin: 0 0 6px; font-size: 16px; font-weight: 800; color: var(--color-text-900); }
 .td-text { margin: 0; font-size: 14.5px; line-height: 1.9; color: var(--color-text-700); white-space: pre-line; }
 .td-muted { margin: 0; font-size: 13.5px; color: var(--color-text-400); }
@@ -4262,11 +4264,16 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .td-note-add { display: flex; gap: 8px; margin-top: 8px; }
 .td-note-add input { flex: 1; min-width: 0; height: 38px; padding-inline: 14px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-bg); font-size: 13.5px; color: var(--color-text-900); }
 .td-note-add input:focus { outline: 0; border-color: var(--ucas-blue); box-shadow: 0 0 0 4px rgba(0, 91, 170, .1); }
-.td-log { display: flex; flex-direction: column; gap: 0; margin: 0; padding: 0 16px 0 0; list-style: none; border-inline-start: 2px solid color-mix(in srgb, var(--ucas-blue) 18%, transparent); }
+.td-log { display: flex; flex-direction: column; gap: 0; margin: 0; padding: 0 16px 0 0; list-style: none; border-inline-start: 2px solid color-mix(in srgb, var(--ucas-blue) 22%, transparent); }
 .td-log li { position: relative; padding: 6px 0; font-size: 13px; color: var(--color-text-700); }
-.td-log li::before { content: ""; position: absolute; inset-inline-start: -21px; top: 12px; width: 8px; height: 8px; border-radius: 50%; background: linear-gradient(270deg, #62BB46, #0E699C); }
+.td-log li::before { content: ""; position: absolute; inset-inline-start: -21px; top: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--ucas-blue); }
 .td-log b { color: var(--ucas-blue); }
 .td-log span { color: var(--color-text-400); font-size: 12px; }
+
+/* أزرار لوحة المهام (المشرف): مسطّحة بلون الهوية وحجم واحد */
+.sa-skin .pbtn.tb-add { height: 38px; padding-inline: 16px; border: 0; border-radius: 4px; font-size: 13.5px; font-weight: 700; color: #FFFFFF; background: var(--ucas-blue); box-shadow: none; }
+.sa-skin .pbtn.tb-add:hover:not(:disabled) { background: var(--ucas-blue-deep); filter: none; box-shadow: none; }
+.sa-skin .pbtn.tb-archive { height: 38px; padding-inline: 16px; border-radius: 4px; font-size: 13.5px; font-weight: 700; }
 
 /* ======================================================================
    الفلاتر موحّدة في كل اللوحات: شريط ناعم، كل فلتر كبسولة بارتفاع واحد، والتسمية داخل الكبسولة
@@ -4287,11 +4294,11 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* ======================================================================
    زر "إضافة" الملاحظة في المهام: كبسولة بتدرّج الهوية وحقل كبسولي
    ====================================================================== */
-.sa-skin .task-card .bg-primary-600, .sa-skin .task-card button.bg-primary-600 { height: 34px; padding-inline: 16px; border-radius: 4px; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); box-shadow: 0 4px 12px rgba(4, 40, 80, .18); transition: filter .3s ease; }
-.sa-skin .task-card .bg-primary-600:hover { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); filter: brightness(1.08); }
+.sa-skin .task-card .bg-primary-600, .sa-skin .task-card button.bg-primary-600 { height: 34px; padding-inline: 16px; border: 0; border-radius: 4px; background: var(--ucas-blue); box-shadow: none; transition: background-color .25s var(--ease-standard); }
+.sa-skin .task-card .bg-primary-600:hover { background: var(--ucas-blue-deep); filter: none; }
 .sa-skin .task-card input[placeholder="اكتب ملاحظة..."] { height: 34px; border-radius: 4px; padding-inline: 14px; background: var(--color-bg); }
-.td-note-add button { flex-shrink: 0; min-width: 84px; border-radius: 4px !important; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9) !important; color: #FFFFFF !important; box-shadow: 0 4px 12px rgba(4, 40, 80, .18); }
-.td-note-add button:hover { filter: brightness(1.08); }
+.td-note-add button { flex-shrink: 0; min-width: 84px; height: 38px !important; padding-inline: 16px !important; border: 0 !important; border-radius: 4px !important; font-size: 13px !important; font-weight: 800 !important; color: #FFFFFF !important; background: var(--ucas-blue) !important; box-shadow: none; }
+.td-note-add button:hover { background: var(--ucas-blue-deep) !important; filter: none; }
 
 /* ======================================================================
    صفحة المقترحات (كل اللوحات): عنوان القسم، الجدول، الترقيم، وتفاصيل الطالب
