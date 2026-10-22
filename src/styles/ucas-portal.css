@@ -4234,6 +4234,18 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .task-col-head > span:first-child > span { width: 9px; height: 9px; background: var(--tdot, #98A6AD) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--tdot, #98A6AD) 25%, transparent); }
 .sa-skin .task-col:nth-child(2) { --tdot: #0E699C; } .sa-skin .task-col:nth-child(3) { --tdot: #F89E32; } .sa-skin .task-col:nth-child(4) { --tdot: #62BB46; }
 
+/* ===== لوحة المهام للمشرف: طافية مينيمال بنفس لغة صفحة التكليفات (tk-board/tk-col/tk-card) =====
+   .portal-page.svt-page: نفس العنصر (صفحة المهام) — التخصيص أقوى من قواعد portal-page العامة */
+.svt-page .task-board, .ucas-portal .portal-page.svt-page .task-board { padding: 0; border-radius: 4px; background: transparent; background-image: none; box-shadow: none; }
+.svt-page .task-col, .ucas-portal .portal-page.svt-page .task-col { border: 0; border-radius: 4px; background: var(--color-bg); box-shadow: none; backdrop-filter: none; }
+.svt-page .task-col-head, .ucas-portal .portal-page.svt-page .task-col-head { position: static; padding: 10px 12px 8px; background: transparent !important; border-bottom: 1px solid var(--color-border-soft); }
+.svt-page .task-col-head::after, .ucas-portal .portal-page.svt-page .task-col-head::after { content: none; }
+.svt-page .task-col-head > span:first-child { color: var(--color-text-900); }
+.svt-page .task-col-head > span:first-child > span { box-shadow: none !important; }
+.svt-page .task-col-head > span:last-child, .ucas-portal .portal-page.svt-page .task-col-head > span:last-child { min-width: 0; height: auto; padding: 0; border: 0 !important; border-radius: 4px !important; background: none !important; color: var(--color-text-400) !important; font-size: 12px; font-weight: 800; box-shadow: none !important; }
+.svt-page .task-card, .ucas-portal .portal-page.svt-page .task-card { border: 1px solid var(--color-border-soft); border-radius: 4px; background: var(--color-surface); box-shadow: 0 1px 2px rgba(0, 0, 0, .06); transform: none; }
+.svt-page .task-card:hover, .ucas-portal .portal-page.svt-page .task-card:hover { border-color: color-mix(in srgb, var(--ucas-blue) 45%, transparent); box-shadow: 0 1px 2px rgba(0, 0, 0, .06); transform: none; }
+
 /* ===== تفاصيل المهمة في البوب اب: ستايل البوابة الطافي المينيمال (بلا تدرّجات) ===== */
 .td { display: flex; flex-direction: column; gap: 12px; }
 .td-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
