@@ -58,9 +58,16 @@
           </div>
         </section>
 
+        <!-- فكرة المشروع: البيانات اليدوية الاختيارية — القسم مسكرّ افتراضيًا ويفتحه الطالب إن لم يرفق ملفًا (التسليم إما ملف أو بيانات) -->
         <section class="tk-sec">
-          <header class="tk-sec-head"><h4>فكرة المشروع</h4></header>
-          <div class="tk-sec-body">
+          <button
+            type="button" class="tk-sec-head sp-acc-head" :class="ideaOpen && 'is-open'"
+            :aria-expanded="ideaOpen" @click="ideaOpen = !ideaOpen"
+          >
+            <span>فكرة المشروع <small class="pt-muted">(اختياري — إن لم ترفق ملفًا)</small></span>
+            <ChevronDown :size="16" />
+          </button>
+          <div v-show="ideaOpen" class="tk-sec-body">
             <label class="pfield">
               <span>وصف المشروع</span>
               <textarea v-model="form.description" rows="2" @keydown.enter.shift.exact.prevent="bullet($event, 'description')" placeholder="فكرة المشروع باختصار" />
@@ -221,7 +228,7 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { ImagePlus, Lock, PencilLine, RotateCcw, FileText, PlayCircle, Send, XCircle } from 'lucide-vue-next'
+import { ChevronDown, ImagePlus, Lock, PencilLine, RotateCcw, FileText, PlayCircle, Send, XCircle } from 'lucide-vue-next'
 import { latestReport, rejectedBy } from '@/utils/finalReport'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
 import { PROJECT_TYPES, PROPOSAL_CHANGES_PREFIX, isOtherType } from '@/utils/constants'
@@ -243,7 +250,7 @@ const PROPOSAL_STATE = {
 export default {
   name: 'StudentProposalPage',
 
-  components: { ImagePlus, Lock, PencilLine, RotateCcw, FileText, PlayCircle, Send, XCircle, FileDropzone },
+  components: { ChevronDown, ImagePlus, Lock, PencilLine, RotateCcw, FileText, PlayCircle, Send, XCircle, FileDropzone },
 
   data() {
     return {
@@ -256,6 +263,7 @@ export default {
       reportForm: { files: [], video_url: '', cover: null, zip: [] },
       coverPreview: '',
       coverError: '',
+      ideaOpen: false,
       otherOpen: false,
       form: { name: '', description: '', problems: '', solutions: '', features_value: '', types: [], files: [] }
     }
@@ -464,6 +472,8 @@ export default {
       const p = this.proposal
       this.form = { name: p.name || '', description: p.description || '', problems: p.problems || '', solutions: p.solutions || '', features_value: p.features_value || '', types: this.projectTypes.slice(0, 3), files: [] }
       this.editing = true
+      // إعادة الإرسال: القسم المطويّ يفتح نفسه إن كان في بيانات مكتوبة مسبقًا
+      this.ideaOpen = this.proposalTexts.length > 0
     },
 
     /** POST /proposals (أول تقديم) أو PUT /proposals/{id} (إعادة تقديم بعد الرفض أو طلب التعديل) */

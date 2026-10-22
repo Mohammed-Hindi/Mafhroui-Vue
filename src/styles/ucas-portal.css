@@ -2642,6 +2642,15 @@
 .sp-text .pr-h { margin: 0 0 4px; }
 .sp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-top: 16px; border-top: 1px solid var(--color-border); }
 .sp-form .tk-chip:disabled { opacity: 0.4; cursor: not-allowed; }
+/* رأس القسم المطويّ (بيانات المقترح اليدوية الاختيارية): ضغطة تفتح وتعيد الإغلاق — كقائمة جدولة المواعيد */
+.sp-acc-head { width: 100%; border: 0; border-bottom: 1px solid var(--color-border); font: inherit; text-align: start; cursor: pointer; }
+.sp-acc-head:hover { background: color-mix(in srgb, var(--ucas-blue) 5%, var(--color-bg)); }
+.sp-acc-head:focus-visible { outline: 2px solid var(--portal-cyan); outline-offset: -2px; }
+.sp-acc-head > span { display: inline-flex; align-items: center; gap: 10px; font-size: 15.5px; font-weight: 700; color: var(--color-text-900); }
+.sp-acc-head > span::before { content: ''; width: 16px; height: 12px; background: linear-gradient(var(--portal-cyan) 0 0) top / 100% 2px no-repeat, linear-gradient(var(--portal-cyan) 0 0) center / 75% 2px no-repeat, linear-gradient(var(--portal-cyan) 0 0) bottom / 50% 2px no-repeat; }
+.sp-acc-head > svg { color: var(--color-text-400); transition: transform .3s var(--ease-standard, ease); }
+.sp-acc-head:not(.is-open) { border-bottom: 0; }
+.sp-acc-head.is-open > svg { transform: rotate(180deg); }
 @media (max-width: 1023.98px) { .st-slots { grid-template-columns: minmax(0, 1fr); } }
 .st-flow { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .st-flow li { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 4px; background: var(--color-bg); font-size: 12.5px; font-weight: 700; color: var(--color-text-600); }
