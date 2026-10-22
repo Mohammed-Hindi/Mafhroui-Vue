@@ -4,15 +4,17 @@
     <!-- composeOnly: نافذة الإنشاء وحدها (زر "مهمة جديدة" في صفحات أخرى) بلا قائمة المهام -->
     <template v-if="!composeOnly">
     <section class="dash-card">
-      <div class="dash-card-head">
-        <!-- المشرف: بلا عنوان "المهام" ولا أيقونته — الأدوات وحدها فوق الفلاتر -->
-        <h3 v-if="!isSupervisor">المهام</h3>
+      <!-- الإدارة/اللجنة: رأس البطاقة بالعنوان والأزرار — المشرف: بلا رأس -->
+      <div v-if="!isSupervisor" class="dash-card-head">
+        <h3>المهام</h3>
         <div class="tk-head-tools">
           <button v-if="canAnnounce" type="button" class="pbtn is-outline" @click="$emit('announce')"><Megaphone :size="16" /> إعلان جديد</button>
           <button type="button" class="pbtn is-green" @click="openComposer"><Plus :size="16" /> مهمة جديدة</button>
         </div>
       </div>
 
+      <!-- المشرف: الأزرار بجانب شريط الفلاتر لا داخله ولا فوقه -->
+      <div :class="isSupervisor && 'tk-toolbar'">
       <div class="gr-filters tk-filters">
         <label class="gr-search">
           <Search :size="16" />
@@ -35,6 +37,11 @@
         <BaseSelect v-if="isSupervisor" v-model="fGender" class="tk-filter" placeholder="طلاب وطالبات" include-placeholder-option :options="[{ value: 'male', label: 'طلاب' }, { value: 'female', label: 'طالبات' }]" />
         <!-- عدد الصفوف المعروضة في الجدول (عرض القائمة فقط) -->
         <BaseSelect v-if="view === 'list'" v-model="pageSize" class="tk-filter tk-filter-size" aria-label="عدد الصفوف" :options="pageSizeOptions" />
+      </div>
+      <div v-if="isSupervisor" class="tk-filters-actions">
+        <button v-if="canAnnounce" type="button" class="pbtn is-outline" @click="$emit('announce')"><Megaphone :size="16" /> إعلان جديد</button>
+        <button type="button" class="pbtn is-green" @click="openComposer"><Plus :size="16" /> مهمة جديدة</button>
+      </div>
       </div>
 
       <SkeletonLoader v-if="!loaded" variant="cards" :rows="6" />

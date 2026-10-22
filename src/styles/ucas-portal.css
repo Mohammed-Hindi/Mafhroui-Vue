@@ -2068,6 +2068,10 @@
 .tk-head-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-inline-start: auto; }
 .tk-head-tools .hm-tabs button { display: inline-flex; align-items: center; gap: 6px; }
 .tk-filters { margin-bottom: 16px; }
+/* صف الفلاتر وأزرار المشرف بجانبه: الشريط يمتد والأزرار بطرفه (لا داخله) */
+.tk-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 16px; }
+.tk-toolbar > .gr-filters { flex: 1 1 320px; min-width: 0; margin-bottom: 0; }
+.tk-filters-actions { display: flex; align-items: center; gap: 10px; }
 .tk-loading { padding: 32px 0; text-align: center; }
 .tk .gr-sumbar { margin-bottom: 16px; }
 .tk-board + .gr-sumbar { margin-top: 16px; border-radius: 4px; }
