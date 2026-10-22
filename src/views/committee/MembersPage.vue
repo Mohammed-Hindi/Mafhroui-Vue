@@ -137,11 +137,8 @@
         <div class="cr-setup">
           <div class="cr-field">
             <span class="cr-label">الفئة</span>
-            <nav class="hm-tabs" aria-label="الفئة">
-              <button v-for="r in crRoles" :key="r.value" type="button" :class="notifyRoleFilter === r.value && 'is-active'" @click="setNotifyRole(r.value)">
-                <component :is="r.icon" :size="15" /> {{ r.label }}
-              </button>
-            </nav>
+            <!-- فلتر الفئة بدل شريط الأزرار: الكل أو إحدى الفئات الثلاث -->
+            <BaseSelect class="min-w-[170px]" aria-label="الفئة" placeholder="الكل" include-placeholder-option :model-value="notifyRoleFilter" :options="crRoles" @update:model-value="setNotifyRole" />
           </div>
           <div class="cr-field">
             <span class="cr-label">طريقة الإرسال</span>
@@ -178,7 +175,7 @@
         <p v-if="ineligibleCount" class="cr-warn">{{ ineligibleCount }} عضو بلا {{ notifyChannel === 'email' ? 'بريد إلكتروني' : 'رقم واتساب' }} — غير قابل للتحديد</p>
 
         <SkeletonLoader v-if="notifyDirectoryLoading" variant="cards" />
-        <EmptyState v-else-if="!filteredNotifyDirectory.length" :title="notifyDirectory.length ? 'لا يوجد عضو مطابق للبحث' : 'لا يوجد ' + notifyRoleLabel + ' حاليًا'" description="غيّر الفئة أو البحث أو التخصص" />
+        <EmptyState v-else-if="!filteredNotifyDirectory.length" :title="notifyDirectory.length ? 'لا يوجد عضو مطابق للبحث' : 'لا يوجد ' + (notifyRoleFilter ? notifyRoleLabel : 'عضو') + ' حاليًا'" description="غيّر الفئة أو البحث أو التخصص" />
         <ul v-else class="cr-people" aria-label="المستلمون">
           <li v-for="u in filteredNotifyDirectory" :key="u.id">
             <label :class="['cr-person', notifySelectedIds.includes(u.id) && 'is-on', !contactOf(u) && 'is-off']">
@@ -785,7 +782,7 @@ export default {
       return (this.notifyPreviewResult?.invalid || []).filter((i) => String(i.reason || '').includes('دعوة'))
     },
     notifyRoleLabel() {
-      return { student: 'طالب', supervisor: 'مشرف', committee: 'عضو لجنة' }[this.notifyRoleFilter]
+      return { student: 'طالب', supervisor: 'مشرف', committee: 'عضو لجنة', '': 'كل الأعضاء' }[this.notifyRoleFilter]
     }
   },
 
@@ -1239,7 +1236,10 @@ export default {
       this.notifySpecFilter = ''
       this.notifyDirectoryLoading = true
       try {
-        this.notifyDirectory = await this.fetchUsers(this.notifyRoleFilter)
+        // «الكل»: الخادم يلزم role لكل طلب — نجلب الفئات الثلاث وندمجها
+        this.notifyDirectory = this.notifyRoleFilter
+          ? await this.fetchUsers(this.notifyRoleFilter)
+          : (await Promise.all(['student', 'supervisor', 'committee'].map((role) => this.fetchUsers(role)))).flat()
       } catch (_) {
         this.$toast?.error('تعذّر تحميل الأعضاء')
       } finally {
