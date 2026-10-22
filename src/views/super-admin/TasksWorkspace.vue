@@ -5,7 +5,8 @@
     <template v-if="!composeOnly">
     <section class="dash-card">
       <div class="dash-card-head">
-        <h3>المهام</h3>
+        <!-- المشرف: بلا عنوان "المهام" ولا أيقونته — الأدوات وحدها فوق الفلاتر -->
+        <h3 v-if="!isSupervisor">المهام</h3>
         <div class="tk-head-tools">
           <button v-if="canAnnounce" type="button" class="pbtn is-outline" @click="$emit('announce')"><Megaphone :size="16" /> إعلان جديد</button>
           <button type="button" class="pbtn is-green" @click="openComposer"><Plus :size="16" /> مهمة جديدة</button>

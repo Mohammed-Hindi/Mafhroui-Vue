@@ -2065,7 +2065,7 @@
 .tk-dot.is-review { background: #F9C851; }
 .tk-dot.is-done { background: #62BB46; }
 .tk-dot.is-late { background: #FF5B5B; }
-.tk-head-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.tk-head-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-inline-start: auto; }
 .tk-head-tools .hm-tabs button { display: inline-flex; align-items: center; gap: 6px; }
 .tk-filters { margin-bottom: 16px; }
 .tk-loading { padding: 32px 0; text-align: center; }
