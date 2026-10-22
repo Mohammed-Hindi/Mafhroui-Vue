@@ -10,12 +10,92 @@
       </div>
     </div>
 
-    <div class="sm:hidden mb-4">
+    <div v-if="variant !== 'tk'" class="sm:hidden mb-4">
       <BaseSelect v-model="mobileStatus" label="عرض قائمة" :options="columnOptions" />
     </div>
 
+    <!-- نمط صفحة التكليفات: نفس tk-board/tk-col/tk-dot/tk-card ونفس البطاقة القابلة للتوسّع + شريط الملخص -->
+    <template v-if="variant === 'tk'">
+      <div :class="['tk-board', loading && 'tk-busy']">
+        <section v-for="column in columns" :key="column.id" class="tk-col">
+          <header class="tk-col-head"><i :class="['tk-dot', `is-${column.id}`]" />{{ column.label }} <span>{{ tasksByColumn(column.id).length }}</span></header>
+          <div class="tk-col-body">
+            <article
+              v-for="task in tasksByColumn(column.id)"
+              :key="task.id"
+              class="tk-card"
+              tabindex="0"
+              @click="openDetail(task)"
+              @keydown.enter="openDetail(task)"
+            >
+              <b>{{ task.title }}</b>
+              <span v-if="showSource && staffSource(task)" class="pt-muted">من {{ staffSource(task) }}</span>
+              <span class="tk-card-who"><Users :size="13" /> {{ whoNames(task) }}</span>
+              <footer>
+                <span :class="['tk-status', `is-${task.status}`]">{{ columnLabel(task.status) }}</span>
+                <span v-if="canEditTask || canDelete" class="tk-card-acts" @click.stop>
+                  <button v-if="canEditTask" type="button" aria-label="تعديل المهمة" title="تعديل المهمة" @click="openDetail(task)"><Pencil :size="13" /></button>
+                  <button v-if="canDelete" type="button" aria-label="أرشفة المهمة" title="أرشفة المهمة" @click="$emit('archive', task.id)"><ArchiveIcon :size="13" /></button>
+                </span>
+              </footer>
+              <!-- المرفقات والملاحظات وسجل الحركة — يُجلب عند الفتح (GET /tasks/{id}/files + /activity + load-notes) -->
+              <button type="button" class="tk-card-more" :aria-expanded="!!openInfo[task.id]" @click.stop="toggleCardInfo(task)">
+                <History :size="13" /> المرفقات والملاحظات <ChevronDown :size="13" :class="openInfo[task.id] && 'is-open'" />
+              </button>
+              <div v-if="openInfo[task.id]" class="tk-card-info" @click.stop>
+                <SkeletonLoader v-if="infoLoading[task.id]" :rows="3" height="14px" />
+                <template v-else>
+                  <h5 class="tk-info-title"><Paperclip :size="14" /> المرفقات <span>{{ (shownFiles[task.id] || []).length }}</span></h5>
+                  <ul v-if="(shownFiles[task.id] || []).length" class="tk-files">
+                    <li v-for="f in shownFiles[task.id]" :key="f.id" :title="f.name"><FileText :size="14" /> <bdi>{{ f.name }}</bdi></li>
+                  </ul>
+                  <p v-else class="tk-info-empty">لا توجد مرفقات</p>
+
+                  <h5 class="tk-info-title"><MessageSquare :size="14" /> الملاحظات <span>{{ (notesByTask[task.id] || []).length }}</span></h5>
+                  <p v-if="notesLoadingByTask[task.id]" class="tk-info-empty">جارٍ التحميل…</p>
+                  <ol v-else-if="(notesByTask[task.id] || []).length" class="tk-card-log">
+                    <li v-for="note in notesByTask[task.id]" :key="note.id">
+                      <b>{{ note.user?.name || '—' }}</b>
+                      <span>{{ note.note }}</span>
+                      <time>{{ formatRelativeTime(note.created_at) }}</time>
+                    </li>
+                  </ol>
+                  <p v-else class="tk-info-empty">لا توجد ملاحظات بعد</p>
+                  <form v-if="canNote" class="tk-note-form" @submit.prevent="submitNote(task.id)">
+                    <input v-model.trim="noteDrafts[task.id]" type="text" class="ev-input" placeholder="اكتب ملاحظة…">
+                    <button type="submit" class="pbtn is-green is-sm">إضافة</button>
+                  </form>
+
+                  <template v-if="ownsLog(task)">
+                    <h5 class="tk-info-title"><History :size="14" /> سجل الحركة <span>{{ Array.isArray(logs[task.id]) ? logs[task.id].length : 0 }}</span></h5>
+                    <p v-if="logs[task.id] === 'loading'" class="tk-info-empty">جارٍ التحميل…</p>
+                    <ol v-else-if="(logs[task.id] || []).length" class="tk-card-log">
+                      <li v-for="(e, i) in logs[task.id]" :key="i">
+                        <b>{{ e.user?.name || 'النظام' }}</b>
+                        <span>{{ describeTaskEvent(e) }}</span>
+                        <time>{{ formatRelativeTime(e.created_at) }}</time>
+                      </li>
+                    </ol>
+                    <p v-else class="tk-info-empty">لا توجد حركات مسجّلة بعد</p>
+                  </template>
+                </template>
+              </div>
+            </article>
+            <p v-if="!tasksByColumn(column.id).length" class="tk-col-empty">لا توجد مهام</p>
+          </div>
+        </section>
+      </div>
+      <div class="gr-sumbar">
+        <span>عدد المهام: {{ tasks.length }}</span>
+        <span>المكتملة: {{ tasksByColumn('done').length }}</span>
+        <span>قيد التنفيذ: {{ tasksByColumn('in_progress').length }}</span>
+        <span>قيد المراجعة: {{ tasksByColumn('review').length }}</span>
+        <span>نسبة الإنجاز: {{ progressPct }}%</span>
+      </div>
+    </template>
+
     <!-- خلفية شبكية هادئة خلف الأعمدة، بلمسة "لوحة عمل" -->
-    <div class="task-board relative rounded-xl p-4 sm:p-5 board-grid-bg">
+    <div v-else class="task-board relative rounded-xl p-4 sm:p-5 board-grid-bg">
       <!-- هيكل تحميل بنفس شكل الأعمدة والبطاقات -->
       <SkeletonLoader v-if="loading" variant="board" :cols="columns.length" :rows="2" />
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 relative">
@@ -384,7 +464,9 @@ export default {
     /** طلاب المجموعة لاختيار المنتسبين للمهمة الجديدة */
     members: { type: Array, default: () => [] },
     /** سطر إرشادي فوق اللوحة (المشرف: اسم مشروع الشعبة المختارة) */
-    hint: { type: String, default: '' }
+    hint: { type: String, default: '' },
+    /** شكل اللوحة: kanban (الافتراضي) أو tk = لوحة صفحة التكليفات نفسها (tk-board/tk-col/tk-card) */
+    variant: { type: String, default: 'kanban' }
   },
 
   emits: ['create', 'move', 'archive', 'update', 'open-archive', 'restore', 'force-delete', 'load-notes', 'add-note'],
@@ -395,6 +477,8 @@ export default {
       logs: {},
       shownFiles: {},
       openFiles: {},
+      openInfo: {},
+      infoLoading: {},
       Plus,
       ArchiveIcon,
       Check,
@@ -443,6 +527,11 @@ export default {
     // التعديل مسموح فقط لمن يقدر ينشئ مهام (المشرف ومسؤول الفريق في الخادم) — نفس صلاحية الباك-إند
     canEditTask() {
       return this.canCreate
+    },
+    /** نسبة الإنجاز في شريط الملخص (نمط التكليفات) */
+    progressPct() {
+      const total = this.tasks.length
+      return total ? Math.round((this.tasksByColumn('done').length / total) * 100) : 0
     }
   },
 
@@ -503,6 +592,30 @@ export default {
     toggleFiles(id) {
       this.openFiles = { ...this.openFiles, [id]: !this.openFiles[id] }
       if (this.openFiles[id] && !this.shownFiles[id]) this.loadFiles(id)
+    },
+
+    /** أسماء المنتسبين في بطاقة نمط التكليفات: بلا مكلّفين = كل الفريق */
+    whoNames(task) {
+      return (task.assignees || []).map((a) => a.name).join('، ') || 'كل الفريق'
+    },
+
+    /** فتح/طي منطقة المرفقات والملاحظات والسجل على البطاقة — يُجلب كل شيء عند الفتح */
+    async toggleCardInfo(task) {
+      const id = task.id
+      if (this.openInfo[id]) {
+        this.openInfo = { ...this.openInfo, [id]: false }
+        return
+      }
+      this.openInfo = { ...this.openInfo, [id]: true }
+      if (this.isPlaceholderTask(task)) return
+      const jobs = []
+      if (!this.shownFiles[id]) jobs.push(this.loadFiles(id))
+      if (!this.notesByTask[id]) this.$emit('load-notes', id)
+      if (this.ownsLog(task) && !this.logs[id]) jobs.push(this.toggleLog(id))
+      if (!jobs.length) return
+      this.infoLoading = { ...this.infoLoading, [id]: true }
+      await Promise.all(jobs)
+      this.infoLoading = { ...this.infoLoading, [id]: false }
     },
 
     async loadFiles(id) {

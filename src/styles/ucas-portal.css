@@ -4234,17 +4234,14 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .task-col-head > span:first-child > span { width: 9px; height: 9px; background: var(--tdot, #98A6AD) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--tdot, #98A6AD) 25%, transparent); }
 .sa-skin .task-col:nth-child(2) { --tdot: #0E699C; } .sa-skin .task-col:nth-child(3) { --tdot: #F89E32; } .sa-skin .task-col:nth-child(4) { --tdot: #62BB46; }
 
-/* ===== لوحة المهام للمشرف: طافية مينيمال بنفس لغة صفحة التكليفات (tk-board/tk-col/tk-card) =====
-   .portal-page.svt-page: نفس العنصر (صفحة المهام) — التخصيص أقوى من قواعد portal-page العامة */
-.svt-page .task-board, .ucas-portal .portal-page.svt-page .task-board { padding: 0; border-radius: 4px; background: transparent; background-image: none; box-shadow: none; }
-.svt-page .task-col, .ucas-portal .portal-page.svt-page .task-col { border: 0; border-radius: 4px; background: var(--color-bg); box-shadow: none; backdrop-filter: none; }
-.svt-page .task-col-head, .ucas-portal .portal-page.svt-page .task-col-head { position: static; padding: 10px 12px 8px; background: transparent !important; border-bottom: 1px solid var(--color-border-soft); }
-.svt-page .task-col-head::after, .ucas-portal .portal-page.svt-page .task-col-head::after { content: none; }
-.svt-page .task-col-head > span:first-child { color: var(--color-text-900); }
-.svt-page .task-col-head > span:first-child > span { box-shadow: none !important; }
-.svt-page .task-col-head > span:last-child, .ucas-portal .portal-page.svt-page .task-col-head > span:last-child { min-width: 0; height: auto; padding: 0; border: 0 !important; border-radius: 4px !important; background: none !important; color: var(--color-text-400) !important; font-size: 12px; font-weight: 800; box-shadow: none !important; }
-.svt-page .task-card, .ucas-portal .portal-page.svt-page .task-card { border: 1px solid var(--color-border-soft); border-radius: 4px; background: var(--color-surface); box-shadow: 0 1px 2px rgba(0, 0, 0, .06); transform: none; }
-.svt-page .task-card:hover, .ucas-portal .portal-page.svt-page .task-card:hover { border-color: color-mix(in srgb, var(--ucas-blue) 45%, transparent); box-shadow: 0 1px 2px rgba(0, 0, 0, .06); transform: none; }
+/* ===== كروت نمط التكليفات داخل لوحة المشرف: أيقونات تعديل/أرشفة في تذييل البطاقة ===== */
+.tk-card-acts { display: flex; align-items: center; gap: 2px; }
+.tk-card-acts button { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 4px; color: var(--color-text-400); background: transparent; transition: color var(--ucas-color-speed) var(--ease-standard), background var(--ucas-color-speed) var(--ease-standard); }
+.tk-card-acts button:hover { color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 8%, transparent); }
+.tk-card-acts button + button:hover { color: var(--color-error); background: var(--color-error-bg); }
+/* نموذج الملاحظة داخل بطاقة المهام: زر أزرق سادة بلا تدرّج (يطابق أزرار ملاحظات باقي صفحات المشرف) */
+.svt-page .tk-card-info .tk-note-form > button { background: var(--ucas-blue) !important; box-shadow: none; }
+.svt-page .tk-card-info .tk-note-form > button:hover:not(:disabled) { background: var(--ucas-blue-deep) !important; filter: none; box-shadow: none; }
 
 /* ===== تفاصيل المهمة في البوب اب: ستايل البوابة الطافي المينيمال (بلا تدرّجات) ===== */
 .td { display: flex; flex-direction: column; gap: 12px; }
@@ -5163,10 +5160,10 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .tk-card b { font-size: 14.5px; font-weight: 800; color: var(--color-text-900); }
 .tk-card:hover, .tk-card:focus-visible { box-shadow: 0 10px 26px rgba(4, 40, 80, .13); }
 .tk-card .tk-card-who { color: var(--color-text-600); }
-/* كروت المهام: مسطّحة بسيطة بإطار كامل بلا شريط جانبي ولا ظل عائم */
-.sa-skin .as-page .tk-card { border: 1px solid var(--color-border); box-shadow: none; padding-inline-start: 14px; animation: none; }
-.sa-skin .as-page .tk-card::before { display: none; }
-.sa-skin .as-page .tk-card:hover, .sa-skin .as-page .tk-card:focus-visible { box-shadow: none; border-color: color-mix(in srgb, var(--ucas-blue) 45%, var(--color-border)); background: color-mix(in srgb, var(--ucas-blue) 3%, var(--color-surface)); }
+/* كروت المهام: مسطّحة بسيطة بإطار كامل بلا شريط جانبي ولا ظل عائم — التكليفات وصفحة مهام المشرف (نفس اللوحة) */
+.sa-skin :is(.as-page, .svt-page) .tk-card { border: 1px solid var(--color-border); box-shadow: none; padding-inline-start: 14px; animation: none; }
+.sa-skin :is(.as-page, .svt-page) .tk-card::before { display: none; }
+.sa-skin :is(.as-page, .svt-page) .tk-card:hover, .sa-skin :is(.as-page, .svt-page) .tk-card:focus-visible { box-shadow: none; border-color: color-mix(in srgb, var(--ucas-blue) 45%, var(--color-border)); background: color-mix(in srgb, var(--ucas-blue) 3%, var(--color-surface)); }
 /* زر المرفقات والسجل: كبسولة */
 .tk-card-more { justify-content: flex-start; margin-top: 4px; padding: 7px 12px; border: 0; border-radius: 4px; font-size: 12.5px; font-weight: 700; color: var(--ucas-blue); background: color-mix(in srgb, var(--ucas-blue) 7%, transparent); transition: background-color .25s ease; }
 .tk-card-more:hover, .tk-card-more[aria-expanded="true"] { background: color-mix(in srgb, var(--ucas-blue) 13%, transparent); }
@@ -5191,8 +5188,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .tk-card-log span { color: var(--color-text-700); }
 .tk-card-log time { font-family: 'Tajawal', sans-serif; font-size: 11.5px; font-variant-numeric: tabular-nums; color: var(--color-text-400); }
 
-/* ===== لوحة المهام: ملء الشاشة بدرجات الهوية (أبيض/دارك مود) ===== */
-.sa-skin .as-page .tk-board {
+/* ===== لوحة المهام: ملء الشاشة بدرجات الهوية (أبيض/دارك مود) — التكليفات وصفحة مهام المشرف ===== */
+.sa-skin :is(.as-page, .svt-page) .tk-board {
   min-height: calc(100vh - 232px);
   align-items: stretch;
   align-content: stretch;
@@ -5202,11 +5199,11 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
   box-shadow: inset 0 0 0 1px var(--color-border);
 }
 /* الأعمدة تمتدّ لكامل ارتفاع اللوحة والجسم يمرَّر داخله */
-.sa-skin .as-page .tk-board .tk-col {
+.sa-skin :is(.as-page, .svt-page) .tk-board .tk-col {
   background: var(--color-surface);
   box-shadow: inset 0 0 0 1px var(--color-border);
 }
-.sa-skin .as-page .tk-board .tk-col-body {
+.sa-skin :is(.as-page, .svt-page) .tk-board .tk-col-body {
   flex: 1;
   height: auto;
   min-height: 0;

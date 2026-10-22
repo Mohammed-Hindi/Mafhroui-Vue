@@ -98,9 +98,10 @@
         </div>
       </section>
 
-      <!-- لوحة المهام (كانبان) للمجموعة المختارة -->
+      <!-- لوحة المهام (كانبان) للمجموعة المختارة — بنفس نمط لوحة التكليفات (tk-board/tk-col/tk-card) -->
       <TaskBoard
         v-else
+        variant="tk"
         :tasks="shownTasks"
         :loading="tasksLoading"
         :can-create="true"
