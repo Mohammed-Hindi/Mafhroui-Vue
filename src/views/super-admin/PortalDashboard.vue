@@ -35,8 +35,14 @@
       </section>
     </template>
 
+    <!-- زرّا تبديل سكشنات الرئيسية -->
+    <nav v-if="hero" class="dash-switch" aria-label="أقسام الرئيسية">
+      <button type="button" :class="view === 'activity' && 'is-active'" @click="view = 'activity'">مدى نشاط المشرفين والطلاب</button>
+      <button type="button" :class="view === 'status' && 'is-active'" @click="view = 'status'">حالة المشاريع والمهام</button>
+    </nav>
+
     <!-- نشاط المشرفين والمجموعات -->
-    <section class="dash-card">
+    <section class="dash-card" v-show="view === 'activity'">
       <div class="dash-card-head">
         <h3>{{ isSup ? 'مجموعاتي وطلابي' : 'مدى نشاط المشرفين والطلاب' }}</h3>
         <span v-if="isSup" class="dash-chip">{{ groups.length }} مجموعة</span>
@@ -138,86 +144,122 @@
       <p class="hm-count">{{ tab === 'sup' ? `${supRows.length} مشرف` : `${grpRows.length} مجموعة` }}</p>
     </section>
 
-    <section class="dash-card hm-health">
+    <section class="dash-card hm-health" v-show="view === 'status'">
       <div class="dash-card-head">
         <h3>حالة المشاريع والمهام</h3>
-        <div class="hm-filters hm-filters-inline">
-          <BaseSelect v-model="taskGroup" class="min-w-[170px]" aria-label="المجموعة" placeholder="كل المجموعات" include-placeholder-option value-key="id" label-key="name" :options="taskGroups" />
-          <BaseSelect v-model="taskState" class="min-w-[150px]" aria-label="حالة المهمة" placeholder="كل الحالات" include-placeholder-option :options="taskStateOptions" />
-        </div>
       </div>
-      <div class="hm-health-grid">
-        <div class="hm-health-tasks">
-          <div class="hm-table-wrap hm-scroll">
-            <table class="hm-table">
-              <thead><tr><th>المهمة / التكليف</th><th class="hm-center">المجموعة</th><th>{{ isSup ? 'المشروع' : 'المشرف' }}</th><th>المكلّفون</th><th>تاريخ الإصدار</th><th>موعد التسليم</th><th>الحالة</th></tr></thead>
-              <tbody>
-                <tr v-for="t in taskRows" :key="t.id">
-                  <td class="hm-strong">{{ t.title }}</td>
-                  <!-- الشعبة: زر يعرض كل مهام المجموعة ويحدّث الرسم البياني -->
-                  <td class="hm-center"><button type="button" :class="['hm-group-link', taskGroup === t.groupId && 'is-active']" :title="'عرض كل مهام ' + t.group" @click="taskGroup = taskGroup === t.groupId ? '' : t.groupId">{{ t.group }}</button></td>
-                  <td class="hm-muted">{{ t.sup }}</td>
-                  <td class="hm-muted">{{ t.assignees }}</td>
-                  <td><span class="mono">{{ t.issued }}</span></td>
-                  <td><span class="mono">{{ t.due }}</span></td>
-                  <td><span :class="['rv-pill', STATE[t.state].pill]">{{ STATE[t.state].label }}</span></td>
-                </tr>
-                <SkeletonLoader v-if="loading || tasksLoading" variant="table" :cols="7" :rows="4" />
-                <tr v-else-if="!taskRows.length"><td colspan="7" class="gr-empty">لا توجد مهام</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="hm-count">{{ taskRows.length }} مهمة</p>
-        </div>
 
-        <div class="hm-health-status">
-        <div v-if="loading || tasksLoading" class="hm-prog-sk" aria-label="جارٍ التحميل">
-          <span class="sk" style="width: 120px; height: 40px" />
-          <span class="sk" style="height: 14px" />
-          <SkeletonLoader :rows="4" height="18px" />
+      <!-- فلاتر مربوطة: القسم ← التخصص ← المشرف ← الشعبة (لكل شعبة مجموعة واحدة) -->
+      <div class="hm-filters">
+        <BaseSelect v-if="!isSup" v-model="fDept" class="min-w-[160px]" aria-label="القسم" placeholder="كل الأقسام" include-placeholder-option :options="statusDeptOptions" />
+        <BaseSelect v-if="!isSup" v-model="fSpec" class="min-w-[170px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="statusSpecOptions" />
+        <BaseSelect v-if="!isSup" v-model="fSup" class="min-w-[170px]" aria-label="المشرف" placeholder="كل المشرفين" include-placeholder-option value-key="id" label-key="name" :options="statusSupOptions" />
+        <BaseSelect v-model="taskGroup" class="min-w-[190px]" aria-label="الشعبة" placeholder="اختر الشعبة" include-placeholder-option value-key="id" label-key="name" :options="statusGroupOptions" />
+        <BaseSelect v-if="taskGroup" v-model="taskState" class="min-w-[150px]" aria-label="حالة المهمة" placeholder="كل الحالات" include-placeholder-option :options="taskStateOptions" />
+      </div>
+
+      <!-- السكشن فارغ حتى تُختار شعبة -->
+      <div v-if="!taskGroup" class="hm-empty">
+        <p class="hm-empty-title">اختر شعبة لعرض تفاصيل مشروعها وطلابها ومهامها</p>
+        <div v-if="statusGroupOptions.length" class="hm-empty-list">
+          <button v-for="g in statusGroupOptions" :key="g.id" type="button" class="hm-empty-chip" @click="taskGroup = g.id">{{ g.name }}</button>
         </div>
-        <div v-else class="hm-prog">
-          <div class="hm-prog-head">
-            <b>{{ chartPct }}<small>%</small></b>
-            <span>{{ chart[0].count }} من {{ chartTotal }} مهمة مكتملة</span>
+        <p v-else class="hm-muted">لا توجد شعب مطابقة للفلاتر المحددة</p>
+      </div>
+
+      <!-- تفاصيل الشعبة المختارة -->
+      <template v-else-if="selectedGroup">
+        <header class="hm-detail-head">
+          <div>
+            <b>{{ selectedGroup.project || 'بدون مشروع' }}</b>
+            <span>{{ selectedGroup.spec }} · {{ DEGREES[selectedGroup.degree] }}<template v-if="!isSup"> · المشرف:
+              <button v-if="selectedGroup.supId" type="button" class="ev-suplink" @click="openProfile('supervisor', { id: selectedGroup.supId, name: supName(selectedGroup.supId) })">{{ supName(selectedGroup.supId) }}</button>
+              <template v-else>—</template>
+            </template></span>
           </div>
-          <div class="hm-stack" role="img" :aria-label="chart.map((c) => `${c.label} ${c.count}`).join('، ')">
-            <span
-              v-for="c in chart" v-show="c.count" :key="c.key"
-              :class="['hm-seg', 'hm-c-' + c.key]" :style="{ flexGrow: c.count }"
-              :data-tip="`${c.label}: ${c.count} (${pctOf(c.count)}%)`" tabindex="0"
-            />
-            <span v-if="!chartTotal" class="hm-seg is-empty" data-tip="لا توجد مهام" />
-          </div>
-          <ul class="hm-key">
-            <li v-for="c in chart" :key="c.key">
-              <span :class="['dash-dot', 'hm-c-' + c.key]" />
-              <span>{{ c.label }}</span>
-              <b>{{ c.count }}</b>
-              <small>{{ pctOf(c.count) }}%</small>
+          <span class="dash-chip">{{ selectedGroup.members.length }} طالب</span>
+        </header>
+
+        <!-- طلاب الشعبة: الأسماء، والضغط يفتح البروفايل -->
+        <div class="hm-detail-students">
+          <h4>الطلاب <small>{{ selectedGroup.members.length }}</small></h4>
+          <ul v-if="selectedGroup.members.length" class="hm-student-chips">
+            <li v-for="m in selectedGroup.members" :key="m.id">
+              <button type="button" class="hm-student-chip" @click="openProfile('student', m)">
+                <span class="hm-avatar" aria-hidden="true">{{ m.name.charAt(0) }}</span>
+                <span class="hm-student-info"><b>{{ m.name }}</b><span class="mono">{{ m.uni }}</span></span>
+                <span class="hm-student-tasks mono">{{ m.done }}/{{ m.total }}</span>
+              </button>
             </li>
           </ul>
+          <p v-else class="hm-muted">لا يوجد طلاب في هذه الشعبة</p>
         </div>
 
-        <div v-if="!loading && !tasksLoading && !taskGroup && groupProgress.length" class="hm-gprog">
-          <h4>تقدّم المجموعات <small>{{ groupProgress.length }}</small></h4>
-          <div class="hm-gprog-list">
-          <button v-for="g in groupProgress" :key="g.id" type="button" class="hm-gprog-row" :title="`عرض مهام ${g.name}`" @click="taskGroup = g.id">
-            <span class="hm-gprog-name">{{ g.name }}</span>
-            <span class="hm-gprog-bar"><span :style="{ width: g.pct + '%' }" /></span>
-            <span class="hm-gprog-val">{{ g.done }} من {{ g.total }} مهمة مكتملة</span>
-          </button>
+        <div class="hm-health-grid">
+          <div class="hm-health-tasks">
+            <!-- جدول مهام الشعبة: الضغط على الصف يفتح تفاصيلها وحالتها — بلا سكرول أفقي -->
+            <div class="hm-table-wrap hm-scroll hm-noscroll">
+              <table class="hm-table hm-table-fit">
+                <thead><tr><th>المهمة / التكليف</th><th>المكلّفون</th><th>تاريخ الإصدار</th><th>موعد التسليم</th><th>الحالة</th></tr></thead>
+                <tbody>
+                  <template v-for="t in taskRows" :key="t.id">
+                    <tr class="is-link" :aria-expanded="openTask === t.id" @click="openTask = openTask === t.id ? null : t.id">
+                      <td class="hm-strong"><ChevronDown :size="14" :class="['hm-caret', openTask === t.id && 'is-open']" /> {{ t.title }}</td>
+                      <td class="hm-muted">{{ t.assignees }}</td>
+                      <td><span class="mono">{{ t.issued }}</span></td>
+                      <td><span class="mono">{{ t.due }}</span></td>
+                      <td><span :class="['rv-pill', STATE[t.state].pill]">{{ STATE[t.state].label }}</span></td>
+                    </tr>
+                    <tr v-if="openTask === t.id" class="hm-drop-row">
+                      <td colspan="5">
+                        <dl class="hm-task-detail">
+                          <div><dt>الحالة</dt><dd><span :class="['rv-pill', STATE[t.state].pill]">{{ STATE[t.state].label }}</span></dd></div>
+                          <div><dt>المكلّفون</dt><dd>{{ t.assignees }}</dd></div>
+                          <div><dt>تاريخ الإصدار</dt><dd class="mono">{{ t.issued }}</dd></div>
+                          <div><dt>موعد التسليم</dt><dd class="mono">{{ t.due }}</dd></div>
+                        </dl>
+                      </td>
+                    </tr>
+                  </template>
+                  <SkeletonLoader v-if="loading || tasksLoading" variant="table" :cols="5" :rows="4" />
+                  <tr v-else-if="!taskRows.length"><td colspan="5" class="gr-empty">لا توجد مهام لهذه الشعبة</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="hm-count">{{ taskRows.length }} مهمة</p>
+          </div>
+
+          <div class="hm-health-status">
+            <div v-if="loading || tasksLoading" class="hm-prog-sk" aria-label="جارٍ التحميل">
+              <span class="sk" style="width: 120px; height: 40px" />
+              <span class="sk" style="height: 14px" />
+              <SkeletonLoader :rows="4" height="18px" />
+            </div>
+            <div v-else class="hm-prog">
+              <div class="hm-prog-head">
+                <b>{{ chartPct }}<small>%</small></b>
+                <span>{{ chart[0].count }} من {{ chartTotal }} مهمة مكتملة</span>
+              </div>
+              <div class="hm-stack" role="img" :aria-label="chart.map((c) => `${c.label} ${c.count}`).join('، ')">
+                <span
+                  v-for="c in chart" v-show="c.count" :key="c.key"
+                  :class="['hm-seg', 'hm-c-' + c.key]" :style="{ flexGrow: c.count }"
+                  :data-tip="`${c.label}: ${c.count} (${pctOf(c.count)}%)`" tabindex="0"
+                />
+                <span v-if="!chartTotal" class="hm-seg is-empty" data-tip="لا توجد مهام" />
+              </div>
+              <ul class="hm-key">
+                <li v-for="c in chart" :key="c.key">
+                  <span :class="['dash-dot', 'hm-c-' + c.key]" />
+                  <span>{{ c.label }}</span>
+                  <b>{{ c.count }}</b>
+                  <small>{{ pctOf(c.count) }}%</small>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
-        <!-- ملخّص الفصل: يملأ البطاقة بطول بطاقة المهام المجاورة -->
-        <dl class="hm-summary">
-          <div><dt>المجموعات</dt><dd>{{ groups.length }}</dd></div>
-          <div><dt>المهام</dt><dd>{{ chart.reduce((n, c) => n + c.count, 0) }}</dd></div>
-          <div><dt>الطلاب</dt><dd>{{ genderCount.male }}</dd></div>
-          <div><dt>الطالبات</dt><dd>{{ genderCount.female }}</dd></div>
-        </dl>
-        </div>
-      </div>
+      </template>
     </section>
 
     <ProfileModal v-model="profileOpen" :kind="profileKind" :person-id="profileId" :name="profileName" />
@@ -287,13 +329,18 @@ export default {
       raw: {},
       supActivity: {},
       tab: useAuthStore().userRole === ROLES.SUPERVISOR ? 'grp' : 'sup',
+      view: 'activity',
       q: '',
       specFilter: '',
       supFilter: '',
       genderFilter: '',
       openGroup: null,
+      openTask: null,
       taskGroup: '',
       taskState: '',
+      fDept: '',
+      fSpec: '',
+      fSup: '',
       profileOpen: false,
       profileKind: 'student',
       profileId: null,
@@ -305,7 +352,7 @@ export default {
 
   computed: {
     ...mapState(useAuthStore, ['userRole', 'userName']),
-    ...mapState(useTeamsStore, ['specializationFilterOptions']),
+    ...mapState(useTeamsStore, ['specializationFilterOptions', 'departmentFilterOptions', 'specializations']),
 
     isSA() {
       return this.userRole === ROLES.SUPER_ADMIN
@@ -380,6 +427,39 @@ export default {
       return this.specializationFilterOptions
     },
 
+    /** خريطة اسم التخصص ← اسم القسم (لفلاتر سكشن حالة المشاريع) */
+    deptOfSpec() {
+      const map = {}
+      for (const s of this.specializations || []) map[s.name] = s.department?.name || ''
+      return map
+    },
+
+    /** فلاتر سكشن حالة المشاريع: القسم ← التخصص ← المشرف ← الشعبة، مربوطة ببعضها */
+    statusDeptOptions() {
+      return this.departmentFilterOptions
+    },
+
+    statusSpecOptions() {
+      return useTeamsStore().specializationFilterOptionsForDept(this.fDept)
+    },
+
+    statusSupOptions() {
+      return this.supervisors
+        .filter((s) => (!this.fDept || this.deptOfSpec[s.spec] === this.fDept) && (!this.fSpec || s.spec === this.fSpec))
+        .map((s) => ({ id: s.id, name: s.name }))
+    },
+
+    statusGroupOptions() {
+      return this.groups
+        .filter((g) => (!this.fDept || this.deptOfSpec[g.spec] === this.fDept) && (!this.fSpec || g.spec === this.fSpec) && (!this.fSup || g.supId === this.fSup))
+        .map((g) => ({ id: g.id, name: g.name }))
+    },
+
+    /** الشعبة المختارة (لكل شعبة مجموعة واحدة) */
+    selectedGroup() {
+      return this.groups.find((g) => g.id === this.taskGroup) || null
+    },
+
     supRows() {
       return this.supervisors
         .filter((s) => (!this.q || s.name.includes(this.q)) && (!this.specFilter || s.spec === this.specFilter))
@@ -442,8 +522,29 @@ export default {
     }
   },
 
+  /** فلاتر سكشن حالة المشاريع مربوطة: تغيير الأعلى يصفّر ما تحته */
+  watch: {
+    fDept() {
+      this.fSpec = ''
+      this.fSup = ''
+      this.taskGroup = ''
+    },
+    fSpec() {
+      this.fSup = ''
+      this.taskGroup = ''
+    },
+    fSup() {
+      this.taskGroup = ''
+    },
+    taskGroup() {
+      this.openTask = null
+    }
+  },
+
   async created() {
     if (this.isSup) return this.loadSupervisorHome()
+    const ts = useTeamsStore()
+    if (!ts.departments.length || !ts.specializations.length) ts.fetchOrgCatalog()
     const [groups, raw] = await Promise.allSettled([loadGroups(), loadDashboardStats()])
     this.groups = groups.value || []
     this.raw = raw.value || {}

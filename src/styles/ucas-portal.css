@@ -1143,6 +1143,44 @@
   .hm-filters .gr-select { flex: 1 1 100%; max-width: none; }
 }
 
+/* الرئيسية — زرّا تبديل سكشن النشاط / حالة المشاريع */
+.dash-switch { display: flex; gap: 4px; margin-bottom: 20px; padding: 4px; border-radius: 4px; background: var(--color-bg); box-shadow: inset 0 0 0 1px var(--color-border); }
+.dash-switch button { flex: 1 1 0; height: 42px; border-radius: 4px; font-size: 14px; font-weight: 700; color: var(--color-text-600); transition: background-color var(--ucas-color-speed) var(--ease-standard), color var(--ucas-color-speed) var(--ease-standard); }
+.dash-switch button:hover { color: var(--color-text-900); }
+.dash-switch button.is-active { background: var(--color-surface); color: var(--ucas-blue); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); }
+
+/* حالة المشاريع — حالة فارغة قبل اختيار الشعبة */
+.hm-empty { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 40px 20px; text-align: center; border: 1px dashed var(--color-border); border-radius: 4px; background: var(--color-bg); }
+.hm-empty-title { font-size: 15px; font-weight: 700; color: var(--color-text-700); }
+.hm-empty-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.hm-empty-chip { height: 34px; padding-inline: 14px; border-radius: 4px; background: var(--color-surface); box-shadow: inset 0 0 0 1px var(--color-border); font-size: 13px; font-weight: 700; color: var(--color-text-700); transition: color var(--ucas-color-speed) var(--ease-standard), box-shadow var(--ucas-color-speed) var(--ease-standard); }
+.hm-empty-chip:hover { color: var(--ucas-blue); box-shadow: inset 0 0 0 1px var(--ucas-blue); }
+
+/* حالة المشاريع — رأس تفاصيل الشعبة */
+.hm-detail-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-bottom: 14px; margin-bottom: 16px; border-bottom: 1px solid var(--color-border); }
+.hm-detail-head b { display: block; margin-bottom: 3px; font-size: 15px; font-weight: 800; color: var(--color-text-900); }
+.hm-detail-head > div > span { font-size: 13px; color: var(--color-text-500); }
+
+/* حالة المشاريع — طلاب الشعبة */
+.hm-detail-students { margin-bottom: 18px; }
+.hm-detail-students h4 { margin-bottom: 10px; font-size: 13px; font-weight: 700; color: var(--color-text-400); }
+.hm-detail-students h4 small { margin-inline-start: 6px; color: var(--ucas-blue); font-weight: 800; }
+.hm-student-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.hm-student-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border-radius: 4px; background: var(--color-surface); box-shadow: inset 0 0 0 1px var(--color-border); transition: box-shadow var(--ucas-color-speed) var(--ease-standard); }
+.hm-student-chip:hover { box-shadow: inset 0 0 0 1px var(--ucas-blue); }
+.hm-student-info { display: flex; flex-direction: column; line-height: 1.3; text-align: start; }
+.hm-student-info b { font-size: 13px; font-weight: 700; color: var(--color-text-900); }
+.hm-student-info .mono { font-size: 11px; color: var(--color-text-400); }
+.hm-student-tasks { margin-inline-start: 4px; font-size: 12px; font-weight: 700; color: var(--color-text-600); }
+
+/* حالة المشاريع — جدول المهام بلا سكرول أفقي + تفاصيل منسدلة للصف */
+.hm-noscroll { overflow-x: hidden; }
+.hm-table-fit { min-width: 0; table-layout: auto; }
+.hm-task-detail { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 12px 6px; margin: 0; }
+.hm-task-detail dt { font-size: 11.5px; font-weight: 600; color: var(--color-text-400); }
+.hm-task-detail dd { margin: 4px 0 0; font-size: 13px; font-weight: 700; color: var(--color-text-900); }
+@media (max-width: 639.98px) { .hm-task-detail { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
 /* نافذة البروفايل */
 .pf { display: flex; flex-direction: column; gap: 14px; }
 .pf-teams-pager { margin-top: 10px; }
