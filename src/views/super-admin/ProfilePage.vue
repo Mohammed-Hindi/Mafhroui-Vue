@@ -9,11 +9,11 @@
         :aria-current="tab === t.key ? 'page' : undefined"
         @click="tab = t.key"
       >
-        <component :is="t.icon" :size="34" />
+        <component :is="t.icon" :size="18" />
         <span>{{ t.label }}</span>
       </button>
       <router-link :to="{ name: `${portalPrefix}-change-password` }" class="profile-tab">
-        <Lock :size="34" />
+        <Lock :size="18" />
         <span>تغيير كلمة المرور</span>
       </router-link>
     </nav>
@@ -34,7 +34,7 @@
             <Camera :size="15" /> {{ uploading ? 'جارٍ الرفع…' : user?.avatar_url ? 'تغيير الصورة' : 'إضافة صورة' }}
             <input type="file" accept="image/png,image/jpeg,image/webp" hidden :disabled="uploading" @change="onAvatar">
           </label>
-          <button v-if="!editing" type="button" class="pbtn is-cyan is-sm" @click="startEdit"><Pencil :size="15" /> تعديل البيانات</button>
+          <button v-if="!editing" type="button" class="pbtn is-outline is-sm" @click="startEdit"><Pencil :size="15" /> تعديل البيانات</button>
         </div>
       </section>
 
