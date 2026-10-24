@@ -79,9 +79,7 @@
                   <span class="flex items-center justify-center gap-2">
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(member)"><Pencil :size="14" /></button>
                     <button v-if="member.whats" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member)"><MessageCircle :size="14" /></button>
-                    <button v-if="member.mail" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member)"><Mail :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تقييد على المهام" @click="openRestrict(member)"><Lock :size="14" /></button>
-                  </span>
+                    <button v-if="member.mail" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member)"><Mail :size="14" /></button>                  </span>
                 </div>
               </div>
             </div>
@@ -112,9 +110,7 @@
                   <div class="flex gap-1.5">
                     <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل بيانات العضو" @click="openEditMember(member)"><Pencil :size="14" /></button>
                     <button v-if="member.whats" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-whatsapp-bg text-whatsapp hover:brightness-95" title="واتساب" @click="sendWhats(member)"><MessageCircle :size="14" /></button>
-                    <button v-if="member.mail" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member)"><Mail :size="14" /></button>
-                    <button type="button" class="grid place-items-center w-8 h-8 rounded-pill border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تقييد على المهام" @click="openRestrict(member)"><Lock :size="14" /></button>
-                  </div>
+                    <button v-if="member.mail" type="button" class="grid place-items-center w-8 h-8 rounded-pill bg-primary-50 text-primary-600 hover:brightness-95" title="بريد" @click="sendMail(member)"><Mail :size="14" /></button>                  </div>
                 </div>
               </div>
             </div>
@@ -141,25 +137,6 @@
       <template #footer>
         <BaseButton variant="ghost" @click="deleteModal = false">إلغاء</BaseButton>
         <BaseButton variant="danger" :icon="Trash2" :loading="deleting" @click="confirmDelete">تأكيد الحذف</BaseButton>
-      </template>
-    </BaseModal>
-
-    <!-- تقييد الطالب على وحدة المهام -->
-    <BaseModal v-model="restrictModalOpen" title="تقييد الوصول للمهام" :description="restrictTarget ? `صلاحية ${restrictTarget.name} على وحدة المهام` : ''" size="sm">
-      <div class="flex flex-col gap-4">
-        <BaseSelect
-          v-model="restrictLevel"
-          :options="levelOptions"
-          :disabled="restrictSaving"
-        />
-        <BaseInput
-          v-model="restrictReason" label="سبب التقييد" placeholder="مطلوب عند اختيار مستوى غير 'كامل'"
-          :disabled="restrictLevel === 'full' || restrictSaving"
-        />
-      </div>
-      <template #footer>
-        <BaseButton variant="ghost" :disabled="restrictSaving" @click="restrictModalOpen = false">إلغاء</BaseButton>
-        <BaseButton :icon="Check" :loading="restrictSaving" @click="saveRestrict">حفظ</BaseButton>
       </template>
     </BaseModal>
 
@@ -198,7 +175,7 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Lock, Archive, RotateCcw } from 'lucide-vue-next'
+import { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Check, Archive, RotateCcw } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -216,16 +193,10 @@ import { APP_NAME } from '@/utils/constants'
 
 const GROUPS_PAGE_SIZE = 5
 
-const LEVEL_OPTIONS = [
-  { value: 'full', label: 'كامل' },
-  { value: 'view_only', label: 'عرض فقط' },
-  { value: 'blocked', label: 'محظور' }
-]
-
 export default {
   name: 'SupervisorTeamsPage',
 
-  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, Lock, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, ProjectTypes },
+  components: { Search, ChevronLeft, ChevronDown, MessageCircle, Mail, Pencil, Trash2, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, ProjectTypes },
 
   data() {
     return {
@@ -246,14 +217,6 @@ export default {
       deleteTargetId: null,
       deleteLabel: '',
       deleting: false,
-
-      levelOptions: LEVEL_OPTIONS,
-      restrictModalOpen: false,
-      restrictTarget: null,
-      restrictLevel: 'full',
-      restrictReason: '',
-      restrictionId: null,
-      restrictSaving: false,
 
       trashedModal: false,
       restoringId: null,
@@ -322,7 +285,7 @@ export default {
 
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'updateTeam', 'deleteTeam', 'fetchTrashedTeams', 'restoreTeam', 'setProjectTypes']),
-    ...mapActions(useUsersStore, ['fetchRestrictions', 'setRestriction', 'removeRestriction', 'updateUser', 'setUserPassword']),
+    ...mapActions(useUsersStore, ['updateUser', 'setUserPassword']),
 
     isGroupOpen(id) {
       return this.openGroupIds.includes(id)
@@ -408,48 +371,6 @@ export default {
         this.$toast?.error(err.normalized?.message || 'تعذّر استرجاع الفريق')
       } finally {
         this.restoringId = null
-      }
-    },
-
-    async openRestrict(member) {
-      this.restrictTarget = member
-      this.restrictLevel = 'full'
-      this.restrictReason = ''
-      this.restrictionId = null
-      this.restrictModalOpen = true
-      try {
-        const restrictions = await this.fetchRestrictions(member.id)
-        const current = restrictions.find((r) => r.module === 'tasks')
-        if (current) {
-          this.restrictLevel = current.level
-          this.restrictionId = current.id
-          this.restrictReason = current.reason || ''
-        }
-      } catch {
-        this.$toast?.error('تعذّر تحميل حالة التقييد')
-      }
-    },
-
-    async saveRestrict() {
-      if (this.restrictLevel !== 'full' && !this.restrictReason.trim()) {
-        this.$toast?.error('يرجى إدخال سبب التقييد')
-        return
-      }
-      this.restrictSaving = true
-      try {
-        if (this.restrictLevel === 'full') {
-          if (this.restrictionId) await this.removeRestriction(this.restrictionId)
-          this.restrictionId = null
-        } else {
-          const restriction = await this.setRestriction(this.restrictTarget.id, 'tasks', this.restrictLevel, this.restrictReason.trim())
-          this.restrictionId = restriction.id
-        }
-        this.$toast?.success(this.restrictLevel === 'full' ? 'تم إلغاء القيد' : `تم تحديث القيد — السبب: ${this.restrictReason.trim()}`)
-        this.restrictModalOpen = false
-      } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث القيد')
-      } finally {
-        this.restrictSaving = false
       }
     },
 

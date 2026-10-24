@@ -90,7 +90,7 @@
                   <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
                   <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
                   <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, memberKind)"><Pencil :size="14" /></button>
-                  <button v-if="isSuperAdmin && memberKind === 'supervisor'" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="القيود على وحدات النظام" @click="openModuleRestrict(row)"><SlidersHorizontal :size="14" /></button>
+                  <button v-if="isSuperAdmin && memberKind === 'supervisor'" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="التحكم بقبول/رفض المقترحات" @click="openModuleRestrict(row)"><SlidersHorizontal :size="14" /></button>
                   <button v-if="isSuperAdmin" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" :disabled="reinvitingId === row.id" title="نسخ رابط دعوة جديد" @click="quickReinvite(row)"><Link2 :size="14" /></button>
                   <button
                     type="button"
@@ -346,8 +346,8 @@
       </template>
     </BaseModal>
 
-    <!-- القيود على وحدات النظام (سوبر أدمن — للمشرفين فقط) -->
-    <BaseModal v-model="moduleRestrictModalOpen" title="قيود الصلاحيات" :description="moduleRestrictTarget ? `صلاحيات ${moduleRestrictTarget.name} على وحدات النظام` : ''">
+    <!-- التحكم بصلاحية المشرف على قبول/رفض المقترحات (سوبر أدمن — للمشرفين فقط) -->
+    <BaseModal v-model="moduleRestrictModalOpen" title="التحكم بالمقترحات" :description="moduleRestrictTarget ? `صلاحية ${moduleRestrictTarget.name} على قبول ورفض مقترحات طلابه` : ''">
       <div class="flex flex-col gap-4">
         <div v-for="mod in modules" :key="mod.value" class="flex items-center justify-between gap-4">
           <span class="text-body-sm font-bold text-text-900">{{ mod.label }}</span>
@@ -442,11 +442,9 @@ function digitsOnly(value) {
 
 const emptyAddForm = () => ({ role: 'student', name: '', employee_number: '', university_number: '', email: '', whatsapp: '', gender: '', region: '', specialization_id: '', specialization_ids: [] })
 
+// القيود تقتصر على قبول/رفض المقترحات؛ لا قيود على المهام/الاجتماعات/المشاريع.
 const MODULES = [
-  { value: 'projects', label: 'المشاريع' },
-  { value: 'proposals', label: 'المقترحات' },
-  { value: 'tasks', label: 'المهام' },
-  { value: 'meetings', label: 'الاجتماعات' }
+  { value: 'proposals', label: 'قبول/رفض المقترحات' }
 ]
 const LEVEL_OPTIONS = [
   { value: 'full', label: 'كامل' },
