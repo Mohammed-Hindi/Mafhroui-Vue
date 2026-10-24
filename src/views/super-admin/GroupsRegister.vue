@@ -31,6 +31,7 @@
       <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.degree" class="min-w-[140px]" aria-label="الدرجة" placeholder="كل الدرجات" include-placeholder-option :options="degreeSelectOptions" />
       <BaseSelect v-model="f.gender" class="min-w-[140px]" aria-label="الفئة" placeholder="طلاب وطالبات" include-placeholder-option :options="genderSelectOptions" />
       <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.region" class="min-w-[150px]" aria-label="مكان التواجد" placeholder="كل المناطق" include-placeholder-option :options="regionSelectOptions" />
+      <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.dept" class="min-w-[160px]" aria-label="القسم" placeholder="كل الأقسام" include-placeholder-option :options="departmentFilterOptions" />
       <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.spec" class="min-w-[170px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specSelectOptions" />
       <!-- المشرف يرى مجموعاته فقط: فلتر المشرف بلا معنى له -->
       <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.sup" class="min-w-[180px]" aria-label="المشرف" placeholder="كل المشرفين" include-placeholder-option :options="supSelectOptions" />
@@ -255,7 +256,7 @@ const ITEM_TYPES = {
   file: { label: 'ملف', icon: Paperclip, pill: 'is-rejected' }
 }
 
-const EMPTY_FILTERS = { degree: '', gender: '', region: '', spec: '', sup: '', status: '' }
+const EMPTY_FILTERS = { degree: '', gender: '', region: '', dept: '', spec: '', sup: '', status: '' }
 
 /** حالة المشروع كشارة ملوّنة: مقترح (رمادي) · قيد التنفيذ (أزرق) · مكتمل (أخضر) */
 const STATUS_CLASS = { proposed: 'is-neutral', in_progress: 'is-active', completed: 'is-done' }
@@ -293,7 +294,7 @@ export default {
 
   computed: {
     ...mapState(useAuthStore, ['userRole']),
-    ...mapState(useTeamsStore, ['specializationFilterOptions']),
+    ...mapState(useTeamsStore, ['specializationFilterOptions', 'departmentFilterOptions']),
     /** المشرف: مجموعاته فقط (من الخادم) وبصلاحياته — بيانات الطلاب كاملة وأماكنهم، المشروع ووصفه ونوعه، الشعبة، طباعة تقرير */
     isSupervisor() {
       return this.userRole === 'supervisor'
@@ -327,6 +328,7 @@ export default {
       const match = (g, skip) => {
         if (q && !`${g.section} ${g.project} ${g.supName} ${g.members.map((m) => m.name).join(' ')}`.includes(q)) return false
         if (skip !== 'degree' && f.degree && g.degree !== f.degree) return false
+        if (skip !== 'dept' && f.dept && !this.deptSpecNameSet.has(g.spec)) return false
         if (skip !== 'spec' && f.spec && g.spec !== f.spec) return false
         if (skip !== 'sup' && f.sup && g.supId !== f.sup) return false
         if (skip !== 'status' && f.status && g.projectStatus !== f.status) return false
@@ -342,8 +344,13 @@ export default {
       return this.specializationFilterOptions.map((o) => o.value)
     },
 
+    /** تخصصات القسم المحدَّد فقط (تتابع قسم→تخصص) */
     specSelectOptions() {
-      return this.specOptions.map((s) => ({ value: s, label: s }))
+      return useTeamsStore().specializationFilterOptionsForDept(this.f.dept)
+    },
+    /** أسماء تخصصات القسم المحدَّد — لفلترة المجموعات بالقسم */
+    deptSpecNameSet() {
+      return new Set(useTeamsStore().specializationFilterOptionsForDept(this.f.dept).map((o) => o.value))
     },
     supSelectOptions() {
       const ids = new Set(this.groupsMatching('sup').map((g) => g.supId))
@@ -390,6 +397,7 @@ export default {
         .filter((g) => {
           if (q && !`${g.section} ${g.project} ${g.supName} ${g.members.map((m) => m.name).join(' ')}`.includes(q)) return false
           if (f.degree && g.degree !== f.degree) return false
+          if (f.dept && !this.deptSpecNameSet.has(g.spec)) return false
           if (f.spec && g.spec !== f.spec) return false
           if (f.sup && g.supId !== f.sup) return false
           if (f.status && g.projectStatus !== f.status) return false
@@ -408,6 +416,13 @@ export default {
     avgProgress() {
       if (!this.rows.length) return 0
       return Math.round(this.rows.reduce((n, g) => n + g.percentage, 0) / this.rows.length)
+    }
+  },
+
+  watch: {
+    // تغيير القسم يصفّر التخصص إن خرج عن تخصصات القسم (تتابع قسم→تخصص)
+    'f.dept'() {
+      if (this.f.spec && !this.specSelectOptions.some((o) => o.value === this.f.spec)) this.f.spec = ''
     }
   },
 
