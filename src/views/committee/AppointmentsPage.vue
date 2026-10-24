@@ -410,7 +410,8 @@ export default {
       return this.departmentFilterOptions
     },
     specOptions() {
-      return this.specializationFilterOptions
+      // تتابع: تخصصات القسم المحدَّد فقط
+      return this.specializationFilterOptionsForDept(this.deptFilter)
     },
 
     supOptions() {
@@ -451,6 +452,12 @@ export default {
   watch: {
     filteredDiscussions() {
       this.page = 1
+    },
+    // تغيير القسم يصفّر التخصص إن لم يعد ضمن تخصصات القسم الجديد
+    deptFilter() {
+      if (this.specFilter && !this.specOptions.some((o) => o.value === this.specFilter)) {
+        this.specFilter = ''
+      }
     }
   },
 
@@ -461,7 +468,7 @@ export default {
   methods: {
     formatDate,
     ...mapActions(useDiscussionsStore, ['fetchDiscussions', 'createDiscussion', 'updateDiscussion', 'deleteDiscussion', 'previewDiscussionImport', 'confirmDiscussionImport']),
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchDepartments', 'fetchSpecializations', 'addTeamMember', 'removeTeamMember']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchDepartments', 'fetchSpecializations', 'addTeamMember', 'removeTeamMember', 'specializationFilterOptionsForDept']),
     ...mapActions(useUsersStore, ['fetchUsers', 'updateUser']),
 
     isDiscussionOpen(id) {

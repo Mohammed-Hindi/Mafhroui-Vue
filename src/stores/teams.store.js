@@ -47,6 +47,19 @@ export const useTeamsStore = defineStore('teams', () => {
     sortedByName(specializations.value).map((s) => ({ id: s.id, value: s.id, name: s.name, label: s.name }))
   )
 
+  /** تتابع قسم→تخصص: تخصصات القسم المحدَّد فقط (deptName فارغ = كل التخصصات) */
+  const deptNameById = (id) => departments.value.find((d) => d.id === id)?.name || ''
+  const specsForDept = (deptName) =>
+    sortedByName(specializations.value).filter(
+      (s) => !deptName || (s.department?.name || deptNameById(s.department_id)) === deptName
+    )
+  /** خيارات التخصص (بالاسم) لقسمٍ محدَّد — لفلاتر تعتمد الاسم */
+  const specializationFilterOptionsForDept = (deptName) =>
+    specsForDept(deptName).map((s) => ({ value: s.name, label: s.name }))
+  /** خيارات التخصص (بالـid) لقسمٍ محدَّد — لفلاتر/قوائم تعتمد الـid */
+  const specializationIdOptionsForDept = (deptName) =>
+    specsForDept(deptName).map((s) => ({ value: s.id, label: s.name }))
+
   /** تحميل دليل الهيكل الأكاديمي كاملًا (أقسام + تخصصات) لصفحة تستخدم الفلاتر */
   const fetchOrgCatalog = async () => {
     await Promise.all([fetchDepartments(), fetchSpecializations()])
@@ -535,6 +548,8 @@ export const useTeamsStore = defineStore('teams', () => {
     specializationFilterOptions,
     specializationSelectOptions,
     specializationFilterByIdOptions,
+    specializationFilterOptionsForDept,
+    specializationIdOptionsForDept,
     createDepartment,
     updateDepartment,
     deleteDepartment,

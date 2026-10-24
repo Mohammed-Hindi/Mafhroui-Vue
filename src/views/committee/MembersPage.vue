@@ -18,6 +18,7 @@
           <Search :size="16" />
           <input v-model.trim="memberSearch" type="search" :placeholder="memberKind === 'student' ? 'بحث بالاسم أو الرقم الجامعي…' : 'بحث بالاسم أو الرقم الوظيفي…'">
         </label>
+        <BaseSelect v-if="memberKind !== 'committee'" v-model="deptFilter" class="min-w-[150px]" aria-label="القسم" placeholder="كل الأقسام" include-placeholder-option :options="departmentOptions" />
         <template v-if="memberKind === 'student'">
           <BaseSelect v-model="specFilter" class="min-w-[150px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="studentSpecOptions" />
           <BaseSelect v-model="studentSupFilter" class="min-w-[160px]" aria-label="المشرف" placeholder="كل المشرفين" include-placeholder-option :options="supervisorOptions" />
@@ -504,6 +505,7 @@ export default {
         { value: 'committee', label: 'لجنة الإشراف' }
       ],
       memberSearch: '',
+      deptFilter: '',
       supSpecFilter: '',
       specFilter: '',
       studentSupFilter: '',
@@ -579,7 +581,7 @@ export default {
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['teams', 'specializations']),
+    ...mapState(useTeamsStore, ['teams', 'specializations', 'departments']),
     ...mapState(useUsersStore, ['trashedUsers', 'trashedUsersLoading']),
     ...mapState(useNotifyStore, ['deliveries', 'deliveriesLoading']),
     ...mapState(useAuthStore, ['userRole']),
@@ -663,8 +665,22 @@ export default {
       }))
     },
 
+    /** خيارات الأقسام (بالـid) */
+    departmentOptions() {
+      return [...this.departments]
+        .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'))
+        .map((d) => ({ value: d.id, label: d.name }))
+    },
+    /** مجموعة معرّفات تخصصات القسم المحدَّد (null = كل الأقسام) */
+    deptSpecIdSet() {
+      if (!this.deptFilter) return null
+      return new Set(this.specializations.filter((s) => s.department_id === this.deptFilter).map((s) => s.id))
+    },
+    /** تخصصات القسم المحدَّد فقط (تتابع قسم→تخصص) */
     specializationOptions() {
-      return this.specializations.map((s) => ({ value: s.id, label: s.name }))
+      return this.specializations
+        .filter((s) => !this.deptFilter || s.department_id === this.deptFilter)
+        .map((s) => ({ value: s.id, label: s.name }))
     },
     addGenderOptions() {
       return Object.entries(GENDERS).map(([value, label]) => ({ value, label }))
@@ -699,6 +715,7 @@ export default {
     /** الجنس والمكان والبحث تُفلتر في الخادم؛ هنا فقط فلاتر اللجنة (التخصص/المشرف) المبنية على بيانات الفرق */
     filteredStudents() {
       return this.students.filter((s) =>
+        (!this.deptSpecIdSet || this.deptSpecIdSet.has(s.spec)) &&
         (!this.specFilter || String(s.spec) === String(this.specFilter)) &&
         (!this.studentSupFilter || s.sup === this.studentSupFilter) &&
         (!this.assignedFilter || (this.assignedFilter === 'yes') === !!s.grp)
@@ -728,7 +745,14 @@ export default {
       ]
     },
     activeFiltered() {
-      return this.memberKind === 'student' ? this.filteredStudents : this.listOf(this.memberKind)
+      if (this.memberKind === 'student') return this.filteredStudents
+      const list = this.listOf(this.memberKind)
+      // المشرفون: فلترة بالقسم عبر تخصص المشرف
+      if (!this.deptSpecIdSet) return list
+      return list.filter((row) => {
+        const ids = (row.specs && row.specs.length) ? row.specs : (row.spec ? [row.spec] : [])
+        return ids.some((id) => this.deptSpecIdSet.has(id))
+      })
     },
     activeLoading() {
       return { student: this.studentsLoading, supervisor: this.supervisorsLoading, committee: this.committeeLoading }[this.memberKind]
@@ -781,6 +805,11 @@ export default {
   },
 
   watch: {
+    // تغيير القسم يصفّر التخصص إن خرج عن تخصصات القسم الجديد (تتابع قسم→تخصص)
+    deptFilter() {
+      if (this.specFilter && !this.studentSpecOptions.some((o) => o.value === this.specFilter)) this.specFilter = ''
+      if (this.supSpecFilter && !this.specializationOptions.some((o) => o.value === this.supSpecFilter)) this.supSpecFilter = ''
+    },
     // كل فلتر مستقل: اختيار أحدهما يلغي الآخر، وأي تغيير يعيد الطلب من الخادم
     genderFilter(v) {
       if (v && this.regionFilter) this.regionFilter = ''
@@ -819,6 +848,7 @@ export default {
     // قائمة أعضاء اللجنة للإدارة العامة فقط (الخادم يرفضها لعضو اللجنة)
     await Promise.all([this.loadStudents(), this.loadSupervisors(), this.isSuperAdmin && this.loadCommittee(), this.fetchTeams()])
     this.fetchSpecializations()
+    this.fetchDepartments()
     if (this.isSuperAdmin) {
       this.loadNotifyDirectory()
       this.loadDeliveries()
@@ -826,7 +856,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'specializationName']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'fetchDepartments', 'specializationName']),
     ...mapActions(useUsersStore, [
       'fetchUsers', 'createUser', 'updateUser', 'updateUserStatus', 'reinviteUser',
       'fetchRestrictions', 'setRestriction', 'removeRestriction',
