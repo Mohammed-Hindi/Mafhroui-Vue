@@ -32,6 +32,7 @@
         <BaseSelect v-if="!isStaff && !isSupervisor" v-model="fSup" class="tk-filter" placeholder="كل المشرفين" include-placeholder-option :options="supervisorOptions" />
         <BaseSelect v-if="!isStaff" v-model="fGroup" class="tk-filter" placeholder="كل المجموعات" include-placeholder-option value-key="id" label-key="label" :options="groupOptions" />
         <BaseSelect v-if="!isStaff && !isSupervisor" v-model="fDegree" class="tk-filter" placeholder="كل الدرجات" include-placeholder-option :options="degreeOptions" />
+        <BaseSelect v-if="!isStaff" v-model="fDept" class="tk-filter" placeholder="كل الأقسام" include-placeholder-option :options="deptOptions" />
         <BaseSelect v-if="!isStaff" v-model="fSpec" class="tk-filter" placeholder="كل التخصصات" include-placeholder-option value-key="id" label-key="name" :options="specOptions" />
         <!-- المشرف: فلترا التخصص والفئة فقط -->
         <BaseSelect v-if="isSupervisor" v-model="fGender" class="tk-filter" placeholder="طلاب وطالبات" include-placeholder-option :options="[{ value: 'male', label: 'طلاب' }, { value: 'female', label: 'طالبات' }]" />
@@ -340,6 +341,7 @@ export default {
       fSup: '',
       info: {},
       fDegree: '',
+      fDept: '',
       fSpec: '',
       fGender: '',
       DEGREES,
@@ -362,7 +364,13 @@ export default {
 
   computed: {
     ...mapState(useAuthStore, ['userRole', 'user']),
-    ...mapState(useTeamsStore, ['specializationFilterOptions']),
+    ...mapState(useTeamsStore, ['specializationFilterOptions', 'departments', 'specializations']),
+    /** خيارات الأقسام (بالـid) */
+    deptOptions() {
+      return [...this.departments]
+        .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'))
+        .map((d) => ({ value: d.id, label: d.name }))
+    },
     /** الإرسال للجنة الإشراف للإدارة العامة وحدها؛ اللجنة ترسل للمشرفين والمجموعات */
     /** المشرف: نفس الصفحة بصلاحياته — مجموعاته فقط عبر /teams/{id}/tasks */
     isSupervisor() {
@@ -409,12 +417,12 @@ export default {
       ]
     },
     hasFilters() {
-      return !!(this.q || this.fCommittee || this.fGroup || this.fSup || this.fStatus || this.fDegree || this.fSpec || this.fGender)
+      return !!(this.q || this.fCommittee || this.fGroup || this.fSup || this.fStatus || this.fDegree || this.fDept || this.fSpec || this.fGender)
     },
     /** معاملات GET /tasks — كل فلتر يُرسل مستقلًا ويُطبّق في الخادم */
     params() {
       const person = this.fCommittee
-      const p = { audience: this.isStaff ? 'committee' : 'groups', assignee_id: person, team_id: this.fGroup, supervisor_id: this.fSup, degree: this.fDegree, specialization_id: this.fSpec, status: this.fStatus, q: this.q }
+      const p = { audience: this.isStaff ? 'committee' : 'groups', assignee_id: person, team_id: this.fGroup, supervisor_id: this.fSup, degree: this.fDegree, department_id: this.fDept, specialization_id: this.fSpec, status: this.fStatus, q: this.q }
       return Object.fromEntries(Object.entries(p).filter(([, v]) => v !== ''))
     },
     /** شريط الملخص الأخضر — من نتائج الخادم بالفلاتر الحالية */
@@ -458,9 +466,18 @@ export default {
       const ids = new Set(this.targets.flatMap((g) => g.members.map((m) => m.id)))
       return this.form.assignees.filter((id) => ids.has(id))
     },
-    /** فلاتر التخصص من دليل الهيكل الأكاديمي — تشمل التخصصات المضافة حديثًا بلا مجموعات */
+    /** تخصصات القسم المحدَّد فقط (تتابع قسم→تخصص) — تشمل التخصصات المضافة حديثًا بلا مجموعات */
     specOptions() {
-      return this.specializationFilterByIdOptions
+      return [...this.specializations]
+        .filter((s) => !this.fDept || s.department_id === this.fDept)
+        .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'))
+        .map((s) => ({ id: s.id, value: s.id, name: s.name, label: s.name }))
+    },
+    /** معرّف قسم التخصص — لفلترة مجموعات المشرف بالقسم */
+    deptIdOfSpec() {
+      const m = {}
+      this.specializations.forEach((s) => { m[s.id] = s.department_id })
+      return m
     },
     /** خيارات فلاتر الشريط بصيغة BaseSelect */
     statusOptions() {
@@ -506,12 +523,13 @@ export default {
     },
     // لجنة الإشراف منفصلة: اختيار عضو يمسح فلتري المجموعة والمشرف
     fCommittee(v) {
-      if (v) Object.assign(this, { fGroup: '', fSup: '', fDegree: '', fSpec: '' })
+      if (v) Object.assign(this, { fGroup: '', fSup: '', fDegree: '', fDept: '', fSpec: '' })
       this.load()
     },
     fGroup: 'load',
     fSup: 'cascade',
     fDegree: 'cascade',
+    fDept: 'cascade',
     fSpec: 'cascade',
     fGender: 'cascade',
     fStatus: 'load'
@@ -661,6 +679,7 @@ export default {
       const g = (t) => this.groupById[t.team_id] || {}
       const q = this.q
       const base = all.filter((t) => (!this.fGroup || t.team_id === this.fGroup) && (!this.fDegree || g(t).degree === this.fDegree) &&
+        (!this.fDept || this.deptIdOfSpec[g(t).specId] === this.fDept) &&
         (!this.fSpec || g(t).specId === this.fSpec) && (!this.fGender || groupGender(g(t)) === this.fGender) && (!q || `${t.title} ${(t.assignees || []).map((a) => a.name).join(' ')}`.includes(q)))
       const late = (t) => t.status !== 'done' && t.due_date && t.due_date < this.today
       this.counts = { all: base.length, late: base.filter(late).length }
@@ -715,7 +734,7 @@ export default {
     },
 
     clearFilters() {
-      Object.assign(this, { q: '', fCommittee: '', fGroup: '', fSup: '', fStatus: '', fDegree: '', fSpec: '', fGender: '' })
+      Object.assign(this, { q: '', fCommittee: '', fGroup: '', fSup: '', fStatus: '', fDegree: '', fDept: '', fSpec: '', fGender: '' })
     },
 
     openComposer() {
