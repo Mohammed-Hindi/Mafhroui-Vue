@@ -97,7 +97,7 @@
       <p v-if="addStudentError" class="mf-error" role="alert"><AlertCircle :size="16" /> {{ addStudentError }}</p>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <BaseInput v-model="addStudentForm.name" label="اسم الطالب" placeholder="مثال: سيف قطناني" class="sm:col-span-2" />
-        <BaseInput v-model="addStudentForm.university_number" label="الرقم الجامعي" placeholder="اختياري" />
+        <BaseInput v-model="addStudentForm.university_number" label="الرقم الجامعي" placeholder="مثال: 120210001" required />
         <BaseSelect v-model="addStudentForm.specialization_id" label="التخصص" placeholder="اختاري التخصص" :options="specializationSelectOptions" />
         <BaseInput v-model="addStudentForm.email" type="email" label="البريد الإلكتروني" placeholder="name@mashroui.local" />
         <BaseInput v-model="addStudentForm.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" />

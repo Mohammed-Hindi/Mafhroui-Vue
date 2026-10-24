@@ -274,7 +274,7 @@
           <h4>البيانات الأساسية</h4>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <BaseInput v-model="addForm.name" label="الاسم الكامل" :placeholder="addForm.role === 'student' ? 'مثال: أحمد خالد' : 'مثال: د. نورة العتيبي'" required class="sm:col-span-2" />
-            <BaseInput v-if="addForm.role === 'student'" v-model="addForm.university_number" label="الرقم الجامعي" placeholder="اختياري" />
+            <BaseInput v-if="addForm.role === 'student'" v-model="addForm.university_number" label="الرقم الجامعي" placeholder="مثال: 120210001" required />
             <BaseInput v-else v-model="addForm.employee_number" label="الرقم الوظيفي" :placeholder="addForm.role === 'supervisor' ? 'مثال: EMP-1003' : 'اختياري'" :required="addForm.role === 'supervisor'" />
             <BaseInput v-model="addForm.whatsapp" label="رقم الواتساب" placeholder="970591234567" />
             <BaseInput v-model="addForm.email" type="email" label="البريد الإلكتروني" placeholder="name@ucas.edu.ps" class="sm:col-span-2" />
