@@ -328,13 +328,14 @@ export default {
 
   computed: {
     ...mapState(useAuthStore, ['userRole', 'user']),
+    ...mapState(useTeamsStore, ['specializationFilterOptions']),
     /** الصفوف المعروضة: كل الفلاتر مجتمعة (متتالية ومنطقية) + البحث — محليًا */
     rows() {
       return this.all.filter((p) => this.passes(p, this.f))
     },
-    /** التخصصات المتاحة حسب باقي الفلاتر المفعّلة */
+    /** التخصصات من دليل الهيكل الأكاديمي — تظهر الإضافات الجديدة ولو بلا مقترحات */
     specs() {
-      return [...new Set(this.baseExcept('spec').map(specOf).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar'))
+      return this.specializationFilterOptions.map((o) => o.value)
     },
     /** الدرجات المتاحة حسب باقي الفلاتر */
     degreeOptions() {
@@ -421,6 +422,7 @@ export default {
   },
 
   async created() {
+    useTeamsStore().fetchOrgCatalog().catch(() => {})
     await this.reload()
     // رابط مباشر لمقترح (?proposal=ID) — يفتحه داخل الصفحة
     const id = Number(this.$route.query.proposal)

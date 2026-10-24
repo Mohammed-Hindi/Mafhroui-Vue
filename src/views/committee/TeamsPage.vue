@@ -361,7 +361,7 @@ export default {
 
   computed: {
     ...mapState(useAuthStore, ['userRole']),
-    ...mapState(useTeamsStore, ['teams', 'teamsLoading', 'teamsLoaded', 'specializations', 'trashedTeamsForDisplay', 'trashedTeamsLoading']),
+    ...mapState(useTeamsStore, ['teams', 'teamsLoading', 'teamsLoaded', 'specializations', 'specializationFilterOptions', 'trashedTeamsForDisplay', 'trashedTeamsLoading']),
 
     groups() {
       return this.teams.map((team) => ({
@@ -402,8 +402,9 @@ export default {
     supervisorFilterOptions() {
       return [...new Set(this.groups.map((g) => g.sup))].map((name) => ({ value: name, label: name }))
     },
+    /** فلاتر التخصص من دليل الهيكل الأكاديمي — تشمل التخصصات المضافة حديثًا بلا فرق */
     specializationOptions() {
-      return [...new Set(this.groups.map((g) => g.spec))].map((s) => ({ value: s, label: s }))
+      return this.specializationFilterOptions
     },
     specializationSelectOptions() {
       return this.specializations.map((s) => ({ value: s.id, label: s.name }))

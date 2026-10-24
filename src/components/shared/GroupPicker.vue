@@ -43,6 +43,7 @@ import { Search } from 'lucide-vue-next'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import { DEGREES, REGIONS } from '@/utils/progressData'
 import { useAuthStore } from '@/stores/auth.store'
+import { useTeamsStore } from '@/stores/teams.store'
 
 export default {
   name: 'GroupPicker',
@@ -65,8 +66,10 @@ export default {
       return useAuthStore().userRole === 'supervisor'
     },
 
+    /** التخصصات من دليل الهيكل الأكاديمي حتى تظهر الإضافات الجديدة، وإلا تخصصات المجموعات المعروضة */
     specs() {
-      return [...new Set(this.groups.map((g) => g.spec).filter(Boolean))]
+      const catalog = useTeamsStore().specializationFilterOptions.map((o) => o.value)
+      return catalog.length ? catalog : [...new Set(this.groups.map((g) => g.spec).filter(Boolean))]
     },
     sups() {
       return [...new Set(this.groups.map((g) => g.sup.name).filter(Boolean))]
@@ -100,6 +103,10 @@ export default {
     selectedStudents() {
       return this.groups.filter((g) => this.modelValue.includes(g.id)).reduce((n, g) => n + g.members.length, 0)
     }
+  },
+
+  created() {
+    useTeamsStore().fetchOrgCatalog().catch(() => {})
   },
 
   methods: {

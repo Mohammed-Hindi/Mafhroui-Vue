@@ -238,6 +238,7 @@ import { exportStyledExcel } from '@/utils/exportReport'
 import api from '@/services/api'
 import { mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
+import { useTeamsStore } from '@/stores/teams.store'
 
 import { loadGroups, loadSupervisors, loadGroupTimeline, activeSemesterName, day } from '@/services/adminData'
 
@@ -292,6 +293,7 @@ export default {
 
   computed: {
     ...mapState(useAuthStore, ['userRole']),
+    ...mapState(useTeamsStore, ['specializationFilterOptions']),
     /** المشرف: مجموعاته فقط (من الخادم) وبصلاحياته — بيانات الطلاب كاملة وأماكنهم، المشروع ووصفه ونوعه، الشعبة، طباعة تقرير */
     isSupervisor() {
       return this.userRole === 'supervisor'
@@ -335,8 +337,9 @@ export default {
       return (skip) => this.baseGroups.filter((g) => match(g, skip))
     },
 
+    /** فلاتر التخصص من دليل الهيكل الأكاديمي — تشمل التخصصات المضافة حديثًا بلا فرق */
     specOptions() {
-      return [...new Set(this.groupsMatching('spec').map((g) => g.spec))]
+      return this.specializationFilterOptions.map((o) => o.value)
     },
 
     specSelectOptions() {
@@ -409,6 +412,7 @@ export default {
   },
 
   async created() {
+    useTeamsStore().fetchOrgCatalog().catch(() => {})
     try {
       this.list = await loadGroups()
     } catch {

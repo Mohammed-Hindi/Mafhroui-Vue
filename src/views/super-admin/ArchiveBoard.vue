@@ -288,6 +288,7 @@
 <script>
 import { mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
+import { useTeamsStore } from '@/stores/teams.store'
 import { ArrowRight, CalendarDays, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, FileText, FileType2, Folder, FolderOpen, GraduationCap, Hourglass, LayoutGrid, List, Minus, PlayCircle, Search, Star, UserRound, Users, X, ExternalLink } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
 import FileViewer from '@/components/shared/FileViewer.vue'
@@ -328,6 +329,7 @@ export default {
 
   computed: {
     ...mapState(useAuthStore, ['userRole']),
+    ...mapState(useTeamsStore, ['specializationFilterOptions']),
     // المشرف: مشاريعه فقط (loadGroups) ويوافق على التقرير أولًا، ثم تعتمده لجنة الإشراف
     isSup() {
       return this.userRole === 'supervisor'
@@ -401,8 +403,9 @@ export default {
         }
       }).filter((x) => x.count)
     },
+    /** التخصصات من دليل الهيكل الأكاديمي — تظهر الإضافات الجديدة ولو بلا مشاريع مؤرشفة */
     specs() {
-      return [...new Set(this.projects.map((x) => x.spec).filter(Boolean))]
+      return this.specializationFilterOptions.map((o) => o.value)
     },
     visible() {
       return this.inView.filter((p) => (!this.f.spec || p.spec === this.f.spec) && (!this.f.degree || p.degree === this.f.degree) && (!this.f.gender || groupGender(p) === this.f.gender))
@@ -445,6 +448,7 @@ export default {
   },
 
   async created() {
+    useTeamsStore().fetchOrgCatalog().catch(() => {})
     try {
       // مشاريع الفصل الحالي (المجموعات التي لها مشروع) + آخر تقرير نهائي لكل مشروع من GET /teams
       const [groups, teams] = await Promise.all([loadGroups(), api.get('/teams').then(({ data }) => data.data || data).catch(() => [])])

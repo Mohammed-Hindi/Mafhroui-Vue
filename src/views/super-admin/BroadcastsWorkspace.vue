@@ -226,6 +226,7 @@ import api from '@/services/api'
 import { groupGender } from '@/services/adminData'
 import { mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
+import { useTeamsStore } from '@/stores/teams.store'
 import { CHANNELS, downloadAttachment, notifyExternal } from '@/services/announcements'
 import ChannelPicker from '@/components/shared/ChannelPicker.vue'
 import { formatDateTime, formatFileSize } from '@/utils/formatters'
@@ -283,6 +284,7 @@ export default {
 
   computed: {
     ...mapState(useAuthStore, ['userRole', 'user']),
+    ...mapState(useTeamsStore, ['specializationFilterOptions']),
     /** الإرسال للجنة الإشراف للإدارة العامة وحدها؛ اللجنة ترسل للمشرفين والمجموعات */
     /** المشرف: نفس الصفحة بصلاحياته — إعلانات مجموعاته وملفات مشاريعها */
     isSupervisor() {
@@ -294,8 +296,9 @@ export default {
     isFile() {
       return this.type === 'file'
     },
+    /** التخصصات من دليل الهيكل الأكاديمي — تشمل ما أُضيف حديثًا */
     specNames() {
-      return [...new Set(this.groupPool('spec').map((g) => g.spec).filter(Boolean))]
+      return this.specializationFilterOptions.map((o) => o.value)
     },
     groupById() {
       return Object.fromEntries(this.groups.map((g) => [g.id, g]))
@@ -389,6 +392,7 @@ export default {
   },
 
   async created() {
+    useTeamsStore().fetchOrgCatalog()
     if (this.composeOnly) this.openComposer()
     else this.load()
     const people = (role) => api.get('/users', { params: { role } })

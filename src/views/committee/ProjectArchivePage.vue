@@ -112,7 +112,7 @@ export default {
   },
 
   computed: {
-    ...mapState(useTeamsStore, ['projectArchive', 'projectArchiveLoading']),
+    ...mapState(useTeamsStore, ['projectArchive', 'projectArchiveLoading', 'departmentFilterOptions', 'specializationFilterOptions']),
     ...mapState(useAuthStore, ['userRole']),
 
     /** قوالب البوابة (هوية UCAS) للإدارة العامة ولجنة الإشراف */
@@ -137,11 +137,12 @@ export default {
       return this.archive.filter((a) => a.featured).length
     },
 
+    // فلاتر القسم/التخصص من دليل الهيكل الأكاديمي — يظهر ما يُضاف حديثًا ولو بلا مشاريع مؤرشفة
     deptOptions() {
-      return [...new Set(this.archive.map((a) => a.dept))].map((d) => ({ value: d, label: d }))
+      return this.departmentFilterOptions
     },
     specOptions() {
-      return [...new Set(this.archive.map((a) => a.spec))].map((s) => ({ value: s, label: s }))
+      return this.specializationFilterOptions
     },
 
     filteredArchive() {
@@ -172,11 +173,12 @@ export default {
   },
 
   async created() {
+    this.fetchOrgCatalog().catch(() => {})
     await this.fetchProjectArchive()
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchProjectArchive', 'updateProject']),
+    ...mapActions(useTeamsStore, ['fetchProjectArchive', 'updateProject', 'fetchOrgCatalog']),
 
     async toggleFeatured(row) {
       try {

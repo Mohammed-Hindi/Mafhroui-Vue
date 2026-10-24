@@ -287,6 +287,7 @@ import api from '@/services/api'
 import { groupGender } from '@/services/adminData'
 import { mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
+import { useTeamsStore } from '@/stores/teams.store'
 import { notifyExternal } from '@/services/announcements'
 import { formatDate, initials } from '@/utils/formatters'
 import { DEGREES, completedBy, describeTaskEvent } from '@/utils/progressData'
@@ -361,6 +362,7 @@ export default {
 
   computed: {
     ...mapState(useAuthStore, ['userRole', 'user']),
+    ...mapState(useTeamsStore, ['specializationFilterOptions']),
     /** الإرسال للجنة الإشراف للإدارة العامة وحدها؛ اللجنة ترسل للمشرفين والمجموعات */
     /** المشرف: نفس الصفحة بصلاحياته — مجموعاته فقط عبر /teams/{id}/tasks */
     isSupervisor() {
@@ -456,8 +458,9 @@ export default {
       const ids = new Set(this.targets.flatMap((g) => g.members.map((m) => m.id)))
       return this.form.assignees.filter((id) => ids.has(id))
     },
+    /** فلاتر التخصص من دليل الهيكل الأكاديمي — تشمل التخصصات المضافة حديثًا بلا مجموعات */
     specOptions() {
-      return [...new Map(this.groupPool('spec').filter((g) => g.specId).map((g) => [g.specId, { id: g.specId, name: g.spec }])).values()]
+      return this.specializationFilterByIdOptions
     },
     /** خيارات فلاتر الشريط بصيغة BaseSelect */
     statusOptions() {
@@ -516,6 +519,7 @@ export default {
 
   async created() {
     this.load()
+    useTeamsStore().fetchOrgCatalog()
     // أعضاء اللجنة والمشرفون (GET /users?role=…) لفلاتر المهام وقوائم المستلمين
     const people = (role) => api.get('/users', { params: { role } })
       .then(({ data }) => (data.data || data).map((u) => ({ id: u.id, name: u.name, email: u.email || '', whatsapp: u.whatsapp || '' })))

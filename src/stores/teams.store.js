@@ -25,6 +25,33 @@ export const useTeamsStore = defineStore('teams', () => {
     return spec?.name || 'غير محدد'
   }
 
+  /**
+   * فلاتر الهيكل الأكاديمي مصدرها دليل الأقسام/التخصصات لا صفوف الصفحة:
+   * أي قسم أو تخصص يُضاف من «الهيكل الأكاديمي» يظهر فورًا في كل الفلاتر حتى لو لم تكن له فرق بعد.
+   */
+  const sortedByName = (list) => [...list].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'))
+
+  const departmentFilterOptions = computed(() =>
+    sortedByName(departments.value).map((d) => ({ value: d.name, label: d.name }))
+  )
+
+  const specializationFilterOptions = computed(() =>
+    sortedByName(specializations.value).map((s) => ({ value: s.name, label: s.name }))
+  )
+
+  const specializationSelectOptions = computed(() =>
+    sortedByName(specializations.value).map((s) => ({ value: s.id, label: s.name }))
+  )
+
+  const specializationFilterByIdOptions = computed(() =>
+    sortedByName(specializations.value).map((s) => ({ id: s.id, value: s.id, name: s.name, label: s.name }))
+  )
+
+  /** تحميل دليل الهيكل الأكاديمي كاملًا (أقسام + تخصصات) لصفحة تستخدم الفلاتر */
+  const fetchOrgCatalog = async () => {
+    await Promise.all([fetchDepartments(), fetchSpecializations()])
+  }
+
   /** تسطيح فريق واحد بشكل جاهز للعرض — مشتركة بين الفرق النشطة والمحذوفة */
   const mapTeamForDisplay = (team) => ({
     id: team.id,
@@ -103,9 +130,12 @@ export const useTeamsStore = defineStore('teams', () => {
     try {
       const { data } = await api.get('/specializations')
       const all = data.data || data
-      // عضو لجنة الإشراف يرى تخصصه فقط في كل القوائم والفلاتر (الخادم يقيّد البيانات بنفس التخصص)
+      // عضو لجنة الإشراف يرى تخصصاته فقط (قد يكون مرتبطًا بتخصصين — الخادم يقيّد البيانات بنفس التخصصات)
       const me = useAuthStore().user
-      specializations.value = me?.role === ROLES.COMMITTEE && me.specialization_id ? all.filter((s) => s.id === me.specialization_id) : all
+      const mine = me?.role === ROLES.COMMITTEE
+        ? (me.specialization_ids?.length ? me.specialization_ids : [me.specialization_id]).filter(Boolean)
+        : []
+      specializations.value = mine.length ? all.filter((s) => mine.includes(s.id)) : all
       return specializations.value
     } catch (err) {
       specializationsError.value = err.normalized?.message || 'تعذّر تحميل التخصصات'
@@ -500,6 +530,11 @@ export const useTeamsStore = defineStore('teams', () => {
     fetchTeams,
     fetchSpecializations,
     fetchDepartments,
+    fetchOrgCatalog,
+    departmentFilterOptions,
+    specializationFilterOptions,
+    specializationSelectOptions,
+    specializationFilterByIdOptions,
     createDepartment,
     updateDepartment,
     deleteDepartment,

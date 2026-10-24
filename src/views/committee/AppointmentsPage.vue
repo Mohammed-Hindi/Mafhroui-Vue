@@ -337,7 +337,7 @@ export default {
     isSuperAdmin() {
       return PORTAL_ROLES.includes(this.userRole)
     },
-    ...mapState(useTeamsStore, ['teams', 'teamsForDisplay', 'departments', 'specializations']),
+    ...mapState(useTeamsStore, ['teams', 'teamsForDisplay', 'departments', 'specializations', 'departmentFilterOptions', 'specializationFilterOptions']),
 
     rows() {
       return this.discussions.map((d) => ({
@@ -405,11 +405,12 @@ export default {
       }
     },
 
+    // فلاتر القسم/التخصص من دليل الهيكل الأكاديمي (تظهر الإضافات الجديدة ولو بلا مواعيد بعد)
     deptOptions() {
-      return [...new Set(this.rows.map((r) => r.dept))].map((d) => ({ value: d, label: d }))
+      return this.departmentFilterOptions
     },
     specOptions() {
-      return [...new Set(this.rows.map((r) => r.spec))].map((s) => ({ value: s, label: s }))
+      return this.specializationFilterOptions
     },
 
     supOptions() {

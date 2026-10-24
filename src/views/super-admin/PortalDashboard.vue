@@ -230,6 +230,7 @@ import { mapState } from 'pinia'
 import { ChevronDown, Search, Printer } from 'lucide-vue-next'
 import CountUp from '@/components/ui/CountUp.vue'
 import { useAuthStore } from '@/stores/auth.store'
+import { useTeamsStore } from '@/stores/teams.store'
 import { ROLES, STORAGE_KEYS } from '@/utils/constants'
 import { gsap, useScrollMotion } from '@/composables/useScrollMotion'
 import '@/styles/ucas-site.css'
@@ -304,6 +305,7 @@ export default {
 
   computed: {
     ...mapState(useAuthStore, ['userRole', 'userName']),
+    ...mapState(useTeamsStore, ['specializationFilterOptions']),
 
     isSA() {
       return this.userRole === ROLES.SUPER_ADMIN
@@ -373,8 +375,9 @@ export default {
       ]
     },
 
+    /** التخصصات من دليل الهيكل الأكاديمي — تظهر الإضافات الجديدة ولو بلا مشرفين بعد */
     specOptions() {
-      return [...new Set(this.supList.map((s) => s.spec).filter(Boolean))]
+      return this.specializationFilterOptions
     },
 
     supRows() {

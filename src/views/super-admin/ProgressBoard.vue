@@ -291,6 +291,8 @@ import api from '@/services/api'
 import { completedBy, describeTaskEvent, fetchGroups, level, TASK_STATUS } from '@/utils/progressData'
 import { formatDate, formatDateTime, formatRelativeTime, initials } from '@/utils/formatters'
 import { useAuthStore } from '@/stores/auth.store'
+import { useTeamsStore } from '@/stores/teams.store'
+import { mapState } from 'pinia'
 import { groupGender } from '@/services/adminData'
 
 const DEGREES = { diploma: 'دبلوم', bachelor: 'بكالوريوس' }
@@ -317,6 +319,7 @@ export default {
   },
 
   computed: {
+    ...mapState(useTeamsStore, ['specializationFilterOptions']),
     /** الصفوف المعروضة: كل الفلاتر مجتمعة + البحث — محليًا */
     grpRows() {
       return this.groups.filter((g) => this.passes(g, this.f))
@@ -327,8 +330,9 @@ export default {
       this.baseExcept('sup').forEach((g) => g.sup?.id && map.set(g.sup.id, g.sup))
       return [...map.values()].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'))
     },
+    // فلاتر التخصص من دليل الهيكل الأكاديمي — لا من صفوف الصفحة، فتظهر الإضافات الجديدة فورًا
     specOptions() {
-      return [...new Set(this.baseExcept('spec').map((g) => g.spec).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar'))
+      return this.specializationFilterOptions.map((o) => o.value)
     },
     degreeOptions() {
       const present = new Set(this.baseExcept('degree').map((g) => String(g.degree)))
@@ -344,6 +348,7 @@ export default {
   },
 
   async created() {
+    useTeamsStore().fetchOrgCatalog().catch(() => {})
     try {
       this.groups = await fetchGroups()
     } finally {

@@ -672,12 +672,9 @@ export default {
     addRegionOptions() {
       return Object.entries(REGIONS).map(([value, label]) => ({ value, label }))
     },
-    /** التخصصات المتاحة فعليًا: المشتقّة من طلاب المشرف المختار (أو كل الطلاب) */
+    /** فلاتر التخصص من دليل الهيكل الأكاديمي — يظهر ما يُضاف حديثًا ولو بلا طلاب بعد */
     studentSpecOptions() {
-      const pool = this.studentSupFilter ? this.students.filter((s) => s.sup === this.studentSupFilter) : this.students
-      const ids = new Set(pool.map((s) => s.spec).filter(Boolean).map(String))
-      const opts = this.specializations.filter((s) => ids.has(String(s.id))).map((s) => ({ value: s.id, label: s.name }))
-      return opts.length ? opts : this.specializationOptions
+      return this.specializationOptions
     },
     /** المشرفون المتاحون: المشتقّون من الطلاب المطابقين للتخصص المختار (فقط من لهم طلاب) */
     supervisorOptions() {
