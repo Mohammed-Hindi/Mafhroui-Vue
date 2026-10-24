@@ -45,6 +45,18 @@
             <option v-for="(l, k) in STATUS" :key="k" :value="k">{{ l.label }} ({{ statusCount(k) }})</option>
           </select>
         </label>
+        <label class="gr-pick">
+          <select v-model="gDept" class="gr-select" aria-label="القسم">
+            <option value="">كل الأقسام</option>
+            <option v-for="d in departmentFilterOptions" :key="d.value" :value="d.value">{{ d.label }}</option>
+          </select>
+        </label>
+        <label class="gr-pick">
+          <select v-model="gSpec" class="gr-select" aria-label="التخصص">
+            <option value="">كل التخصصات</option>
+            <option v-for="s in gSpecOptions" :key="s.value" :value="s.value">{{ s.label }}</option>
+          </select>
+        </label>
         <label v-if="isStaff" class="gr-pick">
           <select v-model="gSup" class="gr-select" aria-label="المشرف">
             <option value="">كل المشرفين</option>
@@ -123,6 +135,18 @@
         <label class="gr-search">
           <Search :size="16" />
           <input v-model.trim="rq" type="search" placeholder="بحث بالطالب أو الرقم الجامعي أو الشعبة…">
+        </label>
+        <label v-if="isStaff" class="gr-pick">
+          <select v-model="f.dept" class="gr-select" aria-label="القسم">
+            <option value="">كل الأقسام</option>
+            <option v-for="d in departmentFilterOptions" :key="d.value" :value="d.value">{{ d.label }}</option>
+          </select>
+        </label>
+        <label v-if="isStaff" class="gr-pick">
+          <select v-model="f.spec" class="gr-select" aria-label="التخصص">
+            <option value="">كل التخصصات</option>
+            <option v-for="s in rSpecOptions" :key="s.value" :value="s.value">{{ s.label }}</option>
+          </select>
         </label>
         <label v-if="isStaff" class="gr-pick">
           <select v-model="f.degree" class="gr-select" aria-label="الدرجة">
@@ -228,6 +252,7 @@ import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import EvaluationFormEditor from './EvaluationFormEditor.vue'
 import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth.store'
+import { useTeamsStore } from '@/stores/teams.store'
 import { DEGREES, GENDERS, REGIONS, fetchGroups } from '@/utils/progressData'
 import { grade } from '@/utils/evaluation'
 
@@ -238,7 +263,7 @@ const STATUS = {
 }
 const STATUS_PILL = { done: 'is-approved', partial: 'is-pending', none: '' }
 
-const EMPTY_FILTERS = { degree: '', gender: '', grade: '', featured: '', region: '' }
+const EMPTY_FILTERS = { degree: '', gender: '', grade: '', featured: '', region: '', dept: '', spec: '' }
 
 const GRADE_VARIANTS = {
   ممتاز: 'success',
@@ -264,7 +289,7 @@ export default {
       examining: [],
       results: [],
       loading: true,
-      gq: '', rq: '', gSup: '', gStatus: '',
+      gq: '', rq: '', gSup: '', gStatus: '', gDept: '', gSpec: '',
       gSize: 25, rSize: 25,
       f: { ...EMPTY_FILTERS }
     }
@@ -274,13 +299,34 @@ export default {
     // تذكّر حالة بطاقة إعداد النماذج (مفتوحة/مطوية) بين التحديثات
     formsOpen(open) {
       try { localStorage.setItem('ev-forms-open', open ? '1' : '0') } catch { /* تجاهل */ }
+    },
+    // تتابع قسم→تخصص: تغيير القسم يصفّر التخصص الخارج عن نطاقه
+    gDept() {
+      if (this.gSpec && !this.gSpecOptions.some((o) => o.value === this.gSpec)) this.gSpec = ''
+    },
+    'f.dept'() {
+      if (this.f.spec && !this.rSpecOptions.some((o) => o.value === this.f.spec)) this.f.spec = ''
     }
   },
 
   computed: {
     ...mapState(useAuthStore, ['userRole']),
+    ...mapState(useTeamsStore, ['departmentFilterOptions']),
     isStaff() {
       return this.userRole === 'super_admin' || this.userRole === 'committee'
+    },
+    /** تخصصات القسم المحدَّد (تتابع قسم→تخصص) — لكل جدول فلتره */
+    gSpecOptions() {
+      return useTeamsStore().specializationFilterOptionsForDept(this.gDept)
+    },
+    rSpecOptions() {
+      return useTeamsStore().specializationFilterOptionsForDept(this.f.dept)
+    },
+    /** قسم/تخصص كل مجموعة حسب معرّفها — لفلترة النتائج بالقسم/التخصص عبر الفريق */
+    groupInfoById() {
+      const m = {}
+      this.groups.forEach((g) => { m[g.id] = { dept: g.dept, spec: g.spec } })
+      return m
     },
     supSelectOptions() {
       const map = new Map()
@@ -323,6 +369,7 @@ export default {
       return this.groupsWithStatus
         .filter((g) =>
           (!q || `${g.section} ${g.name} ${g.project?.name || ''} ${g.members.map((m) => m.name).join(' ')}`.includes(q)) &&
+          (!this.gDept || g.dept === this.gDept) && (!this.gSpec || g.spec === this.gSpec) &&
           (!this.gSup || g.sup.id === this.gSup) && (!this.gStatus || g.ev.status === this.gStatus)
         )
         .map((g) => ({
@@ -348,12 +395,14 @@ export default {
       const { degree, gender, featured, region } = this.f
       const q = this.rq
       return this.results
-        .filter((r) =>
-          (!q || `${r.student?.name} ${r.student?.university_number} ${r.team?.section} ${r.team?.name} ${r.project?.name}`.includes(q)) &&
+        .filter((r) => {
+          const info = this.groupInfoById[r.team?.id] || {}
+          return (!q || `${r.student?.name} ${r.student?.university_number} ${r.team?.section} ${r.team?.name} ${r.project?.name}`.includes(q)) &&
+          (!this.f.dept || info.dept === this.f.dept) && (!this.f.spec || info.spec === this.f.spec) &&
           (!degree || r.degree === degree) && (!gender || (gender === 'female') === (r.student?.gender === 'female')) &&
           (!this.f.grade || this.gradeOf(r) === this.f.grade) &&
           (!featured || (featured === 'yes') === !!r.project?.is_featured) && (!region || r.student?.region === region)
-        )
+        })
         .map((r) => {
           const label = this.gradeOf(r)
           return {
@@ -386,6 +435,7 @@ export default {
   },
 
   async created() {
+    useTeamsStore().fetchOrgCatalog().catch(() => {})
     const [groups] = await Promise.allSettled([fetchGroups(), this.loadResults(), this.loadExamining()])
     this.groups = groups.value || []
     if (groups.status === 'rejected') this.$toast?.error('تعذّر تحميل المجموعات')
