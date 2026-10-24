@@ -170,7 +170,7 @@
             <button type="button" class="cr-clear" :disabled="!notifySelectedIds.length" @click="notifySelectedIds = []">إلغاء</button>
           </div>
         </div>
-        <p v-if="ineligibleCount" class="cr-warn">{{ ineligibleCount }} عضو بلا {{ notifyChannel === 'email' ? 'بريد إلكتروني' : 'رقم واتساب' }} — غير قابل للتحديد</p>
+        <p v-if="ineligibleCount" class="cr-warn">{{ ineligibleCount }} عضو بلا {{ notifyMissingLabel }} — غير قابل للتحديد</p>
 
         <SkeletonLoader v-if="notifyDirectoryLoading" variant="cards" />
         <EmptyState v-else-if="!filteredNotifyDirectory.length" :title="notifyDirectory.length ? 'لا يوجد عضو مطابق للبحث' : 'لا يوجد ' + (notifyRoleFilter ? notifyRoleLabel : 'عضو') + ' حاليًا'" description="غيّر الفئة أو البحث أو التخصص" />
@@ -182,7 +182,7 @@
               <span class="cr-who">
                 <b>{{ u.name }}</b>
                 <small v-if="contactOf(u)" class="mono">{{ contactOf(u) }}</small>
-                <small v-else class="cr-missing">بلا {{ notifyChannel === 'email' ? 'بريد إلكتروني' : 'رقم واتساب' }}</small>
+                <small v-else class="cr-missing">بلا {{ notifyMissingLabel }}</small>
                 <span v-if="u.specialization_id" class="cr-spec">{{ specializationName(u.specialization_id) }}</span>
               </span>
               <span class="cr-tick" aria-hidden="true"><Check :size="14" /></span>
@@ -229,7 +229,7 @@
      </div>
 
       <!-- نافذة المراجعة والتأكيد -->
-      <BaseModal v-model="crConfirmOpen" title="مراجعة الإرسال" :description="`رابط دعوة عبر ${notifyChannel === 'email' ? 'البريد الإلكتروني' : 'واتساب'} — ${notifyRoleLabel}`" size="sm">
+      <BaseModal v-model="crConfirmOpen" title="مراجعة الإرسال" :description="`رابط دعوة عبر ${notifyChannelLabel} — ${notifyRoleLabel}`" size="sm">
         <template v-if="notifyPreviewResult">
           <div class="cr-review">
             <div class="is-ok"><b>{{ notifyPreviewResult.valid_count }}</b><span>جاهز للإرسال</span></div>
@@ -482,7 +482,8 @@ const CR_ROLES = [
 ]
 const CR_CHANNELS = [
   { value: 'email', label: 'البريد الإلكتروني', hint: 'رابط دعوة على بريد كل عضو', icon: Mail },
-  { value: 'whatsapp', label: 'واتساب', hint: 'رابط دعوة برسالة واتساب', icon: MessageCircle }
+  { value: 'whatsapp', label: 'واتساب', hint: 'رابط دعوة برسالة واتساب', icon: MessageCircle },
+  { value: 'both', label: 'واتساب + البريد', hint: 'إرسال لكل عضو على القناتين المتاحتين له', icon: Send }
 ]
 const STATUS_LABELS = { pending: 'قيد الإرسال', sent: 'تم الإرسال', failed: 'فشل' }
 const STATUS_VARIANTS = { pending: 'warning', sent: 'success', failed: 'error' }
@@ -822,6 +823,14 @@ export default {
     },
     notifyRoleLabel() {
       return { student: 'طالب', supervisor: 'مشرف', committee: 'عضو لجنة', '': 'كل الأعضاء' }[this.notifyRoleFilter]
+    },
+    /** اسم القناة/القنوات للعرض */
+    notifyChannelLabel() {
+      return { email: 'البريد الإلكتروني', whatsapp: 'واتساب', both: 'واتساب والبريد' }[this.notifyChannel]
+    },
+    /** وصف الوسيلة الناقصة عند تعذّر التحديد */
+    notifyMissingLabel() {
+      return this.notifyChannel === 'email' ? 'بريد إلكتروني' : this.notifyChannel === 'whatsapp' ? 'رقم واتساب' : 'بريد ولا رقم واتساب'
     }
   },
 
@@ -1321,7 +1330,7 @@ export default {
         this.crInviteDone++
       }
       try {
-        this.notifyPreviewResult = await this.previewBulkNotify(this.notifySelectedIds, this.notifyChannel)
+        this.notifyPreviewResult = await this.runPreview(this.notifySelectedIds)
         this.$toast?.[failed ? 'warning' : 'success'](failed ? `تعذّر إنشاء ${failed} رابط` : 'تم إنشاء روابط الدعوة')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر تحديث المراجعة')
@@ -1330,7 +1339,27 @@ export default {
       }
     },
     contactOf(u) {
+      if (this.notifyChannel === 'both') return u.email || u.whatsapp
       return this.notifyChannel === 'email' ? u.email : u.whatsapp
+    },
+    /** القنوات الفعلية للإرسال ('both' = القناتان) */
+    channelsToSend() {
+      return this.notifyChannel === 'both' ? ['email', 'whatsapp'] : [this.notifyChannel]
+    },
+    /** معاينة مدمجة: لكل قناة نعاين من يملك وسيلتها، ونجمع العدادات وقائمة غير المؤهَّلين */
+    async runPreview(ids) {
+      const channels = this.channelsToSend()
+      if (channels.length === 1) return this.previewBulkNotify(ids, channels[0])
+      const dir = new Map(this.notifyDirectory.map((u) => [u.id, u]))
+      const parts = await Promise.all(channels.map((ch) => {
+        const chIds = ids.filter((id) => { const u = dir.get(id); return u && (ch === 'email' ? u.email : u.whatsapp) })
+        return chIds.length ? this.previewBulkNotify(chIds, ch) : Promise.resolve({ valid_count: 0, invalid_count: 0, invalid: [] })
+      }))
+      return {
+        valid_count: parts.reduce((n, r) => n + (r.valid_count || 0), 0),
+        invalid_count: parts.reduce((n, r) => n + (r.invalid_count || 0), 0),
+        invalid: parts.flatMap((r) => r.invalid || [])
+      }
     },
     setNotifyRole(role) {
       if (role === this.notifyRoleFilter) return
@@ -1348,7 +1377,7 @@ export default {
     async openNotifyConfirm() {
       this.crPreviewing = true
       try {
-        this.notifyPreviewResult = await this.previewBulkNotify(this.notifySelectedIds, this.notifyChannel)
+        this.notifyPreviewResult = await this.runPreview(this.notifySelectedIds)
         this.crConfirmOpen = true
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر تجهيز المراجعة')
@@ -1359,8 +1388,18 @@ export default {
     async confirmSendNotify() {
       this.notifySending = true
       try {
-        const result = await this.sendBulkNotify(this.notifySelectedIds, this.notifyChannel)
-        this.$toast?.success(`تم إرسال ${result.dispatched.length} رسالة${result.skipped.length ? ` (تخطّي ${result.skipped.length})` : ''}`)
+        const channels = this.channelsToSend()
+        const dir = new Map(this.notifyDirectory.map((u) => [u.id, u]))
+        let dispatched = 0
+        let skipped = 0
+        for (const ch of channels) {
+          const ids = this.notifySelectedIds.filter((id) => { const u = dir.get(id); return u && (ch === 'email' ? u.email : u.whatsapp) })
+          if (!ids.length) continue
+          const r = await this.sendBulkNotify(ids, ch)
+          dispatched += r.dispatched.length
+          skipped += r.skipped.length
+        }
+        this.$toast?.success(`تم إرسال ${dispatched} رسالة${skipped ? ` (تخطّي ${skipped})` : ''}`)
         this.crConfirmOpen = false
         this.notifyPreviewResult = null
         this.notifySelectedIds = []
