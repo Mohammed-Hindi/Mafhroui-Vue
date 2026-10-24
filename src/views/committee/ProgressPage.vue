@@ -62,7 +62,10 @@
       @page-change="page = $event"
     >
       <template #cell-spec="{ value }"><span class="text-text-700">{{ value }}</span></template>
-      <template #cell-sup="{ value }"><span class="text-text-700 font-semibold">{{ value }}</span></template>
+      <template #cell-sup="{ row, value }">
+        <button v-if="row.supId" type="button" class="text-primary-700 font-semibold hover:underline" title="عرض بروفايل المشرف ومجموعاته" @click="openPerson('supervisor', row.supId, value)">{{ value }}</button>
+        <span v-else class="text-text-700 font-semibold">{{ value }}</span>
+      </template>
       <template #cell-team="{ row }">
         <router-link :to="{ name: 'committee-teams' }" class="inline-flex items-center gap-1.5 font-bold text-primary-700 hover:text-primary-800 hover:underline transition-colors duration-fast">
           {{ row.team }} <ExternalLink :size="11" class="opacity-65" />
@@ -82,6 +85,8 @@
         </div>
       </template>
     </DataTable>
+
+    <ProfileModal v-model="profile.open" :kind="profile.kind" :person-id="profile.id" :name="profile.name" />
   </div>
 </template>
 
@@ -97,6 +102,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { useTeamsStore } from '@/stores/teams.store'
 import { PORTAL_ROLES } from '@/utils/constants'
 import ProgressBoard from '@/views/super-admin/ProgressBoard.vue'
+import ProfileModal from '@/components/shared/ProfileModal.vue'
 import { exportStyledExcel } from '@/utils/exportReport'
 
 const STATUS_LABELS = {
@@ -109,7 +115,7 @@ const PAGE_SIZE = 4
 export default {
   name: 'CommitteeProgressPage',
 
-  components: { TrendingUp, Search, ExternalLink, BaseButton, BaseSelect, BaseBadge, DataTable, ProgressBoard },
+  components: { TrendingUp, Search, ExternalLink, BaseButton, BaseSelect, BaseBadge, DataTable, ProgressBoard, ProfileModal },
 
   data() {
     return {
@@ -120,6 +126,7 @@ export default {
       teamFilter: '',
       deptFilter: '',
       specFilter: '',
+      profile: { open: false, kind: 'supervisor', id: null, name: '' },
       columns: [
         { key: 'spec', label: 'التخصص' },
         { key: 'sup', label: 'المشرف' },
@@ -157,6 +164,7 @@ export default {
           team: team.name,
           spec: team.specialization?.name || 'غير محدد',
           sup: team.supervisor?.name || 'غير محدد',
+          supId: team.supervisor?.id ?? null,
           members: (team.members || []).map((m) => m.student?.name).filter(Boolean),
           status: team.project?.status || 'proposed',
           pct: entry.progress.percentage,
@@ -244,6 +252,12 @@ export default {
 
   methods: {
     ...mapActions(useProgressStore, ['fetchProgress']),
+
+    /** فتح بروفايل المشرف (مع مجموعاته) */
+    openPerson(kind, id, name) {
+      if (!id) return
+      this.profile = { open: true, kind, id, name }
+    },
 
     async exportExcel() {
       this.exporting = true

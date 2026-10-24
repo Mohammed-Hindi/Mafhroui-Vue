@@ -5479,6 +5479,9 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .tk-sup-link { display: inline-flex; align-items: center; gap: 3px; color: var(--ucas-blue); font-weight: 800; cursor: pointer; transition: color .2s ease; }
 .tk-sup-link:hover { color: var(--ucas-green); text-decoration: underline; }
 .tk-sup-link svg { opacity: .7; }
+/* رابط اسم المشرف → بروفايله (جداول التقييمات وغيرها) */
+.ev-suplink { color: var(--ucas-blue); font-weight: 700; cursor: pointer; transition: color .2s ease; }
+.ev-suplink:hover { color: var(--ucas-green); text-decoration: underline; }
 /* أقسام التفاصيل: تباعد موحّد بين العنوان والمحتوى والنموذج حتى لا تتلاصق العناصر */
 [role="dialog"] .tk-detail-block { display: flex; flex-direction: column; gap: 12px; }
 [role="dialog"] .tk-detail-block > h4 { margin-bottom: 0; }

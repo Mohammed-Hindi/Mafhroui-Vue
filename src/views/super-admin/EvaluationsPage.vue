@@ -97,7 +97,7 @@
                       <span v-for="name in g.members" :key="name" class="evp-mem">{{ name }}</span>
                     </span>
                   </td>
-                  <td v-if="isStaff" class="pt-strong">{{ g.sup }}</td>
+                  <td v-if="isStaff" class="pt-strong"><button v-if="g.supId" type="button" class="ev-suplink" title="عرض بروفايل المشرف ومجموعاته" @click.stop="openPerson('supervisor', g.supId, g.sup)">{{ g.sup }}</button><span v-else>{{ g.sup }}</span></td>
                   <td>{{ g.degree }}</td>
                   <td class="hm-center"><span :class="['rv-pill', g.supMark ? 'is-approved' : '']">{{ g.supMark ? 'تم' : 'لم يتم' }}</span></td>
                   <td class="hm-center"><span :class="['rv-pill', g.comMark ? 'is-approved' : '']">{{ g.comMark ? 'تم' : 'لم يتم' }}</span></td>
@@ -213,7 +213,7 @@
                   </td>
                   <td>
                     <span class="gr-name">{{ r.projectName }}<Star v-if="r.featured" :size="12" fill="currentColor" class="ev-star" /></span>
-                    <span class="evp-sub">{{ r.supName }}</span>
+                    <span class="evp-sub"><button v-if="r.supId" type="button" class="ev-suplink" title="عرض بروفايل المشرف ومجموعاته" @click.stop="openPerson('supervisor', r.supId, r.supName)">{{ r.supName }}</button><template v-else>{{ r.supName }}</template></span>
                   </td>
                   <td>{{ r.degree }}</td>
                   <td class="hm-center"><span class="mono">{{ r.supScore ?? '—' }}</span></td>
@@ -241,6 +241,8 @@
         </template>
       </SlideTable>
     </section>
+
+    <ProfileModal v-model="profile.open" :kind="profile.kind" :person-id="profile.id" :name="profile.name" />
   </div>
 </template>
 
@@ -250,6 +252,7 @@ import { ClipboardPen, Search, Star, ChevronDown } from 'lucide-vue-next'
 import SlideTable from '@/components/ui/SlideTable.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import EvaluationFormEditor from './EvaluationFormEditor.vue'
+import ProfileModal from '@/components/shared/ProfileModal.vue'
 import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth.store'
 import { useTeamsStore } from '@/stores/teams.store'
@@ -278,7 +281,7 @@ const VARIANT_PILL = { success: 'is-approved', info: 'is-pending', warning: 'is-
 export default {
   name: 'EvaluationsPage',
 
-  components: { SlideTable, SkeletonLoader, EvaluationFormEditor, Search, ClipboardPen, Star, ChevronDown },
+  components: { SlideTable, SkeletonLoader, EvaluationFormEditor, ProfileModal, Search, ClipboardPen, Star, ChevronDown },
 
   data() {
     return {
@@ -291,7 +294,8 @@ export default {
       loading: true,
       gq: '', rq: '', gSup: '', gStatus: '', gDept: '', gSpec: '',
       gSize: 25, rSize: 25,
-      f: { ...EMPTY_FILTERS }
+      f: { ...EMPTY_FILTERS },
+      profile: { open: false, kind: 'supervisor', id: null, name: '' }
     }
   },
 
@@ -378,6 +382,7 @@ export default {
           projectName: g.project?.name || 'لم يُسجَّل مشروع',
           members: g.members.map((m) => m.name),
           sup: g.sup.name,
+          supId: g.sup?.id ?? null,
           degree: DEGREES[g.degree] || '—',
           supMark: g.ev.sup,
           comMark: g.ev.com,
@@ -416,6 +421,7 @@ export default {
             projectName: r.project?.name || '—',
             featured: !!r.project?.is_featured,
             supName: r.supervisor?.name || '',
+            supId: r.supervisor?.id ?? null,
             degree: DEGREES[r.degree] || '—',
             supScore: r.supervisor_score,
             comScore: r.committee_score,
@@ -444,6 +450,12 @@ export default {
 
   methods: {
     grade,
+
+    /** فتح بروفايل المشرف (مع مجموعاته) */
+    openPerson(kind, id, name) {
+      if (!id) return
+      this.profile = { open: true, kind, id, name }
+    },
 
     async loadResults() {
       try {
