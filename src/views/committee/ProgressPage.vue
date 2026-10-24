@@ -44,6 +44,8 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-lg bg-surface border border-border shadow-card">
+      <BaseSelect v-model="deptFilter" class="min-w-[160px]" placeholder="كل الأقسام" include-placeholder-option :options="departmentFilterOptions" />
+      <BaseSelect v-model="specFilter" class="min-w-[170px]" placeholder="كل التخصصات" include-placeholder-option :options="specCascadeOptions" />
       <BaseSelect v-model="statusFilter" class="min-w-[160px]" placeholder="كل الحالات" include-placeholder-option :options="statusOptions" />
       <BaseSelect v-model="teamFilter" class="min-w-[170px]" placeholder="جميع الفرق" include-placeholder-option :options="teamOptions" />
       <div class="relative flex-1 min-w-[220px]">
@@ -92,6 +94,7 @@ import BaseBadge from '@/components/ui/BaseBadge.vue'
 import DataTable from '@/components/ui/DataTable.vue'
 import { useProgressStore } from '@/stores/progress.store'
 import { useAuthStore } from '@/stores/auth.store'
+import { useTeamsStore } from '@/stores/teams.store'
 import { PORTAL_ROLES } from '@/utils/constants'
 import ProgressBoard from '@/views/super-admin/ProgressBoard.vue'
 import { exportStyledExcel } from '@/utils/exportReport'
@@ -115,6 +118,8 @@ export default {
       search: '',
       statusFilter: '',
       teamFilter: '',
+      deptFilter: '',
+      specFilter: '',
       columns: [
         { key: 'spec', label: 'التخصص' },
         { key: 'sup', label: 'المشرف' },
@@ -130,6 +135,14 @@ export default {
   computed: {
     ...mapState(useProgressStore, ['overview', 'overviewLoading']),
     ...mapState(useAuthStore, ['userRole']),
+    ...mapState(useTeamsStore, ['departmentFilterOptions']),
+    /** تخصصات القسم المحدَّد (تتابع قسم→تخصص) */
+    specCascadeOptions() {
+      return useTeamsStore().specializationFilterOptionsForDept(this.deptFilter)
+    },
+    deptSpecNameSet() {
+      return new Set(useTeamsStore().specializationFilterOptionsForDept(this.deptFilter).map((o) => o.value))
+    },
     /** قوالب البوابة (هوية UCAS) للإدارة العامة ولجنة الإشراف */
     isSuperAdmin() {
       return PORTAL_ROLES.includes(this.userRole)
@@ -199,7 +212,9 @@ export default {
         const matchQ = !q || `${row.project}${row.team}`.includes(q)
         const matchStatus = !this.statusFilter || row.status === this.statusFilter
         const matchTeam = !this.teamFilter || row.team === this.teamFilter
-        return matchQ && matchStatus && matchTeam
+        const matchDept = !this.deptFilter || this.deptSpecNameSet.has(row.spec)
+        const matchSpec = !this.specFilter || row.spec === this.specFilter
+        return matchQ && matchStatus && matchTeam && matchDept && matchSpec
       })
     },
 
@@ -215,10 +230,15 @@ export default {
   watch: {
     filteredRows() {
       this.page = 1
+    },
+    // تتابع قسم→تخصص: تغيير القسم يصفّر التخصص الخارج عن نطاقه
+    deptFilter() {
+      if (this.specFilter && !this.specCascadeOptions.some((o) => o.value === this.specFilter)) this.specFilter = ''
     }
   },
 
   async created() {
+    useTeamsStore().fetchOrgCatalog().catch(() => {})
     await this.fetchProgress()
   },
 
