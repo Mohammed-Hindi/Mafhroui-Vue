@@ -37,6 +37,7 @@
       <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.sup" class="min-w-[180px]" aria-label="المشرف" placeholder="كل المشرفين" include-placeholder-option :options="supSelectOptions" />
       <BaseSelect v-if="userRole !== 'supervisor'" v-model="f.status" class="min-w-[140px]" aria-label="حالة المشروع" placeholder="حالة المشروع" include-placeholder-option :options="statusSelectOptions" />
       <BaseSelect v-model="pageSize" class="min-w-[110px]" aria-label="عدد الصفوف" :options="pageSizeOptions" />
+      <button v-if="hasFilters" type="button" class="gr-clear" @click="clearFilters"><X :size="14" /> مسح الفلاتر</button>
     </div>
 
     <!-- المشرف: الجدول يملأ ارتفاع الشاشة ورأسه يثبت أثناء التمرير -->
@@ -78,7 +79,10 @@
                       <span v-if="g.projectStatus" :class="['gm-chip', STATUS_CLASS[g.projectStatus]]">{{ STATUS[g.projectStatus] }}</span>
                       <span v-else class="gr-muted">غير محدّد</span>
                     </td>
-                    <td v-if="!isSupervisor">{{ g.supName }}</td>
+                    <td v-if="!isSupervisor">
+                      <button v-if="g.supId" type="button" class="gr-link" title="عرض بروفايل المشرف ومجموعاته" @click.stop="openPerson('supervisor', g.supId, g.supName)">{{ g.supName }}</button>
+                      <span v-else class="gr-muted">{{ g.supName }}</span>
+                    </td>
                     <td class="gr-hide-md">
                       <span class="gr-spec">{{ g.spec }}</span>
                       <span class="gr-degree">{{ DEGREES[g.degree] }}</span>
@@ -130,7 +134,8 @@
                           </template>
                           <h4>مهام المجموعة</h4>
                           <div class="gr-stats">
-                            <div><b>{{ g.tasksTotal }}</b><span>موكلة</span></div>
+                            <div><b>{{ g.tasksTotal }}</b><span>التكاليف</span></div>
+                            <div><b>{{ g.annCount }}</b><span>الإعلانات</span></div>
                             <div><b>{{ g.done }}</b><span>منجزة</span></div>
                             <div><b>{{ g.tasksTotal - g.done }}</b><span>متبقية</span></div>
                           </div>
@@ -231,7 +236,7 @@ import ProjectTypes from '@/components/shared/ProjectTypes.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
-import { Search, ChevronLeft, FileSpreadsheet, Printer, Archive, ListTodo, Megaphone, Paperclip } from 'lucide-vue-next'
+import { Search, ChevronLeft, FileSpreadsheet, Printer, Archive, ListTodo, Megaphone, Paperclip, X } from 'lucide-vue-next'
 import ProfileModal from '@/components/shared/ProfileModal.vue'
 import { DEGREES, GENDERS, REGIONS, PROJECT_STATUS as STATUS, level } from '@/utils/progressData'
 import { exportSupervisorsPdf } from '@/utils/ucasReports'
@@ -266,7 +271,7 @@ export default {
 
   emits: ['open-trashed'],
 
-  components: { SlideTable, ProjectTypes, BaseSelect, BaseButton, BaseModal, Search, ChevronLeft, FileSpreadsheet, Printer, Archive, ProfileModal },
+  components: { SlideTable, ProjectTypes, BaseSelect, BaseButton, BaseModal, Search, ChevronLeft, FileSpreadsheet, Printer, Archive, ProfileModal, X },
 
   data() {
     return {
@@ -317,7 +322,7 @@ export default {
           ...tl.tasks.map((t) => ({ key: `t${t.id}`, id: t.id, type: 'task', title: t.title, body: t.description || '', kind: 'مهمة', date: t.issued, due: t.due, status: taskStatus(t) })),
           ...tl.announcements.map((a) => ({ key: `a${a.id}`, id: a.id, type: 'announcement', title: a.title, body: a.body || '', kind: 'إعلان', date: day(a.created_at) }))
         ].sort((x, y) => (y.date || '').localeCompare(x.date || ''))
-        return { ...g, shown, act, timeline }
+        return { ...g, shown, act, timeline, annCount: tl.announcements.length }
       })
     },
 

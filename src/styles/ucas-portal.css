@@ -1509,6 +1509,21 @@
   border-radius: 4px;
   box-shadow: var(--shadow-card);
 }
+.gr-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  padding-inline: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg);
+  color: var(--color-text-600);
+  font-size: 13px;
+  font-weight: 700;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+.gr-clear:hover { border-color: var(--ucas-blue); color: var(--ucas-blue); background: var(--color-surface); }
 .gr-search {
   flex: 1 1 280px;
   display: flex;
@@ -1688,7 +1703,7 @@
 .gr-side h4 { margin: 0 0 10px; font-size: 13px; font-weight: 700; color: var(--color-text-400); }
 .gr-side h4:not(:first-child) { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--color-border); }
 .gr-desc { font-size: 13.5px; line-height: 1.8; color: var(--color-text-700); white-space: pre-line; }
-.gr-stats { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--color-border); border-radius: 4px; }
+.gr-stats { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--color-border); border-radius: 4px; }
 .gr-stats > div { padding: 10px 6px; text-align: center; }
 .gr-stats > div + div { border-inline-start: 1px solid var(--color-border); }
 .gr-stats b { display: block; font-size: 20px; font-weight: 800; color: var(--color-text-900); }
