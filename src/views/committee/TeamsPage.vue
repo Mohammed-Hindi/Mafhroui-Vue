@@ -114,6 +114,18 @@
           <BaseInput v-model="addStudentForm.team_name" label="اسم الفريق" placeholder="مثال: فريق نوفا" />
           <BaseInput v-model="addStudentForm.section" label="الشعبة" placeholder="مثال: 100" />
           <BaseSelect v-model="addStudentForm.supervisor_id" label="المشرف" placeholder="اختاري المشرف" :options="supervisorOptions" class="sm:col-span-2" />
+          <div class="sm:col-span-2">
+            <label class="block mb-1.5 text-label font-semibold text-text-700">ضمّ طلاب غير منتسبين للفريق (اختياري — حتى 3)</label>
+            <div v-if="unassignedStudents.length" class="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-1 scrollbar-thin">
+              <button
+                v-for="s in unassignedStudents" :key="s.id" type="button"
+                class="px-3 h-8 rounded-sm border text-caption font-bold transition-colors duration-fast"
+                :class="addStudentForm.extra_member_ids.includes(s.id) ? 'border-primary-600 bg-primary-50 text-primary-700' : 'border-border bg-bg text-text-600 hover:border-primary-600'"
+                @click="toggleExtraMember(s.id)"
+              >{{ s.name }}</button>
+            </div>
+            <p v-else class="text-caption text-text-400">لا يوجد طلاب غير منتسبين لأي فريق حاليًا.</p>
+          </div>
         </template>
       </div>
       <template #footer>
@@ -131,6 +143,13 @@
         <BaseSelect v-model="addSupervisorForm.specialization_id" label="التخصص" placeholder="اختاري التخصص" :options="specializationSelectOptions" />
         <BaseInput v-model="addSupervisorForm.email" type="email" label="البريد الإلكتروني" placeholder="name@mashroui.local" class="sm:col-span-2" />
         <BaseInput v-model="addSupervisorForm.whatsapp" label="رقم الواتساب" placeholder="مثال: 970591234567" class="sm:col-span-2" />
+        <div class="sm:col-span-2">
+          <BaseSelect
+            v-model="addSupervisorForm.team_id" label="إلحاق بفريق بلا مشرف (اختياري)"
+            placeholder="بدون إلحاق" include-placeholder-option :options="unsupervisedTeamOptions"
+          />
+          <p v-if="!unsupervisedTeamOptions.length" class="mt-1.5 text-caption text-text-400">لا توجد فرق بلا مشرف حاليًا.</p>
+        </div>
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="addSupervisorModal = false">إلغاء</BaseButton>
@@ -287,8 +306,8 @@ function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
 }
 
-const emptyStudentForm = () => ({ name: '', university_number: '', email: '', whatsapp: '', gender: '', region: '', createTeam: false, team_name: '', section: '', specialization_id: '', supervisor_id: '' })
-const emptySupervisorForm = () => ({ name: '', employee_number: '', email: '', whatsapp: '', specialization_id: '' })
+const emptyStudentForm = () => ({ name: '', university_number: '', email: '', whatsapp: '', gender: '', region: '', createTeam: false, team_name: '', section: '', specialization_id: '', supervisor_id: '', extra_member_ids: [] })
+const emptySupervisorForm = () => ({ name: '', employee_number: '', email: '', whatsapp: '', specialization_id: '', team_id: '' })
 
 export default {
   name: 'CommitteeTeamsPage',
@@ -318,6 +337,7 @@ export default {
       addStudentModal: false,
       addStudentForm: emptyStudentForm(),
       addStudentError: '',
+      unassignedStudents: [],
 
       addSupervisorModal: false,
       addSupervisorForm: emptySupervisorForm(),
@@ -402,6 +422,12 @@ export default {
     supervisorFilterOptions() {
       return [...new Set(this.groups.map((g) => g.sup))].map((name) => ({ value: name, label: name }))
     },
+    /** الفرق التي لا مشرف لها (حُذف حسابه أو لم يُعيَّن) — لإلحاق مشرف جديد بها */
+    unsupervisedTeamOptions() {
+      return this.teams
+        .filter((t) => !t.supervisor)
+        .map((t) => ({ value: t.id, label: t.section ? `شعبة ${t.section} — ${t.name}` : t.name }))
+    },
     /** فلاتر التخصص من دليل الهيكل الأكاديمي — تشمل التخصصات المضافة حديثًا بلا فرق */
     specializationOptions() {
       return this.specializationFilterOptions
@@ -466,10 +492,23 @@ export default {
       this.openGroupIds = this.isGroupOpen(id) ? this.openGroupIds.filter((x) => x !== id) : [...this.openGroupIds, id]
     },
 
-    openAddStudent() {
+    async openAddStudent() {
       this.addStudentForm = emptyStudentForm()
       this.addStudentError = ''
+      this.unassignedStudents = []
       this.addStudentModal = true
+      try {
+        const students = await this.fetchUsers('student', { unassigned: 1 })
+        this.unassignedStudents = students.map((s) => ({ id: s.id, name: s.name }))
+      } catch {
+        // تبقى قائمة غير المنتسبين فارغة
+      }
+    },
+    toggleExtraMember(id) {
+      const arr = this.addStudentForm.extra_member_ids
+      const i = arr.indexOf(id)
+      if (i === -1) arr.push(id)
+      else arr.splice(i, 1)
     },
     async submitAddStudent() {
       this.addStudentError = ''
@@ -486,6 +525,10 @@ export default {
         this.addStudentError = 'يرجى تعبئة اسم الفريق والتخصص والمشرف لإنشاء الفريق'
         return
       }
+      if (f.createTeam && 1 + f.extra_member_ids.length > 4) {
+        this.addStudentError = 'الحد الأقصى لأعضاء الفريق 4 طلاب'
+        return
+      }
       this.submitting = true
       try {
         const result = await this.createUser({
@@ -496,7 +539,7 @@ export default {
         if (f.createTeam) {
           await this.createTeam({
             name: f.team_name, section: f.section || null, supervisor_id: f.supervisor_id, specialization_id: f.specialization_id,
-            member_ids: [result.user.id], leader_id: result.user.id
+            member_ids: [result.user.id, ...f.extra_member_ids], leader_id: result.user.id
           })
         }
         this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}&email=${encodeURIComponent(f.email)}`
@@ -530,8 +573,13 @@ export default {
       }
       this.submitting = true
       try {
-        const result = await this.createUser({ ...this.addSupervisorForm, specialization_id: this.addSupervisorForm.specialization_id || null, role: 'supervisor' })
+        const { team_id, ...supervisorPayload } = this.addSupervisorForm
+        const result = await this.createUser({ ...supervisorPayload, specialization_id: supervisorPayload.specialization_id || null, role: 'supervisor' })
         const password = await this.setUserPassword(result.user.id)
+        if (team_id) {
+          await this.updateTeam(team_id, { supervisor_id: result.user.id })
+          await this.fetchTeams()
+        }
         this.inviteLink = `${window.location.origin}/reset-password?token=${result.invite_token}&email=${encodeURIComponent(this.addSupervisorForm.email)}`
         this.inviteTarget = { name: this.addSupervisorForm.name, mail: this.addSupervisorForm.email, whats: this.addSupervisorForm.whatsapp, password, user_id: result.user.id }
         this.addSupervisorModal = false
