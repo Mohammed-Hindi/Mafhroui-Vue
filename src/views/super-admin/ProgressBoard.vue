@@ -84,7 +84,7 @@
                       <td v-if="!isSup">{{ g.sup.name || '—' }}</td>
                       <td class="hm-center">{{ g.members.length }}</td>
                       <td class="hm-center"><span class="mono">{{ g.tasksDone }}/{{ g.tasksTotal }}</span></td>
-                      <td class="hm-center"><span :class="lateClass(lateOf(g.id))">{{ lateOf(g.id) ?? '—' }}</span></td>
+                      <td class="hm-center"><span v-if="tasks[g.id]" :class="lateClass(lateOf(g.id))">{{ lateOf(g.id) }}</span><span v-else class="pb-late-wait" aria-label="جارِ حساب المتأخرة">⋯</span></td>
                       <td>
                         <span class="gr-progress"><span :class="level(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
                         <span class="gr-pct">{{ g.percentage }}%</span>
@@ -354,6 +354,7 @@ export default {
     } finally {
       this.loading = false
     }
+    this.prefetchLate()
   },
 
   methods: {
@@ -466,6 +467,14 @@ export default {
     toggleGrp(g) {
       this.openGrp = this.openGrp === g.id ? null : g.id
       if (this.openGrp) this.loadTasks(g.id)
+    },
+
+    /** تعبئة عمود "المتأخرة" لكل المجموعات في الخلفية (دفعات) دون فتحها — loadTasks محميّ ضد التكرار */
+    async prefetchLate() {
+      const ids = this.groups.map((g) => g.id)
+      for (let i = 0; i < ids.length; i += 6) {
+        await Promise.allSettled(ids.slice(i, i + 6).map((id) => this.loadTasks(id)))
+      }
     },
 
     isLate(t) {
