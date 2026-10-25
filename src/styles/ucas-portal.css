@@ -1162,16 +1162,36 @@
 .hm-detail-head > div > span { font-size: 13px; color: var(--color-text-500); }
 
 /* حالة المشاريع — طلاب الشعبة */
+/* نظرة عامة على حالة كل الشعب (شبكة كروت قابلة للنقر للتفصيل) */
+.hm-ov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.hm-ov-card { display: flex; flex-direction: column; gap: 6px; padding: 14px; text-align: start; border-radius: 4px; background: var(--color-surface); box-shadow: inset 0 0 0 1px var(--color-border); transition: box-shadow var(--ucas-color-speed) var(--ease-standard); }
+.hm-ov-card:hover { box-shadow: inset 0 0 0 1px var(--ucas-blue); }
+.hm-ov-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hm-ov-sec { font-size: 13px; font-weight: 800; color: var(--ucas-blue); }
+.hm-ov-project { font-size: 14px; font-weight: 800; line-height: 1.45; color: var(--color-text-900); }
+.hm-ov-meta { font-size: 12px; color: var(--color-text-600); }
+.hm-ov-prog { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.hm-ov-pct { font-size: 12px; font-weight: 700; color: var(--color-text-700); }
+.hm-ov-foot { font-size: 11.5px; color: var(--color-text-400); }
+
+/* زر الرجوع لكل الشعب */
+.hm-back { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 8px; font-size: 12.5px; font-weight: 700; color: var(--color-text-600); transition: color var(--ucas-color-speed) var(--ease-standard); }
+.hm-back:hover { color: var(--ucas-blue); }
+
 .hm-detail-students { margin-bottom: 18px; }
 .hm-detail-students h4 { margin-bottom: 10px; font-size: 13px; font-weight: 700; color: var(--color-text-400); }
 .hm-detail-students h4 small { margin-inline-start: 6px; color: var(--ucas-blue); font-weight: 800; }
-.hm-student-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.hm-student-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border-radius: 4px; background: var(--color-surface); box-shadow: inset 0 0 0 1px var(--color-border); transition: box-shadow var(--ucas-color-speed) var(--ease-standard); }
-.hm-student-chip:hover { box-shadow: inset 0 0 0 1px var(--ucas-blue); }
-.hm-student-info { display: flex; flex-direction: column; line-height: 1.3; text-align: start; }
-.hm-student-info b { font-size: 13px; font-weight: 700; color: var(--color-text-900); }
-.hm-student-info .mono { font-size: 11px; color: var(--color-text-400); }
-.hm-student-tasks { margin-inline-start: 4px; font-size: 12px; font-weight: 700; color: var(--color-text-600); }
+/* كروت الطلاب — أكبر لعرض الرقم الجامعي والفئة والمنطقة وتقدّم المهام */
+.hm-student-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.hm-student-card { display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 14px; text-align: start; border-radius: 4px; background: var(--color-surface); box-shadow: inset 0 0 0 1px var(--color-border); transition: box-shadow var(--ucas-color-speed) var(--ease-standard); }
+.hm-student-card:hover { box-shadow: inset 0 0 0 1px var(--ucas-blue); }
+.hm-student-card .hm-avatar { width: 42px; height: 42px; font-size: 16px; }
+.hm-sc-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.hm-sc-main b { font-size: 14px; font-weight: 700; color: var(--color-text-900); }
+.hm-sc-uni { font-size: 11.5px; color: var(--color-text-400); }
+.hm-sc-meta { font-size: 11.5px; color: var(--color-text-600); }
+.hm-sc-prog { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: 11.5px; font-weight: 700; color: var(--color-text-600); }
+.hm-sc-prog .gr-progress { flex: 1; }
 
 /* حالة المشاريع — جدول المهام بلا سكرول أفقي + تفاصيل منسدلة للصف */
 .hm-noscroll { overflow-x: hidden; }
@@ -2757,6 +2777,8 @@
 
 /* تقدّم المشاريع */
 .pb-late { color: #E81E63; font-weight: 800; }
+.pb-late-wait { color: var(--color-text-400); letter-spacing: 1px; animation: pb-late-pulse 1.3s ease-in-out infinite; }
+@keyframes pb-late-pulse { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
 .pb-tasks { display: flex; flex-direction: column; gap: 6px; margin: 0 16px 14px; padding: 12px; max-height: 280px; overflow-y: auto; overscroll-behavior: contain; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; }
 .pb-tasks li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13.5px; color: var(--color-text-900); }
 .gr-side-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -5221,6 +5243,11 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 }
 /* مهام الطالب: لا فلاتر ولا رأس فوق اللوحة — الميزانية أقصر بنفس المبدأ (232 ناقص شريط فلاتر المشرف) */
 .sa-skin .stasks-page .tk-board { min-height: max(420px, calc(100vh - 148px)); }
+/* التكليفات (الإدارة/اللجنة): ارتفاع ثابت للّوحة والتمرير داخل كل عمود بدل تمدّد الصفحة كلها */
+.sa-skin .as-page .tk-board { height: calc(100vh - 236px); min-height: 360px; grid-auto-rows: minmax(0, 1fr); }
+.sa-skin .as-page .tk-board .tk-col { min-height: 0; }
+/* عرض القائمة: ارتفاع ثابت للجدول وتمرير صفوف المهام داخله (رأس الجدول يمرَّر مع الصفوف كالسابق) */
+.sa-skin .as-page .gr-table-wrap { max-height: calc(100vh - 300px); overflow-y: auto; }
 /* تمييز العمود أثناء سحب بطاقة — لا يظهر إلا بوجود سحب (بقيمة can-drag) */
 .tk-col-body.is-over { background: color-mix(in srgb, var(--ucas-blue) 6%, var(--color-surface)); transition: background-color var(--ucas-color-speed) var(--ease-standard); }
 /* مبدّل الحالة داخل بطاقة tk (صفحات السحب كالطالب): بصمة شارة الحالة ومقاسها */
@@ -5236,9 +5263,9 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* فلاتر شريط المهام/الإعلانات: مضغوطة لتبقى في صف واحد دون نزول الأزرار لأسفل */
 /* البحث مثبّت أقصى اليمين، والأزرار مزاحة لأقصى اليسار بفراغ بينهما */
 .sa-skin .tk-filters { gap: 8px; align-items: center; }
-.sa-skin .tk-filters .gr-search { flex: 0 1 260px; min-width: 180px; max-width: 320px; margin-inline-end: auto; }
-.sa-skin .tk-filters .tk-filter { flex: 0 1 150px; min-width: 128px; }
-.sa-skin .tk-filters .tk-filter-size { flex: 0 0 auto; min-width: 104px; max-width: 120px; }
+.sa-skin .tk-filters .gr-search { flex: 0 1 200px; min-width: 150px; max-width: 260px; margin-inline-end: auto; }
+.sa-skin .tk-filters .tk-filter { flex: 1 1 128px; min-width: 112px; max-width: 160px; }
+.sa-skin .tk-filters .tk-filter-size { flex: 0 0 auto; min-width: 96px; max-width: 112px; }
 .sa-skin .tk-filters .tk-filter > button { height: 42px; }
 .sa-skin .tk-filters .gr-select { flex: 0 1 150px; min-width: 128px; max-width: 180px; }
 /* شكل كلندر موعد التسليم داخل الفورم — أيقونة الكلندر بلون الهوية (أزرق UCAS) مثل صفحة المناقشات */
