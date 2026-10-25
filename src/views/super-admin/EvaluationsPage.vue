@@ -27,18 +27,8 @@
       <div class="dp-kpi"><b>{{ avg }}</b><span>متوسط الدرجات</span></div>
     </div>
 
-    <!-- مبدّل العرض: تقييم المجموعات / نتائج المجموعات -->
-    <nav class="dash-switch evp-switch" role="tablist" aria-label="عرض التقييمات">
-      <button type="button" role="tab" :aria-selected="tab === 'groups'" :class="tab === 'groups' && 'is-active'" @click="tab = 'groups'">
-        <ClipboardPen :size="16" /> تقييم المجموعات
-      </button>
-      <button type="button" role="tab" :aria-selected="tab === 'results'" :class="tab === 'results' && 'is-active'" @click="tab = 'results'">
-        <Trophy :size="16" /> نتائج المجموعات
-      </button>
-    </nav>
-
     <!-- 3) تقييم المجموعات -->
-    <section v-show="tab === 'groups'" class="gr gr-card evp-card">
+    <section class="gr gr-card evp-card">
       <div class="gr-card-title">
         <h3>تقييم المجموعات</h3>
         <span class="dash-chip">{{ groupTable.length }} من {{ groupsWithStatus.length }} مجموعة</span>
@@ -135,7 +125,7 @@
     </section>
 
     <!-- 4) نتائج المجموعات -->
-    <section v-show="tab === 'results'" class="gr gr-card evp-card">
+    <section class="gr gr-card evp-card">
       <div class="gr-card-title">
         <h3>نتائج المجموعات</h3>
         <span class="dash-chip">{{ resultTable.length }} طالبًا</span>
@@ -226,12 +216,12 @@
                     <span class="evp-sub"><button v-if="r.supId" type="button" class="ev-suplink" title="عرض بروفايل المشرف ومجموعاته" @click.stop="openPerson('supervisor', r.supId, r.supName)">{{ r.supName }}</button><template v-else>{{ r.supName }}</template></span>
                   </td>
                   <td>{{ r.degree }}</td>
-                  <td class="hm-center"><span class="mono">{{ r.supScore ?? '—' }}</span></td>
-                  <td class="hm-center"><span class="mono">{{ r.comScore ?? '—' }}</span></td>
+                  <td class="hm-center"><span class="mono">{{ r.supScore ?? 0 }}</span></td>
+                  <td class="hm-center"><span class="mono">{{ r.comScore ?? 0 }}</span></td>
                   <td class="hm-center">
                     <span class="evp-score">
                       <span class="evp-score-bar"><span :style="{ width: Math.min(100, Number(r.score) || 0) + '%' }" /></span>
-                      <b class="mono">{{ r.score ?? '—' }}</b>
+                      <b class="mono">{{ r.score ?? 0 }}</b>
                     </span>
                   </td>
                   <td class="hm-center"><span :class="['rv-pill', VARIANT_PILL[r.variant]]">{{ r.gradeLabel }}</span></td>
@@ -258,7 +248,7 @@
 
 <script>
 import { mapState } from 'pinia'
-import { ClipboardPen, Search, Star, ChevronDown, Trophy } from 'lucide-vue-next'
+import { ClipboardPen, Search, Star, ChevronDown } from 'lucide-vue-next'
 import SlideTable from '@/components/ui/SlideTable.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import EvaluationFormEditor from './EvaluationFormEditor.vue'
@@ -291,13 +281,12 @@ const VARIANT_PILL = { success: 'is-approved', info: 'is-pending', warning: 'is-
 export default {
   name: 'EvaluationsPage',
 
-  components: { SlideTable, SkeletonLoader, EvaluationFormEditor, ProfileModal, Search, ClipboardPen, Star, ChevronDown, Trophy },
+  components: { SlideTable, SkeletonLoader, EvaluationFormEditor, ProfileModal, Search, ClipboardPen, Star, ChevronDown },
 
   data() {
     return {
       DEGREES, REGIONS, STATUS, STATUS_PILL, VARIANT_PILL, GRADE_NAMES: Object.keys(GRADE_VARIANTS),
       ClipboardPen,
-      tab: this.$route.query.tab === 'results' ? 'results' : 'groups',
       formsOpen: (() => { try { return localStorage.getItem('ev-forms-open') === '1' } catch { return false } })(),
       groups: [],
       examining: [],
