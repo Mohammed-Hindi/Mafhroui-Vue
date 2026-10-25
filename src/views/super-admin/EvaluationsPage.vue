@@ -27,8 +27,18 @@
       <div class="dp-kpi"><b>{{ avg }}</b><span>متوسط الدرجات</span></div>
     </div>
 
+    <!-- مبدّل العرض: تقييم المجموعات / نتائج المجموعات -->
+    <nav class="dash-switch evp-switch" role="tablist" aria-label="عرض التقييمات">
+      <button type="button" role="tab" :aria-selected="tab === 'groups'" :class="tab === 'groups' && 'is-active'" @click="tab = 'groups'">
+        <ClipboardPen :size="16" /> تقييم المجموعات
+      </button>
+      <button type="button" role="tab" :aria-selected="tab === 'results'" :class="tab === 'results' && 'is-active'" @click="tab = 'results'">
+        <Trophy :size="16" /> نتائج المجموعات
+      </button>
+    </nav>
+
     <!-- 3) تقييم المجموعات -->
-    <section class="gr gr-card evp-card">
+    <section v-show="tab === 'groups'" class="gr gr-card evp-card">
       <div class="gr-card-title">
         <h3>تقييم المجموعات</h3>
         <span class="dash-chip">{{ groupTable.length }} من {{ groupsWithStatus.length }} مجموعة</span>
@@ -124,10 +134,10 @@
       </SlideTable>
     </section>
 
-    <!-- 4) نتائج الطلاب -->
-    <section class="gr gr-card evp-card">
+    <!-- 4) نتائج المجموعات -->
+    <section v-show="tab === 'results'" class="gr gr-card evp-card">
       <div class="gr-card-title">
-        <h3>نتائج الطلاب</h3>
+        <h3>نتائج المجموعات</h3>
         <span class="dash-chip">{{ resultTable.length }} طالبًا</span>
       </div>
 
@@ -248,7 +258,7 @@
 
 <script>
 import { mapState } from 'pinia'
-import { ClipboardPen, Search, Star, ChevronDown } from 'lucide-vue-next'
+import { ClipboardPen, Search, Star, ChevronDown, Trophy } from 'lucide-vue-next'
 import SlideTable from '@/components/ui/SlideTable.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import EvaluationFormEditor from './EvaluationFormEditor.vue'
@@ -281,12 +291,13 @@ const VARIANT_PILL = { success: 'is-approved', info: 'is-pending', warning: 'is-
 export default {
   name: 'EvaluationsPage',
 
-  components: { SlideTable, SkeletonLoader, EvaluationFormEditor, ProfileModal, Search, ClipboardPen, Star, ChevronDown },
+  components: { SlideTable, SkeletonLoader, EvaluationFormEditor, ProfileModal, Search, ClipboardPen, Star, ChevronDown, Trophy },
 
   data() {
     return {
       DEGREES, REGIONS, STATUS, STATUS_PILL, VARIANT_PILL, GRADE_NAMES: Object.keys(GRADE_VARIANTS),
       ClipboardPen,
+      tab: this.$route.query.tab === 'results' ? 'results' : 'groups',
       formsOpen: (() => { try { return localStorage.getItem('ev-forms-open') === '1' } catch { return false } })(),
       groups: [],
       examining: [],
