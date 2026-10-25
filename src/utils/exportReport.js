@@ -137,7 +137,7 @@ export async function exportGroupsPdf({ fileName, title, subtitle, sections }) {
         </div>
         <div style="font-size:11px; color:rgba(255,255,255,.9); text-align:end;">
           <div>تاريخ الإصدار</div>
-          <div style="font-weight:700; margin-top:2px;">${escapeHtml(new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }))}</div>
+          <div style="font-weight:700; margin-top:2px;">${escapeHtml(new Date().toLocaleDateString('ar-EG-u-nu-latn', { year: 'numeric', month: 'long', day: 'numeric' }))}</div>
         </div>
       </div>
 

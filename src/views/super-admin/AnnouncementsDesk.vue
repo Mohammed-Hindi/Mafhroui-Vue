@@ -133,7 +133,7 @@ const TYPE = {
 }
 const STATUS = { pending: 'لم تبدأ', in_progress: 'قيد التنفيذ', review: 'قيد المراجعة', done: 'مكتملة' }
 const STAFF = ['supervisor', 'committee', 'super_admin']
-const rtf = new Intl.RelativeTimeFormat('ar', { numeric: 'auto' })
+const rtf = new Intl.RelativeTimeFormat('ar-u-nu-latn', { numeric: 'auto' })
 
 export default {
   name: 'AnnouncementsDesk',
@@ -297,7 +297,7 @@ export default {
     },
 
     when(d) {
-      return d ? new Date(d).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' }) : ''
+      return d ? new Date(d).toLocaleString('ar-EG-u-nu-latn', { dateStyle: 'medium', timeStyle: 'short' }) : ''
     },
 
     ago(d) {
@@ -306,7 +306,7 @@ export default {
       if (Math.abs(mins) < 60) return rtf.format(mins, 'minute')
       if (Math.abs(mins) < 1440) return rtf.format(Math.round(mins / 60), 'hour')
       if (Math.abs(mins) < 10080) return rtf.format(Math.round(mins / 1440), 'day')
-      return new Date(d).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })
+      return new Date(d).toLocaleDateString('ar-EG-u-nu-latn', { day: 'numeric', month: 'short' })
     }
   }
 }

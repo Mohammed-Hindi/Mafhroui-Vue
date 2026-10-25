@@ -57,7 +57,7 @@ export default {
 
   computed: {
     monthLabel() {
-      return new Date(this.viewYear, this.viewMonth, 1).toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' })
+      return new Date(this.viewYear, this.viewMonth, 1).toLocaleDateString('ar-EG-u-nu-latn', { month: 'long', year: 'numeric' })
     },
     leadingBlanks() {
       return new Date(this.viewYear, this.viewMonth, 1).getDay()

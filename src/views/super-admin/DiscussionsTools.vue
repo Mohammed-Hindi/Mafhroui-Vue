@@ -1017,7 +1017,7 @@ export default {
 
     snapshot(onlyConfirmed = false) {
       this.published = {
-        at: new Date().toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' }),
+        at: new Date().toLocaleString('ar-EG-u-nu-latn', { dateStyle: 'medium', timeStyle: 'short' }),
         rows: this.plan.filter((r) => !onlyConfirmed || r.status === 'confirmed').map((r) => ({ id: r.id, section: r.g.section, supId: r.g.supId, date: r.date, time: r.time, room: r.room, examiners: [...r.examiners] }))
       }
     },

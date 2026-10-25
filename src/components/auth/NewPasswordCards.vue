@@ -15,7 +15,7 @@
 
     <form v-else novalidate @submit.prevent="submit">
       <ul class="au-pass-reqs" aria-label="شروط كلمة المرور">
-        <li :class="['au-pass-req', checks.length && 'is-ok']"><component :is="checks.length ? 'CheckCircle2' : 'Circle'" :size="15" /> ٨ أحرف على الأقل</li>
+        <li :class="['au-pass-req', checks.length && 'is-ok']"><component :is="checks.length ? 'CheckCircle2' : 'Circle'" :size="15" /> 8 أحرف على الأقل</li>
         <li :class="['au-pass-req', checks.upper && 'is-ok']"><component :is="checks.upper ? 'CheckCircle2' : 'Circle'" :size="15" /> حرف كبير <bdi dir="ltr">(A–Z)</bdi></li>
         <li :class="['au-pass-req', checks.lower && 'is-ok']"><component :is="checks.lower ? 'CheckCircle2' : 'Circle'" :size="15" /> حرف صغير <bdi dir="ltr">(a–z)</bdi></li>
         <li :class="['au-pass-req', checks.number && 'is-ok']"><component :is="checks.number ? 'CheckCircle2' : 'Circle'" :size="15" /> رقم <bdi dir="ltr">(0–9)</bdi></li>

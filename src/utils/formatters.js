@@ -3,7 +3,7 @@ export function formatDate(value) {
   if (!value) return '—'
   const date = value instanceof Date ? value : new Date(value)
   if (Number.isNaN(date.getTime())) return '—'
-  return new Intl.DateTimeFormat('ar-EG', {
+  return new Intl.DateTimeFormat('ar-EG-u-nu-latn', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
@@ -15,7 +15,7 @@ export function formatDateTime(value) {
   if (!value) return '—'
   const date = value instanceof Date ? value : new Date(value)
   if (Number.isNaN(date.getTime())) return '—'
-  return new Intl.DateTimeFormat('ar-EG', {
+  return new Intl.DateTimeFormat('ar-EG-u-nu-latn', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -39,7 +39,7 @@ export function formatRelativeTime(value) {
     ['minute', 60],
     ['second', 1]
   ]
-  const rtf = new Intl.RelativeTimeFormat('ar', { numeric: 'auto' })
+  const rtf = new Intl.RelativeTimeFormat('ar-u-nu-latn', { numeric: 'auto' })
   for (const [unit, seconds] of units) {
     if (Math.abs(diffSeconds) >= seconds || unit === 'second') {
       return rtf.format(Math.round(diffSeconds / seconds), unit)
@@ -51,7 +51,7 @@ export function formatRelativeTime(value) {
 /** رقم بفواصل عربية */
 export function formatNumber(value) {
   if (value === null || value === undefined || value === '') return '—'
-  return new Intl.NumberFormat('ar-EG').format(value)
+  return new Intl.NumberFormat('ar-EG-u-nu-latn').format(value)
 }
 
 /** حجم ملف مقروء */

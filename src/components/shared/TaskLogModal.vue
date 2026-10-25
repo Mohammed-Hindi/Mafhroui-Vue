@@ -104,7 +104,7 @@ export default {
     },
 
     when(d) {
-      return d ? new Date(d).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' }) : ''
+      return d ? new Date(d).toLocaleString('ar-EG-u-nu-latn', { dateStyle: 'medium', timeStyle: 'short' }) : ''
     }
   }
 }
