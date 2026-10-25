@@ -35,14 +35,8 @@
       </section>
     </template>
 
-    <!-- زرّا تبديل سكشنات الرئيسية -->
-    <nav v-if="hero" class="dash-switch" aria-label="أقسام الرئيسية">
-      <button type="button" :class="view === 'activity' && 'is-active'" @click="view = 'activity'">مدى نشاط المشرفين والطلاب</button>
-      <button type="button" :class="view === 'status' && 'is-active'" @click="view = 'status'">حالة المشاريع والمهام</button>
-    </nav>
-
     <!-- نشاط المشرفين والمجموعات -->
-    <section class="dash-card" v-show="view === 'activity'">
+    <section class="dash-card">
       <div class="dash-card-head">
         <h3>{{ isSup ? 'مجموعاتي وطلابي' : 'مدى نشاط المشرفين والطلاب' }}</h3>
         <span v-if="isSup" class="dash-chip">{{ groups.length }} مجموعة</span>
@@ -79,7 +73,7 @@
                   <span class="gr-progress"><span :class="level(s.activity)" :style="{ width: s.activity + '%' }" /></span>
                   <span class="gr-pct">{{ s.activity }}%</span>
                 </td>
-                <td><span class="mono">{{ formatDateTime(s.lastAt) }}</span></td>
+                <td><span v-if="s.lastAt" class="mono">{{ formatDateTime(s.lastAt) }}</span><span v-else class="hm-muted">لا يوجد</span></td>
                 <td class="hm-muted">{{ s.lastAction }}</td>
               </tr>
               <SkeletonLoader v-if="loading" variant="table" :cols="7" :rows="5" />
@@ -144,7 +138,7 @@
       <p class="hm-count">{{ tab === 'sup' ? `${supRows.length} مشرف` : `${grpRows.length} مجموعة` }}</p>
     </section>
 
-    <section class="dash-card hm-health" v-show="view === 'status'">
+    <section class="dash-card hm-health">
       <div class="dash-card-head">
         <h3>حالة المشاريع والمهام</h3>
       </div>
@@ -158,11 +152,23 @@
         <BaseSelect v-if="taskGroup" v-model="taskState" class="min-w-[150px]" aria-label="حالة المهمة" placeholder="كل الحالات" include-placeholder-option :options="taskStateOptions" />
       </div>
 
-      <!-- السكشن فارغ حتى تُختار شعبة -->
-      <div v-if="!taskGroup" class="hm-empty">
-        <p class="hm-empty-title">اختر شعبة لعرض تفاصيل مشروعها وطلابها ومهامها</p>
-        <div v-if="statusGroupOptions.length" class="hm-empty-list">
-          <button v-for="g in statusGroupOptions" :key="g.id" type="button" class="hm-empty-chip" @click="taskGroup = g.id">{{ g.name }}</button>
+      <!-- افتراضيًا: نظرة عامة على كل الشعب؛ واختيار شعبة يفتح تفاصيلها -->
+      <div v-if="!taskGroup">
+        <div v-if="statusGroups.length" class="hm-ov-grid">
+          <button v-for="g in statusGroups" :key="g.id" type="button" class="hm-ov-card" @click="taskGroup = g.id">
+            <header class="hm-ov-head">
+              <span class="hm-ov-sec">{{ g.name }}</span>
+              <span class="dash-chip">{{ g.members.length }} طالب</span>
+            </header>
+            <b class="hm-ov-project">{{ g.project || 'بدون مشروع' }}</b>
+            <span class="hm-ov-meta">{{ g.spec }} · {{ DEGREES[g.degree] }}</span>
+            <span v-if="!isSup" class="hm-ov-meta">المشرف: {{ supName(g.supId) || '—' }}</span>
+            <div class="hm-ov-prog">
+              <span class="gr-progress"><span :class="levelClass(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
+              <span class="hm-ov-pct mono">{{ g.percentage }}%</span>
+            </div>
+            <span class="hm-ov-foot mono">{{ g.done }}/{{ g.tasksTotal }} مهمة مكتملة</span>
+          </button>
         </div>
         <p v-else class="hm-muted">لا توجد شعب مطابقة للفلاتر المحددة</p>
       </div>
@@ -171,6 +177,7 @@
       <template v-else-if="selectedGroup">
         <header class="hm-detail-head">
           <div>
+            <button type="button" class="hm-back" @click="taskGroup = ''"><ArrowRight :size="14" /> كل الشعب</button>
             <b>{{ selectedGroup.project || 'بدون مشروع' }}</b>
             <span>{{ selectedGroup.spec }} · {{ DEGREES[selectedGroup.degree] }}<template v-if="!isSup"> · المشرف:
               <button v-if="selectedGroup.supId" type="button" class="ev-suplink" @click="openProfile('supervisor', { id: selectedGroup.supId, name: supName(selectedGroup.supId) })">{{ supName(selectedGroup.supId) }}</button>
@@ -183,12 +190,19 @@
         <!-- طلاب الشعبة: الأسماء، والضغط يفتح البروفايل -->
         <div class="hm-detail-students">
           <h4>الطلاب <small>{{ selectedGroup.members.length }}</small></h4>
-          <ul v-if="selectedGroup.members.length" class="hm-student-chips">
+          <ul v-if="selectedGroup.members.length" class="hm-student-cards">
             <li v-for="m in selectedGroup.members" :key="m.id">
-              <button type="button" class="hm-student-chip" @click="openProfile('student', m)">
+              <button type="button" class="hm-student-card" @click="openProfile('student', m)">
                 <span class="hm-avatar" aria-hidden="true">{{ m.name.charAt(0) }}</span>
-                <span class="hm-student-info"><b>{{ m.name }}</b><span class="mono">{{ m.uni }}</span></span>
-                <span class="hm-student-tasks mono">{{ m.done }}/{{ m.total }}</span>
+                <span class="hm-sc-main">
+                  <b>{{ m.name }}</b>
+                  <span class="mono hm-sc-uni">{{ m.uni || '—' }}</span>
+                  <span class="hm-sc-meta">{{ GENDERS[m.gender] || '' }}<template v-if="m.region"> · {{ REGIONS[m.region] }}</template></span>
+                  <span class="hm-sc-prog">
+                    <span class="gr-progress is-sm"><span :class="levelClass(m.percentage)" :style="{ width: (m.percentage || 0) + '%' }" /></span>
+                    <span class="mono">{{ m.done }}/{{ m.total }} مهمة</span>
+                  </span>
+                </span>
               </button>
             </li>
           </ul>
@@ -221,7 +235,7 @@
                       </td>
                     </tr>
                   </template>
-                  <SkeletonLoader v-if="loading || tasksLoading" variant="table" :cols="5" :rows="4" />
+                  <SkeletonLoader v-if="loading || tasksLoading || detailTasksLoading" variant="table" :cols="5" :rows="4" />
                   <tr v-else-if="!taskRows.length"><td colspan="5" class="gr-empty">لا توجد مهام لهذه الشعبة</td></tr>
                 </tbody>
               </table>
@@ -230,7 +244,7 @@
           </div>
 
           <div class="hm-health-status">
-            <div v-if="loading || tasksLoading" class="hm-prog-sk" aria-label="جارٍ التحميل">
+            <div v-if="loading || tasksLoading || detailTasksLoading" class="hm-prog-sk" aria-label="جارٍ التحميل">
               <span class="sk" style="width: 120px; height: 40px" />
               <span class="sk" style="height: 14px" />
               <SkeletonLoader :rows="4" height="18px" />
@@ -269,7 +283,7 @@
 <script>
 import { ref } from 'vue'
 import { mapState } from 'pinia'
-import { ChevronDown, Search, Printer } from 'lucide-vue-next'
+import { ChevronDown, Search, Printer, ArrowRight } from 'lucide-vue-next'
 import CountUp from '@/components/ui/CountUp.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { useTeamsStore } from '@/stores/teams.store'
@@ -284,7 +298,7 @@ import SlideTable from '@/components/ui/SlideTable.vue'
 
 const GENDER_OPTIONS = [{ value: 'male', label: 'طلاب' }, { value: 'female', label: 'طالبات' }]
 const TASK_STATE_OPTIONS = [{ value: 'done', label: 'مكتملة' }, { value: 'open', label: 'غير مكتملة' }, { value: 'late', label: 'متأخرة' }]
-import { DEGREES, REGIONS } from '@/utils/progressData'
+import { DEGREES, REGIONS, GENDERS, level } from '@/utils/progressData'
 import { formatDateTime } from '@/utils/formatters'
 import { loadGroups, loadSupervisors, loadDashboardStats, normalizeTasks } from '@/services/adminData'
 
@@ -299,7 +313,7 @@ const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0)
 export default {
   name: 'PortalDashboard',
 
-  components: { ChevronDown, CountUp, Search, Printer, ProfileModal, BaseSelect, SlideTable },
+  components: { ChevronDown, ArrowRight, CountUp, Search, Printer, ProfileModal, BaseSelect, SlideTable },
 
   /** حركة الصفحة (الإدارة العامة): البانر يدخل عند الفتح، البطاقات تصعد عند الوصول إليها، والصفوف تتوالى بعد وصول البيانات */
   setup() {
@@ -319,17 +333,18 @@ export default {
 
   data() {
     return {
-      STATE, DEGREES, REGIONS,
+      STATE, DEGREES, REGIONS, GENDERS,
       genderOptions: GENDER_OPTIONS,
       taskStateOptions: TASK_STATE_OPTIONS,
       loading: true,
       tasksLoading: useAuthStore().userRole === ROLES.SUPERVISOR,
+      detailTasks: [],
+      detailTasksLoading: false,
       groups: [],
       supList: [],
       raw: {},
       supActivity: {},
       tab: useAuthStore().userRole === ROLES.SUPERVISOR ? 'grp' : 'sup',
-      view: 'activity',
       q: '',
       specFilter: '',
       supFilter: '',
@@ -449,10 +464,14 @@ export default {
         .map((s) => ({ id: s.id, name: s.name }))
     },
 
-    statusGroupOptions() {
+    /** كل الشعب المطابقة للفلاتر (القسم/التخصص/المشرف) — مصدر النظرة العامة وقائمة فلتر الشعبة */
+    statusGroups() {
       return this.groups
         .filter((g) => (!this.fDept || this.deptOfSpec[g.spec] === this.fDept) && (!this.fSpec || g.spec === this.fSpec) && (!this.fSup || g.supId === this.fSup))
-        .map((g) => ({ id: g.id, name: g.name }))
+    },
+
+    statusGroupOptions() {
+      return this.statusGroups.map((g) => ({ id: g.id, name: g.name }))
     },
 
     /** الشعبة المختارة (لكل شعبة مجموعة واحدة) */
@@ -482,7 +501,7 @@ export default {
     },
 
     taskRows() {
-      return this.tasks
+      return this.detailTasks
         .filter((t) => (!this.taskGroup || t.groupId === this.taskGroup) && (!this.taskState || (this.taskState === 'open' ? t.state !== 'done' : t.state === this.taskState)))
         .map((t) => {
           const g = this.groups.find((x) => x.id === t.groupId)
@@ -493,7 +512,7 @@ export default {
 
     /** الرسم البياني يتبع المجموعة المختارة في فلتر المهام */
     chart() {
-      const list = this.tasks.filter((t) => !this.taskGroup || t.groupId === this.taskGroup)
+      const list = this.detailTasks.filter((t) => !this.taskGroup || t.groupId === this.taskGroup)
       return ['done', 'open', 'late'].map((key) => ({ key, label: STATE[key].label, count: list.filter((t) => t.state === key).length }))
     },
 
@@ -536,8 +555,10 @@ export default {
     fSup() {
       this.taskGroup = ''
     },
-    taskGroup() {
+    taskGroup(id) {
       this.openTask = null
+      if (id) this.loadDetailTasks(id)
+      else this.detailTasks = []
     }
   },
 
@@ -569,6 +590,22 @@ export default {
 
   methods: {
     formatDateTime,
+    levelClass: level,
+
+    /** مهام الشعبة المختارة من الخادم (GET /teams/{id}/tasks) — لجدول المهام والرسم البياني */
+    async loadDetailTasks(id) {
+      this.detailTasksLoading = true
+      this.detailTasks = []
+      try {
+        const { data } = await api.get(`/teams/${id}/tasks`)
+        const rows = (data?.data || data || []).map((t) => ({ ...t, team_id: t.team_id ?? id }))
+        if (this.taskGroup === id) this.detailTasks = normalizeTasks(rows)
+      } catch {
+        this.$toast?.error('تعذّر تحميل مهام الشعبة')
+      } finally {
+        this.detailTasksLoading = false
+      }
+    },
 
     /** المشرف: مجموعاته فقط (loadGroups يقصرها عليه) ومهامها من /teams/{id}/tasks — لا يملك صلاحية إحصاءات اللجنة */
     async loadSupervisorHome() {
