@@ -129,8 +129,13 @@
         </template>
       </nav>
 
-      <!-- تذييل الشريط: المستخدم + تسجيل الخروج -->
-      <div class="shrink-0 border-t border-border-soft p-3">
+      <!-- تذييل الشريط: الفصل الدراسي + المستخدم + تسجيل الخروج -->
+      <div class="shrink-0 border-t border-border-soft p-3 space-y-2">
+        <!-- فلتر الفصل الدراسي يظهر في القائمة الجانبية على الموبايل -->
+        <div class="lg:hidden">
+          <SemesterSelect class="w-full" />
+        </div>
+
         <div v-if="!isUcasBrand" class="flex items-center gap-3 px-2 py-2 rounded-sm">
           <span
             class="grid place-items-center w-9 h-9 rounded-pill bg-primary-50 text-primary-600 font-cairo font-bold text-caption shrink-0"
@@ -145,7 +150,7 @@
 
         <button
           type="button"
-          :class="['w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-body-sm font-medium text-text-700 hover:bg-error-bg hover:text-error transition-colors duration-fast', !isUcasBrand && 'mt-2']"
+          :class="['w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-body-sm font-medium text-text-700 hover:bg-error-bg hover:text-error transition-colors duration-fast']"
           @click="handleLogout"
         >
           <LogOut :size="19" class="shrink-0" />
@@ -159,6 +164,7 @@
 <script>
 import { mapState, mapActions } from 'pinia'
 import { X, LogOut, GraduationCap, ChevronDown } from 'lucide-vue-next'
+import SemesterSelect from '@/components/shared/SemesterSelect.vue'
 import { useUiStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
@@ -169,7 +175,7 @@ import { lockScroll, unlockScroll } from '@/utils/scrollLock'
 export default {
   name: 'AppSidebar',
 
-  components: { X, LogOut, GraduationCap, ChevronDown, UcasLogo },
+  components: { X, LogOut, GraduationCap, ChevronDown, UcasLogo, SemesterSelect },
 
   props: {
     /**
