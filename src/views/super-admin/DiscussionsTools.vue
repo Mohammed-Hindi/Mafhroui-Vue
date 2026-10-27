@@ -135,6 +135,13 @@
             <option v-for="r in allRooms" :key="r" :value="r">{{ r }}</option>
           </select>
         </label>
+        <label v-if="deptList.length" class="gr-pick">
+          <select v-model="deptFilter" class="gr-select" aria-label="القسم">
+            <option value="">كل الأقسام</option>
+            <option v-for="d in deptList" :key="d" :value="d">{{ d }}</option>
+          </select>
+        </label>
+        <button type="button" class="pbtn is-outline dp-add-ex" @click="addEx.open = true"><UserPlus :size="16" /> مناقش خارجي</button>
       </div>
 
       <!-- عرض القائمة: أعمدة مضغوطة (حقلان فوق بعض) بلا تمرير أفقي، وسبب التعارض تحت الصف مباشرة -->
@@ -173,9 +180,11 @@
               <td class="dp-stack dp-examiners">
                 <select v-for="k in [0, 1]" :key="k" v-model="r.examiners[k]" class="ev-input" :aria-label="k ? 'المناقش الثاني' : 'المناقش الأول'">
                   <option :value="null">{{ k ? 'المناقش الثاني' : 'المناقش الأول' }}</option>
-                  <option v-for="sp in supList" :key="sp.id" :value="sp.id" :disabled="sp.id === r.g.supId">
-                    {{ sp.name }}{{ sp.id === r.g.supId ? ' (المشرف)' : isBusy(sp.id, r) ? ' (مشغول)' : '' }}
-                  </option>
+                  <optgroup v-for="grp in examinerOptions" :key="grp.label" :label="grp.label">
+                    <option v-for="sp in grp.items" :key="sp.id" :value="sp.id" :disabled="sp.id === r.g.supId">
+                      {{ sp.name }}{{ sp.id === r.g.supId ? ' (المشرف)' : isBusy(sp.id, r) ? ' (مشغول)' : '' }}
+                    </option>
+                  </optgroup>
                 </select>
               </td>
               <td><input v-model.trim="r.note" type="text" class="ev-input" placeholder="مثال: Online"></td>
@@ -371,18 +380,37 @@
         <button type="button" class="pbtn is-green" :disabled="!roomPrint.rooms.length || busy" @click="printRooms"><Printer :size="16" /> {{ busy ? 'جارٍ التجهيز…' : `طباعة ${roomPrint.rooms.length} قاعة` }}</button>
       </template>
     </BaseModal>
+
+    <!-- إضافة مناقش خارجي دائم (ليس مشرفًا ولا لجنة) — يبقى متاحًا في القوائم لاحقًا -->
+    <BaseModal v-model="addEx.open" title="إضافة مناقش خارجي" description="يُضاف لقائمة المناقشين ويبقى متاحًا في المناقشات القادمة" size="md">
+      <div class="dp-form">
+        <label class="pfield"><span>الاسم <b class="as-req">*</b></span><input v-model.trim="addEx.name" type="text" placeholder="اسم المناقش" @keydown.enter.prevent="addExaminer"></label>
+        <label class="pfield"><span>اللقب (اختياري)</span><input v-model.trim="addEx.title" type="text" placeholder="مثال: د."></label>
+        <label class="pfield"><span>واتساب (اختياري)</span><input v-model.trim="addEx.whatsapp" type="tel" dir="ltr" placeholder="9705xxxxxxxx"></label>
+      </div>
+      <template #footer>
+        <button type="button" class="pbtn is-outline" @click="addEx.open = false">إلغاء</button>
+        <button type="button" class="pbtn is-green" :disabled="!addEx.name.trim() || addEx.saving" @click="addExaminer"><UserPlus :size="16" /> {{ addEx.saving ? 'جارٍ الإضافة…' : 'إضافة' }}</button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
 <script>
 import SlideTable from '@/components/ui/SlideTable.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
-import { CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, ChevronDown } from 'lucide-vue-next'
+import { CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, ChevronDown, UserPlus } from 'lucide-vue-next'
 import { exportStyledExcel } from '@/utils/exportReport'
 import { exportPlanPdf, exportRoomsPdf, exportDiscussionsDoc } from '@/utils/ucasReports'
 import { DEGREES, REGIONS } from '@/utils/progressData'
 import api from '@/services/api'
 import { loadGroups, loadSupervisors, loadDiscussions, groupGender, groupRegion } from '@/services/adminData'
+import { useExaminersStore } from '@/stores/examiners.store'
+
+// معرّفات المناقشين داخل الجدول موحَّدة: المشرفون واللجنة بمعرّف المستخدم، والمناقش الخارجي
+// بمعرّفه مزاحًا بهذا الأساس حتى لا يصطدم بمعرّف مستخدم. الهوية تُحفظ بالاسم في committee،
+// وهذه المعرّفات لكشف التعارض والعرض فقط.
+const EXTERNAL_BASE = 1_000_000
 
 const toMin = (hhmm) => {
   const [h, m] = String(hhmm || '0:0').split(':').map(Number)
@@ -396,7 +424,7 @@ const CITY = { gaza: 'غزة', middle: 'وسط غزة', south: 'خانيونس' 
 export default {
   name: 'DiscussionsTools',
 
-  components: { SlideTable, BaseModal, CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, ChevronDown },
+  components: { SlideTable, BaseModal, CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, ChevronDown, UserPlus },
 
   data() {
     return {
@@ -405,6 +433,10 @@ export default {
       saving: false,
       groups: [],
       supList: [],
+      // أعضاء لجنة الإشراف + المناقشون الخارجيون (من /examiners/pool) — إضافةً للمشرفين في قائمة الاختيار
+      examinerExtras: [],
+      // نافذة إضافة مناقش خارجي دائم جديد
+      addEx: { open: false, name: '', title: '', whatsapp: '', saving: false },
       s: {
         // مدة لكل درجة (نموذج الكلية: الدبلوم 15 دقيقة، البكالوريوس 30)
         durations: { diploma: 15, bachelor: 30 },
@@ -432,6 +464,7 @@ export default {
       plan: [],
       day: '',
       roomFilter: '',
+      deptFilter: '',
       busy: false,
       published: null,
       supRoom: '',
@@ -479,8 +512,38 @@ export default {
       return [...new Set(this.plan.map((r) => r.room).filter(Boolean))]
     },
 
+    /** الأقسام الموجودة في المجموعات — لفلتر العرض حسب القسم */
+    deptList() {
+      return [...new Set((this.plan.length ? this.plan.map((r) => r.g.dept) : this.groups.map((g) => g.dept)).filter(Boolean))]
+    },
+
+    /** قائمة اختيار المناقشين مجمَّعة: المشرفون ← لجنة الإشراف ← المناقشون الخارجيون */
+    examinerOptions() {
+      return [
+        { label: 'المشرفون', items: this.supList.map((s) => ({ id: s.id, name: s.name })) },
+        { label: 'لجنة الإشراف', items: this.examinerExtras.filter((e) => e.group === 'committee') },
+        { label: 'مناقشون خارجيون', items: this.examinerExtras.filter((e) => e.group === 'external') }
+      ].filter((g) => g.items.length)
+    },
+
+    /** معرّف → اسم لكل المناقشين (مشرفون + لجنة + خارجيون) لعرض الأسماء في كل مكان */
+    nameById() {
+      const m = new Map()
+      this.supList.forEach((s) => m.set(s.id, s.name))
+      this.examinerExtras.forEach((e) => m.set(e.id, e.name))
+      return m
+    },
+
+    /** اسم → معرّف لاسترجاع المناقشين المحفوظين بالاسم (committee) إلى معرّفاتهم */
+    idByName() {
+      const m = new Map()
+      this.supList.forEach((s) => m.set(s.name, s.id))
+      this.examinerExtras.forEach((e) => m.set(e.name, e.id))
+      return m
+    },
+
     visiblePlan() {
-      return this.plan.filter((r) => (!this.day || r.date === this.day) && (!this.roomFilter || r.room === this.roomFilter) && (!this.onlyConflicts || this.conflicts[r.id]))
+      return this.plan.filter((r) => (!this.day || r.date === this.day) && (!this.roomFilter || r.room === this.roomFilter) && (!this.deptFilter || r.g.dept === this.deptFilter) && (!this.onlyConflicts || this.conflicts[r.id]))
     },
 
     kpis() {
@@ -551,7 +614,7 @@ export default {
       return this.day || this.s.days[this.dayKeys[0].key]
     },
     gridRows() {
-      return this.plan.filter((r) => r.date === this.gridDay)
+      return this.plan.filter((r) => r.date === this.gridDay && (!this.deptFilter || r.g.dept === this.deptFilter))
     },
     gridRooms() {
       const used = this.gridRows.map((r) => r.room).filter(Boolean)
@@ -649,6 +712,7 @@ export default {
     }
     this.supList = await loadSupervisors(this.groups)
     this.supView = this.supList[0]?.id ?? null
+    await this.loadExaminerPool()
     try {
       this.fromDiscussions(await loadDiscussions())
     } catch {
@@ -703,7 +767,38 @@ export default {
     },
 
     supName(id) {
-      return this.supList.find((x) => x.id === id)?.name || '—'
+      return this.nameById.get(id) || '—'
+    },
+
+    /** يجلب لجنة الإشراف والمناقشين الخارجيين لإضافتهم لقائمة الاختيار (لجنة الإشراف فقط لها الصلاحية؛ يتجاهل الفشل بهدوء) */
+    async loadExaminerPool() {
+      try {
+        const pool = await useExaminersStore().fetchExaminerPool()
+        this.examinerExtras = [
+          ...(pool.committee || []).map((c) => ({ id: c.user_id, name: c.name, group: 'committee' })),
+          ...(pool.externals || []).map((e) => ({ id: EXTERNAL_BASE + e.examiner_id, name: e.name, group: 'external' }))
+        ]
+      } catch {
+        // لا صلاحية (غير لجنة الإشراف) أو لا مناقشين إضافيين — تبقى القائمة على المشرفين فقط
+      }
+    },
+
+    /** إضافة مناقش خارجي دائم جديد ثم إتاحته فورًا في القوائم */
+    async addExaminer() {
+      const name = this.addEx.name.trim()
+      if (!name) return
+      this.addEx.saving = true
+      try {
+        const title = this.addEx.title.trim()
+        const ex = await useExaminersStore().createExaminer({ name, title: title || null, whatsapp: this.addEx.whatsapp.trim() || null })
+        const display = (ex.title ? `${ex.title} ` : '') + ex.name
+        this.examinerExtras = [...this.examinerExtras, { id: EXTERNAL_BASE + ex.id, name: display, group: 'external' }]
+        this.$toast?.success(`أُضيف المناقش ${display}`)
+        this.addEx = { open: false, name: '', title: '', whatsapp: '', saving: false }
+      } catch {
+        this.$toast?.error('تعذّر إضافة المناقش — تحقّق من الاسم ورقم الواتساب')
+        this.addEx.saving = false
+      }
     },
 
     /** بطاقة معلومات المشرف */
@@ -949,7 +1044,7 @@ export default {
           if (v instanceof Date) return v.toISOString().slice(0, 10)
           return String(v?.text ?? v ?? '').trim()
         }
-        const byName = (n) => this.supList.find((x) => x.name === n)?.id ?? null
+        const byName = (n) => this.idByName.get(n) ?? null
         let updated = 0
         ws.eachRow((row, i) => {
           if (i === 1) return
@@ -1037,7 +1132,7 @@ export default {
     /** يبني الجدول من مواعيد المناقشات المحفوظة في الخادم */
     fromDiscussions(list) {
       const byProject = Object.fromEntries(list.map((d) => [d.project_id, d]))
-      const byName = (n) => this.supList.find((x) => x.name === n)?.id ?? null
+      const byName = (n) => this.idByName.get(n) ?? null
       const rows = this.groups.filter((g) => byProject[g.projectId]).map((g) => {
         const d = byProject[g.projectId]
         const [who, ...rest] = String(d.committee || '').split(' | ')
