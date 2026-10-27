@@ -3083,7 +3083,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .dp-kpi.is-bad { border-top-color: #FF5B5B; }
 .dp-kpi.is-bad b { color: #E81E63; }
 .dp-kpi.is-warn { border-top-color: #FF9C39; }
-.dp-scroll thead th { position: sticky; top: 0; z-index: 1; }
+/* الرأس اللاصق لجدول مراجعة المناقشات: خلفية معتمة على الـth نفسه (لا الـtr) حتى لا تظهر الصفوف خلفه مع border-collapse */
+.dp-scroll thead th { position: sticky; top: 0; z-index: 2; background: var(--portal-thead-bg); }
 .dp-table tbody.is-conflict td { background: #FDECEE; }
 .dp-table tbody.is-conflict tr:first-child td:first-child { box-shadow: inset -3px 0 0 #FF5B5B; }
 .dp-table tr.dp-why td { padding-top: 0; white-space: normal; font-size: 12.5px; font-weight: 600; color: #E81E63; }
