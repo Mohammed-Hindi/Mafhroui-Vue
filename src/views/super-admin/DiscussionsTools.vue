@@ -14,7 +14,10 @@
           </span>
           <ChevronDown v-if="plan.length" :size="18" :class="['dp-set-caret', settingsOpen && 'is-open']" />
         </button>
-        <button type="button" class="pbtn is-cyan dp-gen-btn" :disabled="loading || !!badWindows.length" @click="generate"><CalendarPlus :size="17" /> {{ plan.length ? 'إعادة توليد الجدول' : 'توليد الجدول' }}</button>
+        <div class="dp-set-actions">
+          <button type="button" class="pbtn is-outline dp-add-ex" @click="addEx.open = true"><UserPlus :size="16" /> مناقش خارجي</button>
+          <button type="button" class="pbtn is-cyan dp-gen-btn" :disabled="loading || !!badWindows.length" @click="generate"><CalendarPlus :size="17" /> {{ plan.length ? 'إعادة توليد الجدول' : 'توليد الجدول' }}</button>
+        </div>
       </div>
 
       <div v-show="!loading && (settingsOpen || !plan.length)" class="dp-set-body">
@@ -86,6 +89,17 @@
       </div>
     </section>
 
+    <!-- حالة فارغة: قبل توليد الجدول يرشد المستخدم للخطوة التالية (اختيار المناقشين والفلترة تظهر بعد التوليد) -->
+    <section v-if="!loading && !plan.length" class="dash-card dp-empty">
+      <CalendarPlus :size="34" />
+      <h3>ابدأ ببناء جدول المناقشات</h3>
+      <p>بعد ضبط الأيام والمدة والقاعات في الإعدادات بالأعلى، اضغط <b>«توليد الجدول»</b> ليُبنى جدول بلا تعارضات.
+        عندها يظهر لكل مجموعة <b>اختيار المناقشَين</b> (من المشرفين ولجنة الإشراف والمناقشين الخارجيين)، و<b>فلتر القسم</b>، مع كشف التعارض فورًا — وكلها قابلة للتعديل.</p>
+      <p class="dp-empty-sub">تقدر كمان تضيف <b>مناقشًا خارجيًا</b> (ليس مشرفًا ولا لجنة) من زر «مناقش خارجي» بالأعلى ليصبح متاحًا في القوائم.</p>
+      <button type="button" class="pbtn is-cyan" :disabled="!!badWindows.length" @click="generate"><CalendarPlus :size="17" /> توليد الجدول</button>
+      <small v-if="badWindows.length" class="dp-empty-warn">حدّد ساعات المكان لـ {{ badWindows.map((k) => REGIONS[k]).join('، ') }} أولًا</small>
+    </section>
+
     <!-- 2) جدول المناقشات -->
     <section v-if="plan.length" id="dp-table" class="dash-card">
       <!-- التصدير والنشر قبال العنوان في رأس البطاقة (أفخم) -->
@@ -141,7 +155,6 @@
             <option v-for="d in deptList" :key="d" :value="d">{{ d }}</option>
           </select>
         </label>
-        <button type="button" class="pbtn is-outline dp-add-ex" @click="addEx.open = true"><UserPlus :size="16" /> مناقش خارجي</button>
       </div>
 
       <!-- عرض القائمة: أعمدة مضغوطة (حقلان فوق بعض) بلا تمرير أفقي، وسبب التعارض تحت الصف مباشرة -->
