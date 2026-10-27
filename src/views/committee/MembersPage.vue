@@ -90,7 +90,7 @@
                   <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-whatsapp-bg text-whatsapp hover:bg-whatsapp-bg disabled:opacity-40 disabled:pointer-events-none" :disabled="!row.whats" title="واتساب" @click="sendWhats(row.whats)"><MessageCircle :size="14" /></button>
                   <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-primary-100 text-primary-600 hover:bg-primary-50" title="بريد" @click="sendMail(row.mail)"><Mail :size="14" /></button>
                   <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="تعديل" @click="openEdit(row, memberKind)"><Pencil :size="14" /></button>
-                  <button v-if="isSuperAdmin && memberKind === 'supervisor'" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="التحكم بقبول/رفض المقترحات" @click="openModuleRestrict(row)"><SlidersHorizontal :size="14" /></button>
+                  <button v-if="canManagePerms && memberKind === 'supervisor'" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" title="التحكم بقبول/رفض المقترحات" @click="openModuleRestrict(row)"><SlidersHorizontal :size="14" /></button>
                   <button v-if="isSuperAdmin" type="button" class="grid place-items-center w-8 h-8 rounded-sm border border-border text-text-600 hover:bg-border-soft hover:text-primary-700" :disabled="reinvitingId === row.id" title="نسخ رابط دعوة جديد" @click="quickReinvite(row)"><Link2 :size="14" /></button>
                   <button
                     type="button"
@@ -609,6 +609,11 @@ export default {
 
     isSuperAdmin() {
       return this.userRole === ROLES.SUPER_ADMIN
+    },
+
+    /** السوبر أدمن ولجنة الإشراف يعدّلان صلاحيات المشرفين (قبول/رفض المقترحات) */
+    canManagePerms() {
+      return this.userRole === ROLES.SUPER_ADMIN || this.userRole === ROLES.COMMITTEE
     },
 
     addRoleCards() {
