@@ -126,12 +126,16 @@ const updatePosition = () => {
   }
 
   const spaceBelow = window.innerHeight - rect.bottom - gap * 2
+  const spaceAbove = rect.top - gap * 2 - Math.max(headerBottom, 0)
+  // الزر قرب أسفل الشاشة (محدّد منخفض داخل نافذة أو تذييل القائمة الجانبية): لو ما في مساحة كافية تحته وفوقه أوسع، تُفتح القائمة للأعلى حتى تبقى كل الخيارات ظاهرة وقابلة للاختيار
+  const openUp = spaceBelow < 200 && spaceAbove > spaceBelow
 
   listStyle.value = {
     left: `${rect.left}px`,
     width: `${rect.width}px`,
-    top: `${Math.max(rect.bottom + gap, headerBottom + gap)}px`,
-    maxHeight: `${Math.max(Math.min(spaceBelow, 288), 140)}px`
+    ...(openUp
+      ? { bottom: `${window.innerHeight - rect.top + gap}px`, maxHeight: `${Math.max(Math.min(spaceAbove, 288), 140)}px` }
+      : { top: `${Math.max(rect.bottom + gap, headerBottom + gap)}px`, maxHeight: `${Math.max(Math.min(spaceBelow, 288), 140)}px` })
   }
 }
 
