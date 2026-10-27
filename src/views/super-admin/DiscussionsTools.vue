@@ -70,6 +70,36 @@
           </div>
           <small v-if="badWindows.length" class="dp-note is-bad">حدّد ساعات صحيحة (من قبل إلى) لـ: {{ badWindows.map((k) => REGIONS[k]).join('، ') }}</small>
         </fieldset>
+
+        <!-- 4. القسم المستهدف للتوليد + المناقشون المتاحون (شيك بوكس): المشرف لا يناقش شعبه -->
+        <fieldset class="dp-block dp-block-wide">
+          <legend><span class="dp-no">4</span><Users :size="17" /> القسم ومن يناقش؟<small>اختر القسم والمناقشين المتاحين؛ لا يناقش المشرف شُعبه</small></legend>
+          <div class="dp-form">
+            <label class="pfield">
+              <span>القسم المستهدف</span>
+              <select v-model="genDept" class="ev-input" aria-label="قسم التوليد">
+                <option value="">كل الأقسام</option>
+                <option v-for="d in allDepts" :key="d" :value="d">{{ d }}</option>
+              </select>
+            </label>
+          </div>
+          <div class="dp-expick">
+            <div class="dp-expick-head">
+              <span>المناقشون المتاحون <b>({{ examinerPicks.length }})</b></span>
+              <button type="button" class="pbtn is-outline is-sm" @click="toggleAllExaminers">{{ examinerPicks.length >= examinerAll.length ? 'إلغاء الكل' : 'تحديد الكل' }}</button>
+            </div>
+            <p v-if="!examinerAll.length" class="dp-note">جارٍ تحميل المناقشين…</p>
+            <div v-for="grp in examinerOptions" :key="grp.label" class="dp-expick-grp">
+              <b class="dp-expick-label">{{ grp.label }}</b>
+              <div class="dp-expick-chips">
+                <label v-for="e in grp.items" :key="e.id" :class="['gp-item dp-expick-chip', pickedSet.has(e.id) && 'is-on']">
+                  <input type="checkbox" :value="e.id" v-model="examinerPicks"><span>{{ e.name }}</span>
+                </label>
+              </div>
+            </div>
+            <small class="dp-note">يُوزَّع التوليد من المحدَّدين فقط، ولا يُسنَد مشرف لمناقشة إحدى شُعبه.</small>
+          </div>
+        </fieldset>
       </div>
 
       <!-- سعة كل يوم بالدقائق (لأن مدة الدبلوم تختلف عن البكالوريوس) -->
@@ -412,7 +442,7 @@
 <script>
 import SlideTable from '@/components/ui/SlideTable.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
-import { CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, ChevronDown, UserPlus } from 'lucide-vue-next'
+import { CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, ChevronDown, UserPlus, Users } from 'lucide-vue-next'
 import { exportStyledExcel } from '@/utils/exportReport'
 import { exportPlanPdf, exportRoomsPdf, exportDiscussionsDoc } from '@/utils/ucasReports'
 import { DEGREES, REGIONS } from '@/utils/progressData'
@@ -437,7 +467,7 @@ const CITY = { gaza: 'غزة', middle: 'وسط غزة', south: 'خانيونس' 
 export default {
   name: 'DiscussionsTools',
 
-  components: { SlideTable, BaseModal, CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, ChevronDown, UserPlus },
+  components: { SlideTable, BaseModal, CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, ChevronDown, UserPlus, Users },
 
   data() {
     return {
@@ -450,6 +480,9 @@ export default {
       examinerExtras: [],
       // نافذة إضافة مناقش خارجي دائم جديد
       addEx: { open: false, name: '', title: '', whatsapp: '', saving: false },
+      // إعدادات التوليد: القسم المستهدف (فارغ = كل الأقسام) والمناقشون المتاحون للتوزيع التلقائي (معرّفاتهم)
+      genDept: '',
+      examinerPicks: [],
       s: {
         // مدة لكل درجة (نموذج الكلية: الدبلوم 15 دقيقة، البكالوريوس 30)
         durations: { diploma: 15, bachelor: 30 },
@@ -528,6 +561,21 @@ export default {
     /** الأقسام الموجودة في المجموعات — لفلتر العرض حسب القسم */
     deptList() {
       return [...new Set((this.plan.length ? this.plan.map((r) => r.g.dept) : this.groups.map((g) => g.dept)).filter(Boolean))]
+    },
+
+    /** الأقسام من المجموعات — لاختيار قسم التوليد في الإعدادات (قبل وجود جدول) */
+    allDepts() {
+      return [...new Set(this.groups.map((g) => g.dept).filter(Boolean))]
+    },
+
+    /** كل المناقشين موحَّدين (مشرفون + لجنة + خارجيون) لقائمة الاختيار وتوزيع التوليد */
+    examinerAll() {
+      return [...this.supList.map((s) => ({ id: s.id, name: s.name, group: 'supervisor' })), ...this.examinerExtras]
+    },
+
+    /** مجموعة معرّفات المناقشين المحدَّدين للتوليد (بحث سريع) */
+    pickedSet() {
+      return new Set(this.examinerPicks)
     },
 
     /** قائمة اختيار المناقشين مجمَّعة: المشرفون ← لجنة الإشراف ← المناقشون الخارجيون */
@@ -725,6 +773,8 @@ export default {
     }
     this.supList = await loadSupervisors(this.groups)
     this.supView = this.supList[0]?.id ?? null
+    // افتراضيًا كل المشرفين متاحون كمناقشين (اللجنة والخارجيون اختياريون يُفعَّلون بالشيك بوكس)
+    this.examinerPicks = this.supList.map((s) => s.id)
     await this.loadExaminerPool()
     try {
       this.fromDiscussions(await loadDiscussions())
@@ -931,12 +981,29 @@ export default {
      */
     generate() {
       if (this.badWindows.length) return this.$toast?.error(`ساعات المكان إلزامية — حدّدها لـ ${this.badWindows.map((k) => REGIONS[k]).join('، ')}`)
+      // قائمة المناقشين المتاحين = المحدَّدون بالشيك بوكس (مشرفون + لجنة + خارجيون)
+      const picked = this.examinerAll.filter((e) => this.pickedSet.has(e.id))
+      if (picked.length < 2) return this.$toast?.error('اختر مناقشَين على الأقل من قائمة «من يناقش؟»')
+      // القسم المستهدف للتوليد؛ باقي الأقسام تبقى كما هي ولا تُلمَس
+      const scope = this.genDept
+      const inScope = (g) => !scope || g.dept === scope
+      if (!this.groups.some(inScope)) return this.$toast?.error('لا مجموعات في القسم المختار')
+
       const busy = new Map() // `${date}|${personId أو room:اسم}` → [[بداية، نهاية]]
       const free = (key, a, b) => !(busy.get(key) || []).some(([x, y]) => a < y && x < b)
       const take = (key, a, b) => busy.set(key, [...(busy.get(key) || []), [a, b]])
-      const load = Object.fromEntries(this.supList.map((x) => [x.id, 0]))
-      const sorted = [...this.groups].sort((a, b) => a.degree.localeCompare(b.degree) || a.section.localeCompare(b.section, 'en', { numeric: true }))
-      this.plan = sorted.map((g) => {
+      const load = Object.fromEntries(picked.map((x) => [x.id, 0]))
+      // حجز مواعيد الأقسام الأخرى المجدولة مسبقًا حتى لا يتعارض القسم الجديد معها، وموازنة الحِمل عادلة
+      this.plan.forEach((r) => {
+        if (inScope(r.g) || !r.time || !r.room) return
+        const a = toMin(r.time), b = a + this.durOf(r)
+        ;[r.g.supId, ...r.examiners].filter(Boolean).forEach((pid) => take(`${r.date}|${pid}`, a, b))
+        take(`${r.date}|room:${r.room}`, a, b)
+        r.examiners.filter(Boolean).forEach((id) => { if (id in load) load[id] += 1 })
+      })
+
+      const sorted = this.groups.filter(inScope).sort((a, b) => a.degree.localeCompare(b.degree) || a.section.localeCompare(b.section, 'en', { numeric: true }))
+      const newRows = sorted.map((g) => {
         // إعادة التوليد تحتفظ بالفئة والمكان المعدّلين يدويًا وبمعرّف الموعد المحفوظ (تحديث بدل تكرار)
         const prev = this.plan.find((p) => p.id === g.id)
         const row = { id: g.id, g, gender: prev?.gender || groupGender(g), region: prev?.region || groupRegion(g), time: '', room: '', examiners: [null, null], note: '', discussionId: prev?.discussionId ?? null }
@@ -947,7 +1014,8 @@ export default {
           const b = a + dur
           if (!free(`${d}|${g.supId}`, a, b)) continue
           const room = this.roomsOf(row.region).find((rm) => this.roomFits(rm, row.region, a, b) && free(`${d}|room:${rm}`, a, b))
-          const ex = this.supList.filter((x) => x.id !== g.supId && free(`${d}|${x.id}`, a, b)).sort((x, y) => load[x.id] - load[y.id]).slice(0, 2).map((x) => x.id)
+          // قاعدة التوليد: المناقش لا يناقش شعبته (x.id !== g.supId)، ويُفضَّل أقل المناقشين تحميلًا
+          const ex = picked.filter((x) => x.id !== g.supId && free(`${d}|${x.id}`, a, b)).sort((x, y) => load[x.id] - load[y.id]).slice(0, 2).map((x) => x.id)
           if (!room || ex.length < 2) continue
           ;[g.supId, ...ex].forEach((pid) => take(`${d}|${pid}`, a, b))
           take(`${d}|room:${room}`, a, b)
@@ -957,11 +1025,22 @@ export default {
         }
         return row
       })
+
+      // دمج: نُبقي صفوف الأقسام الأخرى كما هي، ونستبدل صفوف القسم المستهدف بالجديدة، ثم ترتيب موحَّد
+      const kept = this.plan.filter((r) => !inScope(r.g))
+      this.plan = [...kept, ...newRows].sort((a, b) => a.g.degree.localeCompare(b.g.degree) || a.g.section.localeCompare(b.g.section, 'en', { numeric: true }))
+      this.deptFilter = scope
       this.published = null
       this.settingsOpen = false
       this.$nextTick(() => document.getElementById('dp-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
-      const missing = this.plan.filter((r) => !r.time).length
-      missing ? this.$toast?.error(`تعذّر جدولة ${missing} مجموعة — راجع مؤشر السعة في الإعدادات`) : this.$toast?.success(`جُدولت ${this.plan.length} مناقشة بلا تعارضات`)
+      const missing = newRows.filter((r) => !r.time).length
+      missing ? this.$toast?.error(`تعذّر جدولة ${missing} مجموعة — راجع المناقشين المتاحين ومؤشر السعة`) : this.$toast?.success(`جُدولت ${newRows.length} مناقشة بلا تعارضات`)
+    },
+
+    /** تحديد/إلغاء كل المناقشين في قائمة «من يناقش؟» */
+    toggleAllExaminers() {
+      const all = this.examinerAll.map((e) => e.id)
+      this.examinerPicks = this.examinerPicks.length >= all.length ? [] : all
     },
 
     pdfRows() {
