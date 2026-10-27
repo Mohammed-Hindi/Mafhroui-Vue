@@ -21,6 +21,15 @@
       </div>
 
       <div v-show="!loading && (settingsOpen || !plan.length)" class="dp-set-body">
+      <!-- القسم المستهدف أولًا: يحدّد أي مجموعات يبنيها التوليد (الباقي يبقى كما هو) -->
+      <div class="dp-dept-bar">
+        <span class="dp-dept-label"><Users :size="17" /> القسم المستهدف للتوليد</span>
+        <select v-model="genDept" class="ev-input dp-dept-select" aria-label="قسم التوليد">
+          <option value="">كل الأقسام</option>
+          <option v-for="d in allDepts" :key="d" :value="d">{{ d }}</option>
+        </select>
+        <small>التوليد يبني مجموعات هذا القسم فقط، وباقي الأقسام المجدولة تبقى كما هي.</small>
+      </div>
       <!-- ترتيب أبسط: متى (الأيام) ← كم المدة ← أين (القاعات وساعاتها) -->
       <div class="dp-blocks">
         <!-- 1. الأيام: فئة لكل تقاطع (طلاب/طالبات × دبلوم/بكالوريوس) — يوم خاص لكل فئة -->
@@ -71,18 +80,9 @@
           <small v-if="badWindows.length" class="dp-note is-bad">حدّد ساعات صحيحة (من قبل إلى) لـ: {{ badWindows.map((k) => REGIONS[k]).join('، ') }}</small>
         </fieldset>
 
-        <!-- 4. القسم المستهدف للتوليد + المناقشون المتاحون (شيك بوكس): المشرف لا يناقش شعبه -->
+        <!-- 4. المناقشون المتاحون (شيك بوكس): المشرف لا يناقش شعبه -->
         <fieldset class="dp-block dp-block-wide">
-          <legend><span class="dp-no">4</span><Users :size="17" /> القسم ومن يناقش؟<small>اختر القسم والمناقشين المتاحين؛ لا يناقش المشرف شُعبه</small></legend>
-          <div class="dp-form">
-            <label class="pfield">
-              <span>القسم المستهدف</span>
-              <select v-model="genDept" class="ev-input" aria-label="قسم التوليد">
-                <option value="">كل الأقسام</option>
-                <option v-for="d in allDepts" :key="d" :value="d">{{ d }}</option>
-              </select>
-            </label>
-          </div>
+          <legend><span class="dp-no">4</span><Users :size="17" /> من يناقش؟<small>حدّد المناقشين المتاحين للتوليد؛ لا يناقش المشرف شُعبه</small></legend>
           <div class="dp-expick">
             <div class="dp-expick-head">
               <span>المناقشون المتاحون <b>({{ examinerPicks.length }})</b></span>
