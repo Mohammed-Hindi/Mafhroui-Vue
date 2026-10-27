@@ -6822,30 +6822,34 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .dp-empty > svg:first-child { color: var(--ucas-green); }
 .sa-skin .dp-empty h3 { margin: 0; color: var(--ucas-blue); }
 .sa-skin .dp-empty p { margin: 0; max-width: 620px; color: var(--color-text-600, #555); line-height: 1.9; }
-.sa-skin .dp-empty-sub { font-size: 13px; color: var(--color-text-500, #6F6F6F) !important; }
+.sa-skin .dp-empty-sub { font-size: 13px; color: var(--color-text-600) !important; }
 .sa-skin .dp-empty .pbtn { margin-top: 6px; }
 .sa-skin .dp-empty-warn { color: var(--ucas-red, #c0392b); font-weight: 600; }
 /* شريط القسم المستهدف أعلى الإعدادات */
-.sa-skin .dp-dept-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 16px; margin-bottom: 16px; border: 1px solid var(--color-border, #E3E3E3); border-radius: 12px; background: var(--portal-primary-50, #EAF7EF); }
+/* خلفية خضراء خفيفة بلون الهوية تتكيّف مع الثيمين عبر color-mix مع السطح */
+.sa-skin .dp-dept-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 16px; margin-bottom: 16px; border: 1px solid color-mix(in srgb, var(--ucas-green) 26%, var(--color-border)); border-radius: 12px; background: color-mix(in srgb, var(--ucas-green) 8%, var(--color-surface)); }
 .sa-skin .dp-dept-label { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--ucas-blue); }
 .sa-skin .dp-dept-label svg { color: var(--ucas-green); }
 .sa-skin .dp-dept-select { min-width: 200px; max-width: 280px; }
-.sa-skin .dp-dept-bar small { flex-basis: 100%; color: var(--color-text-500, #6F6F6F); font-size: 12.5px; }
+.sa-skin .dp-dept-bar small { flex-basis: 100%; color: var(--color-text-600); font-size: 12.5px; }
 /* اختيار المناقشين (شيك بوكس) في الإعدادات */
 .sa-skin .dp-expick { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
 .sa-skin .dp-expick-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .sa-skin .dp-expick-head > span { font-weight: 700; color: var(--ucas-blue); }
 .sa-skin .dp-expick-head b { color: var(--ucas-green); }
 .sa-skin .dp-expick-grp { display: flex; flex-direction: column; gap: 7px; }
-.sa-skin .dp-expick-label { font-size: 12.5px; font-weight: 700; color: var(--color-text-500, #6F6F6F); }
+.sa-skin .dp-expick-label { font-size: 12.5px; font-weight: 700; color: var(--color-text-600); }
 .sa-skin .dp-expick-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-/* الرقاقة: افتراضيًا بيضاء بإطار وعلامة +؛ عند التحديد خضراء مملوءة بنص أبيض و✓ */
-.sa-skin .dp-expick-chip { position: relative; display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border: 1.5px solid var(--color-border, #E3E3E3); border-radius: 999px; cursor: pointer; font-size: 13px; color: var(--color-text-700, #333); background: #fff; transition: background .15s, border-color .15s, color .15s, box-shadow .15s; user-select: none; }
-.sa-skin .dp-expick-chip:hover { border-color: var(--ucas-green); background: var(--portal-primary-50, #EAF7EF); }
+/* الرقاقة: افتراضيًا بلون السطح بإطار وعلامة +؛ عند التحديد خضراء مملوءة بنص متباين و✓ — كله يتكيّف مع الثيم */
+.sa-skin .dp-expick-chip { position: relative; display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border: 1.5px solid color-mix(in srgb, var(--ucas-green) 22%, var(--color-border)); border-radius: 999px; cursor: pointer; font-size: 13px; color: var(--color-text-700); background: var(--color-surface); transition: background .15s, border-color .15s, color .15s, box-shadow .15s; user-select: none; }
+.sa-skin .dp-expick-chip:hover { border-color: var(--ucas-green); background: color-mix(in srgb, var(--ucas-green) 9%, var(--color-surface)); }
 .sa-skin .dp-expick-chip input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
 .sa-skin .dp-expick-chip::before { content: '+'; font-weight: 700; font-size: 14px; line-height: 1; color: var(--ucas-green); }
-.sa-skin .dp-expick-chip.is-on { background: var(--ucas-green); border-color: var(--ucas-green); color: #fff; font-weight: 600; box-shadow: 0 2px 6px rgba(27, 152, 84, .25); }
+.sa-skin .dp-expick-chip.is-on { background: var(--ucas-green); border-color: var(--ucas-green); color: #fff; font-weight: 600; box-shadow: 0 2px 8px color-mix(in srgb, var(--ucas-green) 35%, transparent); }
 .sa-skin .dp-expick-chip.is-on::before { content: '✓'; color: #fff; }
+/* في الدارك اللون الأخضر أفتح، فنص داكن متباين على الرقاقة المحددة */
+:root[data-theme="dark"] .sa-skin .dp-expick-chip.is-on,
+:root[data-theme="dark"] .sa-skin .dp-expick-chip.is-on::before { color: #08101F; }
 /* شريط التصدير والنشر أعلى جدول المناقشات */
 /* رأس جدول المناقشات: العنوان يمينًا وأزرار التصدير والنشر قباله */
 .sa-skin .dp-table-head { align-items: center; gap: 12px 16px; flex-wrap: wrap; }
