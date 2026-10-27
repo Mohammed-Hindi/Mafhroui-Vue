@@ -143,10 +143,10 @@ const handleOutsideClick = (event) => {
 }
 
 const openDropdown = () => {
-  // القائمة فوق النافذة اللي فيها (مع احترام طبقة النافذة حتى ما تختفي خلف نافذة فوقها)
-  const dialog = root.value?.closest('[role="dialog"]')
-  const dialogZ = dialog ? parseInt(getComputedStyle(dialog).zIndex, 10) : 0
-  panelZ.value = dialog ? (Number.isFinite(dialogZ) ? dialogZ : 110) + 10 : 39
+  // القائمة فوق الطبقة اللي فيها (نافذة مودال أو الشريط الجانبي المنزلق على الموبايل) حتى ما تختفي خلفها
+  const layer = root.value?.closest('[role="dialog"], #app-sidebar')
+  const layerZ = layer ? parseInt(getComputedStyle(layer).zIndex, 10) : 0
+  panelZ.value = layer ? (Number.isFinite(layerZ) ? layerZ : 110) + 10 : 39
   const button = root.value?.querySelector('button')
   if (button && window.innerHeight - button.getBoundingClientRect().bottom < 200) button.scrollIntoView({ block: 'center' })
   isOpen.value = true
