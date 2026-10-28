@@ -7458,3 +7458,15 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 
 /* إبراز مؤقّت لبطاقة المجموعة عند فتحها من البحث الشامل */
 .tm-focus-ring { outline: 2px solid var(--ucas-blue); outline-offset: 3px; border-radius: 4px; }
+
+/* ===== جدول مراجعة المناقشات على الجوال (dp-table) =====
+   هذا الجدول خلاياه قابلة للتحرير وليس من جداول-البطاقات (لا data-rt)، وله min-width ثابت.
+   قاعدة الجوال العامة تضبط .pt-wrap على overflow:visible لأجل جداول-البطاقات، وهذا يجعل
+   جدول المناقشات العريض يطفح خارج بطاقته ويتداخل مع القسم التالي. نعيد له التمرير الأفقي
+   الداخلي ونمنعه من تجاوز عرض الشاشة (يأتي بعد تلك القاعدة في الترتيب فيتقدّم عليها). */
+@media (max-width: 1023.98px) {
+  .ucas-portal .dp-page .dash-card { min-width: 0; }
+  .ucas-portal .dp-review-scroll,
+  .ucas-portal .dp-scroll,
+  .ucas-portal .dp-grid-wrap { overflow: auto !important; max-width: 100%; }
+}
