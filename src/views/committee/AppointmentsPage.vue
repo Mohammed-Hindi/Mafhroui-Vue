@@ -187,6 +187,7 @@
         <BaseInput v-model="apptForm.place" label="مكان المناقشة" placeholder="مثال: قاعة المناقشات 1" />
         <BaseInput v-model="apptForm.date" type="date" label="تاريخ المناقشة" />
         <BaseInput v-model="apptForm.time" type="time" label="موعد المناقشة" />
+        <BaseInput v-model.number="apptForm.duration" type="number" min="5" max="600" step="5" label="مدة المناقشة (دقيقة)" placeholder="مثال: 30" />
         <BaseSelect v-model="apptForm.status" label="الحالة" :options="statusOptions" />
         <BaseInput v-model="apptForm.committee" label="لجنة المناقشة" placeholder="مثال: د. سارة الحربي، د. يوسف المحطاني" class="sm:col-span-2" />
         <BaseInput v-model="apptForm.whatsapp" label="رقم واتساب للتذكير (اختياري)" placeholder="مثال: 970591234567" class="sm:col-span-2" />
@@ -198,7 +199,7 @@
     </BaseModal>
 
     <!-- استيراد من Excel -->
-    <BaseModal v-model="importModal" title="استيراد مواعيد مناقشات من Excel" description="الأعمدة المطلوبة بالترتيب: اسم الفريق، المكان، التاريخ (YYYY-MM-DD)، الوقت (HH:MM)، لجنة المناقشة، واتساب (اختياري)" size="lg">
+    <BaseModal v-model="importModal" title="استيراد مواعيد مناقشات من Excel" description="الأعمدة المطلوبة بالترتيب: اسم الفريق، المكان، التاريخ (YYYY-MM-DD)، الوقت (HH:MM)، المدة بالدقائق (اختياري، الافتراضي 30)، لجنة المناقشة، واتساب (اختياري)" size="lg">
       <div v-if="!importPreview">
         <input ref="fileInput" type="file" accept=".xlsx" class="block w-full text-body-sm text-text-700 file:me-3 file:h-icon-btn file:px-4 file:rounded-sm file:border-0 file:bg-primary-50 file:text-primary-700 file:font-bold" @change="onFileSelected">
       </div>
@@ -260,7 +261,7 @@ function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '').replace(/^0/, '')
 }
 
-const emptyForm = () => ({ project_id: '', place: '', date: '', time: '', committee: '', whatsapp: '', status: 'pending' })
+const emptyForm = () => ({ project_id: '', place: '', date: '', time: '', duration: 30, committee: '', whatsapp: '', status: 'pending' })
 
 export default {
   name: 'CommitteeAppointmentsPage',
@@ -352,6 +353,7 @@ export default {
         place: d.place,
         date: d.discussion_date,
         time: (d.discussion_time || '').slice(0, 5),
+        duration: d.duration,
         committee: d.committee,
         whatsapp: d.whatsapp,
         status: d.status
@@ -567,7 +569,7 @@ export default {
     openEdit(row) {
       this.isEditing = true
       this.editTargetId = row.id
-      this.apptForm = { project_id: row.project_id, place: row.place, date: (row.date || '').slice(0, 10), time: row.time, committee: row.committee, whatsapp: row.whatsapp || '', status: row.status }
+      this.apptForm = { project_id: row.project_id, place: row.place, date: (row.date || '').slice(0, 10), time: row.time, duration: Number(row.duration) || 30, committee: row.committee, whatsapp: row.whatsapp || '', status: row.status }
       this.apptModal = true
     },
 
@@ -581,10 +583,10 @@ export default {
       const time = f.time.slice(0, 5)
       try {
         if (this.isEditing) {
-          await this.updateDiscussion(this.editTargetId, { place: f.place, discussion_date: f.date, discussion_time: time, committee: f.committee, whatsapp: f.whatsapp || null, status: f.status })
+          await this.updateDiscussion(this.editTargetId, { place: f.place, discussion_date: f.date, discussion_time: time, duration: Number(f.duration) || 30, committee: f.committee, whatsapp: f.whatsapp || null, status: f.status })
           this.$toast?.success('تم حفظ التعديلات')
         } else {
-          await this.createDiscussion({ project_id: f.project_id, supervisor_id: this.teams.find((t) => t.project?.id === f.project_id)?.supervisor?.id, place: f.place, discussion_date: f.date, discussion_time: time, committee: f.committee, whatsapp: f.whatsapp || null, status: f.status })
+          await this.createDiscussion({ project_id: f.project_id, supervisor_id: this.teams.find((t) => t.project?.id === f.project_id)?.supervisor?.id, place: f.place, discussion_date: f.date, discussion_time: time, duration: Number(f.duration) || 30, committee: f.committee, whatsapp: f.whatsapp || null, status: f.status })
           this.$toast?.success('تم تسجيل موعد المناقشة')
         }
         this.apptModal = false

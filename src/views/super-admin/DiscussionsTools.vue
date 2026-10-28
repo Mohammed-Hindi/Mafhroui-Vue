@@ -886,8 +886,9 @@ export default {
       return this.dayKeys.find((d) => d.key === this.dayKeyOf(row))?.label || ''
     },
 
-    /** مدة مناقشة المجموعة حسب درجتها */
+    /** مدة مناقشة المجموعة: المدة المحفوظة مع الموعد أولًا (تطابق ما يفحصه الخادم)، وإلا حسب درجتها */
     durOf(row) {
+      if (row && Number(row.duration) > 0) return Number(row.duration)
       return Math.max(5, Number(this.s.durations[row.g.degree]) || 30)
     },
 
@@ -1168,6 +1169,8 @@ export default {
           place: r.room,
           discussion_date: r.date,
           discussion_time: r.time,
+          // نحفظ المدة بالدقائق ليعرفها الخادم ويفحص تداخل الفترات (بدلها كان يُعاد احتسابها من الإعدادات عند التحميل فتظهر تداخلات وهمية)
+          duration: this.durOf(r),
           // لجنة المناقشة = أسماء المناقشَين، والملاحظة بعد " | " (لا يوجد عمود ملاحظات في الخادم)
           committee: [r.examiners.filter(Boolean).map(this.supName).join('، '), r.note].filter(Boolean).join(' | ') || '—',
           status
@@ -1234,6 +1237,7 @@ export default {
           id: g.id, g, gender: groupGender(g), region: groupRegion(g),
           date: String(d.discussion_date || '').slice(0, 10),
           time: String(d.discussion_time || '').slice(0, 5),
+          duration: Number(d.duration) || null,
           room: d.place,
           examiners: [ids.find(Boolean) ?? null, ids.filter(Boolean)[1] ?? null],
           note: [...names.filter((n, i) => !ids[i]), ...rest].join('، '),
