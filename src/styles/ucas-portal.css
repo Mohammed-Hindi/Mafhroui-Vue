@@ -6724,6 +6724,9 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 /* مراجعة جدول المناقشات: تمرير داخلي بارتفاع ثابت ورأس الجدول ثابت أعلاه */
 .dp-review-scroll { max-height: clamp(420px, calc(100vh - 330px), 760px); overflow: auto; border-radius: 4px; scrollbar-width: thin; }
 .dp-review-scroll thead th { position: sticky; top: 0; z-index: 2; }
+/* قاعدة sa-skin العامة تجعل خلفية الـth شفافة (التدرّج على الـtr لا يتحرك مع الالتصاق) فيبان الرأس اللاصق شفافًا؛
+   نعطي خلايا الرأس خلفية معتمة بمواصفة أعلى خاصة بهذا الجدول */
+:root[data-brand="ucas"] .sa-skin .dp-review-scroll thead th { background: var(--ucas-blue); }
 .sa-skin .tk-filters select[aria-label="المجموعة"] { min-width: 160px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ev-tabs-bar { margin: 0; }
 .ev-tabs-bar .ev-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); width: 100%; }
