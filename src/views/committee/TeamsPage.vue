@@ -474,16 +474,42 @@ export default {
   watch: {
     filteredGroups() {
       this.page = 1
+    },
+    // قدوم من البحث الشامل بمجموعة محدّدة بينما الصفحة مفتوحة أصلًا
+    '$route.query.focus'(v) {
+      if (v) this.focusFromQuery()
     }
   },
 
   async created() {
     await Promise.all([this.fetchTeams(), this.fetchSpecializations()])
+    this.focusFromQuery()
   },
 
   methods: {
     ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'specializationName', 'createTeam', 'updateTeam', 'deleteTeam', 'addTeamMember', 'removeTeamMember', 'updateTeamLeader', 'previewTeamImport', 'confirmTeamImport', 'fetchTrashedTeams', 'restoreTeam']),
     ...mapActions(useUsersStore, ['fetchUsers', 'createUser', 'updateUser', 'setUserPassword']),
+
+    /** فتح مجموعة بعينها قادمة من البحث الشامل (?focus=id): الانتقال لصفحتها، فردها، التمرير إليها وإبرازها */
+    focusFromQuery() {
+      const id = Number(this.$route.query.focus)
+      if (!id) return
+      const idx = this.filteredGroups.findIndex((g) => g.id === id)
+      if (idx === -1) return
+      this.page = Math.floor(idx / GROUPS_PAGE_SIZE) + 1
+      if (!this.openGroupIds.includes(id)) this.openGroupIds = [...this.openGroupIds, id]
+      this.$nextTick(() => {
+        const el = document.getElementById(String(id))
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          el.classList.add('tm-focus-ring')
+          setTimeout(() => el.classList.remove('tm-focus-ring'), 2000)
+        }
+        const query = { ...this.$route.query }
+        delete query.focus
+        this.$router.replace({ query }).catch(() => {})
+      })
+    },
 
     isGroupOpen(id) {
       return this.openGroupIds.includes(id)
