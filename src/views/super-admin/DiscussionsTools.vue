@@ -28,7 +28,7 @@
           <option value="">كل الأقسام</option>
           <option v-for="d in allDepts" :key="d" :value="d">{{ d }}</option>
         </select>
-        <small>التوليد يبني مجموعات هذا القسم فقط، وباقي الأقسام المجدولة تبقى كما هي.</small>
+        <small>قسم محدَّد: يُجدوَل وحده وباقي الأقسام المجدولة تبقى كما هي بلا تداخل معها. «كل الأقسام»: يُجدوَل كل قسم على حدة بالتتابع بحيث لا يتداخل أي قسم مع الآخر.</small>
       </div>
       <!-- ترتيب أبسط: متى (الأيام) ← كم المدة ← أين (القاعات وساعاتها) -->
       <div class="dp-blocks">
@@ -994,7 +994,7 @@ export default {
       const free = (key, a, b) => !(busy.get(key) || []).some(([x, y]) => a < y && x < b)
       const take = (key, a, b) => busy.set(key, [...(busy.get(key) || []), [a, b]])
       const load = Object.fromEntries(picked.map((x) => [x.id, 0]))
-      // حجز مواعيد الأقسام الأخرى المجدولة مسبقًا حتى لا يتعارض القسم الجديد معها، وموازنة الحِمل عادلة
+      // حجز مواعيد الأقسام غير المستهدفة المجدولة مسبقًا حتى لا يتعارض التوليد معها، وموازنة الحِمل عادلة
       this.plan.forEach((r) => {
         if (inScope(r.g) || !r.time || !r.room) return
         const a = toMin(r.time), b = a + this.durOf(r)
@@ -1003,8 +1003,8 @@ export default {
         r.examiners.filter(Boolean).forEach((id) => { if (id in load) load[id] += 1 })
       })
 
-      const sorted = this.groups.filter(inScope).sort((a, b) => a.degree.localeCompare(b.degree) || a.section.localeCompare(b.section, 'en', { numeric: true }))
-      const newRows = sorted.map((g) => {
+      // جدولة مجموعة واحدة في أول موعد/قاعة/مناقشَين متاحين، مع حجزها بخريطة الـ busy المشتركة
+      const placeGroup = (g) => {
         // إعادة التوليد تحتفظ بالفئة والمكان المعدّلين يدويًا وبمعرّف الموعد المحفوظ (تحديث بدل تكرار)
         const prev = this.plan.find((p) => p.id === g.id)
         const row = { id: g.id, g, gender: prev?.gender || groupGender(g), region: prev?.region || groupRegion(g), time: '', room: '', examiners: [null, null], note: '', discussionId: prev?.discussionId ?? null }
@@ -1025,11 +1025,23 @@ export default {
           break
         }
         return row
-      })
+      }
 
-      // دمج: نُبقي صفوف الأقسام الأخرى كما هي، ونستبدل صفوف القسم المستهدف بالجديدة، ثم ترتيب موحَّد
+      const inScopeGroups = this.groups.filter(inScope)
+      const bySection = (a, b) => a.degree.localeCompare(b.degree) || a.section.localeCompare(b.section, 'en', { numeric: true })
+      // نولّد كل قسم على حدة بالتتابع (قسم واحد عند تحديده، وإلا كل الأقسام): كل قسم يحجز مواعيده
+      // في نفس خريطة الـ busy فيتجنّبها القسم التالي — فلا تداخل بين الأقسام وكل جدول مستقل عن الآخر.
+      const deptOrder = [...new Set(inScopeGroups.map((g) => g.dept || ''))]
+      const newRows = []
+      for (const dept of deptOrder) {
+        for (const g of inScopeGroups.filter((g) => (g.dept || '') === dept).sort(bySection)) {
+          newRows.push(placeGroup(g))
+        }
+      }
+
+      // دمج: نُبقي صفوف الأقسام غير المستهدفة كما هي، ونستبدل المستهدفة بالجديدة، ثم ترتيب يُجمِّع كل قسم معًا
       const kept = this.plan.filter((r) => !inScope(r.g))
-      this.plan = [...kept, ...newRows].sort((a, b) => a.g.degree.localeCompare(b.g.degree) || a.g.section.localeCompare(b.g.section, 'en', { numeric: true }))
+      this.plan = [...kept, ...newRows].sort((a, b) => (a.g.dept || '').localeCompare(b.g.dept || '', 'ar') || bySection(a.g, b.g))
       this.deptFilter = scope
       this.published = null
       this.settingsOpen = false
