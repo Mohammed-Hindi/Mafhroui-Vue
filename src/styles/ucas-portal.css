@@ -1206,7 +1206,7 @@
 /* رسوم النظرة العامة — وسط الهرم: بطاقتان متجاورتان بنفس الارتفاع */
 .sa-skin .dash-charts { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr); gap: 14px; align-items: stretch; }
 /* بطاقتا الرسوم: فلات مينيمال، زاوية حادة (4px من .dash-card)، طافية بظل بلا حد */
-.sa-skin .ov-card { margin: 0; border: 0; box-shadow: 0 10px 30px rgba(4, 40, 80, .08); }
+.sa-skin .ov-card { margin: 0; border: 0; box-shadow: 0 10px 30px rgba(4, 40, 80, .08); display: flex; flex-direction: column; }
 .sa-skin .ov-sk { display: flex; flex-direction: column; gap: 12px; padding-top: 6px; }
 
 /* حالة المشاريع: خط تقدّم بشكل نبضات (SVG) بلون فلات + نسبة الإنجاز في الرأس + مفتاح أفقي */
@@ -1259,7 +1259,7 @@
 .sa-skin .ov-bars-val { font-size: 11.5px; font-weight: 700; color: var(--ucas-blue); }
 .sa-skin .ov-empty { padding: 24px 0; text-align: center; }
 /* ملاحظة توضيحية أسفل سيكشن المشرفين: شرح أساس احتساب التفاعل */
-.sa-skin .ov-note { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border); font-size: 12px; line-height: 1.65; color: var(--color-text-500); }
+.sa-skin .ov-note { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--color-border); font-size: 12px; line-height: 1.65; color: var(--color-text-500); }
 
 /* تعبئة تقدّم فلات (بلا تدرّج) — لجدول المجموعات ورسم التفاعل */
 .sa-skin .gr-progress.is-flat > span.is-high { background: var(--ucas-green); }
@@ -7429,6 +7429,3 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 
 /* إبراز مؤقّت لبطاقة المجموعة عند فتحها من البحث الشامل */
 .tm-focus-ring { outline: 2px solid var(--ucas-blue); outline-offset: 3px; border-radius: 4px; }
-
-/* ملاحظة التفاعل أسفل صف المخططات (كامل العرض بدل حشرها داخل كارت المشرفين) */
-.sa-skin .ov-note-foot { margin-top: -8px; }
