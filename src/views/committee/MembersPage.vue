@@ -873,6 +873,13 @@ export default {
     memberKind(v) {
       this.memberSearch = ''
       if (this.$route?.query.kind !== v) this.$router.replace({ query: { ...this.$route.query, kind: v } }).catch(() => {})
+    },
+    // قدوم من البحث الشامل بتبويب/أمر إضافة بينما الصفحة مفتوحة أصلًا (created لا يُعاد تشغيله)
+    '$route.query.kind'(v) {
+      if (['student', 'supervisor', 'committee'].includes(v) && this.memberKind !== v) this.memberKind = v
+    },
+    '$route.query.add'(v) {
+      if (v) this.$nextTick(() => this.autoAddFromQuery())
     }
   },
 
@@ -888,6 +895,7 @@ export default {
       this.loadNotifyDirectory()
       this.loadDeliveries()
     }
+    this.autoAddFromQuery()
   },
 
   methods: {
@@ -969,6 +977,15 @@ export default {
       this.addForm = { ...emptyAddForm(), role }
       this.addError = ''
       this.addModalOpen = true
+    },
+
+    /** فتح نموذج الإضافة مباشرة عند القدوم من البحث الشامل (?add=1)، ثم تنظيف الرابط */
+    autoAddFromQuery() {
+      if (!this.$route?.query?.add) return
+      this.openAddModal()
+      const query = { ...this.$route.query }
+      delete query.add
+      this.$router.replace({ query }).catch(() => {})
     },
     async submitAdd() {
       this.addError = ''
