@@ -16,6 +16,8 @@
         </h1>
       </div>
 
+      <GlobalSearch v-if="showSearch" class="hidden md:block" />
+
       <SemesterSelect class="portal-semester hidden md:block" />
 
       <div class="portal-bell"><NotificationBell /></div>
@@ -68,14 +70,16 @@ import { ChevronDown, Lock, LogOut, Sun, UserCircle } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
 import NotificationBell from '@/components/shared/NotificationBell.vue'
 import SemesterSelect from '@/components/shared/SemesterSelect.vue'
+import GlobalSearch from '@/components/layout/GlobalSearch.vue'
 import { useUiStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { NAV_ITEMS_BY_ROLE } from '@/utils/navConfig'
+import { ROLES } from '@/utils/constants'
 
 export default {
   name: 'PortalTopbar',
 
-  components: { ChevronDown, Lock, LogOut, Sun, UserCircle, UcasLogo, NotificationBell, SemesterSelect },
+  components: { ChevronDown, Lock, LogOut, Sun, UserCircle, UcasLogo, NotificationBell, SemesterSelect, GlobalSearch },
 
   data() {
     return { menuOpen: false, titleOpen: false }
@@ -84,6 +88,11 @@ export default {
   computed: {
     ...mapState(useUiStore, ['isDark']),
     ...mapState(useAuthStore, ['userName', 'avatarSrc', 'userRole', 'portalPrefix']),
+
+    /** البحث الشامل للإدارة العامة ولجنة الإشراف فقط (لا المشرف/الطالب) */
+    showSearch() {
+      return this.userRole === ROLES.SUPER_ADMIN || this.userRole === ROLES.COMMITTEE
+    },
 
     /** عنوان الصفحة = اسمها في السايد بار (الإدارة العامة / لجنة الإشراف)، وإلا عنوان المسار */
     pageTitle() {
