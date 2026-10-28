@@ -7429,3 +7429,6 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 
 /* إبراز مؤقّت لبطاقة المجموعة عند فتحها من البحث الشامل */
 .tm-focus-ring { outline: 2px solid var(--ucas-blue); outline-offset: 3px; border-radius: 4px; }
+
+/* ملاحظة التفاعل أسفل صف المخططات (كامل العرض بدل حشرها داخل كارت المشرفين) */
+.sa-skin .ov-note-foot { margin-top: -8px; }
