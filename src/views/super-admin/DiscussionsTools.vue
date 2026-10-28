@@ -1039,6 +1039,39 @@ export default {
         }
       }
 
+      // تمريرة ضمان: أي مجموعة تعذّر جدولتها ضمن ساعات مكانها نضمن لها موعدًا بتمديد ساعات المكان
+      // (وقاعاته) لآخر اليوم — فترات فاضية الكل متفرّغ فيها — بحيث لا يبقى أحد بلا موعد ولا يحدث تداخل.
+      const extendedRegions = new Set()
+      let unschedulable = 0
+      for (const u of newRows.filter((r) => !r.time)) {
+        // يتعذّر الضمان فقط إن لم يكن للمكان قاعات، أو لا يوجد مناقشان متاحان غير مشرف المجموعة
+        if (!this.roomsOf(u.region).length || picked.filter((x) => x.id !== u.g.supId).length < 2) { unschedulable += 1; continue }
+        const d = u.date
+        const dur = this.durOf(u)
+        for (let guard = 0; !u.time && guard < 300; guard += 1) {
+          for (const a of this.startsFor(u.region, dur)) {
+            const b = a + dur
+            if (!free(`${d}|${u.g.supId}`, a, b)) continue
+            const room = this.roomsOf(u.region).find((rm) => this.roomFits(rm, u.region, a, b) && free(`${d}|room:${rm}`, a, b))
+            const ex = picked.filter((x) => x.id !== u.g.supId && free(`${d}|${x.id}`, a, b)).sort((x, y) => load[x.id] - load[y.id]).slice(0, 2).map((x) => x.id)
+            if (!room || ex.length < 2) continue
+            ;[u.g.supId, ...ex].forEach((pid) => take(`${d}|${pid}`, a, b))
+            take(`${d}|room:${room}`, a, b)
+            ex.forEach((id) => (load[id] += 1))
+            Object.assign(u, { time: fromMin(a), room, examiners: ex })
+            break
+          }
+          if (!u.time) {
+            // مدّد نهاية ساعات المكان وقاعاته بمقدار مدة مناقشة لإتاحة فترة جديدة فاضية
+            const w = this.s.windows[u.region]
+            const newEnd = toMin(w.end) + dur
+            w.end = fromMin(newEnd)
+            this.roomsOf(u.region).forEach((rm) => { const h = this.s.roomHours[rm]; if (h && toMin(h.end) < newEnd) h.end = fromMin(newEnd) })
+            extendedRegions.add(u.region)
+          }
+        }
+      }
+
       // دمج: نُبقي صفوف الأقسام غير المستهدفة كما هي، ونستبدل المستهدفة بالجديدة، ثم ترتيب يُجمِّع كل قسم معًا
       const kept = this.plan.filter((r) => !inScope(r.g))
       this.plan = [...kept, ...newRows].sort((a, b) => (a.g.dept || '').localeCompare(b.g.dept || '', 'ar') || bySection(a.g, b.g))
@@ -1046,8 +1079,13 @@ export default {
       this.published = null
       this.settingsOpen = false
       this.$nextTick(() => document.getElementById('dp-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
-      const missing = newRows.filter((r) => !r.time).length
-      missing ? this.$toast?.error(`تعذّر جدولة ${missing} مجموعة — راجع المناقشين المتاحين ومؤشر السعة`) : this.$toast?.success(`جُدولت ${newRows.length} مناقشة بلا تعارضات`)
+      if (unschedulable) {
+        this.$toast?.error(`تعذّرت جدولة ${unschedulable} مجموعة — مكانها بلا قاعات أو لا يتوفّر مناقشان لها`)
+      } else if (extendedRegions.size) {
+        this.$toast?.success(`جُدولت ${newRows.length} مناقشة بلا تعارضات — مُدِّدت ساعات ${[...extendedRegions].map((k) => REGIONS[k]).join('، ')} لاستيعاب الجميع`)
+      } else {
+        this.$toast?.success(`جُدولت ${newRows.length} مناقشة بلا تعارضات`)
+      }
     },
 
     /** تحديد/إلغاء كل المناقشين في قائمة «من يناقش؟» */
