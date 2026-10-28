@@ -6,7 +6,7 @@
   </select>
   <input
     v-else type="number" class="ev-score mono" min="0" :max="max" step="0.5" :value="modelValue ?? ''" :aria-label="label" placeholder="0"
-    :class="invalid && 'is-invalid'" @input="set($event.target.value)"
+    :class="invalid && 'is-invalid'" @input="set"
   >
 </template>
 
@@ -39,8 +39,17 @@ export default {
   methods: {
     scaleOf,
     round: (v) => Math.round(v * 100) / 100,
-    set(v) {
-      this.$emit('update:modelValue', v === '' ? null : Number(v))
+    set(e) {
+      const el = e.target
+      const raw = el.value
+      if (raw === '') { this.$emit('update:modelValue', null); return }
+      const n = Number(raw)
+      if (Number.isNaN(n)) return
+      // حد أقصى صلب: لا يُسمح بإدخال أكثر من القصوى ولا أقل من صفر
+      const clamped = Math.min(this.max, Math.max(0, n))
+      // تصحيح الحقل فورًا حتى لو لم تتغيّر القيمة المخزّنة (لئلا يبقى الرقم الزائد ظاهرًا)
+      if (clamped !== n) el.value = String(clamped)
+      this.$emit('update:modelValue', clamped)
     },
     pick(pct) {
       this.$emit('update:modelValue', pct === '' ? null : this.round(Number(pct) * this.max))
