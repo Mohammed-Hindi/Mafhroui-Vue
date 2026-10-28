@@ -7429,5 +7429,32 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
   color: var(--color-text-600);
 }
 
+/* نافذة تفاصيل نتيجة البحث (مشروع/مهمة/إعلان) */
+.gsearch-detail dd { white-space: normal; }
+.gsearch-detail-body {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  background: var(--color-bg);
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--color-text-700);
+  white-space: pre-wrap;
+}
+.gsearch-detail-files { margin-top: 14px; }
+.gsearch-detail-files .portal-title { font-size: 12px; margin: 0 0 8px; }
+.gsearch-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 0 6px 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-border-soft);
+  font-size: 12px;
+  color: var(--color-text-700);
+}
+
 /* إبراز مؤقّت لبطاقة المجموعة عند فتحها من البحث الشامل */
 .tm-focus-ring { outline: 2px solid var(--ucas-blue); outline-offset: 3px; border-radius: 4px; }
