@@ -1178,6 +1178,111 @@
 .hm-back { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 8px; font-size: 12.5px; font-weight: 700; color: var(--color-text-600); transition: color var(--ucas-color-speed) var(--ease-standard); }
 .hm-back:hover { color: var(--ucas-blue); }
 
+/* مؤشرات المجموعة السريعة داخل تفاصيلها: كبسولات بخلفية تدرّج خفيفة */
+.sa-skin .hm-detail-kpis { display: flex; flex-wrap: wrap; gap: 10px; margin: 2px 0 16px; }
+.sa-skin .hm-kpi { display: inline-flex; align-items: baseline; gap: 6px; padding: 7px 14px; border-radius: 999px; background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .05)); }
+.sa-skin .hm-kpi b { font-weight: 800; color: var(--ucas-blue); }
+.sa-skin .hm-kpi span { font-size: .8rem; font-weight: 700; color: var(--ucas-green); }
+
+/* سطر وصف تحت الترحيب في البانر + تقليل المسافة بين البانر وبطاقات الإحصاءات */
+.sa-hero-sub { margin-top: 6px; font-size: 14px; color: rgba(255, 255, 255, .85); }
+.sa-skin .sa-hero { margin-bottom: 0; }
+
+/* بطاقات المؤشّرات (KPI) — أعلى الهرم: أيقونة دائرية + رقم كبير + تسمية + تفصيل */
+.sa-skin .dash-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+/* بطاقة مؤشّر = رابط: فلات مينيمال، زاوية حادة، طافية بظل، بلا قفز/تكبير */
+.sa-skin .dash-kpi { position: relative; display: flex; align-items: center; gap: 13px; padding: 16px 18px; border-radius: 4px; background: var(--color-surface); box-shadow: 0 10px 30px rgba(4, 40, 80, .08); text-decoration: none; color: inherit; transition: box-shadow var(--ucas-color-speed) var(--ease-standard); }
+.sa-skin .dash-kpi:hover { box-shadow: 0 16px 38px rgba(4, 40, 80, .15); }
+.sa-skin .dash-kpi-ic { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 4px; background: rgba(0, 91, 170, .08); color: var(--ucas-blue); flex: 0 0 auto; }
+.sa-skin .dash-kpi-go { position: absolute; inset-block-start: 14px; inset-inline-end: 14px; color: var(--color-text-300); opacity: 0; transition: opacity var(--ucas-color-speed) var(--ease-standard), color var(--ucas-color-speed) var(--ease-standard); }
+.sa-skin .dash-kpi:hover .dash-kpi-go { opacity: 1; color: var(--ucas-blue); }
+.sa-skin .dash-kpi-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sa-skin .dash-kpi-val { font-size: 26px; font-weight: 800; line-height: 1.1; color: var(--ucas-blue); }
+.sa-skin .dash-kpi-val .sa-stat-sk { display: inline-block; width: 54px; height: 26px; }
+.sa-skin .dash-kpi-label { font-size: 13px; font-weight: 700; color: var(--color-text-700); }
+.sa-skin .dash-kpi-split { font-size: 11.5px; color: var(--color-text-500); }
+.sa-skin .dash-kpi-split b { color: var(--ucas-green); font-weight: 700; }
+
+/* رسوم النظرة العامة — وسط الهرم: بطاقتان متجاورتان بنفس الارتفاع */
+.sa-skin .dash-charts { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr); gap: 14px; align-items: stretch; }
+/* بطاقتا الرسوم: فلات مينيمال، زاوية حادة (4px من .dash-card)، طافية بظل بلا حد */
+.sa-skin .ov-card { margin: 0; border: 0; box-shadow: 0 10px 30px rgba(4, 40, 80, .08); }
+.sa-skin .ov-sk { display: flex; flex-direction: column; gap: 12px; padding-top: 6px; }
+
+/* حالة المشاريع: خط تقدّم بشكل نبضات (SVG) بلون فلات + نسبة الإنجاز في الرأس + مفتاح أفقي */
+.sa-skin .ov-head-pct { margin-bottom: 6px; font-size: 12px; color: var(--color-text-600); }
+.sa-skin .ov-head-pct b { font-size: 20px; font-weight: 800; color: var(--ucas-blue); }
+.sa-skin .ov-head-pct b small { font-size: 11px; font-weight: 700; }
+/* فلتر الفئة (سيجمنتد ناعم على طريقة داشبورد دادو، بألواننا) */
+.sa-skin .ov-filter { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--color-bg); }
+.sa-skin .ov-filter button { height: 28px; padding: 0 13px; border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--color-text-600); transition: background-color var(--ucas-color-speed) var(--ease-standard), color var(--ucas-color-speed) var(--ease-standard); }
+.sa-skin .ov-filter button:hover { color: var(--ucas-blue); }
+.sa-skin .ov-filter button.is-active { background: var(--color-surface); color: var(--ucas-blue); box-shadow: 0 1px 3px rgba(4, 40, 80, .14); }
+/* منحنى التقدّم الناعم — يُعاد رسمه بحركة عند تغيير الفلتر (على طريقة داشبورد دادو) */
+.sa-skin .ov-trend { display: block; width: 100%; height: 150px; margin: 2px 0 14px; }
+.sa-skin .ov-trend-area { stroke: none; animation: ovFade .6s var(--ease-standard); }
+.sa-skin .ov-trend-line { fill: none; stroke: var(--ucas-blue); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 0; animation: ovDraw .65s var(--ease-standard); }
+.sa-skin .ov-grid { stroke: var(--color-border); stroke-dasharray: 3 5; }
+@keyframes ovDraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes ovFade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .sa-skin .ov-trend-line, .sa-skin .ov-trend-area { animation: none; } }
+/* تفصيل الحالة بشكل ناعم: ثلاث شرائح خفيفة بلا جدول ولا تدرّج */
+.sa-skin .ov-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.sa-skin .ov-stat { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 4px; background: var(--color-bg); }
+.sa-skin .ov-stat-top { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: var(--color-text-700); }
+.sa-skin .ov-stat-nums { display: flex; align-items: baseline; gap: 6px; }
+.sa-skin .ov-stat-nums b { font-size: 18px; font-weight: 800; color: var(--ucas-blue); }
+.sa-skin .ov-stat-nums small { font-size: 11px; color: var(--color-text-500); }
+
+/* حالة المشاريع: رقم الإنجاز + شريط مقسّم بالحالات + مفتاح بالأعداد */
+.sa-skin .ov-status { display: flex; flex-direction: column; gap: 14px; }
+.sa-skin .ov-status-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.sa-skin .ov-big { font-size: 34px; font-weight: 800; line-height: 1; color: var(--ucas-blue); }
+.sa-skin .ov-big small { font-size: 16px; font-weight: 700; }
+.sa-skin .ov-status-head > span { font-size: 12.5px; color: var(--color-text-600); }
+.sa-skin .ov-bar { display: flex; height: 16px; border-radius: 999px; overflow: hidden; background: var(--color-bg); }
+.sa-skin .ov-seg { min-width: 4px; transition: flex-grow var(--ucas-color-speed) var(--ease-standard); }
+.sa-skin .ov-seg.is-empty { flex-grow: 1; background: var(--color-border); }
+.sa-skin .ov-high { background: var(--ucas-green); }
+.sa-skin .ov-mid { background: var(--ucas-blue); }
+.sa-skin .ov-low { background: #F89E32; }
+.sa-skin .ov-key { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.sa-skin .ov-key li { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--color-text-700); }
+.sa-skin .ov-key b { color: var(--ucas-blue); font-weight: 800; }
+.sa-skin .ov-dot { width: 10px; height: 10px; border-radius: 999px; }
+
+/* رسم التفاعل الأفقي: اسم + شريط تقدّم + نسبة — مُصغّر وأنعم */
+.sa-skin .ov-bars { display: flex; flex-direction: column; gap: 10px; }
+.sa-skin .ov-bars li { display: grid; grid-template-columns: minmax(70px, 38%) 1fr auto; align-items: center; gap: 10px; }
+.sa-skin .ov-bars-name { font-size: 12px; font-weight: 700; color: var(--color-text-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sa-skin .ov-bars-track { flex: 1; }
+.sa-skin .ov-bars-val { font-size: 11.5px; font-weight: 700; color: var(--ucas-blue); }
+.sa-skin .ov-empty { padding: 24px 0; text-align: center; }
+/* ملاحظة توضيحية أسفل سيكشن المشرفين: شرح أساس احتساب التفاعل */
+.sa-skin .ov-note { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border); font-size: 12px; line-height: 1.65; color: var(--color-text-500); }
+
+/* تعبئة تقدّم فلات (بلا تدرّج) — لجدول المجموعات ورسم التفاعل */
+.sa-skin .gr-progress.is-flat > span.is-high { background: var(--ucas-green); }
+.sa-skin .gr-progress.is-flat > span.is-mid { background: var(--ucas-blue); }
+.sa-skin .gr-progress.is-flat > span.is-low { background: #F89E32; }
+
+/* طلاب الشعبة: صفوف ألطف وأصغر بدل الكروت المربّعة الكبيرة */
+.sa-skin .hm-student-cards { grid-template-columns: repeat(auto-fill, minmax(188px, 1fr)); gap: 8px; }
+.sa-skin .hm-student-card { align-items: center; gap: 10px; padding: 9px 11px; background: var(--color-bg); box-shadow: none; }
+.sa-skin .hm-student-card:hover { background: color-mix(in srgb, var(--ucas-blue) 7%, var(--color-surface)); box-shadow: none; }
+.sa-skin .hm-student-card .hm-avatar { width: 34px; height: 34px; font-size: 14px; }
+.sa-skin .hm-sc-uni, .sa-skin .hm-sc-meta { font-size: 11px; }
+
+/* شارة حالة المجموعة في جدول المجموعات */
+.sa-skin .ov-pill { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.sa-skin .ov-pill.is-high { color: #0E699C; background: rgba(98, 187, 70, .16); }
+.sa-skin .ov-pill.is-mid { color: var(--ucas-blue); background: rgba(0, 91, 170, .1); }
+.sa-skin .ov-pill.is-low { color: #B4620E; background: rgba(248, 158, 50, .16); }
+
+@media (max-width: 860px) {
+  .sa-skin .dash-charts { grid-template-columns: minmax(0, 1fr); }
+}
+
 .hm-detail-students { margin-bottom: 18px; }
 .hm-detail-students h4 { margin-bottom: 10px; font-size: 13px; font-weight: 700; color: var(--color-text-400); }
 .hm-detail-students h4 small { margin-inline-start: 6px; color: var(--ucas-blue); font-weight: 800; }
