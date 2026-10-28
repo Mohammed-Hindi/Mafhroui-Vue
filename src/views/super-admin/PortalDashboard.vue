@@ -7,13 +7,7 @@
         <div class="sa-hero-text">
           <span class="sa-hero-eyebrow">{{ isSup ? 'لوحة المشرف' : isCommittee ? 'لوحة لجنة الإشراف' : 'لوحة الإدارة العامة' }}</span>
           <h2 class="sa-hero-title">مرحبًا، {{ firstName }}</h2>
-        </div>
-        <div class="sa-hero-stats" aria-label="إحصاءات عامة">
-          <div v-for="s in stats" :key="s.label" class="sa-stat" :title="s.split.map((p) => `${p.label} ${p.value}`).join(' · ')">
-            <b v-if="loading"><span class="sk sa-stat-sk" /></b>
-            <b v-else><CountUp :value="s.value" /></b>
-            <span>{{ s.label }}</span>
-          </div>
+          <p class="sa-hero-sub">لوحة متابعة المشاريع والمجموعات والمهام في منصّة مسار</p>
         </div>
       </div>
     </section>
@@ -35,10 +29,75 @@
       </section>
     </template>
 
-    <!-- نشاط المشرفين والمجموعات -->
+    <!-- بطاقات المؤشّرات العامة (أعلى الهرم) — كل بطاقة رابط لقسمها -->
+    <section class="dash-kpis" aria-label="المؤشرات العامة">
+      <router-link v-for="k in kpis" :key="k.label" :to="k.to" class="dash-kpi">
+        <span class="dash-kpi-ic"><component :is="k.icon" :size="18" /></span>
+        <div class="dash-kpi-body">
+          <b class="dash-kpi-val"><span v-if="loading" class="sk sa-stat-sk" /><CountUp v-else :value="k.value" /></b>
+          <span class="dash-kpi-label">{{ k.label }}</span>
+          <span class="dash-kpi-split">
+            <template v-for="(p, i) in k.split" :key="p.label"><span v-if="i" class="hm-sep">·</span>{{ p.label }} <b>{{ p.value }}</b></template>
+          </span>
+        </div>
+        <ArrowUpLeft :size="15" class="dash-kpi-go" aria-hidden="true" />
+      </router-link>
+    </section>
+
+    <!-- رسوم النظرة العامة (وسط الهرم): حالة المشاريع + التفاعل -->
+    <section class="dash-charts">
+      <article class="dash-card ov-card ov-card-wide">
+        <div class="dash-card-head">
+          <h3>حالة المشاريع</h3>
+          <div class="ov-filter" role="radiogroup" aria-label="الفئة">
+            <button type="button" role="radio" :aria-checked="statusDegree === ''" :class="statusDegree === '' && 'is-active'" @click="statusDegree = ''">الكل</button>
+            <button type="button" role="radio" :aria-checked="statusDegree === 'diploma'" :class="statusDegree === 'diploma' && 'is-active'" @click="statusDegree = 'diploma'">دبلوم</button>
+            <button type="button" role="radio" :aria-checked="statusDegree === 'bachelor'" :class="statusDegree === 'bachelor' && 'is-active'" @click="statusDegree = 'bachelor'">بكالوريوس</button>
+          </div>
+        </div>
+        <div v-if="loading" class="ov-sk"><span class="sk" style="height: 120px" /><span class="sk" style="height: 46px" /></div>
+        <template v-else>
+          <p class="ov-head-pct"><b>{{ overallStatus.completion }}<small>%</small></b> متوسّط إنجاز المهام · {{ overallStatus.total }} مشروع</p>
+          <svg :key="statusDegree" class="ov-trend" :viewBox="`0 0 ${projectTrend.W} ${projectTrend.H}`" preserveAspectRatio="none" role="img" aria-label="منحنى تقدّم المشاريع">
+            <defs><linearGradient id="ovTrendFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="var(--ucas-blue)" stop-opacity="0.2" /><stop offset="100%" stop-color="var(--ucas-blue)" stop-opacity="0" /></linearGradient></defs>
+            <line class="ov-grid" x1="0" :x2="projectTrend.W" :y1="projectTrend.topY" :y2="projectTrend.topY" vector-effect="non-scaling-stroke" />
+            <line class="ov-grid" x1="0" :x2="projectTrend.W" :y1="projectTrend.midY" :y2="projectTrend.midY" vector-effect="non-scaling-stroke" />
+            <line class="ov-grid" x1="0" :x2="projectTrend.W" :y1="projectTrend.baseY" :y2="projectTrend.baseY" vector-effect="non-scaling-stroke" />
+            <template v-if="!projectTrend.empty">
+              <path class="ov-trend-area" :d="projectTrend.area" fill="url(#ovTrendFill)" />
+              <path class="ov-trend-line" :d="projectTrend.line" pathLength="1" vector-effect="non-scaling-stroke" />
+            </template>
+          </svg>
+          <ul class="ov-stats">
+            <li v-for="s in overallStatus.segs" :key="s.key" class="ov-stat">
+              <span class="ov-stat-top"><span :class="['ov-dot', 'ov-' + s.key]" /> {{ s.label }}</span>
+              <span class="ov-stat-nums"><b class="mono">{{ s.count }}</b> <small class="mono">{{ s.pct }}%</small></span>
+            </li>
+          </ul>
+        </template>
+      </article>
+
+      <article class="dash-card ov-card">
+        <div class="dash-card-head"><h3>{{ isSup ? 'أعلى مجموعاتي تقدّمًا' : 'أكثر المشرفين تفاعلًا' }}</h3></div>
+        <div v-if="loading" class="ov-sk"><SkeletonLoader :rows="5" height="20px" /></div>
+        <ul v-else-if="barRows.length" class="ov-bars">
+          <li v-for="r in barRows" :key="r.id">
+            <span class="ov-bars-name">{{ r.name }}</span>
+            <span class="gr-progress is-flat ov-bars-track"><span :class="levelClass(r.value)" :style="{ width: r.value + '%' }" /></span>
+            <b class="ov-bars-val mono">{{ r.value }}%</b>
+          </li>
+        </ul>
+        <p v-else class="hm-muted ov-empty">لا توجد بيانات بعد</p>
+        <p v-if="!loading" class="ov-note">{{ isSup
+          ? 'النسبة = متوسّط إنجاز كل مجموعة من مهامها المُسندة لها.'
+          : 'التفاعل محسوب من نشاط المشرف على المنصة: تكرار دخوله، وإضافته للمهام والتكليفات لمجموعاته، ومتابعته لتقدّم طلابه.' }}</p>
+      </article>
+    </section>
+
+    <!-- جدول البيانات (أسفل الهرم): المشرفون أو المجموعات، وفتح الصف يعرض كل تفاصيل المجموعة -->
     <section class="dash-card">
       <div class="dash-card-head">
-        <h3>{{ isSup ? 'مجموعاتي وطلابي' : 'مدى نشاط المشرفين والطلاب' }}</h3>
+        <h3>{{ isSup ? 'مجموعاتي وطلابي' : 'النشاط وحالة المشاريع' }}</h3>
         <span v-if="isSup" class="dash-chip">{{ groups.length }} مجموعة</span>
         <nav v-else class="hm-tabs" aria-label="نوع القائمة">
           <button type="button" :class="tab === 'sup' && 'is-active'" @click="setTab('sup')">المشرفون <span>{{ supervisors.length }}</span></button>
@@ -51,17 +110,24 @@
           <Search :size="16" />
           <input v-model.trim="q" type="search" :placeholder="tab === 'sup' ? 'بحث باسم المشرف…' : 'بحث باسم المجموعة أو الطالب…'">
         </label>
-        <BaseSelect v-if="tab === 'sup'" v-model="specFilter" class="min-w-[170px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specOptions" />
-        <BaseSelect v-else-if="!isSup" v-model="supFilter" class="min-w-[180px]" aria-label="المشرف" placeholder="كل المشرفين" include-placeholder-option value-key="id" label-key="name" :options="supervisors" />
-        <BaseSelect v-if="tab === 'grp'" v-model="genderFilter" class="min-w-[160px]" aria-label="طلاب / طالبات" placeholder="طلاب وطالبات" include-placeholder-option :options="genderOptions" />
-        <button v-if="tab === 'sup'" type="button" class="pbtn hm-report" :disabled="exporting || !supRows.length" @click="exportSupReport">
-          <Printer :size="17" /> {{ exporting ? 'جارٍ التجهيز…' : 'تقرير المشرفين PDF' }}
-        </button>
+        <template v-if="tab === 'sup'">
+          <BaseSelect v-model="specFilter" class="min-w-[170px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="specOptions" />
+          <button type="button" class="pbtn hm-report" :disabled="exporting || !supRows.length" @click="exportSupReport">
+            <Printer :size="17" /> {{ exporting ? 'جارٍ التجهيز…' : 'تقرير المشرفين PDF' }}
+          </button>
+        </template>
+        <template v-else>
+          <BaseSelect v-if="!isSup" v-model="fDept" class="min-w-[150px]" aria-label="القسم" placeholder="كل الأقسام" include-placeholder-option :options="statusDeptOptions" />
+          <BaseSelect v-if="!isSup" v-model="fSpec" class="min-w-[160px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="statusSpecOptions" />
+          <BaseSelect v-if="!isSup" v-model="fSup" class="min-w-[160px]" aria-label="المشرف" placeholder="كل المشرفين" include-placeholder-option value-key="id" label-key="name" :options="statusSupOptions" />
+          <BaseSelect v-model="genderFilter" class="min-w-[150px]" aria-label="طلاب / طالبات" placeholder="طلاب وطالبات" include-placeholder-option :options="genderOptions" />
+          <BaseSelect v-if="taskGroup" v-model="taskState" class="min-w-[140px]" aria-label="حالة المهمة" placeholder="كل الحالات" include-placeholder-option :options="taskStateOptions" />
+        </template>
       </div>
 
-      <!-- كل الصفوف في صندوق بارتفاع ثابت يمرَّر داخليًا (رأس الجدول ثابت) بدل الشرائح -->
-      <div :class="['hm-table-wrap', !isSup && 'hm-scroll']">
-          <table v-if="tab === 'sup'" class="hm-table">
+      <!-- جدول المشرفين: نشاطهم وآخر تفاعل (يمرَّر داخليًا) -->
+      <div v-if="tab === 'sup'" class="hm-table-wrap hm-scroll">
+          <table class="hm-table">
             <thead><tr><th>المشرف</th><th>التخصص</th><th class="hm-center">المجموعات</th><th>الطلاب</th><th>التفاعل</th><th>آخر تفاعل</th><th>نوع التفاعل</th></tr></thead>
             <tbody>
               <tr v-for="s in supRows" :key="s.id" class="is-link" @click="openProfile('supervisor', s)">
@@ -80,97 +146,32 @@
               <tr v-else-if="!supRows.length"><td colspan="7" class="gr-empty">لا يوجد مشرفون مطابقون</td></tr>
             </tbody>
           </table>
-  
-          <!-- المشرف: مجموعاته بسلايدر صفحات المجموعات؛ الإدارة العامة: كل الصفوف في صندوق التمرير -->
-          <SlideTable v-else v-slot="{ rows: grpPage }" :rows="grpRows" :size="isSup ? 6 : Math.max(grpRows.length, 1)" label="المجموعات">
-          <table class="hm-table">
-            <thead><tr><th>الشعبة</th><th data-rt-show>المشروع</th><th>المهام</th><th>مستوى التقدّم</th></tr></thead>
-            <tbody>
-              <template v-for="g in grpPage" :key="g.id">
-                <tr class="is-link" :aria-expanded="openGroup === g.id" @click="openGroup = openGroup === g.id ? null : g.id">
-                  <td class="hm-strong">
-                    <ChevronDown :size="14" :class="['hm-caret', openGroup === g.id && 'is-open']" />
-                    <span class="rt-section">{{ g.name }}</span> <span class="hm-muted">({{ g.shown.length }})</span>
-                  </td>
-                  <td class="hm-muted">{{ g.project }}</td>
-                  <td><span class="mono">{{ g.done }}/{{ g.tasksTotal }}</span></td>
-                  <td>
-                    <span class="gr-progress"><span :class="level(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
-                    <span class="gr-pct">{{ g.percentage }}%</span>
-                  </td>
-                </tr>
-                <tr v-if="openGroup === g.id" class="hm-drop-row">
-                  <td colspan="4">
-                    <div class="hm-drop">
-                      <header class="hm-drop-head">
-                        <div>
-                          <b>{{ g.project }}</b>
-                          <span>{{ g.spec }} · {{ DEGREES[g.degree] }}<template v-if="!isSup"> · المشرف: {{ supName(g.supId) }}</template></span>
-                        </div>
-                        <span class="dash-chip">{{ g.shown.length }} من {{ g.members.length }} طلاب</span>
-                      </header>
-                      <ul class="hm-drop-list">
-                        <li v-for="m in g.shown" :key="m.id">
-                          <button type="button" class="hm-member" @click="openProfile('student', m, g)">
-                            <span class="hm-avatar" aria-hidden="true">{{ m.name.charAt(0) }}</span>
-                            <span class="hm-member-info">
-                              <b>{{ m.name }}</b>
-                              <span><span class="mono">{{ m.uni }}</span> · {{ m.gender === 'female' ? 'طالبة' : 'طالب' }} · {{ REGIONS[m.region] }}</span>
-                            </span>
-                            <span class="hm-member-tasks">المهام <b class="mono">{{ m.done }}/{{ m.total }}</b></span>
-                            <span class="hm-member-progress">
-                              <span class="gr-progress"><span :class="level(m.percentage)" :style="{ width: m.percentage + '%' }" /></span>
-                              <span class="gr-pct">{{ m.percentage }}%</span>
-                            </span>
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
-                  </td>
-                </tr>
-              </template>
-              <SkeletonLoader v-if="loading" variant="table" :cols="4" :rows="5" />
-              <tr v-else-if="!grpRows.length"><td colspan="4" class="gr-empty">لا توجد مجموعات مطابقة</td></tr>
-            </tbody>
-          </table>
-          </SlideTable>
       </div>
-      <p class="hm-count">{{ tab === 'sup' ? `${supRows.length} مشرف` : `${grpRows.length} مجموعة` }}</p>
-    </section>
+      <p v-if="tab === 'sup'" class="hm-count">{{ supRows.length }} مشرف</p>
 
-    <section class="dash-card hm-health">
-      <div class="dash-card-head">
-        <h3>حالة المشاريع والمهام</h3>
-      </div>
+      <!-- المجموعات: نظرة عامة على الشعب، وفتح أيّ شعبة يعرض كل ما يخصها (طلاب + مهام + تفاعل) -->
+      <template v-else>
 
-      <!-- فلاتر مربوطة: القسم ← التخصص ← المشرف ← الشعبة (لكل شعبة مجموعة واحدة) -->
-      <div class="hm-filters">
-        <BaseSelect v-if="!isSup" v-model="fDept" class="min-w-[160px]" aria-label="القسم" placeholder="كل الأقسام" include-placeholder-option :options="statusDeptOptions" />
-        <BaseSelect v-if="!isSup" v-model="fSpec" class="min-w-[170px]" aria-label="التخصص" placeholder="كل التخصصات" include-placeholder-option :options="statusSpecOptions" />
-        <BaseSelect v-if="!isSup" v-model="fSup" class="min-w-[170px]" aria-label="المشرف" placeholder="كل المشرفين" include-placeholder-option value-key="id" label-key="name" :options="statusSupOptions" />
-        <BaseSelect v-model="taskGroup" class="min-w-[190px]" aria-label="الشعبة" placeholder="اختر الشعبة" include-placeholder-option value-key="id" label-key="name" :options="statusGroupOptions" />
-        <BaseSelect v-if="taskGroup" v-model="taskState" class="min-w-[150px]" aria-label="حالة المهمة" placeholder="كل الحالات" include-placeholder-option :options="taskStateOptions" />
-      </div>
-
-      <!-- افتراضيًا: نظرة عامة على كل الشعب؛ واختيار شعبة يفتح تفاصيلها -->
-      <div v-if="!taskGroup">
-        <div v-if="statusGroups.length" class="hm-ov-grid">
-          <button v-for="g in statusGroups" :key="g.id" type="button" class="hm-ov-card" @click="taskGroup = g.id">
-            <header class="hm-ov-head">
-              <span class="hm-ov-sec">{{ g.name }}</span>
-              <span class="dash-chip">{{ g.members.length }} طالب</span>
-            </header>
-            <b class="hm-ov-project">{{ g.project || 'بدون مشروع' }}</b>
-            <span class="hm-ov-meta">{{ g.spec }} · {{ DEGREES[g.degree] }}</span>
-            <span v-if="!isSup" class="hm-ov-meta">المشرف: {{ supName(g.supId) || '—' }}</span>
-            <div class="hm-ov-prog">
-              <span class="gr-progress"><span :class="levelClass(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
-              <span class="hm-ov-pct mono">{{ g.percentage }}%</span>
-            </div>
-            <span class="hm-ov-foot mono">{{ g.done }}/{{ g.tasksTotal }} مهمة مكتملة</span>
-          </button>
-        </div>
-        <p v-else class="hm-muted">لا توجد شعب مطابقة للفلاتر المحددة</p>
+      <!-- جدول المجموعات: صف لكل شعبة، والضغط عليه يفتح كل ما يخصها -->
+      <div v-if="!taskGroup" class="hm-table-wrap hm-scroll">
+        <table class="hm-table">
+          <thead><tr><th>الشعبة</th><th data-rt-show>المشروع</th><th v-if="!isSup">المشرف</th><th class="hm-center">المهام</th><th>التقدّم</th><th class="hm-center">الحالة</th></tr></thead>
+          <tbody>
+            <tr v-for="g in statusGroups" :key="g.id" class="is-link" @click="taskGroup = g.id">
+              <td class="hm-strong">{{ g.name }} <span class="hm-muted">({{ shownMembers(g).length }})</span></td>
+              <td class="hm-muted" data-rt-show>{{ g.project || 'بدون مشروع' }}</td>
+              <td v-if="!isSup" class="hm-muted">{{ supName(g.supId) }}</td>
+              <td class="hm-center"><span class="mono">{{ g.done }}/{{ g.tasksTotal }}</span></td>
+              <td>
+                <span class="gr-progress is-flat"><span :class="levelClass(g.percentage)" :style="{ width: g.percentage + '%' }" /></span>
+                <span class="gr-pct">{{ g.percentage }}%</span>
+              </td>
+              <td class="hm-center"><span :class="['ov-pill', groupStatus(g.percentage).cls]">{{ groupStatus(g.percentage).label }}</span></td>
+            </tr>
+            <SkeletonLoader v-if="loading" variant="table" :cols="isSup ? 5 : 6" :rows="6" />
+            <tr v-else-if="!statusGroups.length"><td :colspan="isSup ? 5 : 6" class="gr-empty">لا توجد مجموعات مطابقة</td></tr>
+          </tbody>
+        </table>
       </div>
 
       <!-- تفاصيل الشعبة المختارة -->
@@ -184,14 +185,22 @@
               <template v-else>—</template>
             </template></span>
           </div>
-          <span class="dash-chip">{{ selectedGroup.members.length }} طالب</span>
+          <span class="dash-chip">{{ detailMembers.length }} طالب</span>
         </header>
+
+        <!-- مؤشرات سريعة عن المجموعة -->
+        <div class="hm-detail-kpis">
+          <span class="hm-kpi"><b class="mono">{{ selectedGroup.percentage }}%</b><span>الإنجاز</span></span>
+          <span class="hm-kpi"><b class="mono">{{ selectedGroup.done }}/{{ selectedGroup.tasksTotal }}</b><span>المهام المكتملة</span></span>
+          <span class="hm-kpi"><b class="mono">{{ detailMembers.length }}</b><span>الطلاب</span></span>
+          <span class="hm-kpi"><b>{{ DEGREES[selectedGroup.degree] }}</b><span>الفئة</span></span>
+        </div>
 
         <!-- طلاب الشعبة: الأسماء، والضغط يفتح البروفايل -->
         <div class="hm-detail-students">
-          <h4>الطلاب <small>{{ selectedGroup.members.length }}</small></h4>
-          <ul v-if="selectedGroup.members.length" class="hm-student-cards">
-            <li v-for="m in selectedGroup.members" :key="m.id">
+          <h4>الطلاب <small>{{ detailMembers.length }}</small></h4>
+          <ul v-if="detailMembers.length" class="hm-student-cards">
+            <li v-for="m in detailMembers" :key="m.id">
               <button type="button" class="hm-student-card" @click="openProfile('student', m)">
                 <span class="hm-avatar" aria-hidden="true">{{ m.name.charAt(0) }}</span>
                 <span class="hm-sc-main">
@@ -274,6 +283,8 @@
           </div>
         </div>
       </template>
+      <p v-if="!taskGroup" class="hm-count">{{ statusGroups.length }} مجموعة</p>
+      </template>
     </section>
 
     <ProfileModal v-model="profileOpen" :kind="profileKind" :person-id="profileId" :name="profileName" />
@@ -283,7 +294,7 @@
 <script>
 import { ref } from 'vue'
 import { mapState } from 'pinia'
-import { ChevronDown, Search, Printer, ArrowRight } from 'lucide-vue-next'
+import { ChevronDown, Search, Printer, ArrowRight, ArrowUpLeft, Layers, GraduationCap, ListChecks, Gauge, UserCheck, Users } from 'lucide-vue-next'
 import CountUp from '@/components/ui/CountUp.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { useTeamsStore } from '@/stores/teams.store'
@@ -313,7 +324,7 @@ const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0)
 export default {
   name: 'PortalDashboard',
 
-  components: { ChevronDown, ArrowRight, CountUp, Search, Printer, ProfileModal, BaseSelect, SlideTable },
+  components: { ChevronDown, ArrowRight, ArrowUpLeft, CountUp, Search, Printer, ProfileModal, BaseSelect, SlideTable },
 
   /** حركة الصفحة (الإدارة العامة): البانر يدخل عند الفتح، البطاقات تصعد عند الوصول إليها، والصفوف تتوالى بعد وصول البيانات */
   setup() {
@@ -323,7 +334,7 @@ export default {
       useScrollMotion(root, (el) => {
         gsap.timeline({ delay: 0.15 })
           .from(el.querySelectorAll('.sa-hero-text > *'), { y: 24, autoAlpha: 0, duration: 0.7, ease: 'power3.out', stagger: 0.12 })
-          .from(el.querySelectorAll('.sa-stat'), { y: 20, autoAlpha: 0, duration: 0.6, ease: 'power2.out', stagger: 0.08 }, '-=0.3')
+          .from(el.querySelectorAll('.sa-stat, .dash-kpi'), { y: 20, autoAlpha: 0, duration: 0.6, ease: 'power2.out', stagger: 0.08 }, '-=0.3')
         // البطاقات تصعد مباشرة بعد البانر (بلا ScrollTrigger: مواضعه تُحسب قبل وصول البيانات فتبقى البطاقات مخفية)
         gsap.from(el.querySelectorAll('.dash-card'), { y: 30, autoAlpha: 0, duration: 0.7, ease: 'power3.out', stagger: 0.1, delay: 0.35, clearProps: 'all' })
       })
@@ -346,6 +357,7 @@ export default {
       supActivity: {},
       tab: useAuthStore().userRole === ROLES.SUPERVISOR ? 'grp' : 'sup',
       q: '',
+      statusDegree: '',
       specFilter: '',
       supFilter: '',
       genderFilter: '',
@@ -388,6 +400,70 @@ export default {
     firstName() {
       // تخطّي الألقاب المختصرة ("م."، "د."، "أ.") إلى الاسم الأول
       return (this.userName || '').split(/\s+/).find((w) => w && !w.endsWith('.')) || 'بك'
+    },
+
+    /** بطاقات المؤشّرات (أعلى الهرم): كل بطاقة رقم + أيقونة + رابط للقسم المناسب */
+    kpis() {
+      const p = this.isSup ? '/supervisor' : '/committee'
+      const icons = this.isSup ? [Layers, GraduationCap, ListChecks, Gauge] : [Layers, GraduationCap, UserCheck, Users]
+      const tos = this.isSup
+        ? [`${p}/teams`, `${p}/teams`, `${p}/tasks`, `${p}/progress`]
+        : [`${p}/teams`, `${p}/members`, `${p}/teams`, `${p}/members`]
+      return this.stats.map((s, i) => ({ ...s, icon: icons[i] || Layers, to: tos[i] || `${p}/teams` }))
+    },
+
+    /** منحنى تقدّم المشاريع (ناعم monotone cubic): نقطة لكل مجموعة بنسبة تقدّمها.
+     * أقل من نقطتين → إطار فارغ (شبكة فقط) بنفس الحجم بدل نص يكسر ارتفاع السيكشن. */
+    projectTrend() {
+      const vals = this.trendGroups.map((g) => g.percentage || 0)
+      const W = 320
+      const H = 120
+      const padX = 6
+      const padT = 12
+      const padB = 12
+      const base = H - padB
+      const frame = { W, H, topY: padT, midY: (padT + base) / 2, baseY: base }
+      if (vals.length < 2) return { ...frame, line: '', area: '', empty: true }
+      const n = vals.length
+      const pts = vals.map((v, i) => [padX + (i * (W - padX * 2)) / (n - 1), padT + (1 - v / 100) * (H - padT - padB)])
+      const line = this.monotonePath(pts)
+      const area = `${line} L${pts[n - 1][0].toFixed(1)},${base} L${pts[0][0].toFixed(1)},${base} Z`
+      return { ...frame, line, area, empty: false }
+    },
+
+    /** مجموعات المخطط حسب فلتر الفئة (الكل / دبلوم / بكالوريوس) */
+    trendGroups() {
+      return this.statusDegree ? this.groups.filter((g) => g.degree === this.statusDegree) : this.groups
+    },
+
+    /** حالة المشاريع: توزيع المجموعات حسب التقدّم + نسبة إنجاز المهام (ضمن الفئة المختارة) */
+    overallStatus() {
+      const b = { high: 0, mid: 0, low: 0 }
+      let done = 0
+      let tasks = 0
+      for (const g of this.trendGroups) {
+        done += g.done || 0
+        tasks += g.tasksTotal || 0
+        const p = g.percentage || 0
+        b[p >= 70 ? 'high' : p >= 35 ? 'mid' : 'low']++
+      }
+      const total = this.trendGroups.length
+      const seg = (key, label, count) => ({ key, label, count, pct: total ? Math.round((count / total) * 100) : 0 })
+      return {
+        total,
+        done,
+        tasks,
+        completion: tasks ? Math.round((done / tasks) * 100) : 0,
+        segs: [seg('high', 'متقدّمة', b.high), seg('mid', 'متوسّطة', b.mid), seg('low', 'متعثّرة', b.low)]
+      }
+    },
+
+    /** رسم التفاعل الأفقي: أعلى المشرفين تفاعلًا (الإدارة) أو أعلى مجموعاتي تقدّمًا (المشرف) */
+    barRows() {
+      if (this.isSup) {
+        return [...this.groups].sort((a, b) => b.percentage - a.percentage).slice(0, 6).map((g) => ({ id: g.id, name: g.name, value: g.percentage }))
+      }
+      return [...this.supervisors].sort((a, b) => b.activity - a.activity).slice(0, 6).map((s) => ({ id: s.id, name: s.name, value: s.activity }))
     },
 
     /** آخر المهام الموكلة (GET /committee/dashboard-stats → latest_tasks) */
@@ -467,7 +543,13 @@ export default {
     /** كل الشعب المطابقة للفلاتر (القسم/التخصص/المشرف) — مصدر النظرة العامة وقائمة فلتر الشعبة */
     statusGroups() {
       return this.groups
-        .filter((g) => (!this.fDept || this.deptOfSpec[g.spec] === this.fDept) && (!this.fSpec || g.spec === this.fSpec) && (!this.fSup || g.supId === this.fSup))
+        .filter((g) =>
+          (!this.fDept || this.deptOfSpec[g.spec] === this.fDept) &&
+          (!this.fSpec || g.spec === this.fSpec) &&
+          (!this.fSup || g.supId === this.fSup) &&
+          (!this.genderFilter || g.members.some((m) => m.gender === this.genderFilter)) &&
+          (!this.q || `${g.name} ${g.project || ''} ${g.members.map((s) => s.name).join(' ')}`.includes(this.q))
+        )
     },
 
     statusGroupOptions() {
@@ -477,6 +559,11 @@ export default {
     /** الشعبة المختارة (لكل شعبة مجموعة واحدة) */
     selectedGroup() {
       return this.groups.find((g) => g.id === this.taskGroup) || null
+    },
+
+    /** طلاب المجموعة المختارة بعد فلتر طلاب/طالبات (لعرض التفاصيل) */
+    detailMembers() {
+      return this.selectedGroup ? this.shownMembers(this.selectedGroup) : []
     },
 
     supRows() {
@@ -670,6 +757,37 @@ export default {
 
     supName(id) {
       return this.supList.find((s) => s.id === id)?.name || '—'
+    },
+
+    /** طلاب المجموعة بعد فلتر طلاب/طالبات (بلا فلتر: كلهم) */
+    shownMembers(g) {
+      return this.genderFilter ? g.members.filter((m) => m.gender === this.genderFilter) : g.members
+    },
+
+    /** مسار منحنى ناعم يمرّ بالنقاط دون تجاوزها (monotone cubic — Fritsch–Carlson) */
+    monotonePath(pts) {
+      const n = pts.length
+      if (n === 0) return ''
+      if (n < 3) return pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ')
+      const dx = []
+      const m = []
+      for (let i = 0; i < n - 1; i++) { dx.push(pts[i + 1][0] - pts[i][0]); m.push((pts[i + 1][1] - pts[i][1]) / dx[i]) }
+      const t = [m[0]]
+      for (let i = 1; i < n - 1; i++) t.push(m[i - 1] * m[i] <= 0 ? 0 : (3 * (dx[i - 1] + dx[i])) / ((2 * dx[i] + dx[i - 1]) / m[i - 1] + (dx[i] + 2 * dx[i - 1]) / m[i]))
+      t.push(m[n - 2])
+      let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`
+      for (let i = 0; i < n - 1; i++) {
+        const h = dx[i] / 3
+        d += ` C${(pts[i][0] + h).toFixed(1)},${(pts[i][1] + t[i] * h).toFixed(1)} ${(pts[i + 1][0] - h).toFixed(1)},${(pts[i + 1][1] - t[i + 1] * h).toFixed(1)} ${pts[i + 1][0].toFixed(1)},${pts[i + 1][1].toFixed(1)}`
+      }
+      return d
+    },
+
+    /** شارة حالة المجموعة حسب نسبة التقدّم (للعمود «الحالة» في جدول المجموعات) */
+    groupStatus(p) {
+      if (p >= 70) return { label: 'متقدّمة', cls: 'is-high' }
+      if (p >= 35) return { label: 'متوسّطة', cls: 'is-mid' }
+      return { label: 'متعثّرة', cls: 'is-low' }
     },
 
     openProfile(kind, row) {
