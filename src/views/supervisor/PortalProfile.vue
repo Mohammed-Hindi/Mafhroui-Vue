@@ -1,30 +1,13 @@
 <template>
-  <!-- الملف الشخصي للمشرف — بنمط "ملف الطالب" في بوابة الكلية (201300) كملف الإدارة العامة:
-       شريط تبويبات أزرق بأيقونات بيضاء ← بطاقة الهوية ← بيانات (تسمية + قيمة) ← التفاعل الكلي والجزئي لكل مجموعة.
-       البيانات (عرض فقط): GET /me + GET /supervisors/{me}/profile -->
+  <!-- بياناتي (المشرف) — صفحة واحدة بتمرير: بطاقة المعلومات (تعديل مباشر) ← التفاعل الكلي ← التفاعل مع كل مجموعة.
+       البيانات: GET /me + GET /supervisors/{me}/profile. -->
   <div class="flex flex-col gap-6">
-    <nav class="profile-tabs" aria-label="أقسام الملف الشخصي">
-      <button
-        v-for="t in tabs" :key="t.key" type="button"
-        :class="['profile-tab', tab === t.key && 'is-active']" :aria-current="tab === t.key ? 'page' : undefined"
-        @click="tab = t.key"
-      >
-        <component :is="t.icon" :size="34" />
-        <span>{{ t.label }}</span>
-      </button>
-      <router-link :to="{ name: 'supervisor-change-password' }" class="profile-tab">
-        <Lock :size="34" />
-        <span>تغيير كلمة المرور</span>
-      </router-link>
-    </nav>
-
-
     <!-- المعلومات الشخصية -->
-    <ProfileInfoCard v-if="tab === 'info'" :sections="infoSections" />
+    <ProfileInfoCard :sections="infoSections" change-password-route="supervisor-change-password" />
 
-    <!-- التفاعل الكلي: صفوف "التسمية : القيمة" كبطاقة "بيانات أكاديمية" (200515) + مقياس عام -->
-    <section v-else-if="tab === 'activity'" class="profile-card">
-      <h3 class="portal-title mb-4">التفاعل الكلي <span class="profile-card-sub">{{ activeSemesterName }}</span></h3>
+    <!-- التفاعل الكلي: مقياس عام + صفوف ملخّص -->
+    <section class="profile-card">
+      <h3 class="portal-title pf-title">التفاعل الكلي <span class="profile-card-sub">{{ activeSemesterName }}</span></h3>
       <div class="sp-meter">
         <span class="gr-progress"><span :class="level(overall)" :style="{ width: overall + '%' }" /></span>
         <b>{{ overall }}%</b>
@@ -36,8 +19,8 @@
     </section>
 
     <!-- التفاعل الجزئي: بطاقة لكل مجموعة باسمها ورقم شعبتها -->
-    <section v-else class="profile-card">
-      <h3 class="portal-title mb-4">التفاعل مع كل مجموعة <span class="profile-card-sub">{{ teams.length }} مجموعة</span></h3>
+    <section class="profile-card">
+      <h3 class="portal-title pf-title">التفاعل مع كل مجموعة <span class="profile-card-sub">{{ teams.length }} مجموعة</span></h3>
       <SkeletonLoader v-if="loading" :rows="4" height="40px" />
       <p v-else-if="!teams.length" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لا توجد مجموعات مسندة لك</p>
       <div v-else class="sp-groups">
@@ -105,7 +88,6 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Lock, IdCard, Activity, Users } from 'lucide-vue-next'
 import api from '@/services/api'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ProfileInfoCard from '@/components/shared/ProfileInfoCard.vue'
@@ -118,23 +100,17 @@ import { DEGREES, GENDERS, PROJECT_STATUS, REGIONS, level } from '@/utils/progre
 export default {
   name: 'SupervisorPortalProfile',
 
-  components: { Lock, BaseModal, ProfileInfoCard },
+  components: { BaseModal, ProfileInfoCard },
 
   data() {
     return {
       DEGREES, GENDERS, PROJECT_STATUS, REGIONS,
-      tab: 'info',
       group: null,
       groupOpen: false,
       groups: null,
       groupsLoading: false,
       interaction: null,
-      loading: true,
-      tabs: [
-        { key: 'info', label: 'المعلومات الشخصية', icon: IdCard },
-        { key: 'activity', label: 'التفاعل الكلي', icon: Activity },
-        { key: 'groups', label: 'التفاعل مع المجموعات', icon: Users }
-      ]
+      loading: true
     }
   },
 
@@ -171,7 +147,7 @@ export default {
       ]
     },
 
-    /** صفوف الملف (عرض فقط) */
+    /** صفوف الملف: الاسم/الرقم الوظيفي/البريد/الواتساب قابلة للتعديل، والباقي عرض فقط */
     infoSections() {
       const u = this.user || {}
       return [
@@ -221,8 +197,7 @@ export default {
       } finally {
         this.groupsLoading = false
       }
-    },
-
+    }
   }
 }
 </script>

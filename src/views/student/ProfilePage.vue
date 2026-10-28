@@ -1,30 +1,14 @@
 <template>
-  <!-- الملف التعريفي للطالب — بنمط "ملف الطالب" في بوابة الكلية (201300) كملف الإدارة العامة:
-       شريط تبويبات أزرق ← صفوف (تسمية + قيمة). المطلوب: اسم المشرف (الضغط ← بروفايله: الاسم، الواتساب،
-       مكان التواجد، الشعبة) وبيانات المجموعة كنافذة منبثقة مع أماكن تواجد الطلاب. البيانات من GET /students/{me}/profile -->
+  <!-- بياناتي (الطالب) — صفحة واحدة بتمرير: بطاقة المعلومات (تعديل مباشر) ← مجموعتي (الشعبة/المجموعة/المشرف).
+       البيانات من GET /students/{me}/profile. اسم المشرف والمجموعة يفتحان نافذة تفاصيل. -->
   <div class="flex flex-col gap-6">
-    <nav class="profile-tabs" aria-label="أقسام الملف التعريفي">
-      <button
-        v-for="t in tabs" :key="t.key" type="button"
-        :class="['profile-tab', tab === t.key && 'is-active']" :aria-current="tab === t.key ? 'page' : undefined"
-        @click="tab = t.key"
-      >
-        <component :is="t.icon" :size="34" />
-        <span>{{ t.label }}</span>
-      </button>
-      <router-link :to="{ name: 'student-change-password' }" class="profile-tab">
-        <Lock :size="34" />
-        <span>تغيير كلمة المرور</span>
-      </router-link>
-    </nav>
+    <ProfileInfoCard :sections="infoSections" change-password-route="student-change-password" />
 
-    <ProfileInfoCard v-if="tab === 'info'" :sections="sections" />
-
-    <section v-else class="profile-card">
+    <section class="profile-card">
       <h3 class="portal-title pf-title">مجموعتي</h3>
       <SkeletonLoader v-if="!loaded" :rows="5" height="22px" />
-      <p v-else-if="tab === 'team' && !myTeam" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لم تُنسب لمجموعة بعد</p>
-      <div v-for="sec in sections" v-else :key="sec.title" class="pf-row">
+      <p v-else-if="!myTeam" class="palert is-warning hd-alert"><span class="hd-ic is-warning">!</span> لم تُنسب لمجموعة بعد</p>
+      <div v-for="sec in teamSections" v-else :key="sec.title" class="pf-row">
         <h4 class="pf-row-title">{{ sec.title }}</h4>
         <div class="pf-row-fields">
           <div v-for="f in sec.fields" :key="f.label" class="profile-field">
@@ -62,7 +46,6 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { IdCard, Lock, Users } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ProfileInfoCard from '@/components/shared/ProfileInfoCard.vue'
 import api from '@/services/api'
@@ -74,20 +57,15 @@ import { placeholderGroup } from '@/utils/studentPlaceholders'
 export default {
   name: 'StudentProfilePage',
 
-  components: { Lock, BaseModal, ProfileInfoCard },
+  components: { BaseModal, ProfileInfoCard },
 
   data() {
     return {
       REGIONS,
-      tab: 'info',
       profile: null,
       supOpen: false,
       groupOpen: false,
-      loaded: false,
-      tabs: [
-        { key: 'info', label: 'المعلومات الشخصية', icon: IdCard },
-        { key: 'team', label: 'مجموعتي', icon: Users }
-      ]
+      loaded: false
     }
   },
 
@@ -108,23 +86,24 @@ export default {
       return this.profile?.section || this.myTeam?.section || ''
     },
 
-    sections() {
+    infoSections() {
       const u = this.user || {}
-      if (this.tab === 'info') {
-        return [
-          { title: 'بيانات الطالب', fields: [
-            { label: 'الاسم', value: u.name, key: 'name', required: true },
-            { label: 'الرقم الجامعي', value: u.university_number, mono: true },
-            { label: 'التخصص', value: u.specialization?.name },
-            { label: 'الفصل الدراسي', value: u.academicTerm?.name }
-          ] },
-          { title: 'بيانات التواصل', fields: [
-            { label: 'البريد الإلكتروني', value: u.email, key: 'email', type: 'email', required: true, mono: true },
-            { label: 'رقم الواتساب', value: u.whatsapp, key: 'whatsapp', mono: true, placeholder: 'مثال: 970591234567' },
-            { label: 'مكان التواجد', value: REGIONS[this.profile?.region] }
-          ] }
-        ]
-      }
+      return [
+        { title: 'بيانات الطالب', fields: [
+          { label: 'الاسم', value: u.name, key: 'name', required: true },
+          { label: 'الرقم الجامعي', value: u.university_number, mono: true },
+          { label: 'التخصص', value: u.specialization?.name },
+          { label: 'الفصل الدراسي', value: u.academicTerm?.name }
+        ] },
+        { title: 'بيانات التواصل', fields: [
+          { label: 'البريد الإلكتروني', value: u.email, key: 'email', type: 'email', required: true, mono: true },
+          { label: 'رقم الواتساب', value: u.whatsapp, key: 'whatsapp', mono: true, placeholder: 'مثال: 970591234567' },
+          { label: 'مكان التواجد', value: REGIONS[this.profile?.region] }
+        ] }
+      ]
+    },
+
+    teamSections() {
       return [
         { title: 'المجموعة', fields: [
           { label: 'رقم الشعبة', value: this.section },
