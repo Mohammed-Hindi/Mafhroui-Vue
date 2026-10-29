@@ -29,7 +29,10 @@ function mapProject(p) {
     semester: p.term || '',
     video_url: p.video_url || '',
     // صورة المشروع يرفعها الطالب مع التقرير النهائي (تظهر عند توفير الخادم للحقل، وإلا غلاف بهوية المنصة)
-    cover: p.cover_url || p.cover_image_url || ''
+    cover: p.cover_url || p.cover_image_url || '',
+    // تمييز اللجنة/الإدارة (badge) + ترشيح المناقشين (نجوم): كم مناقشًا رشّح المشروع من إجمالي من قيّموه
+    featured: !!p.featured,
+    stars: { nominations: Number(p.stars?.nominations) || 0, discussants: Number(p.stars?.discussants) || 0 }
   }
 }
 
