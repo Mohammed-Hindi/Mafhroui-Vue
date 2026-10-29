@@ -6,7 +6,9 @@
       <img v-if="project.cover" :src="project.cover" :alt="project.title" loading="lazy">
       <span v-else class="us-pf-fallback" aria-hidden="true"><b>{{ project.title?.charAt(0) }}</b><UcasLogo :size="34" /></span>
       <span v-if="project.program_name" class="us-pf-tag">{{ project.program_name }}</span>
-      <span v-if="project.featured" class="us-pf-badge"><Award :size="14" /> مميّز</span>
+      <span v-if="project.rank" class="us-pf-badge" :class="`is-${project.rank}`">
+        <Crown v-if="project.rank === 'top'" :size="14" /><Award v-else :size="14" /> {{ RANK_LABELS[project.rank] }}
+      </span>
       <!-- مشروع بفيديو: زر تشغيل على الصورة، والضغط يفتح صفحة المشروع والفيديو يعمل -->
       <span v-if="project.video_url" class="us-pf-play" aria-hidden="true"><Play :size="26" /></span>
       <span class="us-pf-hover"><span>{{ project.video_url ? 'تشغيل الفيديو' : 'عرض المشروع' }} <ArrowLeft :size="16" /></span></span>
@@ -33,8 +35,9 @@
 </template>
 
 <script setup>
-import { ArrowLeft, Award, Play, Star, UserRound, Users } from 'lucide-vue-next'
+import { ArrowLeft, Award, Crown, Play, Star, UserRound, Users } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
+import { RANK_LABELS } from '@/stores/landing.store'
 
 defineProps({
   project: { type: Object, required: true }

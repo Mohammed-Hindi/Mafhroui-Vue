@@ -580,5 +580,10 @@ a.au-split-submit { margin-top: 4px; }
 .us-pagehead-badge { display: inline-flex; align-items: center; gap: 5px; margin-top: 14px; margin-inline-start: 8px; padding: 4px 14px; border-radius: 999px; background: var(--ucas-green); font-size: 13.5px; font-weight: 700; color: #FFFFFF; }
 .us-proj-stars { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
 .us-proj-stars small { font-size: 13.5px; font-weight: 700; color: var(--color-text-600); }
+/* رتبة المشروع: الأساسي «مميّز» أخضر، و«متصّدر» برتقالي (رشّحه أغلب المناقشين) */
+.us-pf-badge.is-top, .us-pagehead-badge.is-top { background: var(--ucas-orange, #FF9800); }
+.us-tg-rank { position: relative; display: inline-flex; align-items: center; gap: 4px; width: fit-content; margin-bottom: 2px; padding: 3px 10px; border-radius: 999px; background: rgba(255, 255, 255, .95); font-size: .72em; font-weight: 700; color: var(--ucas-green); }
+.us-tg-rank.is-top { color: var(--ucas-orange, #FF9800); }
+.us-tg-rank svg { width: 1em; height: 1em; }
 .us-section .us-more nav[aria-label="ترقيم الصفحات"] button { border-radius: 999px; }
 .us-section .us-more nav[aria-label="ترقيم الصفحات"] .bg-primary-600 { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); }
