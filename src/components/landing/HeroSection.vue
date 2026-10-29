@@ -10,11 +10,11 @@
           <h1>منصة {{ APP_NAME }} لمشاريع التخرج</h1>
           <p>
             منصة موحّدة تربط الطلاب بالمشرفين ولجنة الإشراف لإدارة المقترحات والمهام والاجتماعات
-            والمناقشات وأرشفة أفضل مشاريع التخرج في الكلية الجامعية للعلوم التطبيقية.
+            والمناقشات وأرشفة مشاريع التخرج المميّزة في الكلية الجامعية للعلوم التطبيقية.
           </p>
           <div class="us-hero-actions">
             <router-link :to="{ name: 'login' }" class="us-btn is-solid is-white">تسجيل الدخول <LogIn :size="19" class="us-flip" /></router-link>
-            <a href="#projects" class="us-btn is-glass">أفضل مشاريع التخرج <ArrowDown :size="18" /></a>
+            <a href="#projects" class="us-btn is-glass">المشاريع المميّزة <ArrowDown :size="18" /></a>
           </div>
         </div>
       </div>

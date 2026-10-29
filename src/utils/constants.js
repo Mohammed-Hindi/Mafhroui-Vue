@@ -48,7 +48,7 @@ export const DEFAULT_PAGE_SIZE = 10
 export const LANDING_LINKS = [
   { label: 'الرئيسية', to: { name: 'landing' } },
   { label: 'من نحن', to: { name: 'about' } },
-  { label: 'أفضل المشاريع', to: { name: 'landing', hash: '#projects' } },
+  { label: 'المشاريع المميّزة', to: { name: 'landing', hash: '#projects' } },
   { label: 'ميزات المنصة', to: { name: 'landing', hash: '#features' } }
 ]
 

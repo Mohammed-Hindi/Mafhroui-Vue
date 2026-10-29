@@ -1,11 +1,11 @@
 <template>
-  <!-- معرض أفضل مشاريع التخرج: عنوان بالخطين الجانبيين، فلترا التخصص والدرجة، ثم شريط بطاقات منحنٍ متحرك
+  <!-- معرض مشاريع التخرج المميّزة: عنوان بالخطين الجانبيين، فلترا التخصص والدرجة، ثم شريط بطاقات منحنٍ متحرك
        (TiltedGallery) — الوقوف يوقفه، السحب/العجلة/الأسهم تحرّكه يمينًا ويسارًا، والضغط يفتح المشروع، مع قائمة روابط مخفية بصريًا لقارئات الشاشة ولوحة المفاتيح -->
   <section id="projects" class="us-section us-projects scroll-mt-24">
     <div class="us-wrap">
       <!-- قبل أول تمرير: العنوان يلمع وخطاه ينسابان وسهم يدعو للنزول، لجذب الزائر لبداية القسم -->
-      <a v-if="beckon" href="#projects" class="us-beckon-cue" aria-label="انزل إلى أفضل مشاريع التخرج"><ChevronsDown :size="22" /></a>
-      <h2 :class="['us-title reveal', beckon && 'is-beckon']">أفضل مشاريع التخرج</h2>
+      <a v-if="beckon" href="#projects" class="us-beckon-cue" aria-label="انزل إلى المشاريع المميّزة"><ChevronsDown :size="22" /></a>
+      <h2 :class="['us-title reveal', beckon && 'is-beckon']">المشاريع المميّزة</h2>
 
       <p v-if="!projects.length" class="us-empty">لم تُعيَّن مشاريع مميزة بعد — تعيّنها لجنة الإشراف من أرشيف المشاريع.</p>
       <template v-else>
