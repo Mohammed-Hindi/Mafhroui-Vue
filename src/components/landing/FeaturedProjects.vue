@@ -7,7 +7,7 @@
       <a v-if="beckon" href="#projects" class="us-beckon-cue" aria-label="انزل إلى المشاريع المميّزة"><ChevronsDown :size="22" /></a>
       <h2 :class="['us-title reveal', beckon && 'is-beckon']">المشاريع المميّزة</h2>
 
-      <p v-if="!projects.length" class="us-empty">لم تُعيَّن مشاريع مميزة بعد — تعيّنها لجنة الإشراف من أرشيف المشاريع.</p>
+      <p v-if="!projects.length" class="us-empty">ستظهر هنا المشاريع المتصدّرة فور ترشيحها من لجان المناقشة واعتمادها من الإدارة.</p>
       <template v-else>
         <div class="us-filterbar is-center is-compact" aria-label="تصفية المشاريع">
           <label class="us-field">
