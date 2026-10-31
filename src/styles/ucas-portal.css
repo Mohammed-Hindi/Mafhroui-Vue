@@ -6903,6 +6903,16 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .prd-readonly { display: flex; align-items: center; gap: 10px; margin: 0; padding: 14px 16px; border-radius: 4px; background: var(--color-surface); box-shadow: inset 0 0 0 1px var(--color-border); color: var(--color-text-500); font-weight: 600; line-height: 1.6; }
 .prd-readonly svg { flex: none; color: var(--color-text-400); }
 
+/* تقييم المشروع (أرشيف الطاقم فقط): نجوم ترشيح المناقشين (placeholder مطفأ والمُرشِّحة تضوي) + تاج التمييز أسفلها */
+.pj-rating { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 8px; }
+.pj-rating-stars { display: inline-flex; align-items: center; gap: 3px; }
+.pj-rating-stars svg { color: var(--color-text-300); }
+.pj-rating-stars svg.is-on { color: #F5A623; }
+.pj-rating-stars small { margin-inline-start: 4px; font-size: 12.5px; font-weight: 700; color: var(--color-text-500); }
+/* تاج «مميّز» — أرقى وبلون ذهبي مختلف عن النجوم البرتقالية وأزرار التمييز الخضراء */
+.pj-rating-crown { display: inline-flex; align-items: center; gap: 5px; padding: 3px 11px; border-radius: 999px; background: linear-gradient(135deg, #C9971E, #E9B949 55%, #B8860B); color: #FFFFFF; font-size: 12px; font-weight: 800; box-shadow: 0 3px 9px rgba(160, 120, 10, .28); }
+.pj-rating-crown svg { color: #FFFFFF; }
+
 /* مواعيد المناقشات: مراحل العمل بتبويبات العرض المعتمدة */
 .dp-tabs-bar { margin: 0; }
 .dp-tabs-bar .ev-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
