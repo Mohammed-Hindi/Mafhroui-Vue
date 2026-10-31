@@ -160,8 +160,8 @@
               <div><dt>تاريخ القرار</dt><dd class="mono">{{ day(view.p.updated_at) }}</dd></div>
               <div v-if="view.p.rejection_reason" class="is-wide"><dt>{{ view.p.status === 'changes' ? 'المطلوب تعديله' : 'سبب الرفض' }}</dt><dd>{{ view.p.rejection_reason }}</dd></div>
             </dl>
-            <!-- لم يُبتّ بعد: خانة القرار (موافقة / طلب تعديل / رفض) -->
-            <form v-else class="prd-decide" @submit.prevent="decide('approved')">
+            <!-- لم يُبتّ بعد ويملك صلاحية البتّ: خانة القرار (موافقة / طلب تعديل / رفض) -->
+            <form v-else-if="canReviewProposals" class="prd-decide" @submit.prevent="decide('approved')">
               <label class="pfield">
                 <span>ملاحظات على المقترح <small>(مطلوبة للرفض وطلب التعديل)</small></span>
                 <textarea v-model.trim="draft.projectNote" rows="3" placeholder="مثال: وضّحوا نطاق المشروع والفئة المستهدفة" />
@@ -172,6 +172,8 @@
                 <button type="button" class="pbtn is-red" :disabled="!draft.projectNote || deciding" @click="decide('rejected')"><X :size="16" /> رفض المقترح</button>
               </div>
             </form>
+            <!-- لم يُبتّ بعد وبلا صلاحية بتّ: عرض فقط (الافتراضي للمشرف حتى تمنحه العمادة الصلاحية) -->
+            <p v-else class="prd-readonly"><Eye :size="16" /> لديك صلاحية عرض فقط — لا يمكنك اعتماد المقترح أو رفضه. تواصل مع العمادة لتعديل صلاحياتك.</p>
           </section>
 
           <!-- 2) محاولات التقديم والرفض: العدّاد + كل رفض بسببه (يظهر فقط عند وجود رفض) -->
@@ -326,7 +328,7 @@ export default {
   },
 
   computed: {
-    ...mapState(useAuthStore, ['userRole', 'user']),
+    ...mapState(useAuthStore, ['userRole', 'user', 'canReviewProposals']),
     ...mapState(useTeamsStore, ['specializationFilterOptions']),
     /** الصفوف المعروضة: كل الفلاتر مجتمعة (متتالية ومنطقية) + البحث — محليًا */
     rows() {

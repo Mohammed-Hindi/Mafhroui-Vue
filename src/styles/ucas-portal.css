@@ -6899,6 +6899,9 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .prd-decide-acts .pbtn { border-radius: 4px; }
 .prd-decide-acts .pbtn.is-green { flex: 1 1 200px; justify-content: center; background: var(--ucas-green); color: #FFFFFF; box-shadow: none; }
 @media (prefers-reduced-motion: reduce) { .prd-decide { animation: none; } }
+/* نافذة المقترح: إشعار "عرض فقط" لمن لا يملك صلاحية البتّ — بطاقة محايدة بدل خانة القرار */
+.prd-readonly { display: flex; align-items: center; gap: 10px; margin: 0; padding: 14px 16px; border-radius: 4px; background: var(--color-surface); box-shadow: inset 0 0 0 1px var(--color-border); color: var(--color-text-500); font-weight: 600; line-height: 1.6; }
+.prd-readonly svg { flex: none; color: var(--color-text-400); }
 
 /* مواعيد المناقشات: مراحل العمل بتبويبات العرض المعتمدة */
 .dp-tabs-bar { margin: 0; }
