@@ -51,7 +51,7 @@ async function loadProgressGroups() {
       specId: team.specialization_id,
       degree: team.specialization?.degree || '',
       dept: team.specialization?.department?.name || '',
-      project: team.project ? { id: team.project.id, name: team.project.name, description: team.project.description || '', status: team.project.status, featured: !!team.project.is_featured, types: team.project.types || [] } : null,
+      project: team.project ? { id: team.project.id, name: team.project.name, description: team.project.description || '', status: team.project.status, featured: !!team.project.is_featured, types: team.project.types || [], stars: { nominations: Number(team.project.nomination_stars?.nominations) || 0, discussants: Number(team.project.nomination_stars?.discussants) || 0 } } : null,
       tasksTotal: progress?.total ?? 0,
       tasksDone: progress?.done ?? 0,
       percentage: Math.round(progress?.percentage ?? 0),

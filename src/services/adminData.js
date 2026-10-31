@@ -9,7 +9,7 @@ export const day = (v) => (v ? String(v).slice(0, 10) : '')
 
 /**
  * مجموعات الفصل الحالي (GET /progress):
- * { id, name, section, degree, spec, specId, supId, supName, project, projectId, projectStatus, type, featured,
+ * { id, name, section, degree, spec, specId, supId, supName, project, projectId, projectStatus, type, featured, stars,
  *   members: [{ id, name, gender, region, uni, whatsapp, email, online, total, done, percentage, evaluation }],
  *   done, tasksTotal, percentage }
  */
@@ -38,6 +38,8 @@ export async function loadGroups(fresh = false) {
     types: g.project?.types || [],
     type: (g.project?.types || []).join('، '),
     featured: !!g.project?.featured,
+    // نجوم ترشيح المناقشين (للطاقم فقط في أرشيف المشاريع)
+    stars: g.project?.stars || { nominations: 0, discussants: 0 },
     done: g.tasksDone,
     tasksTotal: g.tasksTotal,
     percentage: g.percentage,

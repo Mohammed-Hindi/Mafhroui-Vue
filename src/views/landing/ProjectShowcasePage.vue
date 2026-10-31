@@ -5,9 +5,6 @@
     <header class="us-pagehead">
       <div class="us-wrap">
         <span v-if="project?.spec" class="us-pagehead-tag">{{ project.spec }}</span>
-        <span v-if="project?.rank" class="us-pagehead-badge" :class="`is-${project.rank}`">
-          <Crown v-if="project.rank === 'top'" :size="15" /><Award v-else :size="15" /> مشروع {{ rankLabel(project.rank) }}
-        </span>
         <h1>{{ loading ? 'جارٍ التحميل…' : project?.title || 'لم يتم العثور على المشروع' }}</h1>
         <p v-if="project">{{ [project.dept_name, project.semester].filter(Boolean).join(' · ') }}</p>
         <nav class="us-crumbs" aria-label="مسار التنقل">
@@ -50,12 +47,6 @@
             <dl class="us-data">
               <div v-for="row in infoRows" :key="row.label"><dt>{{ row.label }}</dt><dd>{{ row.value || '—' }}</dd></div>
             </dl>
-            <div v-if="project.stars?.discussants" class="us-proj-stars">
-              <span class="us-pf-stars" :aria-label="`ترشيح المناقشين: ${project.stars.nominations} من ${project.stars.discussants}`">
-                <Star v-for="i in project.stars.discussants" :key="i" :size="18" :class="{ 'is-on': i <= project.stars.nominations }" :fill="i <= project.stars.nominations ? 'currentColor' : 'none'" />
-              </span>
-              <small>رشّحه {{ project.stars.nominations }} من {{ project.stars.discussants }} من لجنة المناقشة</small>
-            </div>
             <h3 class="us-detail-sub">فريق المشروع</h3>
             <ul class="us-team">
               <li v-for="m in team" :key="m"><span>{{ m.charAt(0) }}</span>{{ m }}</li>
@@ -74,13 +65,13 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { Award, Crown, Play, Star } from 'lucide-vue-next'
-import { useLandingStore, RANK_LABELS } from '@/stores/landing.store'
+import { Play } from 'lucide-vue-next'
+import { useLandingStore } from '@/stores/landing.store'
 
 export default {
   name: 'ProjectShowcasePage',
 
-  components: { Award, Crown, Play, Star },
+  components: { Play },
 
   props: {
     id: { type: [String, Number], required: true }
@@ -132,10 +123,6 @@ export default {
 
   methods: {
     ...mapActions(useLandingStore, ['fetchProjectById']),
-
-    rankLabel(rank) {
-      return RANK_LABELS[rank] || ''
-    },
 
     play() {
       if (this.embedUrl) this.playing = true
