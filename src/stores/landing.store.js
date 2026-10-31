@@ -9,15 +9,6 @@ export const DEGREE_OPTIONS = [
   { value: 'bachelor', label: DEGREE_LABELS.bachelor }
 ]
 
-// رُتب المشاريع المميّزة (تُحسب من ترشيح المناقشين): متصّدر = رشّحه أغلب المناقشين، وإلا مميّز
-export const RANK_LABELS = { top: 'متصّدر', base: 'مميّز' }
-
-function computeRank(featured, nominations, discussants) {
-  if (!featured) return null
-  const top = discussants > 0 && nominations >= 1 && nominations * 2 >= discussants
-  return top ? 'top' : 'base'
-}
-
 function mapProject(p) {
   const degree = DEGREE_LABELS[p.specialization?.degree] || ''
   const program = p.specialization?.name || ''
@@ -38,12 +29,8 @@ function mapProject(p) {
     semester: p.term || '',
     video_url: p.video_url || '',
     // صورة المشروع يرفعها الطالب مع التقرير النهائي (تظهر عند توفير الخادم للحقل، وإلا غلاف بهوية المنصة)
-    cover: p.cover_url || p.cover_image_url || '',
-    // تمييز اللجنة/الإدارة (badge) + ترشيح المناقشين (نجوم): كم مناقشًا رشّح المشروع من إجمالي من قيّموه
-    featured: !!p.featured,
-    stars: { nominations: Number(p.stars?.nominations) || 0, discussants: Number(p.stars?.discussants) || 0 },
-    // رتبة المشروع تُحسب من الترشيحات: top=متصّدر، base=مميّز، null=غير مميّز
-    rank: computeRank(!!p.featured, Number(p.stars?.nominations) || 0, Number(p.stars?.discussants) || 0)
+    cover: p.cover_url || p.cover_image_url || ''
+    // لا تُعرض تفاصيل التقييم (نجوم المناقشين/تمييز الإدارة) للعامة — تظهر للطاقم فقط داخل اللوحات
   }
 }
 

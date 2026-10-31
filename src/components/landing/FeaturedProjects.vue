@@ -7,7 +7,7 @@
       <a v-if="beckon" href="#projects" class="us-beckon-cue" aria-label="انزل إلى المشاريع المميّزة"><ChevronsDown :size="22" /></a>
       <h2 :class="['us-title reveal', beckon && 'is-beckon']">المشاريع المميّزة</h2>
 
-      <p v-if="!projects.length" class="us-empty">ستظهر هنا المشاريع المتصدّرة فور ترشيحها من لجان المناقشة واعتمادها من الإدارة.</p>
+      <p v-if="!projects.length" class="us-empty">ستظهر هنا المشاريع المميّزة فور اعتمادها من إدارة الكلية.</p>
       <template v-else>
         <div class="us-filterbar is-center is-compact" aria-label="تصفية المشاريع">
           <label class="us-field">
@@ -31,7 +31,6 @@
               <div v-if="item" :class="['us-tg-card', item.cover && 'has-cover']" :style="item.cover ? { backgroundImage: `linear-gradient(to top, rgba(4,30,60,.85), rgba(4,30,60,.15) 65%), url(${item.cover})` } : null">
                 <span v-if="item.program_name" class="us-tg-tag">{{ item.program_name }}</span>
                 <span class="us-tg-mark"><UcasLogo :size="40" /></span>
-                <span v-if="item.rank" class="us-tg-rank" :class="`is-${item.rank}`"><Crown v-if="item.rank === 'top'" :size="13" /><Award v-else :size="13" /> {{ rankLabel(item.rank) }}</span>
                 <strong>{{ item.title }}</strong>
                 <small>{{ [item.degree, item.supervisor_name].filter(Boolean).join(' · ') }}</small>
                 <span v-if="item.members" class="us-tg-team"><Users :size="13" /> {{ item.members }}</span>
@@ -52,15 +51,14 @@
 </template>
 
 <script>
-import { Award, ChevronsDown, Crown, Users } from 'lucide-vue-next'
+import { ChevronsDown, Users } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
-import { RANK_LABELS } from '@/stores/landing.store'
 import TiltedGallery from './TiltedGallery.vue'
 
 export default {
   name: 'FeaturedProjects',
 
-  components: { Award, ChevronsDown, Crown, TiltedGallery, UcasLogo, Users },
+  components: { ChevronsDown, TiltedGallery, UcasLogo, Users },
 
   props: {
     projects: { type: Array, default: () => [] }
@@ -95,9 +93,6 @@ export default {
       if (window.scrollY < 40) return
       this.beckon = false
       window.removeEventListener('scroll', this.stopBeckon)
-    },
-    rankLabel(rank) {
-      return RANK_LABELS[rank] || ''
     },
 
     openProject(p) {
