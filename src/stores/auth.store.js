@@ -13,6 +13,13 @@ export const useAuthStore = defineStore('auth', () => {
   const userRole = computed(() => user.value?.role || null)
   const userName = computed(() => user.value?.name || '')
   const userEmail = computed(() => user.value?.email || '')
+  // صلاحية البتّ في المقترحات: الخادم يُرفق abilities.proposals (full | view_only | blocked).
+  // الافتراضي قراءة فقط للمشرف عند غياب البيانات (جلسة قديمة)، وكامل للإدارة واللجنة.
+  const canReviewProposals = computed(() => {
+    const level = user.value?.abilities?.proposals
+    if (level) return level === 'full'
+    return user.value?.role !== 'supervisor'
+  })
   // واجهة البوابة (هوية UCAS) للإدارة العامة ولجنة الإشراف، وبادئة مسارات صفحاتها الخاصة (الملف التعريفي، كلمة المرور)
   const usesPortal = computed(() => PORTAL_ROLES.includes(user.value?.role))
   const portalPrefix = computed(() => ({ super_admin: 'super-admin', committee: 'committee', supervisor: 'supervisor', student: 'student' })[user.value?.role] || 'committee')
@@ -197,6 +204,7 @@ export const useAuthStore = defineStore('auth', () => {
     userRole,
     userName,
     userEmail,
+    canReviewProposals,
     usesPortal,
     portalPrefix,
     avatarSrc,
