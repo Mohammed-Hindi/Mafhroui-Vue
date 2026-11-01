@@ -1,12 +1,12 @@
 <template>
   <div>
     <HeroSection />
+    <DepartmentsSection />
     <FeaturedProjects :projects="featured" />
     <div id="features" class="scroll-mt-24">
       <RolesSection />
     </div>
     <HowItWorksSection />
-    <DepartmentsSection />
   </div>
 </template>
 
