@@ -13,12 +13,16 @@ const BRAND = { ink: '#15314A', deep: '#0E5A86', line: '#A3B6C7', head: '#E9EFF4
 const RULE = (m) => `<div style="height:3px; margin:${m}; background:linear-gradient(90deg,#4C8F3F,#0E699C 55%,#064F86);"></div>`
 
 const FONT = `font-family:Arial,'Cairo',sans-serif; color:${BRAND.ink}; direction:rtl; background:#fff; box-sizing:border-box;`
-const CELL = `border:1px solid ${BRAND.line}; padding:6px 8px; font-size:13px;`
+// خلايا الجدول: محاذاة رأسية للوسط مع هامش سفلي أوسع حتى لا يلتصق النص بالحد السفلي
+const CELL = `border:1px solid ${BRAND.line}; padding:9px 8px 15px; font-size:13px; vertical-align:middle;`
 const today = () => new Date().toLocaleDateString('en-GB')
 const phone = (w) => String(w || '').replace(/^970/, '')
 
 // ترويسة الكلية الرسمية (الشعار + الاسم بالعربي والإنجليزي + رائدة الإبداع) مستخرجة كما هي من نماذج الكلية
 const collegeHeader = (h = 76) => `<img src="${HEADER}" style="height:${h}px; display:block;">`
+
+// حقوق منصة مسار أسفل كل مطبوعة (شريط مطلق في أسفل الصفحة) — PDF بالبكسل
+const creditBar = (bottom) => `<div style="position:absolute; bottom:${bottom}px; right:0; left:0; text-align:center; font-size:10.5px; font-weight:700; color:${BRAND.line}; letter-spacing:.2px;">طُبع عبر <span style="color:${BRAND.deep};">منصّة مسار</span> — نظام إدارة مشاريع التخرج</div>`
 
 // خط الكشف: Cairo (محمّل في التطبيق) مع بديل، وألوان صريحة بـ !important حتى لا تتسرّب أنماط البوابة (رأس الجدول الأبيض) إلى الطباعة
 const RFONT = `font-family:'Cairo',Arial,sans-serif; color:${BRAND.ink}; direction:rtl; background:#fff; box-sizing:border-box; line-height:1.35;`
@@ -72,6 +76,7 @@ function rosterPage(g, n, total, filterLabel = '') {
       <span>توقيع المدرس: ..............................</span>
       <span style="display:flex; align-items:center; gap:8px;"><span>صفحة</span><span style="background:${BRAND.deep}; color:#fff !important; padding:2px 12px 6px; line-height:1.5;" dir="ltr">${n} / ${total}</span></span>
     </div>
+    ${creditBar(26)}
   </div>`
 }
 
@@ -100,7 +105,7 @@ function tablePages(titleHtml, rows) {
   for (let i = 0; i < rows.length; i += 6) {
     // ترويسة الكلية بالشعار في كل صفحة + العنوان في أول صفحة + رأس الجدول يتكرر
     pages.push(`
-      <div style="${FONT} width:1123px; height:794px; padding:26px 60px 30px;">
+      <div style="${FONT} width:1123px; height:794px; padding:26px 60px 44px; position:relative;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           ${collegeHeader(58)}
           <div style="text-align:left; font-size:13px; color:#555; line-height:1.7;">
@@ -111,6 +116,7 @@ function tablePages(titleHtml, rows) {
         ${RULE('8px -60px 16px')}
         ${i ? '' : `<div style="text-align:center; font-weight:700; font-size:18px; margin:0 0 16px;">${titleHtml}</div>`}
         <table style="width:100%; border-collapse:collapse;">${head}<tbody>${rows.slice(i, i + 6).map(row).join('')}</tbody></table>
+        ${creditBar(16)}
       </div>`)
   }
   return pages
@@ -212,6 +218,7 @@ export function exportTablePdf({ fileName, title, filterLabel = '', head, rows, 
         <span>توقيع رئيس اللجنة: ..............................</span>
         <span style="display:flex; align-items:center; gap:8px;"><span>صفحة</span><span style="background:${BRAND.deep}; color:#fff !important; padding:2px 12px 6px; line-height:1.5;" dir="ltr">${n + 1} / ${total}</span></span>
       </div>
+      ${creditBar(24)}
     </div>`)
   }
   return exportPagesPdf({ fileName: fileName.replace(/[/:*?"<>|]/g, '-'), landscape, pages })
@@ -293,7 +300,8 @@ export async function exportDiscussionsDoc(plan, { byRoom = false } = {}) {
   const logo = await headerDataUri()
   // نفس أنماط PDF (RTH/CELL) بوحدات Word
   const th = `border:1px solid ${BRAND.line}; background:${BRAND.head}; padding:4pt 4pt 7pt; font-size:10.5pt; font-weight:bold; text-align:center; color:${BRAND.headInk};`
-  const td = `border:1px solid ${BRAND.line}; padding:4pt 6pt; font-size:10pt; vertical-align:middle; color:${BRAND.ink};`
+  const td = `border:1px solid ${BRAND.line}; padding:5pt 6pt 9pt; font-size:10pt; vertical-align:middle; color:${BRAND.ink};`
+  const credit = `<p style="text-align:center; font-size:8.5pt; font-weight:bold; color:${BRAND.line}; margin:9pt 0 0;">طُبع عبر منصّة مسار — نظام إدارة مشاريع التخرج</p>`
   const head = `<tr><th style="${th} width:62pt;">الرقم</th><th style="${th} width:42pt;">الشعبة</th><th style="${th} width:90pt;">اسم المشرف</th>
     <th style="${th}">الطلاب</th><th style="${th} width:90pt;">وقت المناقشة</th><th style="${th} width:90pt;">المناقشين</th><th style="${th} width:140pt;">ملاحظات</th></tr>`
   const row = (r, n, i) => r.isBreak
@@ -326,7 +334,8 @@ export async function exportDiscussionsDoc(plan, { byRoom = false } = {}) {
     for (let k = 0; k < list.length; k += 6) {
       pages.push(`${pageHead(k / 6 + 1, total)}
         ${k ? '' : `<p style="text-align:center; font-weight:bold; font-size:13.5pt; margin:0 0 12pt;">${title}</p>`}
-        <table style="width:100%; border-collapse:collapse;" dir="rtl"><thead>${head}</thead><tbody>${list.slice(k, k + 6).map((r, j) => row(r, k + j + 1, j)).join('')}</tbody></table>`)
+        <table style="width:100%; border-collapse:collapse;" dir="rtl"><thead>${head}</thead><tbody>${list.slice(k, k + 6).map((r, j) => row(r, k + j + 1, j)).join('')}</tbody></table>
+        ${credit}`)
     }
   })
   const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
