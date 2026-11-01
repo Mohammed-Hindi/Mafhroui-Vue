@@ -989,6 +989,13 @@ export default {
       const scope = this.genDept
       const inScope = (g) => !scope || g.dept === scope
       if (!this.groups.some(inScope)) return this.$toast?.error('لا مجموعات في القسم المختار')
+      // لا يمكن توليد جدول بلا قاعات مطلقًا
+      if (!this.roomTotal) return this.$toast?.error('أضف قاعة واحدة على الأقل في أحد الأماكن قبل التوليد')
+      // لكل مجموعة يلزم مناقشان غير مشرفها؛ تأكّد أن المحدَّدين يكفون لأقسى حالة (مشرف ضمن القائمة)
+      const scopeSups = [...new Set(this.groups.filter(inScope).map((g) => g.supId))]
+      if (scopeSups.some((sid) => picked.filter((x) => x.id !== sid).length < 2)) {
+        return this.$toast?.error('عدد المناقشين المحدَّدين لا يكفي — يلزم مناقشان لكل مجموعة غير مشرفها. أضف مناقشًا آخر من «من يناقش؟»')
+      }
 
       const busy = new Map() // `${date}|${personId أو room:اسم}` → [[بداية، نهاية]]
       const free = (key, a, b) => !(busy.get(key) || []).some(([x, y]) => a < y && x < b)
