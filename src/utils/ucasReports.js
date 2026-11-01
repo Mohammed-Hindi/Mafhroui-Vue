@@ -22,8 +22,8 @@ const phone = (w) => String(w || '').replace(/^970/, '')
 const collegeHeader = (h = 76) => `<img src="${HEADER}" style="height:${h}px; display:block;">`
 
 // حقوق منصة مسار أسفل كل مطبوعة (شريط مطلق في أسفل الصفحة) — PDF بالبكسل
-// بلا تشكيل (حركات) وبخط Cairo صراحةً: html2canvas يكسر الكلمات المشكَّلة، والنص المجرّد يُرسَم سليمًا كبقية الجدول
-const creditBar = (bottom) => `<div style="position:absolute; bottom:${bottom}px; right:0; left:0; text-align:center; font-family:'Cairo',Arial,sans-serif; font-size:11px; font-weight:700; color:${BRAND.line}; letter-spacing:.2px;">طباعة عبر <span style="color:${BRAND.deep};">منصة مسار</span> · نظام إدارة مشاريع التخرج</div>`
+// بلا letter-spacing (يفصل حروف العربي المتّصلة فتبدو مكسورة) وبلا span وسط الجملة وبلا تشكيل — نص واحد بلون واحد ليُرسَم سليمًا في html2canvas
+const creditBar = (bottom) => `<div style="position:absolute; bottom:${bottom}px; right:0; left:0; text-align:center; font-family:'Cairo',Arial,sans-serif; font-size:11px; font-weight:700; color:${BRAND.deep};">طباعة عبر منصة مسار · نظام إدارة مشاريع التخرج</div>`
 
 // خط الكشف: Cairo (محمّل في التطبيق) مع بديل، وألوان صريحة بـ !important حتى لا تتسرّب أنماط البوابة (رأس الجدول الأبيض) إلى الطباعة
 const RFONT = `font-family:'Cairo',Arial,sans-serif; color:${BRAND.ink}; direction:rtl; background:#fff; box-sizing:border-box; line-height:1.35;`
