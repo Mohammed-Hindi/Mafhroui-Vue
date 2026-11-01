@@ -3,9 +3,7 @@
        (TiltedGallery) — الوقوف يوقفه، السحب/العجلة/الأسهم تحرّكه يمينًا ويسارًا، والضغط يفتح المشروع، مع قائمة روابط مخفية بصريًا لقارئات الشاشة ولوحة المفاتيح -->
   <section id="projects" class="us-section us-projects scroll-mt-24">
     <div class="us-wrap">
-      <!-- قبل أول تمرير: العنوان يلمع وخطاه ينسابان وسهم يدعو للنزول، لجذب الزائر لبداية القسم -->
-      <a v-if="beckon" href="#projects" class="us-beckon-cue" aria-label="انزل إلى المشاريع المميّزة"><ChevronsDown :size="22" /></a>
-      <h2 :class="['us-title reveal', beckon && 'is-beckon']">المشاريع المميّزة</h2>
+      <h2 class="us-title">المشاريع المميّزة</h2>
 
       <p v-if="!projects.length" class="us-empty">ستظهر هنا المشاريع المميّزة فور اعتمادها من إدارة الكلية.</p>
       <template v-else>
@@ -51,21 +49,21 @@
 </template>
 
 <script>
-import { ChevronsDown, Users } from 'lucide-vue-next'
+import { Users } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
 import TiltedGallery from './TiltedGallery.vue'
 
 export default {
   name: 'FeaturedProjects',
 
-  components: { ChevronsDown, TiltedGallery, UcasLogo, Users },
+  components: { TiltedGallery, UcasLogo, Users },
 
   props: {
     projects: { type: Array, default: () => [] }
   },
 
   data() {
-    return { spec: '', degree: '', beckon: window.scrollY < 40 }
+    return { spec: '', degree: '' }
   },
 
   computed: {
@@ -80,21 +78,7 @@ export default {
     }
   },
 
-  mounted() {
-    if (this.beckon) window.addEventListener('scroll', this.stopBeckon, { passive: true })
-  },
-
-  beforeUnmount() {
-    window.removeEventListener('scroll', this.stopBeckon)
-  },
-
   methods: {
-    stopBeckon() {
-      if (window.scrollY < 40) return
-      this.beckon = false
-      window.removeEventListener('scroll', this.stopBeckon)
-    },
-
     openProject(p) {
       this.$router.push({ name: 'project-showcase', params: { id: p.id } })
     }

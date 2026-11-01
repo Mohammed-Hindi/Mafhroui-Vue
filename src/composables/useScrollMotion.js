@@ -1,12 +1,11 @@
-// حركة أقسام صفحة الهبوط بمكتبة GSAP (ScrollTrigger + SplitText + DrawSVG):
-// تُبنى داخل gsap.matchMedia فتُلغى كاملة عند مغادرة الصفحة، وتُتخطّى لمن فعّل "تقليل الحركة".
+// حركة أقسام صفحة الهبوط بمكتبة GSAP (ScrollTrigger فقط): دخول هادئ رسمي (fade-up)
+// بلا رسم أيقونات (drawSVG) ولا تقطيع نصوص — تُبنى داخل gsap.matchMedia فتُلغى عند المغادرة،
+// وتُتخطّى كاملة لمن فعّل "تقليل الحركة".
 import { nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { SplitText } from 'gsap/SplitText'
-import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin'
 
-gsap.registerPlugin(ScrollTrigger, SplitText, DrawSVGPlugin)
+gsap.registerPlugin(ScrollTrigger)
 
 /**
  * @param {import('vue').Ref<HTMLElement>} rootRef جذر القسم
@@ -29,18 +28,12 @@ export function useScrollMotion(rootRef, build, deps) {
 }
 
 /**
- * عنوان القسم: كلماته تصعد من خلف قناع واحدة تلو الأخرى، ثم يمتد الخطان الجانبيان.
- * التقسيم بالكلمات لا بالحروف حتى لا ينكسر اتصال الحروف العربية.
+ * عنوان القسم: دخول هادئ رسمي — العنوان كله يظهر ويصعد قليلًا.
+ * الخطان الجانبيان ثابتان (قيمة --tl الافتراضية 1) بلا رسم تدريجي.
  */
 export function titleIn(tl, el) {
-  const split = SplitText.create(el, { type: 'words', mask: 'words' })
-  // بعد الظهور يُعاد النص لأصله (أغلفة القناع توسّع المسافات بين الكلمات العربية)
-  tl.from(split.words, { yPercent: 110, duration: 0.8, ease: 'power3.out', stagger: 0.07, onComplete: () => split.revert() })
-    .fromTo(el, { '--tl': 0 }, { '--tl': 1, duration: 1, ease: 'power2.inOut' }, '<0.2')
+  tl.from(el, { y: 18, autoAlpha: 0, duration: 0.6, ease: 'power2.out' })
   return tl
 }
-
-/** رسم خطوط أيقونات lucide (الخطية) كأنها تُرسم باليد */
-export const iconParts = (scope) => scope.querySelectorAll('svg path, svg circle, svg rect, svg line, svg polyline')
 
 export { gsap }
