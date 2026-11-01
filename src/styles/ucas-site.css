@@ -266,6 +266,27 @@
 .us-supervisor small { display: block; font-size: 15px; color: rgba(255, 255, 255, .9); }
 .us-supervisor strong { display: block; font-size: 24px; font-weight: 800; }
 
+/* ---------- صفحة «من نحن»: عمود قراءة مريح بفقرات منظّمة (بدل البطاقات المبعثرة) ---------- */
+.us-about { max-width: 880px; margin-inline: auto; }
+.us-about > p { margin: 0 0 18px; font-size: 17px; line-height: 2.05; color: var(--color-text-700); text-align: right; }
+.us-about > p:last-child { margin-bottom: 0; }
+.us-about .us-lead { max-width: none; margin: 0 0 28px; text-align: right; font-size: 18.5px; font-weight: 500; color: var(--color-text-900); }
+.us-about-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 44px; }
+.us-about-block h3 { margin: 0 0 8px; padding-inline-start: 14px; border-inline-start: 4px solid var(--ucas-green); font-size: 20px; font-weight: 800; color: var(--ucas-blue); }
+.us-about-block p { margin: 0; font-size: 16px; line-height: 1.95; color: var(--color-text-700); }
+.us-about-item { margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--color-border); }
+.us-about-item h3 { margin: 0 0 8px; font-size: 19px; font-weight: 800; color: var(--ucas-blue); }
+.us-about-item > p { margin: 0 0 10px; font-size: 16px; line-height: 1.9; color: var(--color-text-600); }
+.us-about-sol { display: flex; align-items: flex-start; gap: 8px; margin: 0 !important; color: var(--color-text-700) !important; }
+.us-about-sol svg { flex-shrink: 0; margin-top: 3px; color: var(--ucas-green); }
+.us-about-sol b { color: var(--ucas-blue); }
+/* شريط «كيف تساعد المنصة»: فقرات بيضاء على التدرّج */
+.us-about-roles { display: grid; grid-template-columns: 1fr 1fr; gap: 28px 48px; max-width: 1040px; margin-inline: auto; }
+.us-about-role h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font-size: 20px; font-weight: 800; color: #FFFFFF; }
+.us-about-role p { margin: 0; font-size: 16px; line-height: 1.95; color: rgba(255, 255, 255, .92); }
+:root[data-theme="dark"] .us-about-block h3, :root[data-theme="dark"] .us-about-item h3, :root[data-theme="dark"] .us-about-sol b { color: #71B6F9; }
+@media (max-width: 767.98px) { .us-about-pair, .us-about-roles { grid-template-columns: 1fr; } }
+
 /* مسار التنقل في رأس صفحات اللاندج: شريط زجاجي، روابط الرجوع أزرار بيضاء بسهم، والصفحة الحالية بخط عريض */
 .us-crumbs { display: flex; width: fit-content; margin-top: 22px; max-width: 100%; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px; border: 1px solid rgba(255, 255, 255, .35); border-radius: 4px; background: rgba(255, 255, 255, .12); font-size: 14.5px; font-weight: 600; color: rgba(255, 255, 255, .75); }
 .us-crumbs a { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding-inline: 12px 14px; border-radius: 4px; background: #FFFFFF; font-weight: 700; color: var(--ucas-blue); box-shadow: 0 2px 8px rgba(0, 0, 0, .12); transition: background-color var(--ucas-color-speed, .8s) ease, color var(--ucas-color-speed, .8s) ease; }
