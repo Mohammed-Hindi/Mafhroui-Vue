@@ -53,9 +53,21 @@ export const useDiscussionsStore = defineStore('discussions', () => {
   }
 
   // POST /discussions/import/confirm
-  const confirmDiscussionImport = async (rows) => {
-    const { data } = await api.post('/discussions/import/confirm', { rows })
+  const confirmDiscussionImport = async (rows, filename = null) => {
+    const { data } = await api.post('/discussions/import/confirm', { rows, filename })
     return data
+  }
+
+  // GET /discussions/import/latest — حالة آخر استيراد مناقشات (لإتاحة زر التراجع)
+  const latestDiscussionImport = async () => {
+    const { data } = await api.get('/discussions/import/latest')
+    return data.batch
+  }
+
+  // POST /discussions/import/revert — تراجع عن آخر استيراد مناقشات (خطوة واحدة)
+  const revertDiscussionImport = async () => {
+    const { data } = await api.post('/discussions/import/revert')
+    return data.batch
   }
 
   // GET /discussions/export (xlsx)
@@ -81,6 +93,8 @@ export const useDiscussionsStore = defineStore('discussions', () => {
     deleteDiscussion,
     previewDiscussionImport,
     confirmDiscussionImport,
+    latestDiscussionImport,
+    revertDiscussionImport,
     exportDiscussionsExcel
   }
 })

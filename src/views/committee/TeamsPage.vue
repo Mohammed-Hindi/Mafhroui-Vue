@@ -180,6 +180,7 @@
 
     <!-- استيراد من Excel -->
     <BaseModal v-model="importModal" title="استيراد طلاب من Excel" description="الأعمدة المطلوبة بالترتيب: الاسم، البريد، الرقم الجامعي، الواتساب" size="lg">
+      <ImportRevertBar :batch="lastImport" :labels="{ students: 'طالب', teams: 'فريق' }" :reverting="reverting" @revert="doRevertImport" />
       <div v-if="!importPreview">
         <FileDropzone label="ملف الطلاب" accept=".xlsx" hint="Excel (.xlsx) — الأعمدة بالترتيب: الاسم، البريد، الرقم الجامعي، الواتساب" @change="onFileSelected" />
       </div>
@@ -293,6 +294,7 @@ import { exportStyledExcel, exportGroupsPdf } from '@/utils/exportReport'
 import { APP_NAME, PORTAL_ROLES } from '@/utils/constants'
 import { sendEmail, sendWhatsapp } from '@/services/api'
 import FileDropzone from '@/components/shared/FileDropzone.vue'
+import ImportRevertBar from '@/components/shared/ImportRevertBar.vue'
 import EmailComposeModal from '@/components/shared/EmailComposeModal.vue'
 import TeamMembersPanel from '@/components/shared/TeamMembersPanel.vue'
 import ProjectTypes from '@/components/shared/ProjectTypes.vue'
@@ -312,7 +314,7 @@ const emptySupervisorForm = () => ({ name: '', employee_number: '', email: '', w
 export default {
   name: 'CommitteeTeamsPage',
 
-  components: { Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, FileDropzone, EmailComposeModal, TeamMembersPanel, GroupsRegister, ProjectTypes },
+  components: { Search, ChevronLeft, MessageCircle, Mail, Pencil, Trash2, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, FileDropzone, EmailComposeModal, TeamMembersPanel, GroupsRegister, ProjectTypes, ImportRevertBar },
 
   data() {
     return {
@@ -351,6 +353,9 @@ export default {
       importPreview: null,
       importSpecId: '',
       importRows: [],
+      importFileName: '',
+      lastImport: null,
+      reverting: false,
 
       addMemberModal: false,
       addMemberTarget: null,
@@ -487,7 +492,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'specializationName', 'createTeam', 'updateTeam', 'deleteTeam', 'addTeamMember', 'removeTeamMember', 'updateTeamLeader', 'previewTeamImport', 'confirmTeamImport', 'fetchTrashedTeams', 'restoreTeam']),
+    ...mapActions(useTeamsStore, ['fetchTeams', 'fetchSpecializations', 'specializationName', 'createTeam', 'updateTeam', 'deleteTeam', 'addTeamMember', 'removeTeamMember', 'updateTeamLeader', 'previewTeamImport', 'confirmTeamImport', 'latestTeamImport', 'revertTeamImport', 'fetchTrashedTeams', 'restoreTeam']),
     ...mapActions(useUsersStore, ['fetchUsers', 'createUser', 'updateUser', 'setUserPassword']),
 
     /** فتح مجموعة بعينها قادمة من البحث الشامل (?focus=id): الانتقال لصفحتها، فردها، التمرير إليها وإبرازها */
@@ -667,14 +672,21 @@ export default {
       }
     },
 
-    openImport() {
+    async openImport() {
       this.importPreview = null
       this.importSpecId = ''
       this.importRows = []
+      this.importFileName = ''
       this.importModal = true
+      try {
+        this.lastImport = await this.latestTeamImport()
+      } catch {
+        this.lastImport = null
+      }
     },
     async onFileSelected(file) {
       if (!file) return
+      this.importFileName = file.name
       this.submitting = true
       try {
         const result = await this.previewTeamImport(file)
@@ -690,13 +702,26 @@ export default {
       if (!this.importRows.length || !this.importSpecId) return
       this.submitting = true
       try {
-        await this.confirmTeamImport(this.importRows, this.importSpecId)
+        await this.confirmTeamImport(this.importRows, this.importSpecId, this.importFileName || null)
         this.importModal = false
         this.$toast?.success(`تم إنشاء ${this.importRows.length} حساب طالب`)
+        await this.fetchTeams()
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر تأكيد الاستيراد')
       } finally {
         this.submitting = false
+      }
+    },
+    async doRevertImport() {
+      this.reverting = true
+      try {
+        this.lastImport = await this.revertTeamImport()
+        this.$toast?.success('تم التراجع عن آخر استيراد فرق.')
+        await this.fetchTeams()
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر التراجع عن الاستيراد')
+      } finally {
+        this.reverting = false
       }
     },
 

@@ -286,9 +286,21 @@ export const useTeamsStore = defineStore('teams', () => {
   }
 
   // POST /teams/import/confirm
-  const confirmTeamImport = async (rows, specializationId) => {
-    const { data } = await api.post('/teams/import/confirm', { rows, specialization_id: specializationId })
+  const confirmTeamImport = async (rows, specializationId, filename = null) => {
+    const { data } = await api.post('/teams/import/confirm', { rows, specialization_id: specializationId, filename })
     return data
+  }
+
+  // GET /teams/import/latest — حالة آخر استيراد فرق (لإتاحة زر التراجع)
+  const latestTeamImport = async () => {
+    const { data } = await api.get('/teams/import/latest')
+    return data.batch
+  }
+
+  // POST /teams/import/revert — تراجع عن آخر استيراد فرق (خطوة واحدة)
+  const revertTeamImport = async () => {
+    const { data } = await api.post('/teams/import/revert')
+    return data.batch
   }
 
   const tasks = ref([])
@@ -565,6 +577,8 @@ export const useTeamsStore = defineStore('teams', () => {
     updateTeamLeader,
     previewTeamImport,
     confirmTeamImport,
+    latestTeamImport,
+    revertTeamImport,
     submitProposal,
     updateProposal,
     submitFinalReport,

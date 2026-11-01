@@ -200,6 +200,7 @@
 
     <!-- استيراد من Excel -->
     <BaseModal v-model="importModal" title="استيراد مواعيد مناقشات من Excel" description="الأعمدة المطلوبة بالترتيب: اسم الفريق، المكان، التاريخ (YYYY-MM-DD)، الوقت (HH:MM)، المدة بالدقائق (اختياري، الافتراضي 30)، لجنة المناقشة، واتساب (اختياري)" size="lg">
+      <ImportRevertBar :batch="lastImport" :labels="{ created: 'موعد مُضاف', updated: 'موعد مُحدَّث' }" :reverting="reverting" @revert="doRevertImport" />
       <div v-if="!importPreview">
         <input ref="fileInput" type="file" accept=".xlsx" class="block w-full text-body-sm text-text-700 file:me-3 file:h-icon-btn file:px-4 file:rounded-sm file:border-0 file:bg-primary-50 file:text-primary-700 file:font-bold" @change="onFileSelected">
       </div>
@@ -234,6 +235,7 @@
 <script>
 import { Plus, Upload, Download, FileDown, Search, MessageCircle, Mail, Pencil, Trash2, Check, ChevronDown, CalendarClock } from 'lucide-vue-next'
 import PortalPageHead from '@/components/shared/PortalPageHead.vue'
+import ImportRevertBar from '@/components/shared/ImportRevertBar.vue'
 import { mapState, mapActions } from 'pinia'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -266,7 +268,7 @@ const emptyForm = () => ({ project_id: '', place: '', date: '', time: '', durati
 export default {
   name: 'CommitteeAppointmentsPage',
 
-  components: { Search, MessageCircle, Mail, Pencil, Trash2, ChevronDown, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, EmailComposeModal, PortalPageHead, DiscussionMembersPanel, DataTable, DiscussionsTools },
+  components: { Search, MessageCircle, Mail, Pencil, Trash2, ChevronDown, BaseButton, BaseSelect, BaseInput, BaseBadge, BaseModal, EmptyState, SkeletonLoader, Pagination, EmailComposeModal, PortalPageHead, DiscussionMembersPanel, DataTable, DiscussionsTools, ImportRevertBar },
 
   data() {
     return {
@@ -295,6 +297,9 @@ export default {
       importModal: false,
       importPreview: null,
       importRows: [],
+      importFileName: '',
+      lastImport: null,
+      reverting: false,
 
       addMemberModal: false,
       addMemberTarget: null,
@@ -469,7 +474,7 @@ export default {
 
   methods: {
     formatDate,
-    ...mapActions(useDiscussionsStore, ['fetchDiscussions', 'createDiscussion', 'updateDiscussion', 'deleteDiscussion', 'previewDiscussionImport', 'confirmDiscussionImport']),
+    ...mapActions(useDiscussionsStore, ['fetchDiscussions', 'createDiscussion', 'updateDiscussion', 'deleteDiscussion', 'previewDiscussionImport', 'confirmDiscussionImport', 'latestDiscussionImport', 'revertDiscussionImport']),
     ...mapActions(useTeamsStore, ['fetchTeams', 'fetchDepartments', 'fetchSpecializations', 'addTeamMember', 'removeTeamMember', 'specializationFilterOptionsForDept']),
     ...mapActions(useUsersStore, ['fetchUsers', 'updateUser']),
 
@@ -597,14 +602,21 @@ export default {
       }
     },
 
-    openImport() {
+    async openImport() {
       this.importPreview = null
       this.importRows = []
+      this.importFileName = ''
       this.importModal = true
+      try {
+        this.lastImport = await this.latestDiscussionImport()
+      } catch {
+        this.lastImport = null
+      }
     },
     async onFileSelected(event) {
       const file = event.target.files?.[0]
       if (!file) return
+      this.importFileName = file.name
       this.submitting = true
       try {
         const result = await this.previewDiscussionImport(file)
@@ -620,7 +632,7 @@ export default {
       if (!this.importRows.length) return
       this.submitting = true
       try {
-        const result = await this.confirmDiscussionImport(this.importRows)
+        const result = await this.confirmDiscussionImport(this.importRows, this.importFileName || null)
         this.importModal = false
         this.$toast?.success(`تم تسجيل ${result.created?.length || this.importRows.length} موعد مناقشة`)
         await this.fetchDiscussions()
@@ -628,6 +640,18 @@ export default {
         this.$toast?.error(err.normalized?.message || 'تعذّر تأكيد الاستيراد')
       } finally {
         this.submitting = false
+      }
+    },
+    async doRevertImport() {
+      this.reverting = true
+      try {
+        this.lastImport = await this.revertDiscussionImport()
+        this.$toast?.success('تم التراجع عن آخر استيراد مواعيد.')
+        await this.fetchDiscussions()
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر التراجع عن الاستيراد')
+      } finally {
+        this.reverting = false
       }
     },
 
