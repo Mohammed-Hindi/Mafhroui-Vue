@@ -3,14 +3,6 @@
        معاينة الفرق (مضاف/معدّل/محذوف/مُستعاد) قبل الحفظ، مع تراجع خطوة واحدة.
        المحذوفون يُؤرشفون (حذف ناعم قابل للرجوع) لا يُمحون نهائيًا. -->
   <div class="rs">
-    <header class="rs-head">
-      <div class="rs-head-ic" aria-hidden="true"><RefreshCw :size="20" /></div>
-      <div class="rs-head-txt">
-        <h2>مزامنة كشف الطلبة</h2>
-        <p>ارفع نسخة الكشف المصدّرة من النظام الجامعي، عايِن الفرق، ثم احفظ المزامنة. الطلاب الغائبون عن النسخة الجديدة يُؤرشفون (قابل للرجوع) ولا يُحذفون نهائيًا.</p>
-      </div>
-    </header>
-
     <!-- آخر مزامنة + التراجع -->
     <section v-if="latest" :class="['rs-last', latest.status]">
       <div class="rs-last-info">
@@ -44,6 +36,7 @@
     <section class="rs-card">
       <header class="rs-card-head">
         <h3>رفع نسخة جديدة</h3>
+        <p>ارفع نسخة الكشف المصدّرة من النظام الجامعي، عايِن الفرق، ثم احفظ. الطلاب الغائبون عن النسخة الجديدة يُؤرشفون (قابل للرجوع) ولا يُحذفون نهائيًا.</p>
       </header>
 
       <FileDropzone v-model="files" accept=".xlsx" :max-mb="10" label="اسحب ملف Excel هنا أو اختر من جهازك" />
@@ -193,7 +186,7 @@
 
 <script>
 import { mapState, mapActions } from 'pinia'
-import { RefreshCw, History, Eye, X, Save, Undo2, AlertTriangle, Inbox } from 'lucide-vue-next'
+import { History, Eye, X, Save, Undo2, AlertTriangle, Inbox } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
@@ -207,10 +200,10 @@ const STATUSES = { applied: 'مطبَّقة', reverted: 'جرى التراجع �
 
 export default {
   name: 'RosterSyncPage',
-  components: { BaseButton, BaseModal, EmptyState, FileDropzone, RefreshCw, History, AlertTriangle },
+  components: { BaseButton, BaseModal, EmptyState, FileDropzone, History, AlertTriangle },
   data() {
     return {
-      RefreshCw, History, Eye, X, Save, Undo2, AlertTriangle, Inbox,
+      History, Eye, X, Save, Undo2, AlertTriangle, Inbox,
       files: [],
       previewData: null,
       previewing: false,
@@ -317,56 +310,48 @@ export default {
 </script>
 
 <style scoped>
+/* تصميم حادّ: زوايا 4px، حدود box-shadow بدل border، بلا كبسولات — مطابق لبوابة الإدارة العامة */
 .rs { display: flex; flex-direction: column; gap: 16px; }
-
-.rs-head { display: flex; align-items: flex-start; gap: 12px; }
-.rs-head-ic {
-  flex: none; width: 40px; height: 40px; display: grid; place-items: center;
-  border-radius: 8px; color: var(--ucas-blue);
-  background: color-mix(in srgb, var(--ucas-blue) 10%, var(--color-surface));
-  border: 1px solid color-mix(in srgb, var(--ucas-blue) 20%, transparent);
-}
-.rs-head-txt h2 { font-size: 20px; font-weight: 800; color: var(--color-text-900); margin: 0; }
-.rs-head-txt p { font-size: 13px; color: var(--color-text-600); margin: 4px 0 0; line-height: 1.6; max-width: 70ch; }
 
 /* آخر مزامنة */
 .rs-last {
   display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-  padding: 12px 16px; border-radius: 8px;
-  background: var(--color-surface); border: 1px solid var(--color-border);
+  padding: 14px 18px; border-radius: 4px;
+  background: var(--color-surface); box-shadow: inset 4px 0 0 var(--ucas-blue), 0 0 0 1px var(--color-border);
 }
-.rs-last.reverted { opacity: .75; }
+.rs-last.reverted { opacity: .7; box-shadow: inset 4px 0 0 var(--color-text-400), 0 0 0 1px var(--color-border); }
 .rs-last-info { display: flex; align-items: center; gap: 10px; flex: 1 1 240px; }
 .rs-last-ic { color: var(--ucas-blue); flex: none; }
 .rs-last-info b { display: block; font-size: 14px; color: var(--color-text-900); }
 .rs-last-info small { font-size: 12px; color: var(--color-text-600); }
 .rs-last-chips { display: flex; gap: 6px; flex-wrap: wrap; }
 
-.rs-chip { font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.rs-chip { font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 4px; white-space: nowrap; }
 .rs-chip.is-add { color: var(--color-success); background: var(--color-success-bg); }
 .rs-chip.is-upd { color: var(--color-warning-text); background: var(--color-warning-bg); }
 .rs-chip.is-rem { color: var(--color-error); background: var(--color-error-bg); }
 .rs-chip.is-res { color: var(--color-info); background: var(--color-info-bg); }
 
 /* بطاقات */
-.rs-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 18px; }
+.rs-card { background: var(--color-surface); box-shadow: 0 0 0 1px var(--color-border); border-radius: 4px; padding: 18px 20px; }
 .rs-card-head { margin-bottom: 14px; }
 .rs-card-head h3 { font-size: 16px; font-weight: 800; color: var(--color-text-900); margin: 0; }
+.rs-card-head p { font-size: 13px; color: var(--color-text-600); margin: 4px 0 0; line-height: 1.6; max-width: 72ch; }
 .rs-card-actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
-.rs-save { justify-content: flex-end; border-top: 1px solid var(--color-border-soft); padding-top: 14px; }
+.rs-save { justify-content: flex-end; box-shadow: 0 -1px 0 var(--color-border-soft); padding-top: 14px; }
 .rs-nochange { margin: 8px 0 0; font-size: 12.5px; color: var(--color-text-600); text-align: center; }
 
 /* ملخّص الفرق — أزرار تبويب */
 .rs-summary { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
 .rs-sum {
   flex: 1 1 96px; min-width: 96px; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 12px 8px; border-radius: 8px; border: 1px solid var(--color-border);
-  background: var(--color-surface); cursor: default; transition: border-color .2s ease, box-shadow .2s ease;
+  padding: 14px 8px; border-radius: 4px; box-shadow: 0 0 0 1px var(--color-border);
+  background: var(--color-surface); cursor: default; transition: box-shadow .2s ease;
 }
 button.rs-sum { cursor: pointer; }
-.rs-sum b { font-size: 22px; font-weight: 800; line-height: 1; }
+.rs-sum b { font-size: 24px; font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; }
 .rs-sum span { font-size: 12px; color: var(--color-text-600); }
-button.rs-sum.is-active { box-shadow: inset 0 -3px 0 currentColor; }
+button.rs-sum.is-active { box-shadow: 0 0 0 1px var(--color-border), inset 0 -3px 0 currentColor; }
 .rs-sum.is-add b { color: var(--color-success); }
 .rs-sum.is-upd b { color: var(--color-warning-text); }
 .rs-sum.is-rem b { color: var(--color-error); }
@@ -377,9 +362,9 @@ button.rs-sum.is-active { box-shadow: inset 0 -3px 0 currentColor; }
 /* تنبيه الأخطاء */
 .rs-warn {
   display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px;
-  padding: 12px 14px; border-radius: 8px;
+  padding: 12px 14px; border-radius: 4px;
   color: var(--color-warning-text); background: var(--color-warning-bg);
-  border: 1px solid var(--color-warning-border);
+  box-shadow: 0 0 0 1px var(--color-warning-border);
 }
 .rs-warn b { font-size: 13px; }
 .rs-warn ul { margin: 6px 0 0; padding-inline-start: 18px; font-size: 12px; line-height: 1.6; }
@@ -387,15 +372,15 @@ button.rs-sum.is-active { box-shadow: inset 0 -3px 0 currentColor; }
 /* الجدول */
 .rs-table-wrap { overflow-x: auto; }
 .rs-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.rs-table th, .rs-table td { text-align: start; padding: 9px 10px; border-bottom: 1px solid var(--color-border-soft); }
-.rs-table th { font-weight: 700; color: var(--color-text-600); background: var(--color-bg-subtle, var(--color-border-soft)); white-space: nowrap; }
+.rs-table th, .rs-table td { text-align: start; padding: 9px 10px; box-shadow: inset 0 -1px 0 var(--color-border-soft); }
+.rs-table th { font-weight: 700; color: var(--color-text-600); background: var(--color-bg); white-space: nowrap; }
 .rs-table tbody tr:hover { background: color-mix(in srgb, var(--ucas-blue) 4%, transparent); }
 .rs-col-num { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .rs-col-s { width: 90px; }
 .rs-muted { color: var(--color-text-600); }
 .rs-change {
   display: inline-block; margin: 2px 4px 2px 0; font-size: 11.5px; font-weight: 700; padding: 2px 8px;
-  border-radius: 999px; color: var(--color-warning-text); background: var(--color-warning-bg);
+  border-radius: 4px; color: var(--color-warning-text); background: var(--color-warning-bg);
 }
 
 /* نوافذ التأكيد */
