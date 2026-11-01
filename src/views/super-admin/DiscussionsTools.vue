@@ -397,25 +397,31 @@
     <!-- طباعة حسب القاعات: اختيار اليوم والقاعات قبل الطباعة -->
     <BaseModal v-model="roomPrint.open" title="طباعة جدول المناقشات حسب القاعات" size="md">
       <div class="dp-print">
-        <div class="pfield">
-          <span>اليوم</span>
-          <nav class="hm-tabs">
-            <button v-for="t in dayTabs" :key="t.value" type="button" :class="roomPrint.day === t.value && 'is-active'" @click="roomPrint.day = t.value">{{ t.label }}</button>
-          </nav>
+        <div class="dp-rp-field">
+          <span class="dp-rp-label">اليوم</span>
+          <BaseSelect v-model="roomPrint.day" :options="dayTabs" aria-label="اليوم" @change="roomPrint.rooms = [...printableRooms]" />
         </div>
-        <div class="pfield">
-          <span>القاعات ({{ roomPrint.rooms.length }} من {{ printableRooms.length }})</span>
-          <label class="gp-check gp-bar">
-            <input type="checkbox" :checked="roomPrint.rooms.length === printableRooms.length" @change="roomPrint.rooms = roomPrint.rooms.length === printableRooms.length ? [] : [...printableRooms]"> كل القاعات
-          </label>
-          <div class="dp-print-rooms">
-            <label v-for="room in printableRooms" :key="room" :class="['gp-item', roomPrint.rooms.includes(room) && 'is-on']">
-              <input v-model="roomPrint.rooms" type="checkbox" :value="room">
-              <span class="gp-item-main"><b dir="ltr">{{ room }}</b><span class="pt-muted">{{ roomCount(room) }} مناقشة</span></span>
-            </label>
+        <div class="dp-rp-field">
+          <div class="dp-rp-head">
+            <span class="dp-rp-label">القاعات</span>
+            <span class="dp-rp-count"><b>{{ roomPrint.rooms.length }}</b> من {{ printableRooms.length }}</span>
           </div>
+          <template v-if="printableRooms.length">
+            <label class="dp-rp-all">
+              <input type="checkbox" :checked="roomPrint.rooms.length === printableRooms.length" @change="roomPrint.rooms = roomPrint.rooms.length === printableRooms.length ? [] : [...printableRooms]">
+              <span>تحديد كل القاعات</span>
+            </label>
+            <div class="dp-rp-rooms">
+              <label v-for="room in printableRooms" :key="room" :class="['dp-rp-opt', roomPrint.rooms.includes(room) && 'is-on']">
+                <input v-model="roomPrint.rooms" type="checkbox" :value="room">
+                <b dir="ltr">{{ room }}</b>
+                <span class="dp-rp-n">{{ roomCount(room) }} مناقشة</span>
+              </label>
+            </div>
+          </template>
+          <p v-else class="pt-muted dp-rp-empty">لا قاعات بها مناقشات في هذا اليوم.</p>
         </div>
-        <div v-if="conflictCount" class="palert is-warning">في الجدول {{ conflictCount }} تعارض — ستُطبع المواعيد كما هي.</div>
+        <div v-if="conflictCount" class="palert is-warning dp-rp-warn">في الجدول {{ conflictCount }} تعارض — ستُطبع المواعيد كما هي.</div>
       </div>
       <template #footer>
         <button type="button" class="pbtn is-outline" @click="roomPrint.open = false">إلغاء</button>
@@ -442,6 +448,7 @@
 <script>
 import SlideTable from '@/components/ui/SlideTable.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import { CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, ChevronDown, UserPlus, Users } from 'lucide-vue-next'
 import { exportStyledExcel } from '@/utils/exportReport'
 import { exportPlanPdf, exportRoomsPdf, exportDiscussionsDoc } from '@/utils/ucasReports'
@@ -467,7 +474,7 @@ const CITY = { gaza: 'غزة', middle: 'وسط غزة', south: 'خانيونس' 
 export default {
   name: 'DiscussionsTools',
 
-  components: { SlideTable, BaseModal, CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, ChevronDown, UserPlus, Users },
+  components: { SlideTable, BaseModal, BaseSelect, CalendarPlus, Printer, FileSpreadsheet, FileText, Upload, Send, Save, Clock, CalendarDays, DoorOpen, X, AlertTriangle, List, LayoutGrid, MapPin, Pencil, ChevronDown, UserPlus, Users },
 
   data() {
     return {
