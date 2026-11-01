@@ -26,15 +26,21 @@
       <!-- شريط الحفظ أعلى النموذج (الأهم): حالة التعديل ثم تراجع/حفظ -->
       <div class="ef-actions is-top">
         <span :class="['as-summary', missing && 'is-missing']">{{ missing || `القصوى لكل طالب: ${formMax(draft)} درجة` }}</span>
+        <button v-if="isOverride" type="button" class="pbtn is-outline is-red-text" :disabled="saving" @click="removeOverride"><Trash2 :size="15" /> حذف التخصيص</button>
         <button type="button" class="pbtn is-outline" :disabled="!dirty" @click="reset">تراجع</button>
-        <button type="button" class="pbtn is-green" :disabled="!!missing || !dirty || saving" @click="save"><Save :size="15" /> {{ saving ? 'جارٍ الحفظ…' : 'حفظ النموذج' }}</button>
+        <button type="button" class="pbtn is-green" :disabled="!!missing || saving || (!dirty && !customizing)" @click="save"><Save :size="15" /> {{ saving ? 'جارٍ الحفظ…' : customizing ? 'تخصيص لهذا القسم' : 'حفظ النموذج' }}</button>
       </div>
+
+      <!-- قسم مختار بلا تخصيص: تنبيه أن الحفظ يُنشئ نسخة خاصة بالقسم ويُبقي الافتراضي -->
+      <p v-if="customizing" class="ef-dept-note"><Info :size="16" /> هذا القسم يستخدم النموذج الافتراضي حاليًا. عدّل ثم احفظ لإنشاء نموذج خاص بقسم «{{ deptName }}» دون تغيير باقي الأقسام.</p>
 
       <div class="dash-card-head ef-edit-head">
         <div>
           <span class="ef-item-tags">
             <span :class="['ef-kind', `is-${draft.kind}`]">{{ FORM_KINDS[draft.kind] }}</span>
             <span class="ef-kind">{{ draft.degree ? DEGREES[draft.degree] : 'دبلوم وبكالوريوس' }}</span>
+            <span v-if="isOverride" class="ef-kind is-dept">خاص بقسم {{ deptName }}</span>
+            <span v-else-if="dept" class="ef-kind">{{ deptName }} · افتراضي</span>
             <span v-if="dirty" class="ef-kind is-dirty">تعديلات غير محفوظة</span>
           </span>
           <h3>{{ draft.title }}</h3>
@@ -83,8 +89,10 @@
 </template>
 
 <script>
-import { GripVertical, Save } from 'lucide-vue-next'
+import { mapState } from 'pinia'
+import { GripVertical, Info, Save, Trash2 } from 'lucide-vue-next'
 import api from '@/services/api'
+import { useTeamsStore } from '@/stores/teams.store'
 import { DEGREES } from '@/utils/progressData'
 import { FORM_KINDS, SCOPES, formMax } from '@/utils/evaluation'
 
@@ -93,22 +101,39 @@ const clone = (v) => JSON.parse(JSON.stringify(v))
 export default {
   name: 'EvaluationFormEditor',
 
-  components: { GripVertical, Save },
+  components: { GripVertical, Info, Save, Trash2 },
 
   data() {
-    return { DEGREES, FORM_KINDS, SCOPES, forms: [], loading: true, kind: 'supervisor', degree: 'diploma', draft: null, saving: false, drag: null }
+    return { DEGREES, FORM_KINDS, SCOPES, forms: [], loading: true, kind: 'supervisor', degree: 'diploma', dept: '', draft: null, saving: false, drag: null }
   },
 
   computed: {
+    ...mapState(useTeamsStore, ['departments']),
+
     filters() {
       return [
         { key: 'kind', value: this.kind, label: 'نوع النموذج', options: Object.entries(FORM_KINDS).map(([value, label]) => ({ value, label })) },
-        { key: 'degree', value: this.degree, label: 'الدرجة', options: Object.entries(DEGREES).map(([value, label]) => ({ value, label })) }
+        { key: 'degree', value: this.degree, label: 'الدرجة', options: Object.entries(DEGREES).map(([value, label]) => ({ value, label })) },
+        // القسم: «كل الأقسام» = النموذج الافتراضي، واختيار قسم يُظهر نموذجه الخاص إن وُجد (أو الافتراضي لتخصيصه)
+        { key: 'dept', value: this.dept, label: 'القسم', options: [{ value: '', label: 'كل الأقسام' }, ...this.departments.map((d) => ({ value: d.id, label: d.name }))] }
       ]
     },
-    /** النموذج المطابق للفلترين — نموذج بلا درجة يُطبَّق على الدرجتين */
+    /** النموذج المطابق (النوع + الدرجة): نموذج خاص بالقسم المختار يتقدّم على الافتراضي (بلا قسم) */
     selected() {
-      return this.forms.find((f) => f.kind === this.kind && (!f.degree || f.degree === this.degree)) || null
+      const matches = this.forms.filter((f) => f.kind === this.kind && (!f.degree || f.degree === this.degree))
+      if (this.dept) return matches.find((f) => f.department_id === Number(this.dept)) || matches.find((f) => !f.department_id) || null
+      return matches.find((f) => !f.department_id) || null
+    },
+    /** النموذج المعروض خاص بقسم (وليس الافتراضي) */
+    isOverride() {
+      return !!this.selected?.department_id
+    },
+    /** قسم مختار لكنه ما زال على النموذج الافتراضي (لم يُخصَّص بعد) — الحفظ يُنشئ نسخة خاصة */
+    customizing() {
+      return !!this.dept && !this.isOverride
+    },
+    deptName() {
+      return this.departments.find((d) => d.id === Number(this.dept))?.name || ''
     },
     dirty() {
       return !!this.draft && JSON.stringify(this.pick(this.draft)) !== JSON.stringify(this.pick(this.selected))
@@ -123,6 +148,7 @@ export default {
 
   // GET /evaluation-forms
   async created() {
+    useTeamsStore().fetchOrgCatalog().catch(() => {})
     try {
       const { data } = await api.get('/evaluation-forms')
       this.forms = data
@@ -137,7 +163,8 @@ export default {
   methods: {
     formMax,
 
-    pick: (f) => f && { title: f.title, method: f.method, weight: Number(f.weight), allow_nomination: false, sections: f.sections },
+    // نحافظ على allow_nomination من النموذج نفسه (نماذج المناقشين تعتمده للترشيح) بدل إطفائه عند الحفظ
+    pick: (f) => f && { title: f.title, method: f.method, weight: Number(f.weight), allow_nomination: !!f.allow_nomination, sections: f.sections },
 
     choose(key, value) {
       if (value === this[key] || (this.dirty && !window.confirm('تجاهل التعديلات غير المحفوظة؟'))) return
@@ -176,18 +203,39 @@ export default {
       this.drag = null
     },
 
-    // PUT /evaluation-forms/{id}
+    // الحفظ: قسم مختار بلا نموذج خاص ← POST نسخة خاصة بالقسم (يبقى الافتراضي كما هو)؛ غير ذلك ← PUT تحديث النموذج
     async save() {
       this.saving = true
       try {
-        const { data } = await api.put(`/evaluation-forms/${this.selected.id}`, this.pick(this.draft))
-        this.forms = this.forms.map((f) => (f.id === data.id ? data : f))
+        let data
+        if (this.customizing) {
+          const payload = { ...this.pick(this.draft), kind: this.selected.kind, degree: this.selected.degree, department_id: Number(this.dept) }
+          data = (await api.post('/evaluation-forms', payload)).data
+          this.forms = [...this.forms, data]
+        } else {
+          data = (await api.put(`/evaluation-forms/${this.selected.id}`, this.pick(this.draft))).data
+          this.forms = this.forms.map((f) => (f.id === data.id ? data : f))
+        }
         this.draft = clone(data)
-        this.$toast?.success('تم حفظ النموذج')
+        this.$toast?.success(this.customizing ? 'تم إنشاء نموذج خاص بالقسم' : 'تم حفظ النموذج')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر حفظ النموذج')
       } finally {
         this.saving = false
+      }
+    },
+
+    // DELETE /evaluation-forms/{id} — حذف تخصيص القسم والعودة للنموذج الافتراضي (ممنوع إن عُبّئ)
+    async removeOverride() {
+      if (!this.isOverride || !window.confirm(`حذف نموذج قسم «${this.deptName}» والعودة للنموذج الافتراضي؟`)) return
+      const id = this.selected.id
+      try {
+        await api.delete(`/evaluation-forms/${id}`)
+        this.forms = this.forms.filter((f) => f.id !== id)
+        this.reset()
+        this.$toast?.success('حُذف التخصيص وعاد القسم للنموذج الافتراضي')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّر حذف التخصيص')
       }
     }
   }
