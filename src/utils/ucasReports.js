@@ -292,13 +292,13 @@ export async function exportDiscussionsDoc(plan, { byRoom = false } = {}) {
   })
   const logo = await headerDataUri()
   // نفس أنماط PDF (RTH/CELL) بوحدات Word
-  const th = 'border:1px solid #000; background:#D9D9D9; padding:4pt 4pt 7pt; font-size:10.5pt; font-weight:bold; text-align:center; color:#000;'
-  const td = 'border:1px solid #000; padding:4pt 6pt; font-size:10pt; vertical-align:middle;'
+  const th = `border:1px solid ${BRAND.line}; background:${BRAND.head}; padding:4pt 4pt 7pt; font-size:10.5pt; font-weight:bold; text-align:center; color:${BRAND.headInk};`
+  const td = `border:1px solid ${BRAND.line}; padding:4pt 6pt; font-size:10pt; vertical-align:middle; color:${BRAND.ink};`
   const head = `<tr><th style="${th} width:62pt;">الرقم</th><th style="${th} width:42pt;">الشعبة</th><th style="${th} width:90pt;">اسم المشرف</th>
     <th style="${th}">الطلاب</th><th style="${th} width:90pt;">وقت المناقشة</th><th style="${th} width:90pt;">المناقشين</th><th style="${th} width:140pt;">ملاحظات</th></tr>`
   const row = (r, n, i) => r.isBreak
-    ? `<tr><td colspan="7" style="${td} background:#DCE6F2; text-align:center; font-weight:bold;">Break (30 min)</td></tr>`
-    : `<tr style="height:57pt;${i % 2 ? '' : ' background:#F2F2F2;'}">
+    ? `<tr><td colspan="7" style="${td} background:${BRAND.brk}; text-align:center; font-weight:bold;">Break (30 min)</td></tr>`
+    : `<tr style="height:57pt;${i % 2 ? '' : ` background:${BRAND.zebra};`}">
       <td style="${td}">${String(n).padStart(2, '0')}</td>
       <td style="${td} text-align:center;">${e(r.section)}</td>
       <td style="${td} text-align:center;">${e(r.sup)}</td>
@@ -310,9 +310,9 @@ export async function exportDiscussionsDoc(plan, { byRoom = false } = {}) {
   const pageHead = (n, total) => `<table style="width:100%; border-collapse:collapse;"><tr>
       <td style="vertical-align:middle;"><img src="${logo}" style="height:44pt;"></td>
       <td style="vertical-align:middle; text-align:left; font-size:10pt; color:#555; line-height:1.7;">
-        <b style="color:#000; font-size:11.5pt;">لجنة مشاريع التخرج</b><br>التاريخ: <span dir="ltr">${today()}</span> · صفحة <span dir="ltr">${n} / ${total}</span>
+        <b style="color:${BRAND.deep}; font-size:11.5pt;">لجنة مشاريع التخرج</b><br>التاريخ: <span dir="ltr">${today()}</span> · صفحة <span dir="ltr">${n} / ${total}</span>
       </td></tr></table>
-    <div style="border-top:1.5pt solid #000; margin:6pt 0 12pt;"></div>`
+    <div style="border-top:2.2pt solid ${BRAND.deep}; margin:6pt 0 12pt;"></div>`
 
   const pages = []
   ;[...blocks.values()].forEach((list) => {
