@@ -3502,6 +3502,10 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .ef-kind.is-supervisor { background: color-mix(in srgb, var(--portal-cyan) 14%, var(--color-surface)); color: #1F8EB3; }
 .ef-kind.is-examiner { background: #E2F8ED; color: #0B8A4B; }
 .ef-kind.is-dirty { background: #FEF3D7; color: #B7791F; }
+/* نموذج خاص بقسم: شارة ذهبية + تنبيه التخصيص */
+.ef-kind.is-dept { background: color-mix(in srgb, #C9971E 16%, var(--color-surface)); color: #8A6A12; }
+.ef-dept-note { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; padding: 10px 14px; border-radius: 6px; background: color-mix(in srgb, #C9971E 10%, var(--color-surface)); color: var(--color-text-700); font-size: 13px; font-weight: 600; line-height: 1.6; }
+.ef-dept-note svg { flex: none; color: #C9971E; }
 .ef-edit-head { align-items: flex-start; }
 .ef-edit-head h3 { margin-top: 6px; }
 .ef-edit .ef-actions { position: sticky; bottom: 0; z-index: 2; margin: 0 -24px -24px; padding: 14px 24px; background: var(--color-surface); box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05); }
