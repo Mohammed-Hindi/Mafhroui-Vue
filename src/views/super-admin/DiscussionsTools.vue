@@ -989,11 +989,22 @@ export default {
       const scope = this.genDept
       const inScope = (g) => !scope || g.dept === scope
       if (!this.groups.some(inScope)) return this.$toast?.error('لا مجموعات في القسم المختار')
+      // لا يمكن توليد جدول بلا قاعات مطلقًا
+      if (!this.roomTotal) return this.$toast?.error('أضف قاعة واحدة على الأقل في أحد الأماكن قبل التوليد')
+      // لكل مجموعة يلزم مناقشان غير مشرفها؛ تأكّد أن المحدَّدين يكفون لأقسى حالة (مشرف ضمن القائمة)
+      const scopeSups = [...new Set(this.groups.filter(inScope).map((g) => g.supId))]
+      if (scopeSups.some((sid) => picked.filter((x) => x.id !== sid).length < 2)) {
+        return this.$toast?.error('عدد المناقشين المحدَّدين لا يكفي — يلزم مناقشان لكل مجموعة غير مشرفها. أضف مناقشًا آخر من «من يناقش؟»')
+      }
 
       const busy = new Map() // `${date}|${personId أو room:اسم}` → [[بداية، نهاية]]
       const free = (key, a, b) => !(busy.get(key) || []).some(([x, y]) => a < y && x < b)
       const take = (key, a, b) => busy.set(key, [...(busy.get(key) || []), [a, b]])
       const load = Object.fromEntries(picked.map((x) => [x.id, 0]))
+      // الأماكن التي لها قاعات (البديل حين يكون مكان المجموعة بلا قاعات)، مع حِمل لتوزيع البديل بعدالة
+      const withRooms = Object.keys(REGIONS).filter((k) => this.roomsOf(k).length)
+      const regionLoad = Object.fromEntries(withRooms.map((k) => [k, 0]))
+      let reassigned = 0
       // حجز مواعيد الأقسام غير المستهدفة المجدولة مسبقًا حتى لا يتعارض التوليد معها، وموازنة الحِمل عادلة
       this.plan.forEach((r) => {
         if (inScope(r.g) || !r.time || !r.room) return
@@ -1001,13 +1012,22 @@ export default {
         ;[r.g.supId, ...r.examiners].filter(Boolean).forEach((pid) => take(`${r.date}|${pid}`, a, b))
         take(`${r.date}|room:${r.room}`, a, b)
         r.examiners.filter(Boolean).forEach((id) => { if (id in load) load[id] += 1 })
+        if (r.region in regionLoad) regionLoad[r.region] += 1
       })
 
       // جدولة مجموعة واحدة في أول موعد/قاعة/مناقشَين متاحين، مع حجزها بخريطة الـ busy المشتركة
       const placeGroup = (g) => {
         // إعادة التوليد تحتفظ بالفئة والمكان المعدّلين يدويًا وبمعرّف الموعد المحفوظ (تحديث بدل تكرار)
         const prev = this.plan.find((p) => p.id === g.id)
-        const row = { id: g.id, g, gender: prev?.gender || groupGender(g), region: prev?.region || groupRegion(g), time: '', room: '', examiners: [null, null], note: '', discussionId: prev?.discussionId ?? null }
+        // مكان المجموعة الطبيعي؛ فإن كان بلا قاعات نحوّلها لأقل الأماكن (ذات القاعات) حِملًا — فلا تبقى بلا موعد
+        const natural = prev?.region || groupRegion(g)
+        let region = natural
+        if (!this.roomsOf(region).length) {
+          region = withRooms.reduce((best, k) => (regionLoad[k] < regionLoad[best] ? k : best), withRooms[0])
+          reassigned += 1
+        }
+        regionLoad[region] = (regionLoad[region] || 0) + 1
+        const row = { id: g.id, g, gender: prev?.gender || groupGender(g), region, time: '', room: '', examiners: [null, null], note: '', discussionId: prev?.discussionId ?? null }
         row.date = this.dayOf(row)
         const dur = this.durOf(row)
         const d = row.date
@@ -1079,12 +1099,13 @@ export default {
       this.published = null
       this.settingsOpen = false
       this.$nextTick(() => document.getElementById('dp-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+      const moved = reassigned ? ` ونُقلت ${reassigned} مجموعة إلى أماكن فيها قاعات` : ''
       if (unschedulable) {
         this.$toast?.error(`تعذّرت جدولة ${unschedulable} مجموعة — مكانها بلا قاعات أو لا يتوفّر مناقشان لها`)
       } else if (extendedRegions.size) {
-        this.$toast?.success(`جُدولت ${newRows.length} مناقشة بلا تعارضات — مُدِّدت ساعات ${[...extendedRegions].map((k) => REGIONS[k]).join('، ')} لاستيعاب الجميع`)
+        this.$toast?.success(`جُدولت ${newRows.length} مناقشة بلا تعارضات${moved} — مُدِّدت ساعات ${[...extendedRegions].map((k) => REGIONS[k]).join('، ')} لاستيعاب الجميع`)
       } else {
-        this.$toast?.success(`جُدولت ${newRows.length} مناقشة بلا تعارضات`)
+        this.$toast?.success(`جُدولت ${newRows.length} مناقشة بلا تعارضات${moved}`)
       }
     },
 
