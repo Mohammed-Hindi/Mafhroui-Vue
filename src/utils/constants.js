@@ -45,11 +45,11 @@ export const DEFAULT_PAGE_SIZE = 10
 
 /** بيانات التواصل المعروضة باللاندنج والتذييل */
 // روابط صفحات الهبوط — نفسها في الناف بار و"روابط سريعة" بالفوتر
+// روابط الهيدر والفوتر: صفحات حقيقية فقط (لا روابط لأقسام داخل الصفحة الرئيسية)
 export const LANDING_LINKS = [
   { label: 'الرئيسية', to: { name: 'landing' } },
-  { label: 'من نحن', to: { name: 'about' } },
-  { label: 'المشاريع المميّزة', to: { name: 'landing', hash: '#projects' } },
-  { label: 'ميزات المنصة', to: { name: 'landing', hash: '#features' } }
+  { label: 'المشاريع المميّزة', to: { name: 'projects-archive' } },
+  { label: 'من نحن', to: { name: 'about' } }
 ]
 
 export const CONTACT = {
