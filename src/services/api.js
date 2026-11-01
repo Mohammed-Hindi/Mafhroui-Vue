@@ -3,11 +3,34 @@ import { STORAGE_KEYS } from '@/utils/constants'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api',
+  // مهلة لكل طلب حتى لا يتعلّق الاتصال إلى ما لا نهاية عند تعثّر الخادم
+  timeout: 20000,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
 })
+
+// إعادة المحاولة على الأعطال المؤقتة: بوّابة/خدمة غير متاحة/مهلة، أو انقطاع شبكة.
+// تقتصر على GET (آمنة التكرار) مع تراجع أُسّي وقليل من العشوائية، واحترام Retry-After.
+const RETRY_STATUSES = [408, 425, 429, 502, 503, 504]
+const MAX_RETRIES = 2
+
+function shouldRetry(error) {
+  const config = error.config
+  if (!config || config.__noRetry) return false
+  if ((config.method || 'get').toLowerCase() !== 'get') return false
+  if ((config.__retryCount || 0) >= MAX_RETRIES) return false
+  // انقطاع شبكة/مهلة (بلا استجابة) أو حالة مؤقتة معروفة
+  if (!error.response) return error.code !== 'ERR_CANCELED'
+  return RETRY_STATUSES.includes(error.response.status)
+}
+
+function retryDelay(attempt, error) {
+  const retryAfter = Number(error.response?.headers?.['retry-after'])
+  if (retryAfter > 0) return Math.min(retryAfter * 1000, 5000)
+  return 400 * 2 ** attempt + Math.random() * 200 // ‎400‎→‎800‎ms تقريبًا + عشوائية
+}
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
@@ -35,7 +58,15 @@ function normalizeError(error) {
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    // عطل مؤقت على طلب GET: انتظر ثم أعد المحاولة قبل اعتباره فشلًا
+    if (shouldRetry(error)) {
+      const config = error.config
+      config.__retryCount = (config.__retryCount || 0) + 1
+      await new Promise((resolve) => setTimeout(resolve, retryDelay(config.__retryCount - 1, error)))
+      return api(config)
+    }
+
     error.normalized = normalizeError(error)
 
     if (error.response) {
