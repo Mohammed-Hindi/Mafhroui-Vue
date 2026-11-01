@@ -2,7 +2,7 @@
   <!-- فوتر موقع الكلية (200153): كحلي بأربعة أعمدة، عناوين بيضاء تحتها خط تدرج قصير، وخط تدرج فوق الحقوق -->
   <footer class="us-footer">
     <div class="us-wrap us-footer-cols">
-      <div>
+      <div class="us-footer-brand-col">
         <div class="us-footer-brand">
           <UcasLogo :size="46" />
           <span>
@@ -23,8 +23,8 @@
       <div>
         <h2>الأقسام</h2>
         <ul>
-          <li v-for="d in departments" :key="d.id"><router-link :to="{ name: 'landing', hash: '#departments' }">{{ d.name }}</router-link></li>
-          <li v-if="!departments.length">—</li>
+          <li v-for="d in departments" :key="d.id"><router-link :to="{ name: 'projects-archive', query: { department_id: d.id } }">{{ d.name }}</router-link></li>
+          <li v-if="!departments.length" class="us-footer-muted">تُعرض الأقسام فور إتاحتها</li>
         </ul>
       </div>
 

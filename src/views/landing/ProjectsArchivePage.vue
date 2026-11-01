@@ -85,6 +85,9 @@ export default {
   },
 
   created() {
+    // قسم مُمرَّر من رابط الفوتر (?department_id=) يبدأ الأرشيف مُفلترًا عليه
+    const dep = Number(this.$route.query.department_id)
+    if (dep) this.filters.department_id = dep
     if (!this.departments.length) this.fetchDepartments()
     this.loadProjects()
   },
