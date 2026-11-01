@@ -427,11 +427,8 @@
 @keyframes us-beckon-cue { 0%, 100% { opacity: .35; transform: translateY(-4px); } 50% { opacity: 1; transform: translateY(6px); } }
 @media (prefers-reduced-motion: reduce) { .us-title.is-beckon, .us-title.is-beckon::before, .us-title.is-beckon::after, .us-beckon-cue { animation: none; } }
 
-/* شريط عنوان الصفحات الداخلية: تدرّج ينساب ببطء دائمًا خلف مطر البيانات */
-.us-pagehead { background-size: 200% 100%; animation: us-grad-drift 14s ease-in-out infinite alternate; }
+/* شريط عنوان الصفحات الداخلية: تدرّج ثابت مطفي خلف شبكة النقاط (بلا حركة — طابع رسمي هادئ) */
 .us-pagehead .us-wrap { z-index: 1; }
-@keyframes us-grad-drift { from { background-position: 0 0; } to { background-position: 100% 0; } }
-@media (prefers-reduced-motion: reduce) { .us-pagehead { animation: none; } }
 
 /* ---------- تسجيل الدخول: شاشة من قسمين بهوية صفحة الهبوط (فورم يمينًا، لوحة متحركة يسارًا) ---------- */
 .au-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); min-height: 100vh; min-height: 100svh; }
@@ -442,7 +439,7 @@
 .au-split-brand small { display: block; font-size: 12.5px; font-weight: 700; color: var(--ucas-green); }
 .au-split-title { margin: 0 0 6px; font-size: 32px; font-weight: 800; color: var(--color-text-900); }
 .au-split-sub { margin: 0 0 28px; font-size: 15.5px; color: var(--color-text-600); }
-.au-split-alert { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; padding: 12px 14px; border-radius: 10px; background: rgba(255, 91, 91, .1); font-size: 14.5px; font-weight: 600; color: #E04848; }
+.au-split-alert { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; padding: 12px 14px; border-radius: 4px; background: rgba(255, 91, 91, .1); font-size: 14.5px; font-weight: 600; color: #E04848; }
 .au-split-field { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
 .au-split-field > span:first-child { font-size: 14.5px; font-weight: 700; color: var(--color-text-700); }
 .au-split-input { display: flex; align-items: center; gap: 10px; height: 52px; padding-inline: 16px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-bg); color: var(--color-text-400); transition: border-color var(--ucas-color-speed, .8s) ease, background-color var(--ucas-color-speed, .8s) ease, box-shadow var(--ucas-color-speed, .8s) ease; }
@@ -461,7 +458,7 @@
 :root[data-theme="dark"] .au-split-input { border-color: var(--color-border); background: var(--color-bg); }
 :root[data-theme="dark"] .au-split-brand strong { color: #71B6F9; }
 /* اللوحة المتحركة */
-.au-split-art { position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 48px 32px; background: var(--us-grad); background-size: 200% 100%; color: #FFFFFF; text-align: center; animation: us-grad-drift 14s ease-in-out infinite alternate; }
+.au-split-art { position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 48px 32px; background: var(--us-grad); color: #FFFFFF; text-align: center; }
 .au-split-art::before { content: ''; position: absolute; inset: 0; z-index: 1; opacity: .12; background-image: radial-gradient(#FFFFFF 1.2px, transparent 1.2px); background-size: 26px 26px; pointer-events: none; }
 /* خلفية الصورة الرسمية تحت طبقة تدرّج الهوية — هادئة بدل مؤثّر مطر البيانات، مع إبقاء الشعار واضحًا */
 .au-split-art-bg { position: absolute; inset: 0; z-index: 0; background-size: cover; background-position: center; background-repeat: no-repeat; }
@@ -491,13 +488,13 @@
 .au-split-input input:-webkit-autofill { -webkit-text-fill-color: var(--color-text-900); transition: background-color 9999s ease 0s; }
 /* خط فاصل بين زر الدخول ورابط العودة، والرابط في المنتصف */
 .au-split-back { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--color-border); text-align: center; }
-.au-split-back a { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding-inline: 20px; border: 1.5px solid var(--color-border); border-radius: 999px; font-size: 14.5px; font-weight: 700; color: var(--color-text-600); transition: color var(--ucas-color-speed, .8s) ease, border-color var(--ucas-color-speed, .8s) ease; }
+.au-split-back a { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding-inline: 20px; border: 1px solid var(--color-border); border-radius: 4px; font-size: 14.5px; font-weight: 700; color: var(--color-text-600); transition: color var(--ucas-color-speed, .8s) ease, border-color var(--ucas-color-speed, .8s) ease; }
 .au-split-back a:hover { border-color: var(--ucas-blue); color: var(--ucas-blue); }
 .au-split-alert.is-success { background: rgba(16, 196, 105, .1); color: #0B9A52; }
-.au-split-hint { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 20px; padding: 12px 14px; border-radius: 10px; background: rgba(0, 91, 170, .07); font-size: 13.5px; line-height: 1.8; color: var(--ucas-blue); }
+.au-split-hint { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 20px; padding: 12px 14px; border-radius: 4px; background: rgba(0, 91, 170, .07); font-size: 13.5px; line-height: 1.8; color: var(--ucas-blue); }
 .au-split-hint svg { flex-shrink: 0; margin-top: 3px; }
 /* شروط كلمة المرور: قائمة حيّة يتحوّل كل شرط للأخضر عند تحققه */
-.au-pass-reqs { list-style: none; margin: 0 0 20px; padding: 12px 14px; border-radius: 10px; background: rgba(0, 91, 170, .06); display: grid; grid-template-columns: 1fr 1fr; gap: 9px 16px; }
+.au-pass-reqs { list-style: none; margin: 0 0 20px; padding: 12px 14px; border-radius: 4px; background: rgba(0, 91, 170, .06); display: grid; grid-template-columns: 1fr 1fr; gap: 9px 16px; }
 .au-pass-req { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: #8A93A3; transition: color var(--ucas-color-speed, .5s) ease; }
 .au-pass-req svg { flex-shrink: 0; color: currentColor; }
 .au-pass-req.is-ok { color: #2E9E5B; }
