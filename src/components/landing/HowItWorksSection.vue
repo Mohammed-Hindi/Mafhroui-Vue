@@ -21,19 +21,14 @@
 <script setup>
 import { ref } from 'vue'
 import { Archive, CalendarDays, FileText, KeyRound, Users } from 'lucide-vue-next'
-import { gsap, iconParts, titleIn, useScrollMotion } from '@/composables/useScrollMotion'
+import { gsap, titleIn, useScrollMotion } from '@/composables/useScrollMotion'
 
 const root = ref(null)
+// الخط الرابط بين الخطوات ثابت؛ العنوان والخطوات تظهر بهدوء بلا رسم أيقونات
 useScrollMotion(root, (el) => {
-  titleIn(gsap.timeline({ scrollTrigger: { trigger: el, start: 'top 72%' } }), el.querySelector('.us-title'))
-  // الخط يمتد من الخطوة الأولى (يمينًا) مع التمرير
-  gsap.fromTo(el.querySelector('.us-steps-line'), { scaleX: 0 }, { scaleX: 1, ease: 'none', scrollTrigger: { trigger: el.querySelector('.us-steps'), start: 'top 75%', end: 'bottom 55%', scrub: 0.6 } })
-  // الخطوات تتوالى من الأولى، وكل أيقونة تُرسم بعد ظهور خطوتها
-  const tl = gsap.timeline({ scrollTrigger: { trigger: el.querySelector('.us-steps'), start: 'top 78%' } })
-  el.querySelectorAll('.us-step').forEach((step, i) => {
-    tl.from(step, { y: 36, autoAlpha: 0, duration: 0.7, ease: 'power3.out' }, i * 0.16)
-      .from(iconParts(step), { drawSVG: 0, duration: 1, ease: 'power2.inOut' }, i * 0.16 + 0.15)
-  })
+  const tl = gsap.timeline({ scrollTrigger: { trigger: el, start: 'top 78%' } })
+  titleIn(tl, el.querySelector('.us-title'))
+    .from(el.querySelectorAll('.us-step'), { y: 28, autoAlpha: 0, duration: 0.6, ease: 'power2.out', stagger: 0.12 }, '-=0.25')
 })
 
 // ألوان عمادات الكلية (الدليل 6.2.1) — أيقونات خطية بلا مربعات

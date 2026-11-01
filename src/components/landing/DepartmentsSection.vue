@@ -34,12 +34,9 @@ export default {
     const store = useLandingStore()
     // تُبنى الحركة بعد وصول الأقسام من الخادم
     useScrollMotion(root, (el) => {
-      const tl = gsap.timeline({ scrollTrigger: { trigger: el, start: 'top 72%' } })
+      const tl = gsap.timeline({ scrollTrigger: { trigger: el, start: 'top 80%' } })
       titleIn(tl, el.querySelector('.us-title'))
-      el.querySelectorAll('.us-card').forEach((card, i) => {
-        tl.from(card, { x: i % 2 ? -60 : 60, autoAlpha: 0, clipPath: 'inset(0 0 100% 0)', duration: 0.9, ease: 'power3.out' }, i ? '<0.15' : '-=0.5')
-          .from(card.querySelectorAll('li'), { x: 20, autoAlpha: 0, duration: 0.45, ease: 'power2.out', stagger: 0.06 }, '<0.35')
-      })
+        .from(el.querySelectorAll('.us-card'), { y: 28, autoAlpha: 0, duration: 0.6, ease: 'power2.out', stagger: 0.12 }, '-=0.25')
     }, () => store.departments.length)
     return { root }
   },

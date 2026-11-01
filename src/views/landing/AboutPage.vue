@@ -110,58 +110,26 @@
 import { Award, BadgeCheck, Building2, CheckCircle2, GraduationCap, Rocket, UserCheck, Users, UsersRound } from 'lucide-vue-next'
 import { APP_NAME, APP_DESCRIPTION } from '@/utils/constants'
 import { ref } from 'vue'
-import { gsap, iconParts, titleIn, useScrollMotion } from '@/composables/useScrollMotion'
+import { gsap, titleIn, useScrollMotion } from '@/composables/useScrollMotion'
 
 const root = ref(null)
+// دخول هادئ رسمي بلا رسم: رأس الصفحة عند الفتح، وكل قسم يظهر بهدوء (fade-up) عند الوصول إليه
 useScrollMotion(root, (el) => {
   const q = (s, scope = el) => scope.querySelector(s)
-  const qa = (s, scope = el) => scope.querySelectorAll(s)
-  const onEnter = (trigger, start = 'top 72%') => gsap.timeline({ scrollTrigger: { trigger, start } })
-  const [intro, story, problems, band, team] = qa(':scope > section')
 
-  // رأس الصفحة عند الفتح
   gsap.timeline({ delay: 0.1 })
-    .from(q('.us-pagehead h1'), { y: 30, autoAlpha: 0, duration: 0.8, ease: 'power3.out' })
-    .from(q('.us-pagehead p'), { y: 16, autoAlpha: 0, duration: 0.6, ease: 'power2.out' }, '-=0.45')
-    .from(q('.us-crumbs'), { y: 12, autoAlpha: 0, duration: 0.5, ease: 'power2.out' }, '-=0.3')
+    .from(q('.us-pagehead h1'), { y: 20, autoAlpha: 0, duration: 0.6, ease: 'power2.out' })
+    .from(q('.us-pagehead p'), { y: 14, autoAlpha: 0, duration: 0.5, ease: 'power2.out' }, '-=0.3')
+    .from(q('.us-crumbs'), { autoAlpha: 0, duration: 0.4 }, '-=0.25')
 
-  // تعريف المنصة: الفقرة تتضح، ثم الرؤية والرسالة من الجانبين
-  titleIn(onEnter(intro), q('.us-title', intro))
-    .from(q('.us-lead', intro), { y: 24, autoAlpha: 0, filter: 'blur(6px)', duration: 0.9, ease: 'power3.out' }, '-=0.5')
-    .from(qa('.us-card', intro), { x: (i) => (i ? -70 : 70), autoAlpha: 0, duration: 0.9, ease: 'power3.out', stagger: 0.12 }, '-=0.5')
-
-  // قصة مسار: خط يمتد مع التمرير، الخطوات تتوالى وأيقوناتها تُرسم
-  titleIn(onEnter(story), q('.us-title', story))
-  gsap.fromTo(q('.us-steps-line', story), { scaleX: 0 }, { scaleX: 1, ease: 'none', scrollTrigger: { trigger: q('.us-steps', story), start: 'top 78%', end: 'bottom 60%', scrub: 0.6 } })
-  const steps = onEnter(q('.us-steps', story), 'top 80%')
-  qa('.us-step', story).forEach((s, i) => {
-    steps.from(s, { y: 36, autoAlpha: 0, duration: 0.7, ease: 'power3.out' }, i * 0.2)
-      .from(iconParts(s), { drawSVG: 0, duration: 1, ease: 'power2.inOut' }, i * 0.2 + 0.15)
+  el.querySelectorAll(':scope > section').forEach((sec) => {
+    const tl = gsap.timeline({ scrollTrigger: { trigger: sec, start: 'top 80%' } })
+    titleIn(tl, q('.us-title', sec))
+    const lead = q('.us-lead', sec)
+    if (lead) tl.from(lead, { y: 20, autoAlpha: 0, duration: 0.6, ease: 'power2.out' }, '-=0.25')
+    const items = sec.querySelectorAll('.us-card, .us-step, .us-feature, .us-person, .us-supervisor')
+    if (items.length) tl.from(items, { y: 24, autoAlpha: 0, duration: 0.6, ease: 'power2.out', stagger: 0.1 }, '-=0.2')
   })
-
-  // المشكلات: كل بطاقة تنكشف من الأعلى، ثم صندوق الحل يمتد من اليمين
-  titleIn(onEnter(problems), q('.us-title', problems))
-  qa('.us-problem', problems).forEach((card, i) => {
-    onEnter(card, 'top 85%')
-      .from(card, { y: 40, autoAlpha: 0, clipPath: 'inset(0 0 100% 0)', duration: 0.9, ease: 'power3.out', delay: (i % 2) * 0.12 })
-      .from(q('.us-solution', card), { clipPath: 'inset(0 0 0 100%)', duration: 0.8, ease: 'power2.inOut' }, '-=0.3')
-      .from(iconParts(q('.us-solution', card)), { drawSVG: 0, duration: 0.6 }, '-=0.3')
-  })
-
-  // كيف تساعد المنصة: البطاقات تتضح وأيقوناتها تُرسم ثم البنود
-  titleIn(onEnter(band), q('.us-title', band))
-    .from(qa('.us-feature', band), { y: 46, autoAlpha: 0, filter: 'blur(8px)', duration: 0.9, ease: 'power3.out', stagger: 0.12 }, '-=0.6')
-    .from(iconParts(band), { drawSVG: 0, duration: 1.2, ease: 'power2.inOut', stagger: 0.03 }, '<0.1')
-    .from(qa('.us-feature li', band), { x: 24, autoAlpha: 0, duration: 0.45, stagger: 0.04 }, '<0.4')
-
-  // فريق التطوير: البطاقات تصعد، الحرف الأول يظهر داخل دائرته، ثم شريط المشرف ينكشف بمسح ولمعة
-  titleIn(onEnter(team), q('.us-title', team))
-    .from(qa('.us-person', team), { y: 40, autoAlpha: 0, duration: 0.8, ease: 'power3.out', stagger: 0.12 }, '-=0.5')
-    .from(qa('.us-person-av', team), { autoAlpha: 0, scale: 0.6, duration: 0.6, ease: 'power2.out', stagger: 0.12 }, '<0.2')
-  onEnter(q('.us-supervisor', team), 'top 88%')
-    .from(q('.us-supervisor', team), { clipPath: 'inset(0 0 0 100%)', duration: 1, ease: 'power3.inOut' })
-    .from(qa('.us-supervisor small, .us-supervisor strong', team), { y: 14, autoAlpha: 0, duration: 0.5, stagger: 0.12 }, '-=0.3')
-    .from(iconParts(q('.us-supervisor', team)), { drawSVG: 0, duration: 0.8 }, '<')
 })
 
 const team = ['انس محمد الشنطي', 'محمد زياد الغول', 'محمد رفعت النونو', 'محمد هشام الهندي']

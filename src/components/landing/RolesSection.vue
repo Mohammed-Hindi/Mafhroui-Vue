@@ -20,15 +20,13 @@
 <script setup>
 import { ref } from 'vue'
 import { GraduationCap, ShieldCheck, UserCheck } from 'lucide-vue-next'
-import { gsap, iconParts, titleIn, useScrollMotion } from '@/composables/useScrollMotion'
+import { gsap, titleIn, useScrollMotion } from '@/composables/useScrollMotion'
 
 const root = ref(null)
 useScrollMotion(root, (el) => {
-  const tl = gsap.timeline({ scrollTrigger: { trigger: el, start: 'top 70%' } })
+  const tl = gsap.timeline({ scrollTrigger: { trigger: el, start: 'top 75%' } })
   titleIn(tl, el.querySelector('.us-title'))
-    .from(el.querySelectorAll('.us-feature'), { y: 50, autoAlpha: 0, filter: 'blur(8px)', duration: 0.9, ease: 'power3.out', stagger: 0.15 }, '-=0.6')
-    .from(iconParts(el), { drawSVG: 0, duration: 1.2, ease: 'power2.inOut', stagger: 0.04 }, '<0.1')
-    .from(el.querySelectorAll('.us-feature li'), { x: 24, autoAlpha: 0, duration: 0.5, ease: 'power2.out', stagger: 0.05 }, '<0.4')
+    .from(el.querySelectorAll('.us-feature'), { y: 32, autoAlpha: 0, duration: 0.7, ease: 'power2.out', stagger: 0.14 }, '-=0.25')
 })
 
 /* محتوى تعريفي ثابت — ليس بيانات أعمال */
