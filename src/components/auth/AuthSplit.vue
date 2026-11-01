@@ -26,10 +26,10 @@
     </section>
 
     <aside class="au-split-art" aria-hidden="true">
-      <div class="au-split-art-bg" :style="{ backgroundImage: `url(${heroCover})` }"></div>
-      <div class="au-split-art-in">
-        <MasarWordmark />
-        <h2>منصة {{ APP_NAME }} لمشاريع التخرج</h2>
+      <div class="au-split-art-bg" :style="{ backgroundImage: `url(${heroCover})` }" />
+      <div class="au-split-art-brand">
+        <UcasLogo :size="42" />
+        <span>{{ APP_NAME }}</span>
       </div>
     </aside>
   </div>
@@ -38,7 +38,6 @@
 <script setup>
 import { ArrowRight } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
-import MasarWordmark from '@/components/landing/MasarWordmark.vue'
 import { APP_NAME, APP_DESCRIPTION } from '@/utils/constants'
 // صورة حفل التخرّج الرسمية: خلفية هادئة للوحة بدل مؤثّر مطر البيانات
 import heroCover from '@/assets/hero/ucas-cover.jpg'

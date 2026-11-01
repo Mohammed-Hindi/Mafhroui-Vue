@@ -449,7 +449,7 @@
 :root[data-theme="dark"] .au-split-input { border-color: var(--color-border); background: var(--color-bg); }
 :root[data-theme="dark"] .au-split-brand strong { color: #71B6F9; }
 /* اللوحة المتحركة */
-.au-split-art { position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 48px 32px; background: var(--us-grad); color: #FFFFFF; text-align: center; }
+.au-split-art { position: relative; overflow: hidden; background: var(--us-grad); color: #FFFFFF; }
 .au-split-art::before { content: ''; position: absolute; inset: 0; z-index: 1; opacity: .12; background-image: radial-gradient(#FFFFFF 1.2px, transparent 1.2px); background-size: 26px 26px; pointer-events: none; }
 /* خلفية الصورة الرسمية تحت طبقة تدرّج الهوية — هادئة بدل مؤثّر مطر البيانات، مع إبقاء الشعار واضحًا */
 .au-split-art-bg { position: absolute; inset: 0; z-index: 0; background-size: cover; background-position: center; background-repeat: no-repeat; }
@@ -457,19 +457,16 @@
   content: ''; position: absolute; inset: 0;
   background: linear-gradient(160deg, rgba(98, 187, 70, .84) 0%, rgba(14, 105, 156, .82) 55%, rgba(2, 93, 169, .88) 100%);
 }
-.au-split-art-in { position: relative; z-index: 2; max-width: 520px; }
-.au-split-art .us-hero-word { width: clamp(260px, 30vw, 440px); }
-.au-split-art h2 { margin: 18px 0 10px; font-size: clamp(24px, 2.2vw, 32px); font-weight: 800; opacity: 0; animation: au-art-in .8s ease 2.4s forwards; }
-.au-split-art p { margin: 0; font-size: 16.5px; line-height: 1.9; color: rgba(255, 255, 255, .88); opacity: 0; animation: au-art-in .8s ease 2.7s forwards; }
-@keyframes au-art-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .au-split-art, .au-split-art h2, .au-split-art p { animation: none; opacity: 1; } }
-/* الآيباد والجوال: اللوحة شريط علوي قصير، والفورم تحتها */
+/* زاوية اللوحة: شعار الكلية + «مسار» مثل رأس السايد بار داخل اللوحات — بلا كلمة مسار الكبيرة */
+.au-split-art-brand { position: absolute; z-index: 2; top: 28px; inset-inline-start: 34px; display: flex; align-items: center; gap: 12px; color: #FFFFFF; }
+.au-split-art-brand span { font-family: var(--font-heading, 'Cairo', sans-serif); font-size: 30px; font-weight: 800; line-height: 1; text-shadow: 0 1px 12px rgba(2, 40, 80, .4); }
+.au-split-art-brand svg { filter: drop-shadow(0 1px 8px rgba(2, 40, 80, .35)); }
+/* الآيباد والجوال: اللوحة شريط علوي قصير بالصورة والشعار، والفورم تحتها */
 @media (max-width: 1023.98px) {
   .au-split { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-  .au-split-art { order: -1; padding: 28px 20px 24px; }
-  .au-split-art .us-hero-word { width: 170px; }
-  .au-split-art h2 { margin: 8px 0 4px; font-size: 20px; }
-  .au-split-art p { font-size: 14px; }
+  .au-split-art { order: -1; min-height: 150px; }
+  .au-split-art-brand { top: 20px; inset-inline-start: 22px; }
+  .au-split-art-brand span { font-size: 24px; }
   .au-split-form { align-items: flex-start; padding: 28px 20px 40px; }
   .au-split-brand { margin-bottom: 24px; }
   .au-split-title { font-size: 26px; }
