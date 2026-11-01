@@ -511,21 +511,20 @@
 a.au-split-submit { margin-top: 4px; }
 
 /* ---------- أرشيف المشاريع: شبكة معرض أعمال أكاديمي (صورة أولًا، نص هادئ، مسافات واسعة) ---------- */
-.us-portfolio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px 32px; }
-@media (max-width: 1023.98px) { .us-portfolio { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 24px; } }
+.us-portfolio { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 28px 24px; }
 @media (max-width: 639.98px) { .us-portfolio { grid-template-columns: 1fr; } }
 .us-pf-count { margin: -8px 0 24px; font-size: 15px; color: var(--color-text-500, #6F6F6F); }
 .us-pf-count b { color: var(--ucas-blue); }
 .us-pf { display: flex; flex-direction: column; gap: 16px; color: inherit; }
-.us-pf-media { position: relative; display: block; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 12px; background: #E9EEF3; box-shadow: 0 10px 30px rgba(4, 40, 80, .12); }
+.us-pf-media { position: relative; display: block; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 4px; background: #E9EEF3; box-shadow: 0 10px 30px rgba(4, 40, 80, .12); }
 .us-pf-media img { width: 100%; height: 100%; object-fit: cover; transition: filter var(--ucas-color-speed, .8s) ease; }
 .us-pf-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #62BB46 0%, #50A16E 35%, #0E699C 75%, #025DA9 100%); }
 .us-pf-fallback::before { content: ''; position: absolute; inset: 0; opacity: .16; background-image: radial-gradient(#FFFFFF 1.2px, transparent 1.2px); background-size: 18px 18px; }
 .us-pf-fallback b { position: relative; font-size: 96px; font-weight: 800; line-height: 1; color: rgba(255, 255, 255, .92); }
 .us-pf-fallback svg { position: absolute; bottom: 14px; left: 16px; opacity: .9; }
-.us-pf-tag { position: absolute; top: 14px; right: 14px; padding: 5px 12px; border-radius: 999px; background: rgba(255, 255, 255, .94); font-size: 12.5px; font-weight: 700; color: var(--ucas-blue); }
+.us-pf-tag { position: absolute; top: 14px; right: 14px; padding: 5px 12px; border-radius: 4px; background: rgba(255, 255, 255, .94); font-size: 12.5px; font-weight: 700; color: var(--ucas-blue); }
 .us-pf-hover { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center; padding: 18px; background: linear-gradient(to top, rgba(4, 30, 60, .78), rgba(4, 30, 60, 0) 60%); opacity: 0; transition: opacity var(--ucas-color-speed, .8s) ease; }
-.us-pf-hover span { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border: 1.5px solid rgba(255, 255, 255, .85); border-radius: 999px; font-size: 14px; font-weight: 700; color: #FFFFFF; }
+.us-pf-hover span { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border: 1.5px solid rgba(255, 255, 255, .85); border-radius: 4px; font-size: 14px; font-weight: 700; color: #FFFFFF; }
 .us-pf:hover .us-pf-hover, .us-pf:focus-visible .us-pf-hover { opacity: 1; }
 .us-pf:hover .us-pf-media img { filter: saturate(1.1) brightness(.92); }
 .us-pf-body { display: flex; flex-direction: column; gap: 8px; padding-inline: 4px; }
@@ -544,38 +543,37 @@ a.au-split-submit { margin-top: 4px; }
 .us-pf:hover .us-pf-play { background: rgba(98, 187, 70, .75); }
 
 /* ---------- أرشيف المشاريع وصفحة المشروع بهوية مسار (MASAR_PORTAL_IDENTITY): كبسولات، زوايا 16–18، ظل ناعم بلا حدود، تدرّج ---------- */
-.us-proj .us-pagehead-tag { border-radius: 999px; padding: 5px 16px; }
-.us-proj .us-crumbs { border-radius: 999px; padding: 5px; }
-.us-proj .us-crumbs a { height: 32px; border-radius: 999px; padding-inline: 12px 16px; }
-.us-proj .us-btn { height: 48px; padding-inline: 28px; border: 0; border-radius: 999px; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); color: #FFFFFF; box-shadow: 0 8px 20px rgba(2, 93, 169, .22); transition: box-shadow .4s ease, filter .4s ease; }
+.us-proj .us-pagehead-tag { border-radius: 4px; padding: 5px 16px; }
+.us-proj .us-crumbs { border-radius: 4px; padding: 5px; }
+.us-proj .us-crumbs a { height: 32px; border-radius: 4px; padding-inline: 12px 16px; }
+.us-proj .us-btn { height: 48px; padding-inline: 28px; border: 0; border-radius: 4px; background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); color: #FFFFFF; box-shadow: 0 8px 20px rgba(2, 93, 169, .22); transition: box-shadow .4s ease, filter .4s ease; }
 .us-proj .us-btn:hover { filter: brightness(1.06); box-shadow: 0 10px 26px rgba(2, 93, 169, .32); }
 /* البطاقات: زوايا 18، ظل الهوية، صورة المعرض زوايا 16 */
-.us-proj .us-pf-media { border-radius: 16px; }
-.us-proj .us-card { border-radius: 18px; box-shadow: 0 10px 30px rgba(4, 40, 80, .08); }
-.us-proj .us-detail-cover { border-radius: 18px; }
+.us-proj .us-pf-media { border-radius: 4px; }
+.us-proj .us-card { border-radius: 4px; box-shadow: 0 0 0 1px var(--color-border), 0 10px 30px -16px rgba(4, 40, 80, .12); }
+.us-proj .us-detail-cover { border-radius: 4px; }
 /* بيانات المشروع: التسمية خضراء والقيمة زرقاء داخل خانة بخلفية تدرّج خفيفة */
 .us-proj .us-data { gap: 8px; }
-.us-proj .us-data > div { padding: 11px 16px; border: 0; border-radius: 12px; background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .05)); }
+.us-proj .us-data > div { padding: 11px 16px; border: 0; border-radius: 4px; background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .05)); }
 .us-proj .us-data dt { color: var(--ucas-green); }
 .us-proj .us-data dd { font-weight: 700; color: var(--ucas-blue); }
-.us-proj .us-team li { padding: 6px; border-radius: 999px; font-weight: 600; color: var(--ucas-blue); }
+.us-proj .us-team li { padding: 6px; border-radius: 4px; font-weight: 600; color: var(--ucas-blue); }
 .us-proj .us-team li > span { background: linear-gradient(135deg, #62BB46, #0E699C 55%, #025DA9); box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px var(--ucas-green); }
 :root[data-theme="dark"] .us-proj .us-data dd, :root[data-theme="dark"] .us-proj .us-team li { color: #71B6F9; }
 :root[data-theme="dark"] .us-proj .us-team li > span { box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--ucas-green); }
-@media (max-width: 639.98px) { .us-proj .us-crumbs { border-radius: 18px; } }
+@media (max-width: 639.98px) { .us-proj .us-crumbs { border-radius: 4px; } }
 
-/* أرشيف المشاريع المكتملة: كل مشروع بطاقة مستقلة بإطار بلون الهوية وزوايا 18 وظل ناعم، والإطار يتحوّل للتدرّج عند المرور */
-.us-portfolio { gap: 28px 24px; }
-.us-portfolio .us-pf { gap: 0; overflow: hidden; border: 1.5px solid color-mix(in srgb, var(--ucas-blue) 16%, transparent); border-radius: 18px; background: var(--color-surface); box-shadow: 0 10px 28px rgba(4, 40, 80, .07); transition: border-color .4s ease, box-shadow .4s ease; }
-.us-portfolio .us-pf:hover, .us-portfolio .us-pf:focus-visible { border-color: transparent; background: linear-gradient(var(--color-surface), var(--color-surface)) padding-box, linear-gradient(135deg, #62BB46, #0E699C 55%, #025DA9) border-box; box-shadow: 0 18px 40px rgba(4, 40, 80, .14); outline: none; }
-.us-portfolio .us-pf-media { margin: 10px 10px 0; border-radius: 14px; box-shadow: none; }
-.us-portfolio .us-pf-body { gap: 8px; padding: 16px 18px 18px; }
+/* أرشيف المشاريع المكتملة: كل مشروع بطاقة حادة مستقلة (زوايا 4px، حدٌّ بالظل)، يتحوّل حدّها للأزرق عند المرور */
+.us-portfolio .us-pf { gap: 0; overflow: hidden; border-radius: 4px; background: var(--color-surface); box-shadow: 0 0 0 1px var(--color-border), 0 10px 26px -16px rgba(4, 40, 80, .2); transition: box-shadow var(--ucas-color-speed, .5s) ease; }
+.us-portfolio .us-pf:hover, .us-portfolio .us-pf:focus-visible { box-shadow: 0 0 0 1px var(--ucas-blue), 0 16px 34px -16px rgba(4, 40, 80, .28); outline: none; }
+.us-portfolio .us-pf-media { margin: 10px 10px 0; border-radius: 4px; box-shadow: none; }
+.us-portfolio .us-pf-body { gap: 8px; padding: 14px 16px 16px; }
 .us-portfolio .us-pf h3 { font-size: 19px; color: var(--ucas-blue); }
-.us-portfolio .us-pf-eyebrow { display: inline-flex; width: fit-content; padding: 3px 12px; border-radius: 999px; background: rgba(98, 187, 70, .12); }
-.us-portfolio .us-pf-meta { margin-top: 6px; padding-top: 12px; border-top: 1px dashed color-mix(in srgb, var(--ucas-blue) 16%, transparent); }
-.us-portfolio .us-pf-meta span { padding: 4px 10px; border-radius: 999px; background: color-mix(in srgb, var(--ucas-blue) 6%, transparent); font-weight: 600; color: var(--ucas-blue); }
+.us-portfolio .us-pf-eyebrow { display: inline-flex; width: fit-content; padding: 4px 12px; border-radius: 4px; background: rgba(98, 187, 70, .12); }
+.us-portfolio .us-pf-meta { margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--color-border); }
+.us-portfolio .us-pf-meta span { padding: 4px 10px; border-radius: 4px; background: color-mix(in srgb, var(--ucas-blue) 6%, transparent); font-weight: 600; color: var(--ucas-blue); }
 :root[data-theme="dark"] .us-portfolio .us-pf h3 { color: #71B6F9; }
 .us-portfolio .us-pf-media:has(.us-pf-play) .us-pf-fallback b { display: none; }
 
-.us-section .us-more nav[aria-label="ترقيم الصفحات"] button { border-radius: 999px; }
+.us-section .us-more nav[aria-label="ترقيم الصفحات"] button { border-radius: 4px; }
 .us-section .us-more nav[aria-label="ترقيم الصفحات"] .bg-primary-600 { background: linear-gradient(270deg, #62BB46, #0E699C 55%, #025DA9); }
