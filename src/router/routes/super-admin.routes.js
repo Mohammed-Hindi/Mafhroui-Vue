@@ -28,6 +28,12 @@ export default [
         meta: { title: 'الأقسام والتخصصات والفصول', hideIdentity: true }
       },
       {
+        path: 'roster-sync',
+        name: 'super-admin-roster-sync',
+        component: () => import('@/views/super-admin/RosterSyncPage.vue'),
+        meta: { title: 'مزامنة كشف الطلبة', hideIdentity: true }
+      },
+      {
         path: 'profile',
         name: 'super-admin-profile',
         component: () => import('@/views/super-admin/ProfilePage.vue'),
