@@ -22,7 +22,8 @@ const phone = (w) => String(w || '').replace(/^970/, '')
 const collegeHeader = (h = 76) => `<img src="${HEADER}" style="height:${h}px; display:block;">`
 
 // حقوق منصة مسار أسفل كل مطبوعة (شريط مطلق في أسفل الصفحة) — PDF بالبكسل
-const creditBar = (bottom) => `<div style="position:absolute; bottom:${bottom}px; right:0; left:0; text-align:center; font-size:10.5px; font-weight:700; color:${BRAND.line}; letter-spacing:.2px;">طُبع عبر <span style="color:${BRAND.deep};">منصّة مسار</span> — نظام إدارة مشاريع التخرج</div>`
+// بلا تشكيل (حركات) وبخط Cairo صراحةً: html2canvas يكسر الكلمات المشكَّلة، والنص المجرّد يُرسَم سليمًا كبقية الجدول
+const creditBar = (bottom) => `<div style="position:absolute; bottom:${bottom}px; right:0; left:0; text-align:center; font-family:'Cairo',Arial,sans-serif; font-size:11px; font-weight:700; color:${BRAND.line}; letter-spacing:.2px;">طباعة عبر <span style="color:${BRAND.deep};">منصة مسار</span> · نظام إدارة مشاريع التخرج</div>`
 
 // خط الكشف: Cairo (محمّل في التطبيق) مع بديل، وألوان صريحة بـ !important حتى لا تتسرّب أنماط البوابة (رأس الجدول الأبيض) إلى الطباعة
 const RFONT = `font-family:'Cairo',Arial,sans-serif; color:${BRAND.ink}; direction:rtl; background:#fff; box-sizing:border-box; line-height:1.35;`
@@ -301,7 +302,7 @@ export async function exportDiscussionsDoc(plan, { byRoom = false } = {}) {
   // نفس أنماط PDF (RTH/CELL) بوحدات Word
   const th = `border:1px solid ${BRAND.line}; background:${BRAND.head}; padding:4pt 4pt 7pt; font-size:10.5pt; font-weight:bold; text-align:center; color:${BRAND.headInk};`
   const td = `border:1px solid ${BRAND.line}; padding:5pt 6pt 9pt; font-size:10pt; vertical-align:middle; color:${BRAND.ink};`
-  const credit = `<p style="text-align:center; font-size:8.5pt; font-weight:bold; color:${BRAND.line}; margin:9pt 0 0;">طُبع عبر منصّة مسار — نظام إدارة مشاريع التخرج</p>`
+  const credit = `<p style="text-align:center; font-size:8.5pt; font-weight:bold; color:${BRAND.line}; margin:9pt 0 0;">طباعة عبر منصة مسار · نظام إدارة مشاريع التخرج</p>`
   const head = `<tr><th style="${th} width:62pt;">الرقم</th><th style="${th} width:42pt;">الشعبة</th><th style="${th} width:90pt;">اسم المشرف</th>
     <th style="${th}">الطلاب</th><th style="${th} width:90pt;">وقت المناقشة</th><th style="${th} width:90pt;">المناقشين</th><th style="${th} width:140pt;">ملاحظات</th></tr>`
   const row = (r, n, i) => r.isBreak
