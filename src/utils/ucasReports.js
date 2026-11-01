@@ -7,8 +7,13 @@ import { COURSES, activeSemesterName } from '@/services/adminData'
 const DEGREE_LABEL = { diploma: 'دبلوم', bachelor: 'بكالوريوس' }
 
 
-const FONT = "font-family:Arial,'Cairo',sans-serif; color:#000; direction:rtl; background:#fff; box-sizing:border-box;"
-const CELL = 'border:1px solid #000; padding:6px 8px; font-size:13px;'
+// هوية مسار المطبوعة: ألوان منطفئة مشتقّة من تدرّج الكلية (أخضر←أزرق) بحواف حادة — بديلة عن الأسود/الأحمر الرسمي
+const BRAND = { ink: '#15314A', deep: '#0E5A86', line: '#A3B6C7', head: '#E9EFF4', headInk: '#123E5E', meta: '#EEF3F7', zebra: '#F4F7FA', brk: '#E4EDF3', online: '#B23A48' }
+// فاصل الهوية: شريط حادّ بتدرّج الكلية بدل الخط الأسود؛ m = الهامش (مع نزف للحواف)
+const RULE = (m) => `<div style="height:3px; margin:${m}; background:linear-gradient(90deg,#4C8F3F,#0E699C 55%,#064F86);"></div>`
+
+const FONT = `font-family:Arial,'Cairo',sans-serif; color:${BRAND.ink}; direction:rtl; background:#fff; box-sizing:border-box;`
+const CELL = `border:1px solid ${BRAND.line}; padding:6px 8px; font-size:13px;`
 const today = () => new Date().toLocaleDateString('en-GB')
 const phone = (w) => String(w || '').replace(/^970/, '')
 
@@ -16,11 +21,11 @@ const phone = (w) => String(w || '').replace(/^970/, '')
 const collegeHeader = (h = 76) => `<img src="${HEADER}" style="height:${h}px; display:block;">`
 
 // خط الكشف: Cairo (محمّل في التطبيق) مع بديل، وألوان صريحة بـ !important حتى لا تتسرّب أنماط البوابة (رأس الجدول الأبيض) إلى الطباعة
-const RFONT = "font-family:'Cairo',Arial,sans-serif; color:#111; direction:rtl; background:#fff; box-sizing:border-box; line-height:1.35;"
-const RTH = 'border:1px solid #000 !important; padding:6px 6px 10px; font-size:13.5px; font-weight:700; background:#D9D9D9 !important; color:#000 !important; text-align:center;'
-const RTD = 'border:1px solid #000; padding:5px 8px 9px; font-size:14px; color:#111; line-height:1.35;'
-const META_L = 'border:1px solid #000; padding:5px 10px 9px; font-size:13.5px; font-weight:700; background:#EFEFEF !important; color:#000 !important; width:118px; white-space:nowrap;'
-const META_V = 'border:1px solid #000; padding:5px 10px 9px; font-size:14.5px; font-weight:700; color:#000;'
+const RFONT = `font-family:'Cairo',Arial,sans-serif; color:${BRAND.ink}; direction:rtl; background:#fff; box-sizing:border-box; line-height:1.35;`
+const RTH = `border:1px solid ${BRAND.line} !important; padding:6px 6px 10px; font-size:13.5px; font-weight:700; background:${BRAND.head} !important; color:${BRAND.headInk} !important; text-align:center;`
+const RTD = `border:1px solid ${BRAND.line}; padding:5px 8px 9px; font-size:14px; color:${BRAND.ink}; line-height:1.35;`
+const META_L = `border:1px solid ${BRAND.line}; padding:5px 10px 9px; font-size:13.5px; font-weight:700; background:${BRAND.meta} !important; color:${BRAND.ink} !important; width:118px; white-space:nowrap;`
+const META_V = `border:1px solid ${BRAND.line}; padding:5px 10px 9px; font-size:14.5px; font-weight:700; color:${BRAND.ink};`
 
 /** كشف بأسماء الطلبة في شعبة — صفحة لكل مجموعة (نموذج "مجموعات الدبلوم/البكالوريوس"); filterLabel = الفلترة المطبّقة */
 function rosterPage(g, n, total, filterLabel = '') {
@@ -33,7 +38,7 @@ function rosterPage(g, n, total, filterLabel = '') {
       <b style="font-size:16px;">قسم القبول والتسجيل</b>
       <span style="font-size:13px; color:#444;">التاريخ: <span dir="ltr">${today()}</span></span>
     </div>
-    <div style="border-top:2px solid #000; margin:6px -44px 0;"></div>
+    ${RULE('7px -44px 0')}
 
     <div style="text-align:center; margin:18px 0 14px;">
       <div style="font-size:19px; font-weight:800;">كشف بأسماء طلبة ${DEGREE_LABEL[g.degree] || ''} في شعبة</div>
@@ -103,7 +108,7 @@ function tablePages(titleHtml, rows) {
             التاريخ: <span dir="ltr">${today()}</span> · صفحة <span dir="ltr">${i / 6 + 1} / ${total}</span>
           </div>
         </div>
-        <div style="border-top:2px solid #000; margin:8px -60px 16px;"></div>
+        ${RULE('8px -60px 16px')}
         ${i ? '' : `<div style="text-align:center; font-weight:700; font-size:18px; margin:0 0 16px;">${titleHtml}</div>`}
         <table style="width:100%; border-collapse:collapse;">${head}<tbody>${rows.slice(i, i + 6).map(row).join('')}</tbody></table>
       </div>`)
@@ -193,7 +198,7 @@ export function exportTablePdf({ fileName, title, filterLabel = '', head, rows, 
         <b style="font-size:16px;">لجنة مشاريع التخرج</b>
         <span style="font-size:13px; color:#444;">التاريخ: <span dir="ltr">${today()}</span></span>
       </div>
-      <div style="border-top:2px solid #000; margin:6px -40px 0;"></div>
+      ${RULE('7px -40px 0')}
       <div style="text-align:center; margin:16px 0 12px;">
         <div style="font-size:19px; font-weight:800;">${e(title)}</div>
         <div style="font-size:15px; font-weight:700; margin-top:4px;">${e(activeSemesterName())}</div>
@@ -232,7 +237,7 @@ export function exportSupervisorsPdf(groups, supervisors = [], filterLabel = '')
         <b style="font-size:16px;">لجنة مشاريع التخرج</b>
         <span style="font-size:13px; color:#444;">التاريخ: <span dir="ltr">${today()}</span></span>
       </div>
-      <div style="border-top:2px solid #000; margin:6px -40px 0;"></div>
+      ${RULE('7px -40px 0')}
       <div style="text-align:center; margin:18px 0 14px;">
         <div style="font-size:19px; font-weight:800;">تقرير المشرف ومجموعاته</div>
         <div style="font-size:15px; font-weight:700; margin-top:4px;">${e(activeSemesterName())}</div>
@@ -348,7 +353,7 @@ export async function proposalPdfFile(p, teamLabel = '') {
         <b style="font-size:16px;">لجنة مشاريع التخرج</b>
         <span style="font-size:13px; color:#444;">التاريخ: <span dir="ltr">${today()}</span></span>
       </div>
-      <div style="border-top:2px solid #000; margin:6px -40px 0;"></div>
+      ${RULE('7px -40px 0')}
       <div style="text-align:center; margin:16px 0 14px; font-size:19px; font-weight:800;">مقترح مشروع تخرج</div>
       <table style="width:100%; border-collapse:collapse; margin-bottom:16px;">
         ${rows.map(([k, v]) => `<tr><td style="${META_L}">${e(k)}</td><td style="${META_V}">${e(v)}</td></tr>`).join('')}
