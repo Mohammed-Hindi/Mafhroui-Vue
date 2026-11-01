@@ -85,27 +85,26 @@
     <section class="us-section is-gray">
       <div class="us-wrap">
         <h2 class="us-title">فريق التطوير</h2>
-        <div class="us-devteam">
-          <div v-for="n in team" :key="n" class="us-person">
-            <span class="us-person-av">{{ n.charAt(0) }}</span>
-            <strong>{{ n }}</strong>
-            <small>طالب — تصميم وتطوير مواقع الويب</small>
-          </div>
+        <div class="us-about">
+          <p class="us-lead">
+            طُوّرت منصة {{ APP_NAME }} على يد فريق من طلاب دبلوم تصميم وتطوير مواقع الويب في الكلية الجامعية للعلوم التطبيقية،
+            جمعهم مشروع التخرّج فحوّلوا فكرته إلى منصّة متكاملة تخدم كل أطراف العملية الأكاديمية.
+          </p>
         </div>
-        <div class="us-supervisor">
-          <GraduationCap :size="40" :stroke-width="1.5" />
-          <div>
-            <small>تحت إشراف المشرف القدير المميّز</small>
-            <strong>م. محمود ظهير</strong>
-          </div>
-        </div>
+        <ul class="us-team">
+          <li v-for="n in team" :key="n" class="us-team-member">
+            <span class="us-team-av" aria-hidden="true">{{ n.charAt(0) }}</span>
+            <strong class="us-team-name">{{ n }}</strong>
+          </li>
+        </ul>
+        <p class="us-team-sup">بإشراف المشرف القدير المميّز <strong>م. محمود ظهير</strong></p>
       </div>
     </section>
   </div>
 </template>
 
 <script setup>
-import { Building2, CheckCircle2, GraduationCap, UserCheck, Users, UsersRound } from 'lucide-vue-next'
+import { Building2, CheckCircle2, UserCheck, Users, UsersRound } from 'lucide-vue-next'
 import { APP_NAME, APP_DESCRIPTION } from '@/utils/constants'
 import { ref } from 'vue'
 import { gsap, titleIn, useScrollMotion } from '@/composables/useScrollMotion'
@@ -123,7 +122,7 @@ useScrollMotion(root, (el) => {
   el.querySelectorAll(':scope > section').forEach((sec) => {
     const tl = gsap.timeline({ scrollTrigger: { trigger: sec, start: 'top 80%' } })
     titleIn(tl, q('.us-title', sec))
-    const items = sec.querySelectorAll('.us-about > p, .us-about-block, .us-about-item, .us-about-role, .us-person, .us-supervisor')
+    const items = sec.querySelectorAll('.us-about > p, .us-about-block, .us-about-item, .us-about-role, .us-team-member, .us-team-sup')
     if (items.length) tl.from(items, { y: 22, autoAlpha: 0, duration: 0.55, ease: 'power2.out', stagger: 0.1 }, '-=0.2')
   })
 })
