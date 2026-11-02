@@ -256,15 +256,28 @@
 .us-features.is-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 1023.98px) { .us-features.is-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 639.98px) { .us-features.is-4 { grid-template-columns: 1fr; } }
-/* فريق التطوير: كروت أعضاء حادة بأفاتار مربّع بتدرّج الهوية وشريط أخضر جانبي، ثم سطر المشرف */
+/* قائمة أعضاء بشبكة حادة — تُستخدم في صفحة عرض المشروع (us-proj) */
 .us-team { list-style: none; margin: 8px auto 0; padding: 0; max-width: 980px; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
-.us-team-member { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 4px; background: var(--color-surface); box-shadow: inset 4px 0 0 var(--ucas-green), 0 0 0 1px var(--color-border); }
-.us-team-av { flex-shrink: 0; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 4px; background: linear-gradient(135deg, #62BB46, #0E699C 55%, #025DA9); font-family: var(--font-heading, 'Cairo', sans-serif); font-size: 21px; font-weight: 800; color: #FFFFFF; }
-.us-team-name { min-width: 0; font-size: 16.5px; font-weight: 700; line-height: 1.5; color: var(--ucas-blue); }
-.us-team-sup { max-width: 980px; margin: 22px auto 0; padding: 14px 18px; border-radius: 4px; background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .05)); text-align: center; font-size: 16px; color: var(--color-text-700); }
-.us-team-sup strong { font-weight: 800; color: var(--ucas-blue); }
-:root[data-theme="dark"] .us-team-name, :root[data-theme="dark"] .us-team-sup strong { color: #71B6F9; }
 @media (max-width: 479.98px) { .us-team { grid-template-columns: 1fr; } }
+
+/* ---------- صفحة فريق التطوير: براغراف + بطاقات حادة مطفية (أفاتار بالحرف، دور، وصف، تقنيات) ---------- */
+.us-tm-grid { list-style: none; margin: clamp(28px, 4vw, 44px) 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+.us-tm-card { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 30px 22px 26px; border-radius: 4px; background: var(--color-surface); box-shadow: 0 0 0 1px var(--color-border); transition: box-shadow .25s ease; }
+.us-tm-card:hover { box-shadow: 0 0 0 1px var(--ucas-blue); }
+.us-tm-av { display: grid; place-items: center; width: 84px; height: 84px; border-radius: 4px; background: linear-gradient(135deg, #62BB46, #0E699C 55%, #025DA9); font-family: var(--font-heading, 'Cairo', sans-serif); font-size: 34px; font-weight: 800; color: #FFFFFF; }
+.us-tm-name { margin-top: 16px; font-size: 18px; font-weight: 800; color: var(--ucas-blue); }
+.us-tm-role { margin-top: 5px; font-size: 13px; font-weight: 700; letter-spacing: .3px; color: var(--ucas-green); }
+.us-tm-desc { margin: 12px 0 0; font-size: 14px; line-height: 1.85; color: var(--color-text-700); }
+.us-tm-tech { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 16px 0 0; padding: 0; }
+.us-tm-tech li { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 4px; background: var(--color-bg); box-shadow: inset 0 0 0 1px var(--color-border); font-size: 12.5px; font-weight: 700; color: var(--color-text-700); }
+.us-tm-tech svg { color: var(--ucas-green); }
+/* بطاقة المشرف الأكاديمي: شريط علوي أخضر وشارة في الزاوية */
+.us-tm-sup-wrap { display: flex; justify-content: center; margin-top: 24px; }
+.us-tm-card.is-sup { width: 100%; max-width: 360px; box-shadow: inset 0 3px 0 var(--ucas-green), 0 0 0 1px var(--color-border); }
+.us-tm-card.is-sup .us-tm-av { background: linear-gradient(135deg, #0E699C, #025DA9); }
+.us-tm-badge { position: absolute; top: 14px; inset-inline-end: 14px; padding: 3px 10px; border-radius: 4px; background: linear-gradient(135deg, rgba(98, 187, 70, .14), rgba(14, 105, 156, .12)); font-size: 11.5px; font-weight: 800; color: var(--ucas-blue); }
+:root[data-theme="dark"] .us-tm-name, :root[data-theme="dark"] .us-tm-badge { color: #71B6F9; }
+@media (max-width: 479.98px) { .us-tm-grid { grid-template-columns: 1fr; } }
 
 /* ---------- صفحة «من نحن»: عمود قراءة مريح بفقرات منظّمة (بدل البطاقات المبعثرة) ---------- */
 .us-about { max-width: 880px; margin-inline: auto; }
