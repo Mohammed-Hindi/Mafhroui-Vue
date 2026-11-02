@@ -252,6 +252,8 @@
 @media (max-width: 639.98px) { .portal-footer-in { justify-content: center; text-align: center; font-size: 13px; } }
 /* سطر أسماء فريق التطوير: على سطر مستقل أسفل الحقوق، هادئ وأصغر */
 .portal-footer-devs { flex-basis: 100%; text-align: center; font-size: 12.5px; opacity: .75; letter-spacing: .2px; }
+.portal-footer-devs-label { font-weight: 700; opacity: .85; }
+.portal-footer-devs-label::after { content: ":"; margin-inline-start: 1px; }
 
 
 /* ============ 7) مكونات الصفحات ============ */

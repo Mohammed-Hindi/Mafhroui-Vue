@@ -47,7 +47,7 @@
       <footer v-if="isSuperAdmin" class="portal-footer">
         <div class="portal-footer-in px-4 lg:px-6">
           <span>{{ year }} © جميع الحقوق محفوظة لـ <router-link :to="homeRoute">منصة {{ appName }}</router-link> في <a href="https://www.ucas.edu.ps" target="_blank" rel="noopener">الكلية الجامعية للعلوم التطبيقية</a></span>
-          <span class="portal-footer-devs">{{ devs.join(' · ') }}</span>
+          <span class="portal-footer-devs"><span class="portal-footer-devs-label">طوّر بواسطة</span> {{ devs.join(' · ') }}</span>
         </div>
       </footer>
     </div>
