@@ -1,6 +1,6 @@
 <template>
   <!-- فريق التطوير بنمط موقع الكلية: شريط عنوان متدرّج، فقرة تعريفية، ثم بطاقات أعضاء حادة مطفية
-       (أفاتار بالحرف الأول، الاسم، الدور، وصف موجز، وشارات التقنيات)، وبطاقة المشرف الأكاديمي أسفلها.
+       (أفاتار صامت بلا ملامح، الاسم، الدور، وصف موجز)، ثم سطر المشرف الأكاديمي نصّيًا.
        الحركة هادئة (fade-up) بلا رسم: رأس الصفحة عند الفتح، والبطاقات تظهر بهدوء عند الوصول إليها -->
   <div ref="root">
     <header class="us-pagehead">
@@ -21,48 +21,35 @@
             جمعهم مشروع التخرّج فعملوا معًا على تحويل فكرته إلى منصّة رقمية متكاملة تدير دورة حياة مشاريع التخرج كاملة.
           </p>
           <p>
-            وزّع أعضاء الفريق أدوارهم بين تصميم الواجهة وتجربة المستخدم وتطوير الواجهة الأمامية والخلفية، ليخرج النظام بتجربة
-            واحدة متناسقة تربط العمادة ولجنة الإشراف والمشرفين والطلاب في بيئة عمل موحّدة.
+            وزّع أعضاء الفريق أدوارهم بين تصميم الواجهة وتجربة المستخدم وتطوير الواجهة الأمامية والخلفية والاختبار،
+            ليخرج النظام بتجربة واحدة متناسقة تربط العمادة ولجنة الإشراف والمشرفين والطلاب في بيئة عمل موحّدة.
           </p>
         </div>
 
         <ul class="us-tm-grid">
           <li v-for="m in members" :key="m.name" class="us-tm-card">
-            <span class="us-tm-av" aria-hidden="true">{{ m.name.charAt(0) }}</span>
+            <span class="us-tm-av" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4" /><path d="M4 20.2c0-4.1 3.7-6.7 8-6.7s8 2.6 8 6.7v.3H4z" /></svg>
+            </span>
             <strong class="us-tm-name">{{ m.name }}</strong>
             <span class="us-tm-role">{{ m.role }}</span>
             <p class="us-tm-desc">{{ m.desc }}</p>
-            <ul class="us-tm-tech">
-              <li v-for="t in m.tech" :key="t">{{ t }}</li>
-            </ul>
           </li>
         </ul>
 
-        <div class="us-tm-sup-wrap">
-          <article class="us-tm-card is-sup">
-            <span class="us-tm-badge">المشرف الأكاديمي</span>
-            <span class="us-tm-av" aria-hidden="true">{{ supervisor.name.charAt(0) }}</span>
-            <strong class="us-tm-name">{{ supervisor.name }}</strong>
-            <span class="us-tm-role">{{ supervisor.role }}</span>
-            <p class="us-tm-desc">{{ supervisor.desc }}</p>
-            <ul class="us-tm-tech">
-              <li><GraduationCap :size="14" /> الكلية الجامعية للعلوم التطبيقية</li>
-            </ul>
-          </article>
-        </div>
+        <p class="us-tm-sup">بإشراف المشرف القدير المميّز <strong>م. محمود ظهير</strong></p>
       </div>
     </section>
   </div>
 </template>
 
 <script setup>
-import { GraduationCap } from 'lucide-vue-next'
 import { APP_NAME } from '@/utils/constants'
 import { ref } from 'vue'
 import { gsap, titleIn, useScrollMotion } from '@/composables/useScrollMotion'
 
 const root = ref(null)
-// دخول هادئ رسمي بلا رسم: رأس الصفحة عند الفتح، والفقرة والبطاقات تظهر بهدوء (fade-up) عند الوصول إليها
+// دخول هادئ رسمي بلا رسم: رأس الصفحة عند الفتح، والفقرة والبطاقات وسطر المشرف تظهر بهدوء (fade-up)
 useScrollMotion(root, (el) => {
   const q = (s, scope = el) => scope.querySelector(s)
 
@@ -74,22 +61,16 @@ useScrollMotion(root, (el) => {
   el.querySelectorAll(':scope > section').forEach((sec) => {
     const tl = gsap.timeline({ scrollTrigger: { trigger: sec, start: 'top 80%' } })
     titleIn(tl, q('.us-title', sec))
-    const items = sec.querySelectorAll('.us-about > p, .us-tm-card')
+    const items = sec.querySelectorAll('.us-about > p, .us-tm-card, .us-tm-sup')
     if (items.length) tl.from(items, { y: 22, autoAlpha: 0, duration: 0.55, ease: 'power2.out', stagger: 0.1 }, '-=0.2')
   })
 })
 
-// أدوار وتقنيات مبدئية — عدّلوها حسب الواقع
+// أدوار الفريق
 const members = [
-  { name: 'انس محمد الشنطي', role: 'Frontend Developer', desc: 'بناء واجهة المنصة وتجربة المستخدم وربطها بواجهات الخادم.', tech: ['Vue.js', 'JavaScript', 'CSS'] },
-  { name: 'محمد زياد الغول', role: 'Full-Stack Developer', desc: 'تطوير واجهات الخادم وربطها بالواجهة الأمامية وإدارة قاعدة البيانات.', tech: ['Laravel', 'Vue.js', 'MySQL'] },
-  { name: 'محمد رفعت النونو', role: 'Backend Developer', desc: 'تصميم منطق النظام وواجهات الـ API والصلاحيات والأمان.', tech: ['Laravel', 'PHP', 'MySQL'] },
-  { name: 'محمد هشام الهندي', role: 'UI/UX Designer', desc: 'تصميم الهوية البصرية وتجربة المستخدم وتدفّق الشاشات.', tech: ['Figma', 'UI/UX', 'CSS'] }
+  { name: 'انس محمد الشنطي', role: 'Front-End Developer', desc: 'بناء واجهة المنصة وتجربة المستخدم وربطها بواجهات الخادم.' },
+  { name: 'محمد زياد الغول', role: 'Full-Stack & Back-End Developer', desc: 'تطوير الواجهة الأمامية والخلفية معًا وإدارة قاعدة البيانات ومنطق النظام.' },
+  { name: 'محمد رفعت سامي النونو', role: 'Web Developer & UI/UX Designer', desc: 'تطوير الويب وتصميم الواجهات وتجربة المستخدم وتدفّق الشاشات.' },
+  { name: 'محمد هشام الهندي', role: 'Testing & QA', desc: 'اختبار النظام وضمان الجودة ومتابعة الأخطاء قبل الإصدار.' }
 ]
-
-const supervisor = {
-  name: 'م. محمود ظهير',
-  role: 'المشرف الأكاديمي',
-  desc: 'إشراف أكاديمي على مشروع التخرّج ومتابعة الفريق من الفكرة حتى المناقشة.'
-}
 </script>
