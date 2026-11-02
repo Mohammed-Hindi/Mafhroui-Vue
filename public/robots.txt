@@ -1,0 +1,19 @@
+# منصة مسار — إدارة مشاريع التخرج
+# نسمح بأرشفة الصفحات العامة فقط، ونمنع لوحات التحكم وصفحات المصادقة
+
+User-agent: *
+Allow: /$
+Allow: /projects
+Allow: /about
+Allow: /team
+
+# مناطق خاصة لا تُؤرشَف (لوحات التحكم والمصادقة)
+Disallow: /login
+Disallow: /reset-password
+Disallow: /committee
+Disallow: /supervisor
+Disallow: /student
+Disallow: /super-admin
+Disallow: /403
+
+Sitemap: https://masar.slidd.app/sitemap.xml
