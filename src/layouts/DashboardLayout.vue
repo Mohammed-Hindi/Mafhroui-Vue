@@ -47,6 +47,7 @@
       <footer v-if="isSuperAdmin" class="portal-footer">
         <div class="portal-footer-in px-4 lg:px-6">
           <span>{{ year }} © جميع الحقوق محفوظة لـ <router-link :to="homeRoute">منصة {{ appName }}</router-link> في <a href="https://www.ucas.edu.ps" target="_blank" rel="noopener">الكلية الجامعية للعلوم التطبيقية</a></span>
+          <span class="portal-footer-devs">{{ devs.join(' · ') }}</span>
         </div>
       </footer>
     </div>
@@ -83,7 +84,9 @@ export default {
   data() {
     return {
       year: new Date().getFullYear(),
-      appName: APP_NAME
+      appName: APP_NAME,
+      // فريق التطوير — سطر حقوق بأسمائهم فقط أسفل الفوتر
+      devs: ['انس محمد الشنطي', 'محمد زياد الغول', 'محمد رفعت سامي النونو', 'محمد هشام الهندي']
     }
   },
 
