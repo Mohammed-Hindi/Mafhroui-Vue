@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, START_LOCATION } from 'vue-router'
-import { authGuard, titleGuard } from './guards'
+import { authGuard, seoGuard } from './guards'
 
 import landingRoutes from './routes/landing.routes'
 import authRoutes from './routes/auth.routes'
@@ -42,7 +42,7 @@ const router = createRouter({
 })
 
 router.beforeEach(authGuard)
-router.afterEach(titleGuard)
+router.afterEach(seoGuard)
 
 // الصفحات تُحمَّل كسولًا؛ بعد أول دخول للوحة تُجلب صفحات نفس القسم وقت فراغ المتصفح فيبقى التنقّل بينها فوريًا
 const prefetched = new Set()

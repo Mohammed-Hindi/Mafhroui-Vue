@@ -2,6 +2,9 @@
 export const APP_NAME = 'مسار'
 export const APP_DESCRIPTION = 'منصة إدارة مشاريع التخرج'
 
+/** عنوان الموقع العام — يُستخدم في روابط canonical و Open Graph (SEO) */
+export const SITE_URL = (import.meta.env.VITE_PUBLIC_URL || 'https://masar.slidd.app').replace(/\/$/, '')
+
 /** أدوار المستخدمين — المصدر الوحيد للحقيقة، تُستخدم بالراوتر والـ guards والـ stores */
 export const ROLES = {
   SUPER_ADMIN: 'super_admin',
