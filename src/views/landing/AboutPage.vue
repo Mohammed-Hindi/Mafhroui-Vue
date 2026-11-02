@@ -81,25 +81,6 @@
         </div>
       </div>
     </section>
-
-    <section class="us-section is-gray">
-      <div class="us-wrap">
-        <h2 class="us-title">فريق التطوير</h2>
-        <div class="us-about">
-          <p class="us-lead">
-            طُوّرت منصة {{ APP_NAME }} على يد فريق من طلاب دبلوم تصميم وتطوير مواقع الويب في الكلية الجامعية للعلوم التطبيقية،
-            جمعهم مشروع التخرّج فحوّلوا فكرته إلى منصّة متكاملة تخدم كل أطراف العملية الأكاديمية.
-          </p>
-        </div>
-        <ul class="us-team">
-          <li v-for="n in team" :key="n" class="us-team-member">
-            <span class="us-team-av" aria-hidden="true">{{ n.charAt(0) }}</span>
-            <strong class="us-team-name">{{ n }}</strong>
-          </li>
-        </ul>
-        <p class="us-team-sup">بإشراف المشرف القدير المميّز <strong>م. محمود ظهير</strong></p>
-      </div>
-    </section>
   </div>
 </template>
 
@@ -122,12 +103,10 @@ useScrollMotion(root, (el) => {
   el.querySelectorAll(':scope > section').forEach((sec) => {
     const tl = gsap.timeline({ scrollTrigger: { trigger: sec, start: 'top 80%' } })
     titleIn(tl, q('.us-title', sec))
-    const items = sec.querySelectorAll('.us-about > p, .us-about-block, .us-about-item, .us-about-role, .us-team-member, .us-team-sup')
+    const items = sec.querySelectorAll('.us-about > p, .us-about-block, .us-about-item, .us-about-role')
     if (items.length) tl.from(items, { y: 22, autoAlpha: 0, duration: 0.55, ease: 'power2.out', stagger: 0.1 }, '-=0.2')
   })
 })
-
-const team = ['انس محمد الشنطي', 'محمد زياد الغول', 'محمد رفعت النونو', 'محمد هشام الهندي']
 
 // قصة النشأة سردًا متصلًا بدل خطوات مرقّمة
 const storyText = [
