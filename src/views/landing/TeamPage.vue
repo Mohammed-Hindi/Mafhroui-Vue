@@ -101,7 +101,7 @@ const members = [
   },
   {
     name: 'محمد هشام الهندي', role: 'Testing & QA', desc: 'اختبار النظام وضمان الجودة ومتابعة الأخطاء قبل الإصدار.',
-    links: [{ type: 'github', url: 'https://github.com/Mohammed-Hindi', label: 'GitHub — محمد الهندي' }]
+    links: [{ type: 'mostaql', url: 'https://mostaql.com/u/Mohammed_Hindi0', label: 'مستقل — محمد الهندي' }]
   }
 ]
 </script>
