@@ -5,7 +5,7 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- SEO أساسي (تُحدَّث العناوين والأوصاف لكل صفحة عبر حارس الراوتر) -->
+    <!-- SEO أساسي (تُحدَّث العناوين والأوصاف لكل صفحة عبر حارس الراوتر؛ الدومين يُحقَن وقت البناء من VITE_PUBLIC_URL) -->
     <title>مسار — منصة إدارة مشاريع التخرج</title>
     <meta
       name="description"
@@ -18,7 +18,7 @@
     <meta name="author" content="الكلية الجامعية للعلوم التطبيقية" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#005BAA" />
-    <link rel="canonical" href="https://masar.slidd.app/" />
+    <link rel="canonical" href="__SITE_URL__/" />
 
     <!-- Open Graph (فيسبوك/واتساب/لينكدإن) -->
     <meta property="og:type" content="website" />
@@ -29,8 +29,8 @@
       property="og:description"
       content="منصة إلكترونية موحّدة لإدارة مشاريع التخرج في الكلية الجامعية للعلوم التطبيقية — من الفكرة حتى المناقشة والأرشيف."
     />
-    <meta property="og:url" content="https://masar.slidd.app/" />
-    <meta property="og:image" content="https://masar.slidd.app/og-image.svg" />
+    <meta property="og:url" content="__SITE_URL__/" />
+    <meta property="og:image" content="__SITE_URL__/og-image.svg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
 
@@ -41,7 +41,7 @@
       name="twitter:description"
       content="منصة إلكترونية موحّدة لإدارة مشاريع التخرج في الكلية الجامعية للعلوم التطبيقية."
     />
-    <meta name="twitter:image" content="https://masar.slidd.app/og-image.svg" />
+    <meta name="twitter:image" content="__SITE_URL__/og-image.svg" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -57,8 +57,8 @@
         "@type": "Organization",
         "name": "مسار — منصة إدارة مشاريع التخرج",
         "alternateName": "Masar",
-        "url": "https://masar.slidd.app/",
-        "logo": "https://masar.slidd.app/og-image.svg",
+        "url": "__SITE_URL__/",
+        "logo": "__SITE_URL__/og-image.svg",
         "description": "منصة إلكترونية موحّدة لإدارة مشاريع التخرج في الكلية الجامعية للعلوم التطبيقية.",
         "parentOrganization": {
           "@type": "CollegeOrUniversity",
