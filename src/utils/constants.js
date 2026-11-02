@@ -49,7 +49,8 @@ export const DEFAULT_PAGE_SIZE = 10
 export const LANDING_LINKS = [
   { label: 'الرئيسية', to: { name: 'landing' } },
   { label: 'المشاريع المميّزة', to: { name: 'projects-archive' } },
-  { label: 'من نحن', to: { name: 'about' } }
+  { label: 'من نحن', to: { name: 'about' } },
+  { label: 'فريق التطوير', to: { name: 'team' } }
 ]
 
 export const CONTACT = {
