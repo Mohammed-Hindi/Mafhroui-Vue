@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" dir="rtl">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f6f8fb"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#005BAA"/>
+      <stop offset="0.55" stop-color="#0E699C"/>
+      <stop offset="1" stop-color="#62BB46"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="14" fill="url(#bar)"/>
+  <rect x="0" y="616" width="1200" height="14" fill="url(#bar)"/>
+  <text x="600" y="300" text-anchor="middle" font-family="Cairo, Tajawal, Arial, sans-serif" font-size="150" font-weight="800" fill="#005BAA">مسار</text>
+  <text x="600" y="390" text-anchor="middle" font-family="Cairo, Tajawal, Arial, sans-serif" font-size="46" font-weight="700" fill="#334155">منصة إدارة مشاريع التخرج</text>
+  <text x="600" y="455" text-anchor="middle" font-family="Cairo, Tajawal, Arial, sans-serif" font-size="32" font-weight="500" fill="#62BB46">الكلية الجامعية للعلوم التطبيقية</text>
+</svg>
