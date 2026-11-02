@@ -269,6 +269,12 @@
 .us-tm-name { margin-top: 16px; font-size: 18px; font-weight: 800; color: var(--ucas-blue); }
 .us-tm-role { margin-top: 5px; font-size: 13px; font-weight: 700; letter-spacing: .3px; color: var(--ucas-green); }
 .us-tm-desc { margin: 12px 0 0; font-size: 14px; line-height: 1.85; color: var(--color-text-700); }
+/* روابط حسابات العضو — أيقونات لطيفة بهوية مطفية حادة، مثبّتة أسفل البطاقة */
+.us-tm-links { list-style: none; display: flex; justify-content: center; gap: 10px; margin-top: auto; padding: 18px 0 0; }
+.us-tm-link { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 4px; color: var(--color-text-700); box-shadow: inset 0 0 0 1px var(--color-border); transition: color .2s ease, box-shadow .2s ease, background .2s ease, transform .2s ease; }
+.us-tm-link svg { width: 19px; height: 19px; }
+.us-tm-link:hover { color: #fff; background: linear-gradient(270deg, var(--ucas-green), var(--ucas-blue)); box-shadow: inset 0 0 0 1px transparent; transform: translateY(-2px); }
+.us-tm-link:focus-visible { outline: 2px solid var(--ucas-blue); outline-offset: 2px; }
 /* سطر المشرف الأكاديمي نصّيًا أسفل البطاقات */
 .us-tm-sup { max-width: 760px; margin: 26px auto 0; padding: 14px 18px; border-radius: 4px; background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .05)); text-align: center; font-size: 16px; color: var(--color-text-700); }
 .us-tm-sup strong { font-weight: 800; color: var(--ucas-blue); }
