@@ -56,11 +56,12 @@ export const LANDING_LINKS = [
   { label: 'فريق التطوير', to: { name: 'team' } }
 ]
 
+/** بيانات التواصل بالفوتر — تُقرأ من env (VITE_CONTACT_*) مع قيم افتراضية */
 export const CONTACT = {
-  EMAIL: 'anas120226878@gmail.com',
-  PHONE: '0597 302 452',
-  PHONE_RAW: '+970597302452',
-  ADDRESS: 'فلسطين - غزة'
+  EMAIL: import.meta.env.VITE_CONTACT_EMAIL || 'support@masar.ps',
+  PHONE: import.meta.env.VITE_CONTACT_PHONE || '0597 302 452',
+  PHONE_RAW: import.meta.env.VITE_CONTACT_PHONE_RAW || '+970597302452',
+  ADDRESS: import.meta.env.VITE_CONTACT_ADDRESS || 'فلسطين - غزة'
 }
 
 /** أنواع المشاريع — قد يكون للمشروع أكثر من نوع (يُحفظ في projects.types) */
