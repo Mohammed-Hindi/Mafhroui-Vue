@@ -38,6 +38,7 @@ npm run lint             # eslint --fix
 | `VITE_APP_NAME` | Display name (`مسار`) |
 | `VITE_API_BASE_URL` | Backend API base URL, including `/api` |
 | `VITE_PUBLIC_URL` | Public site origin — drives SEO canonical/OG tags, `robots.txt` and `sitemap.xml`. Change it (and rebuild) to move the site to a new domain. |
+| `VITE_CONTACT_EMAIL` / `VITE_CONTACT_PHONE` / `VITE_CONTACT_PHONE_RAW` / `VITE_CONTACT_ADDRESS` | Footer contact details shown on the public site (all have sensible defaults). |
 
 ## Roles
 
