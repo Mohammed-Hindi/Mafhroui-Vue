@@ -182,7 +182,7 @@
     <BaseModal v-model="importModal" title="استيراد طلاب من Excel" description="الأعمدة المطلوبة بالترتيب: الاسم، البريد، الرقم الجامعي، الواتساب" size="lg">
       <ImportRevertBar :batch="lastImport" :labels="{ students: 'طالب', teams: 'فريق' }" :reverting="reverting" @revert="doRevertImport" />
       <div v-if="!importPreview">
-        <FileDropzone label="ملف الطلاب" accept=".xlsx" hint="Excel (.xlsx) — الأعمدة بالترتيب: الاسم، البريد، الرقم الجامعي، الواتساب" @change="onFileSelected" />
+        <FileDropzone label="ملف الطلاب" accept=".xlsx" hint="Excel (.xlsx) — الأعمدة بالترتيب: الاسم، البريد، الرقم الجامعي، الواتساب" @update:model-value="onFileSelected($event[0])" />
       </div>
       <div v-else class="flex flex-col gap-4">
         <BaseSelect v-model="importSpecId" label="التخصص لكل الطلاب المستوردين" placeholder="اختاري التخصص" :options="specializationSelectOptions" />
