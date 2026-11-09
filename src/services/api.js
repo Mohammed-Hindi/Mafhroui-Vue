@@ -43,9 +43,12 @@ api.interceptors.request.use((config) => {
     config.params = { ...config.params, term_id: termId }
   }
 
-  // رفع الملفات (multipart) قد يتجاوز المهلة الافتراضية (20s) على اتصال بطيء فيُلغى الطلب
-  // ويظهر المرفق وكأنه لم يُستقبل — امنح رفعات الملفات مهلة أوسع.
-  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+  // رفع الملفات (multipart) والعمليات الجماعية الثقيلة (استيراد/تراجع، إشعار جماعي، مهام دفعة)
+  // قد تتجاوز المهلة الافتراضية (20s) فيُلغى الطلب ويظهر "حدث خطأ غير متوقع" رغم أن الخادم
+  // قد يكون أتمّ العملية — امنحها مهلة أوسع.
+  const isUpload = typeof FormData !== 'undefined' && config.data instanceof FormData
+  const isBulk = /\/(import\/(confirm|revert)|notify\/bulk\/send|tasks\/batch)/.test(config.url || '')
+  if (isUpload || isBulk) {
     config.timeout = 120000
   }
 
