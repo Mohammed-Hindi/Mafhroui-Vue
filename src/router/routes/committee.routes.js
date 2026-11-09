@@ -8,7 +8,6 @@ const AppointmentsPageCommittee = () => import('@/views/committee/AppointmentsPa
 const ProjectArchivePageCommittee = () => import('@/views/committee/ProjectArchivePage.vue')
 const ProjectDetailPageCommittee = () => import('@/views/committee/ProjectDetailPage.vue')
 const ProgressPageCommittee = () => import('@/views/committee/ProgressPage.vue')
-const AnnouncementsInboxPageCommittee = () => import('@/views/super-admin/AnnouncementsDesk.vue')
 const EvaluationsPageCommittee = () => import('@/views/super-admin/EvaluationsPage.vue')
 const AssistantPageCommittee = () => import('@/views/committee/AssistantPage.vue')
 const MyTasksPageCommittee = () => import('@/views/committee/MyTasksPage.vue')
@@ -86,10 +85,10 @@ export default [
         meta: { title: 'مهامي', roles: [ROLES.COMMITTEE] }
       },
       {
+        // دُمجت «الإعلانات والملفات» ضمن صفحة التواصل الموحّدة — يُحوّل لوجه الوارد
         path: 'announcements',
         name: 'committee-announcements',
-        component: AnnouncementsInboxPageCommittee,
-        meta: { title: 'الإعلانات والملفات' }
+        redirect: { name: 'committee-assignments', query: { tab: 'inbox' } }
       },
       {
         path: 'evaluations',
@@ -106,8 +105,9 @@ export default [
       {
         path: 'assignments',
         name: 'committee-assignments',
-        component: () => import('@/views/super-admin/AssignmentsPage.vue'),
-        meta: { title: 'التكليفات والإعلانات' }
+        // صفحة التواصل الموحّدة (#39): مبدّل «التكليفات والإعلانات» (إرسال) / «الإعلانات والملفات» (وارد)
+        component: () => import('@/views/shared/CommsHub.vue'),
+        meta: { title: 'التواصل' }
       },
       {
         path: 'tickets',
