@@ -40,6 +40,7 @@ export async function loadGroups(fresh = false) {
     featured: !!g.project?.featured,
     featuredBy: g.project?.featuredBy || '',
     featuredAt: g.project?.featuredAt || '',
+    archivedAt: g.project?.archivedAt || '',
     // نجوم ترشيح المناقشين (للطاقم فقط في أرشيف المشاريع)
     stars: g.project?.stars || { nominations: 0, discussants: 0 },
     done: g.tasksDone,

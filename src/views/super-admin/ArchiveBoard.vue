@@ -46,6 +46,10 @@
             <button v-if="!isSup" type="button" :class="['pbtn ar-feature', current.featured ? 'is-green' : 'is-outline']" :aria-pressed="current.featured" @click="toggleFeatured(current)">
               <Crown :size="15" /> {{ current.featured ? 'مرموق — معروض في المعرض' : 'تصنيف المشروع كمرموق (يظهر في المعرض)' }}
             </button>
+            <!-- أرشفة المشروع: متاحة بعد اكتماله (اعتماد اللجنة)؛ المكتمل غير المؤرشف ينتظر الأرشفة (#31/#32) -->
+            <button v-if="!isSup && current.completed" type="button" :class="['pbtn', current.archived ? 'is-outline' : 'is-green']" :disabled="archiving" @click="toggleArchive(current)">
+              <Archive :size="15" /> {{ current.archived ? 'مؤرشف — إلغاء الأرشفة' : 'أرشفة المشروع' }}
+            </button>
           </aside>
         </div>
 
@@ -132,6 +136,10 @@
             <option :value="100">100</option>
           </select>
         </label>
+        <!-- أرشفة كل المشاريع المكتملة المنتظِرة دفعة واحدة (#31/#32) -->
+        <button v-if="!isSup && archivableCount" type="button" class="pbtn is-green is-sm ab-archive-all" :disabled="archiving" @click="archiveAll">
+          <Archive :size="15" /> أرشفة الكل ({{ archivableCount }})
+        </button>
       </div>
 
         <SkeletonLoader v-if="loading" :rows="5" height="44px" />
@@ -295,7 +303,7 @@
 import { mapState } from 'pinia'
 import { useAuthStore } from '@/stores/auth.store'
 import { useTeamsStore } from '@/stores/teams.store'
-import { ArrowRight, CalendarDays, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, Crown, FileText, FileType2, Folder, FolderOpen, GraduationCap, Hourglass, LayoutGrid, List, Minus, PlayCircle, Search, UserRound, Users, X, ExternalLink } from 'lucide-vue-next'
+import { Archive, ArrowRight, CalendarDays, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, Crown, FileText, FileType2, Folder, FolderOpen, GraduationCap, Hourglass, LayoutGrid, List, Minus, PlayCircle, Search, UserRound, Users, X, ExternalLink } from 'lucide-vue-next'
 import UcasLogo from '@/components/icons/UcasLogo.vue'
 import ProjectRating from '@/components/shared/ProjectRating.vue'
 import FileViewer from '@/components/shared/FileViewer.vue'
@@ -313,7 +321,7 @@ const seeded = (n) => () => { n = (n * 9301 + 49297) % 233280; return n / 233280
 export default {
   name: 'ArchiveBoard',
 
-  components: { ArrowRight, CalendarDays, Check, CheckCircle2, ChevronLeft, ChevronRight, Crown, PlayCircle, FileViewer, ProjectRating, SlideTable, Folder, FolderOpen, GraduationCap, LayoutGrid, List, Search, UcasLogo, UserRound, Users, X, ExternalLink },
+  components: { Archive, ArrowRight, CalendarDays, Check, CheckCircle2, ChevronLeft, ChevronRight, Crown, PlayCircle, FileViewer, ProjectRating, SlideTable, Folder, FolderOpen, GraduationCap, LayoutGrid, List, Search, UcasLogo, UserRound, Users, X, ExternalLink },
 
   data() {
     return {
@@ -321,6 +329,7 @@ export default {
       REVIEW,
       viewing: null,
       reviewing: false,
+      archiving: false,
       rejecting: false,
       rejectNote: '',
       q: '',
@@ -348,6 +357,10 @@ export default {
     readyCount() {
       return this.projects.filter((p) => this.stageOf(p) === this.waitStage).length
     },
+    /** مشاريع مكتملة (معتمدة) تنتظر الأرشفة — تُؤرشف دفعة واحدة (#31/#32) */
+    archivableCount() {
+      return this.projects.filter((p) => p.completed && !p.archived).length
+    },
     report() {
       return this.current?.report || null
     },
@@ -373,7 +386,7 @@ export default {
           state: rejectedAt('committee') ? 'bad' : st === 'approved' ? 'done' : st === 'pending_committee' ? 'current' : 'todo',
           info: rejectedAt('committee') ? 'رُفض' : st === 'approved' ? by(r.committee_reviewer, r.committee_reviewed_at) : st === 'pending_committee' ? 'بانتظار الاعتماد' : '—'
         },
-        { key: 'arc', no: 4, label: 'أرشفة المشروع', state: st === 'approved' ? 'done' : 'todo', info: st === 'approved' ? 'مؤرشف' : '—' }
+        { key: 'arc', no: 4, label: 'أرشفة المشروع', state: this.current?.archived ? 'done' : st === 'approved' ? 'current' : 'todo', info: this.current?.archived ? `مؤرشف ${formatDate(this.current.archivedAt)}` : st === 'approved' ? 'جاهز للأرشفة' : '—' }
       ]
     },
     views() {
@@ -383,14 +396,14 @@ export default {
         { key: 'featured', label: 'المرموقة', icon: Crown, count: n((p) => p.featured) },
         { key: 'archived', label: 'مؤرشفة', icon: CheckCircle2, count: n((p) => p.archived) },
         { key: 'ready', label: this.isSup ? 'بانتظار موافقتي' : 'بانتظار اللجنة', icon: Hourglass, count: this.readyCount },
-        { key: 'pending', label: 'غير مؤرشفة', icon: Clock, count: n((p) => !p.archived) }
+        { key: 'pending', label: 'غير مؤرشفة', icon: Clock, count: n((p) => p.completed && !p.archived) }
       ]
     },
     /** مشاريع العرض الحالي (القائمة الجانبية) والبحث — أساس أعداد الفلتر */
     inView() {
       const q = this.q
       return this.projects.filter((p) =>
-        (this.view === 'all' || (this.view === 'featured' && p.featured) || (this.view === 'archived' && p.archived) || (this.view === 'ready' && this.stageOf(p) === this.waitStage) || (this.view === 'pending' && !p.archived)) &&
+        (this.view === 'all' || (this.view === 'featured' && p.featured) || (this.view === 'archived' && p.archived) || (this.view === 'ready' && this.stageOf(p) === this.waitStage) || (this.view === 'pending' && p.completed && !p.archived)) &&
         (!q || `${p.project} ${p.section} ${p.supName} ${p.members.map((m) => m.name).join(' ')}`.includes(q))
       )
     },
@@ -460,7 +473,8 @@ export default {
       // مشاريع الفصل الحالي (المجموعات التي لها مشروع) + آخر تقرير نهائي لكل مشروع من GET /teams
       const [groups, teams] = await Promise.all([loadGroups(), api.get('/teams').then(({ data }) => data.data || data).catch(() => [])])
       const reports = Object.fromEntries(teams.filter((t) => t.project).map((t) => [t.project.id, latestReport(t.project)]))
-      this.projects = groups.filter((g) => g.projectId).map((g) => ({ ...g, archived: g.projectStatus === 'completed', report: reports[g.projectId] || null }))
+      // «مؤرشف» = له archived_at (مُنقَل للأرشيف فعلًا)، لا مجرّد «مكتمل» — المكتمل غير المؤرشف ينتظر الأرشفة (#31/#32)
+      this.projects = groups.filter((g) => g.projectId).map((g) => ({ ...g, completed: g.projectStatus === 'completed', archived: !!g.archivedAt, archivedAt: g.archivedAt || '', report: reports[g.projectId] || null }))
       // فتح مباشر من رابط "نافذة جديدة"
       const { spec, project } = this.$route.query
       if (spec) this.f.spec = String(spec)
@@ -500,10 +514,11 @@ export default {
       this.reviewing = true
       try {
         p.report = { ...p.report, ...(await reviewReport(p.report.id, approve, approve ? null : this.rejectNote)) }
-        if (approve && !this.isSup) p.archived = true
+        // اعتماد اللجنة يكمّل المشروع ويجعله «جاهزًا للأرشفة»، والأرشفة خطوة لاحقة مستقلّة (#31/#32)
+        if (approve && !this.isSup) p.completed = true
         this.rejecting = false
         this.rejectNote = ''
-        this.$toast?.success(approve ? (this.isSup ? 'تمت الموافقة — أُرسل التقرير لاعتماد لجنة الإشراف' : 'اعتُمد التقرير وأُرشف المشروع') : 'رُفض التقرير وأُعيد للطلاب')
+        this.$toast?.success(approve ? (this.isSup ? 'تمت الموافقة — أُرسل التقرير لاعتماد لجنة الإشراف' : 'اعتُمد التقرير — المشروع جاهز للأرشفة') : 'رُفض التقرير وأُعيد للطلاب')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّرت المراجعة')
       } finally {
@@ -549,6 +564,43 @@ export default {
       } catch (err) {
         p.featured = !p.featured
         this.$toast?.error(err.normalized?.message || 'تعذّر تحديث التصنيف')
+      }
+    },
+
+    /** أرشفة/إلغاء أرشفة مشروع واحد (PATCH /projects/{id} { archived }) — لجنة الإشراف والإدارة العامة (#31/#32) */
+    async toggleArchive(p) {
+      const next = !p.archived
+      this.archiving = true
+      try {
+        const { data } = await api.patch(`/projects/${p.projectId}`, { archived: next })
+        p.archived = !!data.archived_at
+        p.archivedAt = data.archived_at || ''
+        this.$toast?.success(next ? 'أُرشف المشروع ونُقل للأرشيف' : 'أُعيد المشروع من الأرشيف')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّرت الأرشفة')
+      } finally {
+        this.archiving = false
+      }
+    },
+
+    /** أرشفة كل المشاريع المكتملة غير المؤرشفة دفعة واحدة (POST /projects/archive-all) (#31/#32) */
+    async archiveAll() {
+      this.archiving = true
+      try {
+        const { data } = await api.post('/projects/archive-all')
+        // تحديث محلّي فوري: كل مكتمل غير مؤرشف صار مؤرشفًا
+        const now = new Date().toISOString()
+        this.projects.forEach((p) => {
+          if (p.completed && !p.archived) {
+            p.archived = true
+            p.archivedAt = now
+          }
+        })
+        this.$toast?.success(data.archived ? `أُرشف ${data.archived} مشروعًا` : 'لا مشاريع جاهزة للأرشفة')
+      } catch (err) {
+        this.$toast?.error(err.normalized?.message || 'تعذّرت الأرشفة')
+      } finally {
+        this.archiving = false
       }
     }
   }
