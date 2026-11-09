@@ -85,7 +85,6 @@ export const NAV_ITEMS_BY_ROLE = {
     { label: 'أرشيف المشاريع', to: '/supervisor/project-archive', icon: FileCheck },
     { label: 'تقدّم المشاريع', to: '/supervisor/progress', icon: TrendingUp },
     { label: 'الاجتماعات', to: '/supervisor/meetings', icon: CalendarDays },
-    { label: 'مهامي', to: '/supervisor/my-tasks', icon: ListTodo },
     { label: 'الإعلانات والملفات', to: '/supervisor/announcements', icon: Megaphone },
     { label: 'المساعد الآلي', to: '/supervisor/assistant', icon: Bot }
   ],
