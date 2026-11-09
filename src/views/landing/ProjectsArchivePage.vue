@@ -33,6 +33,13 @@
               <option v-for="o in degreeOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
             </select>
           </label>
+          <label v-if="archiveTerms.length" class="us-field">
+            <span>السنة الدراسية</span>
+            <select v-model="filters.term_id" class="us-select" @change="loadProjects(1)">
+              <option value="">كل السنوات</option>
+              <option v-for="t in archiveTerms" :key="t.id" :value="t.id">{{ t.name }}</option>
+            </select>
+          </label>
         </div>
 
         <SkeletonLoader v-if="projectsLoading" variant="cards" :rows="6" />
@@ -70,17 +77,17 @@ export default {
 
   data() {
     return {
-      filters: { search: '', department_id: '', degree: '' },
+      filters: { search: '', department_id: '', degree: '', term_id: '' },
       degreeOptions: DEGREE_OPTIONS,
       searchDebounce: null
     }
   },
 
   computed: {
-    ...mapState(useLandingStore, ['projects', 'projectsMeta', 'projectsLoading', 'projectsError', 'departments']),
+    ...mapState(useLandingStore, ['projects', 'projectsMeta', 'projectsLoading', 'projectsError', 'departments', 'archiveTerms']),
 
     hasActiveFilters() {
-      return Boolean(this.filters.search || this.filters.department_id || this.filters.degree)
+      return Boolean(this.filters.search || this.filters.department_id || this.filters.degree || this.filters.term_id)
     }
   },
 
@@ -115,7 +122,7 @@ export default {
     },
 
     resetFilters() {
-      this.filters = { search: '', department_id: '', degree: '' }
+      this.filters = { search: '', department_id: '', degree: '', term_id: '' }
       this.loadProjects(1)
     }
   }
