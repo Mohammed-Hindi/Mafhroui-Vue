@@ -18,7 +18,7 @@
       <div v-if="latest.summary" class="rs-last-chips">
         <span class="rs-chip is-add">{{ latest.summary.added }} مضاف</span>
         <span class="rs-chip is-upd">{{ latest.summary.updated }} معدّل</span>
-        <span class="rs-chip is-rem">{{ latest.summary.removed }} مؤرشف</span>
+        <span class="rs-chip is-rem">{{ latest.summary.removed }} مُزال</span>
         <span class="rs-chip is-res">{{ latest.summary.restored }} مُستعاد</span>
       </div>
       <BaseButton
@@ -70,7 +70,7 @@
           <b>{{ summary.updated }}</b><span>معدّل</span>
         </button>
         <button type="button" :class="['rs-sum', 'is-rem', activeTab === 'removed' && 'is-active']" @click="activeTab = 'removed'">
-          <b>{{ summary.removed }}</b><span>سيُؤرشَف</span>
+          <b>{{ summary.removed }}</b><span>سيُزال</span>
         </button>
         <button type="button" :class="['rs-sum', 'is-res', activeTab === 'restored' && 'is-active']" @click="activeTab = 'restored'">
           <b>{{ summary.restored }}</b><span>مُستعاد</span>
@@ -132,7 +132,7 @@
                 </td>
               </template>
               <template v-else>
-                <td class="rs-muted">سيُؤرشَف (قابل للرجوع)</td>
+                <td class="rs-muted">{{ item.linked ? 'سيُبقى مخفي (مرتبط بمشروع — قابل للرجوع)' : 'سيُحذف نهائيًا' }}</td>
               </template>
             </tr>
           </tbody>
@@ -163,7 +163,8 @@
         <li v-if="summary.added"><b>{{ summary.added }}</b> طالب جديد سيُضاف</li>
         <li v-if="summary.updated"><b>{{ summary.updated }}</b> طالب ستُحدَّث بياناته</li>
         <li v-if="summary.restored"><b>{{ summary.restored }}</b> طالب سيُستعاد</li>
-        <li v-if="summary.removed" class="is-warn"><b>{{ summary.removed }}</b> طالب سيُؤرشَف (يمكن الرجوع عنه)</li>
+        <li v-if="summary.removed_delete" class="is-warn"><b>{{ summary.removed_delete }}</b> طالب سيُحذف نهائيًا (بلا بيانات مرتبطة)</li>
+        <li v-if="summary.removed_hide" class="is-warn"><b>{{ summary.removed_hide }}</b> طالب سيُبقى مخفي (مرتبط بمشروع — يمكن الرجوع عنه)</li>
       </ul>
       <template #footer>
         <BaseButton variant="ghost" @click="showSaveConfirm = false">رجوع</BaseButton>
@@ -174,7 +175,7 @@
     <!-- تأكيد التراجع -->
     <BaseModal v-model="showRevertConfirm" title="تأكيد التراجع" size="sm">
       <p class="rs-confirm-txt">
-        سيُلغى أثر آخر مزامنة بالكامل: يُحذف الطلاب الذين أُضيفوا بها، ويُستعاد مَن أُرشِفوا، وتُرجَع البيانات المعدّلة كما كانت. لا يمكن التراجع إلا خطوة واحدة.
+        سيُلغى أثر آخر مزامنة بالكامل: يُحذف الطلاب الذين أُضيفوا بها، ويُعاد مَن أُزيلوا (حذفًا أو إخفاءً)، وتُرجَع البيانات المعدّلة كما كانت. لا يمكن التراجع إلا خطوة واحدة.
       </p>
       <template #footer>
         <BaseButton variant="ghost" @click="showRevertConfirm = false">رجوع</BaseButton>
@@ -217,7 +218,7 @@ export default {
   computed: {
     ...mapState(useRosterSyncStore, ['latest']),
     summary() {
-      return this.previewData?.summary || { added: 0, updated: 0, removed: 0, restored: 0, unchanged: 0, invalid: 0 }
+      return this.previewData?.summary || { added: 0, updated: 0, removed: 0, removed_delete: 0, removed_hide: 0, restored: 0, unchanged: 0, invalid: 0 }
     },
     hasInvalid() {
       return this.summary.invalid > 0
@@ -232,7 +233,7 @@ export default {
       return this.previewData?.[this.activeTab] || []
     },
     tabLabel() {
-      return { added: 'مضافة', updated: 'معدّلة', removed: 'للأرشفة', restored: 'مُستعادة' }[this.activeTab]
+      return { added: 'مضافة', updated: 'معدّلة', removed: 'للإزالة', restored: 'مُستعادة' }[this.activeTab]
     },
   },
   async mounted() {
