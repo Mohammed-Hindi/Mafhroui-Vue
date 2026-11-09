@@ -38,6 +38,8 @@ export async function loadGroups(fresh = false) {
     types: g.project?.types || [],
     type: (g.project?.types || []).join('، '),
     featured: !!g.project?.featured,
+    featuredBy: g.project?.featuredBy || '',
+    featuredAt: g.project?.featuredAt || '',
     // نجوم ترشيح المناقشين (للطاقم فقط في أرشيف المشاريع)
     stars: g.project?.stars || { nominations: 0, discussants: 0 },
     done: g.tasksDone,
