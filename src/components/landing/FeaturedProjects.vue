@@ -24,7 +24,7 @@
 
         <p v-if="!shown.length" class="us-empty">لا توجد مشاريع مطابقة للفلاتر</p>
         <template v-else>
-          <TiltedGallery class="us-gallery" :items="shown" :tile-height="66" :curve="50" :axis="50" :speed="3.5" @select="openProject">
+          <TiltedGallery class="us-gallery" :items="shown" :tile-height="66" :curve="50" :axis="50" :speed="3.5" :fade="5" @select="openProject">
             <template #default="{ item }">
               <div v-if="item" :class="['us-tg-card', item.cover && 'has-cover']" :style="item.cover ? { backgroundImage: `linear-gradient(to top, rgba(4,30,60,.85), rgba(4,30,60,.15) 65%), url(${item.cover})` } : null">
                 <span v-if="item.program_name" class="us-tg-tag">{{ item.program_name }}</span>

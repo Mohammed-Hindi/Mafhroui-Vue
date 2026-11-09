@@ -3912,6 +3912,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-hero-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 28px; padding: 18px 24px; }
 .sa-hero-eyebrow { display: inline-block; margin-bottom: 6px; font-size: 12px; font-weight: 700; color: var(--ucas-green); }
 .sa-hero-title { margin: 0; font-size: 20px; font-weight: 800; line-height: 1.2; color: var(--color-text-900); }
+/* الهيرو بالهوية الجديدة خلفيته بيضاء؛ لون النص الفرعي كان أبيض (مخفيًا) فنُعيده لنص وصفي مقروء */
+.sa-hero-sub { color: var(--color-text-600); }
 .sa-hero-stats { display: grid; grid-template-columns: repeat(2, auto); gap: 8px 32px; }
 .sa-stat { display: flex; align-items: baseline; gap: 10px; }
 .sa-stat b { min-width: 2.2ch; text-align: end; font-size: 18px; font-weight: 800; line-height: 1.1; color: var(--ucas-blue); font-variant-numeric: tabular-nums; }
