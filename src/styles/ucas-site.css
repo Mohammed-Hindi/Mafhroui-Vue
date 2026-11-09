@@ -275,11 +275,20 @@
 .us-tm-link svg { width: 19px; height: 19px; }
 .us-tm-link:hover { color: #fff; background: linear-gradient(270deg, var(--ucas-green), var(--ucas-blue)); box-shadow: inset 0 0 0 1px transparent; transform: translateY(-2px); }
 .us-tm-link:focus-visible { outline: 2px solid var(--ucas-blue); outline-offset: 2px; }
-/* سطر المشرف الأكاديمي نصّيًا أسفل البطاقات */
-.us-tm-sup { max-width: 760px; margin: 26px auto 0; padding: 14px 18px; border-radius: 4px; background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .05)); text-align: center; font-size: 16px; color: var(--color-text-700); }
-.us-tm-sup strong { font-weight: 800; color: var(--ucas-blue); }
-:root[data-theme="dark"] .us-tm-name, :root[data-theme="dark"] .us-tm-sup strong { color: #71B6F9; }
-@media (max-width: 479.98px) { .us-tm-grid { grid-template-columns: 1fr; } }
+/* بطاقة المشرف الأكاديمي البارزة — فوق شبكة الفريق، بهوية متدرّجة تميّزها عن بطاقات الأعضاء (ملاحظة #4) */
+.us-tm-supcard { max-width: 620px; margin: clamp(28px, 4vw, 44px) auto 0; display: flex; align-items: center; gap: 22px; padding: 22px 26px; border-radius: 6px; background: linear-gradient(270deg, rgba(98, 187, 70, .1), rgba(0, 91, 170, .06)); box-shadow: inset 0 0 0 1px var(--color-border); }
+.us-tm-supcard-av { flex: none; display: grid; place-items: center; width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, #62BB46, #0E699C 55%, #025DA9); box-shadow: 0 0 0 4px var(--color-surface), 0 0 0 5px var(--color-border); }
+.us-tm-supcard-av svg { width: 44px; height: 44px; color: #FFFFFF; }
+.us-tm-supcard-body { display: flex; flex-direction: column; gap: 3px; text-align: start; }
+.us-tm-supcard-eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .4px; color: var(--ucas-green); }
+.us-tm-supcard-name { font-size: 21px; font-weight: 800; color: var(--ucas-blue); }
+.us-tm-supcard-role { font-size: 14px; color: var(--color-text-700); }
+:root[data-theme="dark"] .us-tm-name, :root[data-theme="dark"] .us-tm-supcard-name { color: #71B6F9; }
+@media (max-width: 479.98px) {
+  .us-tm-grid { grid-template-columns: 1fr; }
+  .us-tm-supcard { flex-direction: column; text-align: center; gap: 16px; }
+  .us-tm-supcard-body { text-align: center; align-items: center; }
+}
 
 /* ---------- صفحة «من نحن»: عمود قراءة مريح بفقرات منظّمة (بدل البطاقات المبعثرة) ---------- */
 .us-about { max-width: 880px; margin-inline: auto; }

@@ -26,6 +26,18 @@
           </p>
         </div>
 
+        <!-- المشرف الأكاديمي: بطاقة بارزة مستقلّة فوق شبكة الفريق بدل سطر نصّي يسهل تجاوزه (ملاحظة #4) -->
+        <div class="us-tm-supcard">
+          <span class="us-tm-supcard-av" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4" /><path d="M4 20.2c0-4.1 3.7-6.7 8-6.7s8 2.6 8 6.7v.3H4z" /></svg>
+          </span>
+          <div class="us-tm-supcard-body">
+            <span class="us-tm-supcard-eyebrow">المشرف الأكاديمي</span>
+            <strong class="us-tm-supcard-name">{{ supervisor.name }}</strong>
+            <span class="us-tm-supcard-role">{{ supervisor.role }}</span>
+          </div>
+        </div>
+
         <ul class="us-tm-grid">
           <li v-for="m in members" :key="m.name" class="us-tm-card">
             <span class="us-tm-av" aria-hidden="true">
@@ -52,8 +64,6 @@
             </ul>
           </li>
         </ul>
-
-        <p class="us-tm-sup">بإشراف المشرف القدير المميّز <strong>م. محمود ظهير</strong></p>
       </div>
     </section>
   </div>
@@ -77,10 +87,16 @@ useScrollMotion(root, (el) => {
   el.querySelectorAll(':scope > section').forEach((sec) => {
     const tl = gsap.timeline({ scrollTrigger: { trigger: sec, start: 'top 80%' } })
     titleIn(tl, q('.us-title', sec))
-    const items = sec.querySelectorAll('.us-about > p, .us-tm-card, .us-tm-sup')
+    const items = sec.querySelectorAll('.us-about > p, .us-tm-supcard, .us-tm-card')
     if (items.length) tl.from(items, { y: 22, autoAlpha: 0, duration: 0.55, ease: 'power2.out', stagger: 0.1 }, '-=0.2')
   })
 })
+
+// المشرف الأكاديمي على المشروع — يُعرض في بطاقة بارزة مستقلّة فوق شبكة الفريق
+const supervisor = {
+  name: 'م. محمود ظهير',
+  role: 'المشرف القدير على مشروع التخرّج'
+}
 
 // أدوار الفريق — مع روابط الحسابات (تظهر أيقونات أسفل كل بطاقة)
 const members = [
