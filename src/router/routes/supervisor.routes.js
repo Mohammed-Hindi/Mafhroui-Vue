@@ -4,7 +4,6 @@ const ProfilePageSupervisor = () => import('@/views/supervisor/ProfilePage.vue')
 const TeamsPageSupervisor = () => import('@/views/supervisor/TeamsPage.vue')
 const MeetingsPageSupervisor = () => import('@/views/supervisor/MeetingsPage.vue')
 const AppointmentsPageSupervisor = () => import('@/views/supervisor/AppointmentsPage.vue')
-const AnnouncementsInboxPageSupervisor = () => import('@/views/super-admin/AnnouncementsDesk.vue')
 const EvaluationsPageSupervisor = () => import('@/views/super-admin/EvaluationsPage.vue')
 const AssistantPageSupervisor = () => import('@/views/supervisor/AssistantPage.vue')
 
@@ -38,9 +37,9 @@ export default [
       {
         path: 'assignments',
         name: 'supervisor-assignments',
-        // نفس صفحة التكليفات والإعلانات للجنة، بصلاحيات المشرف (مجموعاته فقط)
-        component: () => import('@/views/super-admin/AssignmentsPage.vue'),
-        meta: { title: 'التكليفات والإعلانات' }
+        // صفحة التواصل الموحّدة (#39): مبدّل الإرسال/الوارد، بصلاحيات المشرف (مجموعاته فقط)
+        component: () => import('@/views/shared/CommsHub.vue'),
+        meta: { title: 'التواصل' }
       },
       {
         path: 'change-password',
@@ -102,10 +101,10 @@ export default [
         meta: { title: 'تقدّم المشاريع' }
       },
       {
+        // دُمجت «الإعلانات والملفات» ضمن صفحة التواصل الموحّدة — يُحوّل لوجه الوارد
         path: 'announcements',
         name: 'supervisor-announcements',
-        component: AnnouncementsInboxPageSupervisor,
-        meta: { title: 'الإعلانات والملفات' }
+        redirect: { name: 'supervisor-assignments', query: { tab: 'inbox' } }
       },
       {
         path: 'evaluations',
