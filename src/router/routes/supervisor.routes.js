@@ -2,14 +2,11 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { ROLES } from '@/utils/constants'
 const ProfilePageSupervisor = () => import('@/views/supervisor/ProfilePage.vue')
 const TeamsPageSupervisor = () => import('@/views/supervisor/TeamsPage.vue')
-const TasksPageSupervisor = () => import('@/views/supervisor/TasksPage.vue')
 const MeetingsPageSupervisor = () => import('@/views/supervisor/MeetingsPage.vue')
 const AppointmentsPageSupervisor = () => import('@/views/supervisor/AppointmentsPage.vue')
 const AnnouncementsInboxPageSupervisor = () => import('@/views/super-admin/AnnouncementsDesk.vue')
 const EvaluationsPageSupervisor = () => import('@/views/super-admin/EvaluationsPage.vue')
 const AssistantPageSupervisor = () => import('@/views/supervisor/AssistantPage.vue')
-// نفس صفحة "مهامي" في لجنة الإشراف: مهام الإدارة العامة المسندة للمستخدم نفسه
-const MyTasksPageSupervisor = () => import('@/views/committee/MyTasksPage.vue')
 
 // تحميل كسول + جلب مسبق وقت الفراغ (router/index.js) — حزمة أولى أصغر مع بقاء التنقّل فوريًا
 const ProfilePage = () => import('@/views/supervisor/ProfilePage.vue')
@@ -68,14 +65,15 @@ export default [
       {
         path: 'tasks',
         name: 'supervisor-tasks',
-        component: TasksPageSupervisor,
+        // صفحة المهام الموحّدة (#38): مبدّل «مهامي» / «مهام طلابي»
+        component: () => import('@/views/shared/TasksHub.vue'),
         meta: { title: 'المهام' }
       },
       {
+        // دمجت «مهامي» ضمن صفحة المهام — يُحوّل للوجه المناسب
         path: 'my-tasks',
         name: 'supervisor-my-tasks',
-        component: MyTasksPageSupervisor,
-        meta: { title: 'مهامي' }
+        redirect: { name: 'supervisor-tasks', query: { tab: 'mine' } }
       },
       {
         path: 'meetings',
