@@ -7,11 +7,17 @@ import { ROLE_HOME_ROUTE, APP_NAME, APP_DESCRIPTION, SITE_URL } from '@/utils/co
  * - roles: منع دور من دخول لوحة دور آخر
  * - guestOnly: منع مستخدم مسجّل من رؤية صفحات المصادقة
  */
+// يُعاد ضبطه مع كل تحميل كامل للتطبيق — نتحقّق من صلاحية التوكن مرّة واحدة أول تنقّل
+let sessionValidated = false
+
 export async function authGuard(to) {
   const auth = useAuthStore()
 
-  // استعادة بيانات المستخدم بعد إعادة تحميل الصفحة
-  if (auth.token && !auth.user) {
+  // أول تنقّل بعد تحميل التطبيق: نتحقّق من التوكن المخزّن قبل عرض أي صفحة محمية.
+  // (التوكن قد يكون منتهيًا؛ بدونه تظهر اللوحة للحظة ثم يُطرد للّوجين — عكسنا الترتيب)
+  // كما نستعيد المستخدم بعد إعادة التحميل إن غاب.
+  if (auth.token && (!sessionValidated || !auth.user)) {
+    sessionValidated = true
     await auth.fetchCurrentUser()
   }
 
