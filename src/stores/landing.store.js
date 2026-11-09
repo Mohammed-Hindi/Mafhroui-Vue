@@ -51,6 +51,7 @@ export const useLandingStore = defineStore('landing', () => {
   const projectsMeta = ref({ current_page: 1, last_page: 1, total: 0 })
   const projectsLoading = ref(false)
   const projectsError = ref(null)
+  const archiveTerms = ref([]) // السنوات المتاحة لفلتر الأرشيف [{ id, name }]
 
   /* تفاصيل مشروع واحد من الأرشيف العام — GET /projects/public-archive/{id} */
   const currentProject = ref(null)
@@ -124,7 +125,7 @@ export const useLandingStore = defineStore('landing', () => {
     }
   }
 
-  // GET /projects/public-archive?search=&department_id=&degree=&page=
+  // GET /projects/public-archive?search=&department_id=&degree=&term_id=&page=
   const fetchArchive = async (params = {}) => {
     projectsLoading.value = true
     projectsError.value = null
@@ -134,6 +135,7 @@ export const useLandingStore = defineStore('landing', () => {
           search: params.search || undefined,
           department_id: params.department_id || undefined,
           degree: params.degree || undefined,
+          term_id: params.term_id || undefined,
           page: params.page || 1
         }
       })
@@ -143,6 +145,7 @@ export const useLandingStore = defineStore('landing', () => {
         last_page: data.last_page ?? 1,
         total: data.total ?? projects.value.length
       }
+      if (Array.isArray(data.terms)) archiveTerms.value = data.terms
       return projects.value
     } catch (err) {
       projectsError.value = err.normalized?.message || 'تعذّر تحميل أرشيف المشاريع'
@@ -197,6 +200,7 @@ export const useLandingStore = defineStore('landing', () => {
     projectsMeta,
     projectsLoading,
     projectsError,
+    archiveTerms,
     currentProject,
     currentProjectLoading,
     currentProjectError,
