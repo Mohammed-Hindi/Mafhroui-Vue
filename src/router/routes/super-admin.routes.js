@@ -34,6 +34,13 @@ export default [
         meta: { title: 'مزامنة كشف الطلبة', hideIdentity: true }
       },
       {
+        // سجلّ حركات المنصّة — للإدارة العامة فقط (ملاحظة #29)
+        path: 'activity-log',
+        name: 'super-admin-activity-log',
+        component: () => import('@/views/super-admin/AuditLogPage.vue'),
+        meta: { title: 'سجلّ الحركات' }
+      },
+      {
         path: 'profile',
         name: 'super-admin-profile',
         component: () => import('@/views/super-admin/ProfilePage.vue'),
