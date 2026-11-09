@@ -346,23 +346,26 @@ export default {
     ...mapState(useTeamsStore, ['teams', 'teamsForDisplay', 'departments', 'specializations', 'departmentFilterOptions', 'specializationFilterOptions']),
 
     rows() {
-      return this.discussions.map((d) => ({
-        id: d.id,
-        project_id: d.project_id,
-        teamId: d.project?.team?.id ?? null,
-        proj: d.project?.name || '—',
-        team: d.project?.team?.name || '—',
-        sup: d.supervisor?.name || '—',
-        dept: d.project?.department?.name || 'غير محدد',
-        spec: d.project?.specialization?.name || 'غير محدد',
-        place: d.place,
-        date: d.discussion_date,
-        time: (d.discussion_time || '').slice(0, 5),
-        duration: d.duration,
-        committee: d.committee,
-        whatsapp: d.whatsapp,
-        status: d.status
-      }))
+      return this.discussions
+        .map((d) => ({
+          id: d.id,
+          project_id: d.project_id,
+          teamId: d.project?.team?.id ?? null,
+          proj: d.project?.name || '—',
+          team: d.project?.team?.name || '—',
+          sup: d.supervisor?.name || '—',
+          dept: d.project?.department?.name || 'غير محدد',
+          spec: d.project?.specialization?.name || 'غير محدد',
+          place: d.place,
+          date: d.discussion_date,
+          time: (d.discussion_time || '').slice(0, 5),
+          duration: d.duration,
+          committee: d.committee,
+          whatsapp: d.whatsapp,
+          status: d.status
+        }))
+        // ترتيب جدول المناقشات حسب الموعد (التاريخ ثم الوقت) تصاعديًا؛ بلا تاريخ يُدفع للأسفل
+        .sort((a, b) => `${a.date || '9999'} ${a.time || '99:99'}`.localeCompare(`${b.date || '9999'} ${b.time || '99:99'}`))
     },
 
     discussionMembers() {
