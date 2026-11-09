@@ -14,7 +14,8 @@ import {
   KeyRound,
   ClipboardCheck,
   LifeBuoy,
-  RefreshCw
+  RefreshCw,
+  ScrollText
 } from 'lucide-vue-next'
 import { ROLES } from '@/utils/constants'
 
@@ -33,7 +34,8 @@ export const NAV_ITEMS_BY_ROLE = {
         { label: 'إدارة الأعضاء', to: '/committee/members', icon: UserPlus },
         { label: 'الهيكل الأكاديمي', to: '/super-admin/structure', icon: Building2 },
         { label: 'مزامنة كشف الطلبة', to: '/super-admin/roster-sync', icon: RefreshCw },
-        { label: 'إرسال بيانات الدخول', to: '/super-admin/credentials', icon: KeyRound }
+        { label: 'إرسال بيانات الدخول', to: '/super-admin/credentials', icon: KeyRound },
+        { label: 'سجلّ الحركات', to: '/super-admin/activity-log', icon: ScrollText }
       ]
     },
     {
