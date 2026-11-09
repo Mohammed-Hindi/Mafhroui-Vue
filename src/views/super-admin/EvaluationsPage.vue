@@ -167,10 +167,10 @@
           </select>
         </label>
         <label v-if="isStaff" class="gr-pick">
-          <select v-model="f.featured" class="gr-select" aria-label="التميّز">
+          <select v-model="f.featured" class="gr-select" aria-label="المرموق">
             <option value="">الكل</option>
-            <option value="yes">مشروع مميّز</option>
-            <option value="no">غير مميّز</option>
+            <option value="yes">مشروع مرموق</option>
+            <option value="no">غير مرموق</option>
           </select>
         </label>
         <label class="gr-pick">
@@ -212,7 +212,7 @@
                     <span class="evp-sub"><span class="mono">{{ r.number }}</span> · {{ r.gender }} · {{ r.section }}</span>
                   </td>
                   <td>
-                    <span class="gr-name">{{ r.projectName }}<Star v-if="r.featured" :size="12" fill="currentColor" class="ev-star" /></span>
+                    <span class="gr-name">{{ r.projectName }}<Crown v-if="r.featured" :size="12" fill="currentColor" class="ev-star" title="مرموق" /></span>
                     <span class="evp-sub"><button v-if="r.supId" type="button" class="ev-suplink" title="عرض بروفايل المشرف ومجموعاته" @click.stop="openPerson('supervisor', r.supId, r.supName)">{{ r.supName }}</button><template v-else>{{ r.supName }}</template></span>
                   </td>
                   <td>{{ r.degree }}</td>
@@ -248,7 +248,7 @@
 
 <script>
 import { mapState } from 'pinia'
-import { ClipboardPen, Search, Star, ChevronDown } from 'lucide-vue-next'
+import { ClipboardPen, Search, Crown, ChevronDown } from 'lucide-vue-next'
 import SlideTable from '@/components/ui/SlideTable.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 import EvaluationFormEditor from './EvaluationFormEditor.vue'
@@ -281,7 +281,7 @@ const VARIANT_PILL = { success: 'is-approved', info: 'is-pending', warning: 'is-
 export default {
   name: 'EvaluationsPage',
 
-  components: { SlideTable, SkeletonLoader, EvaluationFormEditor, ProfileModal, Search, ClipboardPen, Star, ChevronDown },
+  components: { SlideTable, SkeletonLoader, EvaluationFormEditor, ProfileModal, Search, ClipboardPen, Crown, ChevronDown },
 
   data() {
     return {

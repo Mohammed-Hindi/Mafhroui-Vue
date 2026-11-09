@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- الإدارة العامة: أرشفة جماعية + معرض المشاريع المميّزة (بيانات تجريبية) -->
+    <!-- الإدارة العامة: أرشفة جماعية + معرض المشاريع المرموقة -->
     <ArchiveBoard v-if="isSuperAdmin" />
     <template v-else>
     <PortalPageHead :icon="FileCheck" color="#805C55" title="أرشيف المشاريع" subtitle="المشاريع المكتملة عبر جميع الفصول الدراسية وملفاتها" />
@@ -16,7 +16,7 @@
       </div>
       <div class="reveal group bg-surface rounded-lg border border-border shadow-card p-5 flex items-center gap-4 transition-all duration-base hover:-translate-y-1 hover:shadow-card-hover hover:border-primary-200 active:scale-[0.98]">
         <span class="grid place-items-center w-11 h-11 rounded-md bg-warning-bg text-warning-text shrink-0"><Star :size="20" /></span>
-        <div><div class="font-cairo font-extrabold text-h1 text-text-900 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="featuredCount" /></div><div class="text-body-sm font-bold text-text-600 mt-0.5">مشاريع مميزة</div></div>
+        <div><div class="font-cairo font-extrabold text-h1 text-text-900 transition-colors duration-base group-hover:text-primary-600"><CountUp :value="featuredCount" /></div><div class="text-body-sm font-bold text-text-600 mt-0.5">مشاريع مرموقة</div></div>
       </div>
     </div>
 
@@ -59,8 +59,8 @@
           </router-link>
         </template>
         <template #cell-featured="{ row }">
-          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast" :class="row.featured ? 'bg-warning-bg border-warning text-warning' : 'border-border text-text-400 hover:text-warning-text hover:bg-warning-bg'" :title="row.featured ? 'إلغاء التمييز' : 'تمييز المشروع'" @click="toggleFeatured(row)">
-            <Star :size="15" :fill="row.featured ? 'currentColor' : 'none'" />
+          <button type="button" class="grid place-items-center w-8 h-8 rounded-sm border transition-colors duration-fast" :class="row.featured ? 'bg-warning-bg border-warning text-warning' : 'border-border text-text-400 hover:text-warning-text hover:bg-warning-bg'" :title="featuredTitle(row)" @click="toggleFeatured(row)">
+            <Crown :size="15" :fill="row.featured ? 'currentColor' : 'none'" />
           </button>
         </template>
       </DataTable>
@@ -70,7 +70,7 @@
 </template>
 
 <script>
-import { CheckCircle2, Star, Search, FileText, FileCheck, ExternalLink } from 'lucide-vue-next'
+import { CheckCircle2, Star, Crown, Search, FileText, FileCheck, ExternalLink } from 'lucide-vue-next'
 import { mapState, mapActions } from 'pinia'
 import { useTeamsStore } from '@/stores/teams.store'
 import { useAuthStore } from '@/stores/auth.store'
@@ -87,7 +87,7 @@ const PAGE_SIZE = 5
 export default {
   name: 'CommitteeProjectArchivePage',
 
-  components: { CheckCircle2, Star, Search, FileText, FileCheck, ExternalLink, DataTable, BaseSelect, CountUp, PortalPageHead, ArchiveBoard },
+  components: { CheckCircle2, Star, Crown, Search, FileText, FileCheck, ExternalLink, DataTable, BaseSelect, CountUp, PortalPageHead, ArchiveBoard },
 
   data() {
     return {
@@ -96,7 +96,7 @@ export default {
       specFilter: '',
       deptFilter: '',
       featuredFilter: '',
-      featuredOptions: [{ value: 'yes', label: 'المميّزة فقط' }, { value: 'no', label: 'غير المميّزة' }],
+      featuredOptions: [{ value: 'yes', label: 'المرموقة فقط' }, { value: 'no', label: 'غير المرموقة' }],
       page: 1,
 
       columns: [
@@ -106,7 +106,7 @@ export default {
         { key: 'proj', label: 'المشروع' },
         { key: 'date', label: 'تاريخ الإنجاز' },
         { key: 'files', label: 'الملفات' },
-        { key: 'featured', label: 'مميّز' }
+        { key: 'featured', label: 'مرموق' }
       ]
     }
   },
@@ -129,7 +129,9 @@ export default {
         team: p.team?.name || '—',
         proj: p.name,
         date: formatDate(p.completed_at || p.updated_at),
-        featured: !!p.is_featured
+        featured: !!p.is_featured,
+        featuredBy: p.featured_by?.name || p.featuredBy?.name || '',
+        featuredAt: p.featured_at || ''
       }))
     },
 
@@ -180,10 +182,18 @@ export default {
   methods: {
     ...mapActions(useTeamsStore, ['fetchProjectArchive', 'updateProject', 'fetchOrgCatalog']),
 
+    /** تلميح زر المرموق: الحالة + مَن صنّفه ومتى (#30) */
+    featuredTitle(row) {
+      if (!row.featured) return 'تصنيف كمشروع مرموق (يظهر في المعرض)'
+      if (!row.featuredBy) return 'مشروع مرموق — إلغاء التصنيف'
+      const when = row.featuredAt ? ` (${String(row.featuredAt).slice(0, 10)})` : ''
+      return `مرموق — صنّفه ${row.featuredBy}${when} · اضغط للإلغاء`
+    },
+
     async toggleFeatured(row) {
       try {
         await this.updateProject(row.id, { is_featured: !row.featured })
-        this.$toast?.success(row.featured ? 'تم إلغاء تمييز المشروع' : 'تم تمييز المشروع')
+        this.$toast?.success(row.featured ? 'أُلغي تصنيف المشروع كمرموق' : 'صُنّف المشروع كمرموق')
       } catch (err) {
         this.$toast?.error(err.normalized?.message || 'تعذّر تحديث المشروع')
       }

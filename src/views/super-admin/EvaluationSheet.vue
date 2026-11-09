@@ -30,8 +30,8 @@
           <button type="button" class="es-hero-btn" @click="back"><ArrowRight :size="16" /> رجوع إلى التقييمات</button>
           <label v-if="sheet.team.project_id" :class="['es-hero-btn es-hero-star', sheet.team.featured && 'is-on']">
             <input type="checkbox" class="sr-only" :checked="sheet.team.featured" :disabled="!sheet.team.can_feature || featuring" @change="toggleFeatured($event.target.checked)">
-            <Star :size="16" :fill="sheet.team.featured ? 'currentColor' : 'none'" />
-            {{ sheet.team.featured ? 'مشروع مميّز' : 'تمييز كمشروع مميّز' }}
+            <Crown :size="16" :fill="sheet.team.featured ? 'currentColor' : 'none'" />
+            {{ sheet.team.featured ? 'مشروع مرموق' : 'تصنيف كمشروع مرموق' }}
           </label>
         </div>
         <div class="es-hero-main">
@@ -211,7 +211,7 @@
 
 <script>
 import { mapState } from 'pinia'
-import { ArrowRight, CheckCircle2, GraduationCap, Pencil, Save, Star, UserRound, Users } from 'lucide-vue-next'
+import { ArrowRight, CheckCircle2, Crown, GraduationCap, Pencil, Save, UserRound, Users } from 'lucide-vue-next'
 import ScoreInput from '@/components/shared/ScoreInput.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import api from '@/services/api'
@@ -223,7 +223,7 @@ import { formatDateTime } from '@/utils/formatters'
 export default {
   name: 'EvaluationSheet',
 
-  components: { ScoreInput, BaseModal, ArrowRight, CheckCircle2, GraduationCap, Pencil, Save, Star, UserRound, Users },
+  components: { ScoreInput, BaseModal, ArrowRight, CheckCircle2, Crown, GraduationCap, Pencil, Save, UserRound, Users },
 
   // تنبيه قبل مغادرة الصفحة بتعديلات غير محفوظة
   beforeRouteLeave() {
@@ -390,15 +390,15 @@ export default {
       })
     },
 
-    // PATCH /projects/{id} — تمييز المشروع (يظهر في نتائج "مشروع مميّز")
+    // PATCH /projects/{id} — تصنيف المشروع كمرموق (يظهر في المعرض)
     async toggleFeatured(on) {
       this.featuring = true
       try {
         await api.patch(`/projects/${this.sheet.team.project_id}`, { is_featured: on })
         this.sheet.team.featured = on
-        this.$toast?.success(on ? 'تم تمييز المشروع' : 'أُلغي تمييز المشروع')
+        this.$toast?.success(on ? 'صُنّف المشروع كمرموق' : 'أُلغي تصنيف المشروع كمرموق')
       } catch (err) {
-        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث تمييز المشروع')
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث تصنيف المشروع')
       } finally {
         this.featuring = false
       }

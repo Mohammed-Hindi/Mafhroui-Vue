@@ -1,18 +1,19 @@
 <template>
-  <!-- تقييم المشروع للطاقم: نجوم ترشيح المناقشين (placeholder مطفأ بعدد المناقشين، والمُرشِّحة تضوي)
-       + تاج «مشروع مميّز» حين تميّزه الإدارة/اللجنة (is_featured) — أرقى وبلون مختلف، أسفل النجوم -->
+  <!-- تقييم المشروع للطاقم — طبقتان:
+       (1) مميّز: نجوم ترشيح المناقشين (مطفأة بعدد المناقشين، والمُرشِّحة تضوي) — «X من N»
+       (2) مرموق: تاج تصنيف الإدارة/لجنة الإشراف (is_featured) — يظهر في المعرض، أرقى وبلون مختلف -->
   <div v-if="discussants || featured" class="pj-rating">
     <span
       v-if="discussants"
       class="pj-rating-stars"
-      :aria-label="`ترشيح المناقشين: ${nominations} من ${discussants}`"
-      :title="`رشّحه ${nominations} من ${discussants} من المناقشين`"
+      :aria-label="`مميّز — ترشيح المناقشين: ${nominations} من ${discussants}`"
+      :title="`مميّز: رشّحه ${nominations} من ${discussants} من المناقشين`"
     >
       <Star v-for="i in discussants" :key="i" :size="size" :class="{ 'is-on': i <= nominations }" :fill="i <= nominations ? 'currentColor' : 'none'" />
       <small>{{ nominations }} من {{ discussants }}</small>
     </span>
-    <span v-if="featured" class="pj-rating-crown" title="مشروع مميّز من الإدارة — يظهر في الصفحة الرئيسية">
-      <Crown :size="size" /> مشروع مميّز
+    <span v-if="featured" class="pj-rating-crown" :title="crownTitle">
+      <Crown :size="size" /> مشروع مرموق
     </span>
   </div>
 </template>
@@ -28,6 +29,9 @@ export default {
   props: {
     stars: { type: Object, default: () => ({ nominations: 0, discussants: 0 }) },
     featured: { type: Boolean, default: false },
+    // مَن صنّف المشروع كمرموق ومتى (#30) — يظهران في تلميح التاج
+    featuredBy: { type: String, default: '' },
+    featuredAt: { type: String, default: '' },
     size: { type: Number, default: 15 }
   },
 
@@ -37,6 +41,12 @@ export default {
     },
     discussants() {
       return Number(this.stars?.discussants) || 0
+    },
+    crownTitle() {
+      const base = 'مشروع مرموق من الإدارة/لجنة الإشراف — يظهر في المعرض'
+      if (!this.featuredBy) return base
+      const when = this.featuredAt ? ` (${String(this.featuredAt).slice(0, 10)})` : ''
+      return `${base} · صنّفه ${this.featuredBy}${when}`
     }
   }
 }

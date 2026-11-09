@@ -1,6 +1,6 @@
 <template>
   <div class="dash">
-    <!-- أرشيف المشاريع للإدارة العامة بهوية البوابة: ستيبر العروض (كل/مميّزة/مؤرشفة/غير مؤرشفة) بأعدادها + أرشفة الكل،
+    <!-- أرشيف المشاريع للإدارة العامة بهوية البوابة: ستيبر العروض (كل/مرموقة/مؤرشفة/غير مؤرشفة) بأعدادها + أرشفة الكل،
          بحث وفلتر التخصص (قائمة) والدرجة، مجلدات المشاريع، ومجلد المشروع (ملفاته + معاينة تسليماته) — ملفات تجريبية بلا تخزين بعد -->
     <!-- مجلد المشروع -->
     <section v-if="current" class="dash-card ad-card">
@@ -20,7 +20,7 @@
             <img v-if="report?.cover_url" :src="report.cover_url" :alt="current.project">
             <span v-else class="ab-stage-ph" aria-hidden="true"><UcasLogo :size="74" /></span>
             <span class="ab-stage-sec">شعبة {{ current.section }}</span>
-            <span v-if="current.featured" class="ab-card-star"><Crown :size="14" /> مميّز</span>
+            <span v-if="current.featured" class="ab-card-star"><Crown :size="14" /> مرموق</span>
             <button v-if="report?.video_url" type="button" class="ab-play" aria-label="تشغيل فيديو البرومو" @click="viewing = files[1]"><PlayCircle :size="58" /></button>
             <figcaption>{{ report?.video_url ? 'فيديو البرومو — اضغط للتشغيل' : report?.cover_url ? 'غلاف المشروع' : 'لم يُرفع غلاف بعد' }}</figcaption>
           </figure>
@@ -32,8 +32,8 @@
               <span :class="['rv-pill', REVIEW[stageOf(current)].tone]">{{ REVIEW[stageOf(current)].short }}</span>
               <span class="ab-info-done">{{ doneCount }} من {{ files.length }} تسليمات</span>
             </span>
-            <!-- تقييم المشروع: نجوم ترشيح المناقشين + تاج التمييز (للطاقم فقط) -->
-            <ProjectRating :stars="current.stars" :featured="current.featured" :size="16" />
+            <!-- تقييم المشروع: نجوم مميّز (ترشيح المناقشين) + تاج مرموق (تصنيف الإدارة) — للطاقم فقط -->
+            <ProjectRating :stars="current.stars" :featured="current.featured" :featured-by="current.featuredBy" :featured-at="current.featuredAt" :size="16" />
             <dl class="ab-info-data">
               <div><dt><UserRound :size="14" /> المشرف</dt><dd>{{ current.supName }}</dd></div>
               <div><dt><CalendarDays :size="14" /> تسليم التقرير</dt><dd>{{ report ? formatDate(report.created_at) : '—' }}</dd></div>
@@ -44,7 +44,7 @@
               <li v-if="!current.members.length" class="pt-muted">لا يوجد طلاب</li>
             </ul>
             <button v-if="!isSup" type="button" :class="['pbtn ar-feature', current.featured ? 'is-green' : 'is-outline']" :aria-pressed="current.featured" @click="toggleFeatured(current)">
-              <Crown :size="15" /> {{ current.featured ? 'مميّز — معروض في الصفحة الرئيسية' : 'تمييز المشروع في الصفحة الرئيسية' }}
+              <Crown :size="15" /> {{ current.featured ? 'مرموق — معروض في المعرض' : 'تصنيف المشروع كمرموق (يظهر في المعرض)' }}
             </button>
           </aside>
         </div>
@@ -139,7 +139,7 @@
         <!-- معرض الأعمال: بطاقة لكل مشروع (الشعبة، التخصص، الطلبة، المشرف، حالة الاعتماد)، الضغط يفتح مجلد المشروع -->
       <template v-else-if="layout === 'gallery'">
         <div class="sup-tall-slide">
-          <!-- مجلد لكل تخصص (كأنظمة إدارة الملفات): العدد، المؤرشفة، المميّزة، والدرجات — الضغط يفتح مشاريع التخصص -->
+          <!-- مجلد لكل تخصص (كأنظمة إدارة الملفات): العدد، المؤرشفة، المرموقة، والدرجات — الضغط يفتح مشاريع التخصص -->
           <template v-if="!f.spec && !q">
             <p v-if="!folders.length" class="gr-empty">لا توجد مشاريع</p>
             <!-- المجلدات في السلايدر الموحّد (أرقام الشرائح + السابق/التالي + شريط التقدّم أسفلها) -->
@@ -159,7 +159,7 @@
                   <small>{{ fd.degrees }}</small>
                   <span class="ab-folder-stats">
                     <span><CheckCircle2 :size="13" /> {{ fd.archived }} مؤرشف</span>
-                    <span v-if="fd.featured"><Crown :size="13" /> {{ fd.featured }} مميّز</span>
+                    <span v-if="fd.featured"><Crown :size="13" /> {{ fd.featured }} مرموق</span>
                   </span>
                 </span>
                 <span class="ab-folder-bar" aria-hidden="true"><span :style="{ width: `${fd.count ? (fd.archived / fd.count) * 100 : 0}%` }" /></span>
@@ -188,7 +188,7 @@
                       <img v-if="p.report?.cover_url" :src="p.report.cover_url" alt="" class="ab-card-cover" loading="lazy">
                       <span v-else class="ab-card-mark" aria-hidden="true"><UcasLogo :size="40" /></span>
                       <span class="ab-card-sec">شعبة {{ p.section }}</span>
-                      <span v-if="p.featured" class="ab-card-star ab-pf-star" title="مشروع مميّز من الإدارة"><Crown :size="14" /> مميّز</span>
+                      <span v-if="p.featured" class="ab-card-star ab-pf-star" title="مشروع مرموق من الإدارة — يظهر في المعرض"><Crown :size="14" /> مرموق</span>
                       <span v-if="p.report?.video_url" class="ab-pf-play" aria-hidden="true"><PlayCircle :size="20" /></span>
                       <span class="ab-pf-hover"><span>عرض المشروع <ChevronLeft :size="15" /></span></span>
                     </div>
@@ -201,15 +201,15 @@
                         <li v-for="m in p.members" :key="m.id || m.name">{{ m.name }}</li>
                         <li v-if="!p.members.length" class="is-empty">لا يوجد طلاب</li>
                       </ul>
-                      <!-- تقييم المشروع: نجوم ترشيح المناقشين + تاج التمييز -->
-                      <ProjectRating :stars="p.stars" :featured="p.featured" :size="13" />
+                      <!-- تقييم المشروع: نجوم مميّز (ترشيح المناقشين) + تاج مرموق (تصنيف الإدارة) -->
+                      <ProjectRating :stars="p.stars" :featured="p.featured" :featured-by="p.featuredBy" :featured-at="p.featuredAt" :size="13" />
                     </div>
                     <footer class="ab-card-foot" @click.stop>
                       <span :class="['rv-pill', REVIEW[stageOf(p)].tone]">{{ REVIEW[stageOf(p)].short }}</span>
                       <button v-if="isSup && stageOf(p) === 'pending_supervisor'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click="review(p, true)"><CheckCircle2 :size="14" /> موافقة</button>
                       <button v-else-if="!isSup && stageOf(p) === 'pending_committee'" type="button" class="pbtn is-green is-sm" :disabled="reviewing" @click="review(p, true)"><CheckCircle2 :size="14" /> موافقة اللجنة</button>
                       <span class="ab-pf-icons">
-                        <button v-if="!isSup" type="button" :class="['ab-pf-ic', p.featured && 'is-on']" :aria-pressed="p.featured" :title="p.featured ? 'مميّز — اضغط للإزالة من الصفحة الرئيسية' : 'تمييز المشروع في الصفحة الرئيسية'" @click="toggleFeatured(p)">
+                        <button v-if="!isSup" type="button" :class="['ab-pf-ic', p.featured && 'is-on']" :aria-pressed="p.featured" :title="featuredTitle(p)" @click="toggleFeatured(p)">
                           <Crown :size="15" />
                         </button>
                         <button type="button" class="ab-pf-ic" title="فتح في نافذة جديدة" aria-label="فتح في نافذة جديدة" @click="openInNewTab({ project: p.id })"><ExternalLink :size="15" /></button>
@@ -240,7 +240,7 @@
                     <th class="hm-center">تسليم التقرير</th>
                     <th class="hm-center">مسار الاعتماد</th>
                     <th class="hm-center">الحالة</th>
-                    <th v-if="!isSup" class="hm-center">الصفحة الرئيسية</th>
+                    <th v-if="!isSup" class="hm-center">مرموق</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -250,8 +250,8 @@
                       <b>{{ p.project }}</b>
                       <span class="ad-proj-spec">{{ p.spec }} · {{ DEGREES[p.degree] }}</span>
                       <span class="pt-muted"><Users :size="13" /> {{ p.members.map((m) => m.name).join('، ') || '—' }}</span>
-                      <!-- تقييم المشروع: نجوم ترشيح المناقشين + تاج التمييز -->
-                      <ProjectRating :stars="p.stars" :featured="p.featured" :size="13" />
+                      <!-- تقييم المشروع: نجوم مميّز (ترشيح المناقشين) + تاج مرموق (تصنيف الإدارة) -->
+                      <ProjectRating :stars="p.stars" :featured="p.featured" :featured-by="p.featuredBy" :featured-at="p.featuredAt" :size="13" />
                     </td>
                     <td class="hm-center ad-nowrap">{{ p.supName }}</td>
                     <td class="hm-center ad-nowrap">{{ p.report ? formatDate(p.report.created_at) : '—' }}</td>
@@ -265,10 +265,10 @@
                       </span>
                     </td>
                     <td class="hm-center"><span :class="['rv-pill', REVIEW[stageOf(p)].tone]">{{ REVIEW[stageOf(p)].short }}</span></td>
-                    <!-- أفضل مشاريع التخرج في الصفحة الرئيسية: لجنة الإشراف والإدارة العامة فقط -->
+                    <!-- تصنيف المشروع كمرموق (يظهر في المعرض): لجنة الإشراف والإدارة العامة فقط -->
                     <td v-if="!isSup" class="hm-center">
-                      <button type="button" :class="['pbtn is-sm ar-feature', p.featured ? 'is-green' : 'is-outline']" :aria-pressed="p.featured" :title="p.featured ? 'إزالة من الصفحة الرئيسية' : 'تمييز المشروع في الصفحة الرئيسية'" @click.stop="toggleFeatured(p)">
-                        <Crown :size="14" /> {{ p.featured ? 'مميّز' : 'تمييز' }}
+                      <button type="button" :class="['pbtn is-sm ar-feature', p.featured ? 'is-green' : 'is-outline']" :aria-pressed="p.featured" :title="featuredTitle(p)" @click.stop="toggleFeatured(p)">
+                        <Crown :size="14" /> {{ p.featured ? 'مرموق' : 'تصنيف كمرموق' }}
                       </button>
                     </td>
                   </tr>
@@ -380,7 +380,7 @@ export default {
       const n = (fn) => this.projects.filter(fn).length
       return [
         { key: 'all', label: 'كل المشاريع', icon: FolderOpen, count: this.projects.length },
-        { key: 'featured', label: 'المميّزة', icon: Crown, count: n((p) => p.featured) },
+        { key: 'featured', label: 'المرموقة', icon: Crown, count: n((p) => p.featured) },
         { key: 'archived', label: 'مؤرشفة', icon: CheckCircle2, count: n((p) => p.archived) },
         { key: 'ready', label: this.isSup ? 'بانتظار موافقتي' : 'بانتظار اللجنة', icon: Hourglass, count: this.readyCount },
         { key: 'pending', label: 'غير مؤرشفة', icon: Clock, count: n((p) => !p.archived) }
@@ -530,15 +530,25 @@ export default {
       return { cls: '', icon: Minus, text: 'بعد موافقة المشرف' }
     },
 
-    /** أفضل مشروع تخرج في الصفحة الرئيسية (PATCH /projects/{id} is_featured — لجنة الإشراف والإدارة العامة) */
+    /** تلميح زر المرموق: الحالة + مَن صنّفه ومتى (#30) */
+    featuredTitle(p) {
+      if (!p.featured) return 'تصنيف المشروع كمرموق (يظهر في المعرض)'
+      if (!p.featuredBy) return 'مرموق — اضغط للإزالة من المعرض'
+      const when = p.featuredAt ? ` (${String(p.featuredAt).slice(0, 10)})` : ''
+      return `مرموق — صنّفه ${p.featuredBy}${when} · اضغط للإزالة من المعرض`
+    },
+
+    /** تصنيف المشروع كمرموق (PATCH /projects/{id} is_featured — لجنة الإشراف والإدارة العامة؛ يظهر في المعرض) */
     async toggleFeatured(p) {
       p.featured = !p.featured
       try {
-        await api.patch(`/projects/${p.projectId}`, { is_featured: p.featured })
-        this.$toast?.success(p.featured ? 'عُيّن كأفضل مشروع ويظهر في الصفحة الرئيسية' : 'أُزيل من الصفحة الرئيسية')
+        const { data } = await api.patch(`/projects/${p.projectId}`, { is_featured: p.featured })
+        p.featuredBy = data?.featured_by?.name || ''
+        p.featuredAt = data?.featured_at || ''
+        this.$toast?.success(p.featured ? 'صُنّف المشروع كمرموق ويظهر في المعرض' : 'أُزيل من المعرض')
       } catch (err) {
         p.featured = !p.featured
-        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث التمييز')
+        this.$toast?.error(err.normalized?.message || 'تعذّر تحديث التصنيف')
       }
     }
   }
