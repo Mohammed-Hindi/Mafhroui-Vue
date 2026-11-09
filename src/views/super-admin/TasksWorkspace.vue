@@ -782,7 +782,7 @@ export default {
           const fd = new FormData()
           fd.append('file', file)
           await api.post(`/tasks/${task.id}/files`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-            .catch(() => this.failed.push({ label, error: `لم يُرفق «${file.name}»` }))
+            .catch((err) => this.failed.push({ label, error: `تعذّر إرفاق «${file.name}»: ${err.normalized?.message || 'خطأ غير معروف'}` }))
         }
       }
       let created = 0

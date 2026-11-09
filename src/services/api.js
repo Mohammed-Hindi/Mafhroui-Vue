@@ -43,6 +43,12 @@ api.interceptors.request.use((config) => {
     config.params = { ...config.params, term_id: termId }
   }
 
+  // رفع الملفات (multipart) قد يتجاوز المهلة الافتراضية (20s) على اتصال بطيء فيُلغى الطلب
+  // ويظهر المرفق وكأنه لم يُستقبل — امنح رفعات الملفات مهلة أوسع.
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    config.timeout = 120000
+  }
+
   return config
 })
 
