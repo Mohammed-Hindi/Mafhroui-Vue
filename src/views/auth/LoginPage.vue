@@ -98,8 +98,16 @@ export default {
           return
         }
 
+        // لا نحوّل لوجهة لا يملك دور المستخدم صلاحيتها (كانت تُظهر صفحة 403 بعد الدخول)
         const redirect = this.$route.query.redirect
-        this.$router.replace(typeof redirect === 'string' ? redirect : this.homeRoute)
+        let target = this.homeRoute
+        if (typeof redirect === 'string' && redirect) {
+          const resolved = this.$router.resolve(redirect)
+          const roles = resolved.meta?.roles
+          const allowed = resolved.name && resolved.name !== 'not-found' && (!roles?.length || roles.includes(user?.role))
+          if (allowed) target = redirect
+        }
+        this.$router.replace(target)
       } catch (err) {
         const fieldErrors = err.normalized?.errors || {}
         this.errors.email = fieldErrors.email?.[0] || this.errors.email
