@@ -3137,7 +3137,6 @@ button.dp-sec:hover { background: color-mix(in srgb, var(--portal-cyan) 22%, var
 .dp-window.is-invalid .ev-input { border-color: #FF5B5B; background: color-mix(in srgb, #FF5B5B 6%, var(--color-surface)); }
 .dp-split { width: fit-content; margin-bottom: 12px; }
 /* ساعات كل قاعة */
-.dp-chip-hours { font-size: 11px; font-weight: 600; color: var(--color-text-400); }
 .dp-room-hours { display: grid; grid-template-columns: repeat(auto-fill, minmax(430px, 1fr)); gap: 8px 24px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--color-border); }
 .dp-room-hours-title { grid-column: 1 / -1; font-size: 13.5px; color: var(--color-text-700); }
 .dp-rh { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-text-600); }
