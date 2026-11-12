@@ -5842,7 +5842,7 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .dp-why-msg > svg { flex: 0 0 auto; margin-top: 2px; color: #E04848; }
 .sa-skin .dp-why-msg > span { line-height: 1.55; }
 .sa-skin .dp-free-opt { border: 0; border-radius: 4px; background: linear-gradient(270deg, rgba(98, 187, 70, .16), rgba(0, 91, 170, .1)); color: var(--ucas-blue); font-weight: 700; }
-.sa-skin .dp-free-opt:hover { background: linear-gradient(270deg, #62BB46, #0E699C); color: #FFFFFF; }
+.sa-skin .dp-free-opt:hover { background: var(--ucas-green); color: #FFFFFF; }
 .sa-skin .dash-card .gr-sumbar.dp-sumbar { border-radius: 4px; }
 .sa-skin button.dp-sec:hover { background: color-mix(in srgb, var(--ucas-blue) 20%, var(--color-surface)); }
 @media (max-width: 767.98px) {

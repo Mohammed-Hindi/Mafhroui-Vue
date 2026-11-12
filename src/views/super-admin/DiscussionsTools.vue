@@ -1342,11 +1342,49 @@ export default {
      * يستنتج تاريخ كل فئة (جنس×درجة) من المواعيد المحفوظة = التاريخ الأكثر تكرارًا لها،
      * حتى لا يظهر الجدول المحفوظ كتعارضات "يوم غير مطابق"
      */
+    /**
+     * يتبنّى تاريخ كل فئة يوم من المواعيد المحفوظة: التاريخ الأكثر تكرارًا بين صفوف الفئة.
+     * المفتاح هو نفسه مفتاح الفئة (التخصّص × الجنس) عبر dayKeyOf — وليس الدرجة — حتى تتطابق
+     * الأيام المحمّلة مع ما يتوقّعه كاشف التعارض، فلا تظهر «يجب أن يكون يوم …» على جدول محفوظ.
+     */
     adoptDays(rows) {
       const mode = (list) => Object.entries(list.reduce((m, d) => ({ ...m, [d]: (m[d] || 0) + 1 }), {})).sort((x, y) => y[1] - x[1])[0]?.[0]
       this.dayKeys.forEach((d) => {
-        const date = mode(rows.filter((r) => `${r.gender}-${r.g.degree}` === d.key && r.date).map((r) => r.date))
+        const date = mode(rows.filter((r) => this.dayKeyOf(r) === d.key && r.date).map((r) => r.date))
         if (date) this.s.days[d.key] = date
+      })
+    },
+
+    /**
+     * يوسّع ساعات المكان وساعات القاعات المستخدمة لتشمل كل المواعيد المحفوظة — فجدولٌ وُلِّد بيوم
+     * مُمدَّد (تمريرة الضمان مدّدت ساعات المكان لاستيعاب الجميع) يبقى متّسقًا عند إعادة تحميله،
+     * ولا تظهر «خارج ساعات المكان/القاعة» على مواعيد كانت صحيحة وقت توليدها.
+     */
+    adoptWindows(rows) {
+      const regionBounds = {}
+      const roomBounds = {}
+      rows.forEach((r) => {
+        if (!r.time || !r.room) return
+        const a = toMin(r.time)
+        const b = a + this.durOf(r)
+        ;(regionBounds[r.region] ||= { min: Infinity, max: -Infinity })
+        regionBounds[r.region].min = Math.min(regionBounds[r.region].min, a)
+        regionBounds[r.region].max = Math.max(regionBounds[r.region].max, b)
+        ;(roomBounds[r.room] ||= { min: Infinity, max: -Infinity })
+        roomBounds[r.room].min = Math.min(roomBounds[r.room].min, a)
+        roomBounds[r.room].max = Math.max(roomBounds[r.room].max, b)
+      })
+      Object.entries(regionBounds).forEach(([region, bnd]) => {
+        const w = this.s.windows[region]
+        if (!w) return
+        if (!w.start || toMin(w.start) > bnd.min) w.start = fromMin(bnd.min)
+        if (!w.end || toMin(w.end) < bnd.max) w.end = fromMin(bnd.max)
+      })
+      Object.entries(roomBounds).forEach(([room, bnd]) => {
+        const h = this.s.roomHours[room]
+        if (!h) return
+        if (toMin(h.start) > bnd.min) h.start = fromMin(bnd.min)
+        if (toMin(h.end) < bnd.max) h.end = fromMin(bnd.max)
       })
     },
 
@@ -1373,6 +1411,7 @@ export default {
       })
       if (!rows.length) return
       this.adoptDays(rows)
+      this.adoptWindows(rows)
       this.plan = rows
       if (rows.some((r) => r.status === 'confirmed')) this.snapshot(true)
     }
