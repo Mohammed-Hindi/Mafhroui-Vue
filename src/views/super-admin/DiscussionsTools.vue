@@ -35,8 +35,16 @@
         <!-- 1. الأيام: يوم لكل تخصّص × (طلاب/طالبات) — تظهر تخصّصات القسم المستهدف؛ دمج تخصّصين بجعل تاريخيهما متساويين -->
         <fieldset class="dp-block">
           <legend><span class="dp-no">1</span><CalendarDays :size="17" /> الأيام<small>يوم لكل تخصّص (طلاب/طالبات)؛ اجعل تاريخين متساويين لدمج تخصّصين بيوم واحد</small></legend>
-          <div v-if="dayKeys.length" class="dp-form">
-            <label v-for="d in dayKeys" :key="d.key" class="pfield"><span>يوم {{ d.label }}</span><input v-model="s.days[d.key]" type="date"></label>
+          <div v-if="dayKeys.length" class="dp-days">
+            <div v-for="g in dayGroups" :key="g.specId" class="dp-day-row">
+              <span class="dp-day-spec" :title="g.spec">{{ g.spec }}</span>
+              <div class="dp-day-fields">
+                <label v-for="it in g.items" :key="it.key" class="dp-day-field">
+                  <span :class="['dp-day-gender', it.gender === 'female' ? 'is-f' : 'is-m']">{{ it.genderLabel }}</span>
+                  <input v-model="s.days[it.key]" type="date" :aria-label="`يوم ${g.spec} — ${it.genderLabel}`">
+                </label>
+              </div>
+            </div>
           </div>
           <p v-else class="dp-note">لا تخصّصات في القسم المستهدف — اختر قسمًا فيه مجموعات.</p>
         </fieldset>
@@ -538,9 +546,23 @@ export default {
       const seen = new Map()
       for (const x of source) {
         const key = `${x.gender}-s${x.specId ?? 'none'}`
-        if (!seen.has(key)) seen.set(key, { key, specId: x.specId ?? null, gender: x.gender, label: `${x.spec || 'تخصّص غير محدد'} — ${x.gender === 'female' ? 'طالبات' : 'طلاب'}` })
+        if (!seen.has(key)) seen.set(key, { key, specId: x.specId ?? null, spec: x.spec || 'تخصّص غير محدد', gender: x.gender, label: `${x.spec || 'تخصّص غير محدد'} — ${x.gender === 'female' ? 'طالبات' : 'طلاب'}` })
       }
       return [...seen.values()].sort((a, b) => a.label.localeCompare(b.label, 'ar'))
+    },
+
+    /**
+     * فئات الأيام مجمَّعة حسب التخصّص: اسم التخصّص مرّة واحدة، وتحته طلاب/طالبات — لإدخال أوضح
+     * وأقلّ ازدحامًا من قائمة مسطّحة بعناوين طويلة متكرّرة.
+     */
+    dayGroups() {
+      const m = new Map()
+      this.dayKeys.forEach((d) => {
+        const sid = d.specId ?? 'none'
+        if (!m.has(sid)) m.set(sid, { specId: sid, spec: d.spec, items: [] })
+        m.get(sid).items.push({ key: d.key, gender: d.gender, genderLabel: d.gender === 'female' ? 'طالبات' : 'طلاب' })
+      })
+      return [...m.values()]
     },
 
     /** تبويبات فلتر اليوم: تواريخ فريدة (الفئات التي تشترك في تاريخ تُدمَج في تبويب واحد) */

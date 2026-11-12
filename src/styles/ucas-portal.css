@@ -3081,6 +3081,17 @@
 
 /* مواعيد المناقشات (مخطِّط الإدارة العامة) */
 .dp-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px 16px; margin-bottom: 12px; }
+/* الأيام مجمَّعة حسب التخصّص: اسم التخصّص مرّة، وتحته طلاب/طالبات بوسم مضغوط وحقل تاريخ */
+.dp-days { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.dp-day-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); }
+.dp-day-spec { flex: 1 1 140px; min-width: 110px; font-size: 14px; font-weight: 800; color: var(--color-text-900); }
+.dp-day-fields { display: flex; flex-wrap: wrap; gap: 8px 10px; }
+.dp-day-field { display: inline-flex; align-items: center; gap: 7px; }
+.dp-day-gender { min-width: 46px; padding: 3px 11px; border-radius: 999px; font-size: 12px; font-weight: 700; text-align: center; color: var(--color-text-700); }
+.dp-day-gender.is-m { background: color-mix(in srgb, var(--ucas-blue) 13%, var(--color-surface)); }
+.dp-day-gender.is-f { background: color-mix(in srgb, var(--ucas-green) 16%, var(--color-surface)); }
+.dp-day-field input { padding: 7px 10px; border: 1px solid var(--color-border); border-radius: 4px; font: inherit; color: var(--color-text-900); background: var(--color-surface); }
+.dp-day-field input:focus { outline: 0; border-color: var(--portal-cyan); box-shadow: 0 0 0 3px rgba(0, 91, 170, 0.15); }
 .dp-wide { grid-column: span 2; }
 .dp-hint { margin: 10px 0 14px; font-size: 12.5px; }
 .dp-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
@@ -5817,6 +5828,8 @@ td.dp-me { font-weight: 800; color: var(--portal-cyan); }
 .sa-skin .dp-block { border: 0; border-radius: 4px; padding: 16px 18px 18px; background: linear-gradient(180deg, color-mix(in srgb, var(--ucas-blue) 3%, var(--color-surface)), var(--color-surface)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent); }
 .sa-skin .dp-block legend { padding: 4px 14px; border-radius: 4px; background: var(--color-surface); color: var(--ucas-blue); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 14%, transparent); }
 .sa-skin .dp-block legend svg { color: var(--ucas-green); }
+.sa-skin .dp-day-row { border: 0; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ucas-blue) 12%, transparent); }
+.sa-skin .dp-day-spec { color: var(--ucas-blue); }
 .sa-skin :is(.dp-room-label, .dp-rh-name, td.dp-me) { color: var(--ucas-blue); }
 .sa-skin .dp-room-hours { border-top-color: color-mix(in srgb, var(--ucas-blue) 15%, transparent); }
 .sa-skin .dp-room-hours-title { color: var(--ucas-green); font-weight: 800; }
