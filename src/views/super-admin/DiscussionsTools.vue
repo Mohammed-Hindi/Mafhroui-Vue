@@ -63,7 +63,6 @@
               <div class="dp-chips">
                 <span v-for="r in s.rooms[key]" :key="r" class="tk-picked-chip">
                   <span dir="ltr">{{ r }}</span>
-                  <small class="dp-chip-hours" dir="ltr">{{ roomHoursLabel(r, key) }}</small>
                   <button type="button" :aria-label="`حذف القاعة ${r}`" @click="removeRoom(key, r)"><X :size="14" /></button>
                 </span>
                 <input
