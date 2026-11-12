@@ -32,12 +32,13 @@
       </div>
       <!-- ترتيب أبسط: متى (الأيام) ← كم المدة ← أين (القاعات وساعاتها) -->
       <div class="dp-blocks">
-        <!-- 1. الأيام: فئة لكل تقاطع (طلاب/طالبات × دبلوم/بكالوريوس) — يوم خاص لكل فئة -->
+        <!-- 1. الأيام: يوم لكل تخصّص × (طلاب/طالبات) — تظهر تخصّصات القسم المستهدف؛ دمج تخصّصين بجعل تاريخيهما متساويين -->
         <fieldset class="dp-block">
-          <legend><span class="dp-no">1</span><CalendarDays :size="17" /> الأيام<small>يوم خاص لكل فئة: طلاب/طالبات × دبلوم/بكالوريوس</small></legend>
-          <div class="dp-form">
+          <legend><span class="dp-no">1</span><CalendarDays :size="17" /> الأيام<small>يوم لكل تخصّص (طلاب/طالبات)؛ اجعل تاريخين متساويين لدمج تخصّصين بيوم واحد</small></legend>
+          <div v-if="dayKeys.length" class="dp-form">
             <label v-for="d in dayKeys" :key="d.key" class="pfield"><span>يوم {{ d.label }}</span><input v-model="s.days[d.key]" type="date"></label>
           </div>
+          <p v-else class="dp-note">لا تخصّصات في القسم المستهدف — اختر قسمًا فيه مجموعات.</p>
         </fieldset>
 
         <!-- 2. مدة المناقشة لكل درجة (الأوقات تُقسَّم تلقائيًا ضمن ساعات كل مكان) + استراحة اختيارية -->
@@ -110,7 +111,7 @@
             <span class="mono">{{ c.date || '—' }}</span>
             <span v-if="!c.ok" class="dp-cap-state is-bad">الوقت غير كافٍ</span>
           </div>
-          <div class="dp-cap-num"><b>{{ c.groups }}</b> مجموعة · تحتاج <b>{{ c.need }}</b> من <b>{{ c.have }}</b> دقيقة</div>
+          <div class="dp-cap-num"><b>{{ c.groups }}</b> مجموعة · تحتاج <b>{{ hoursLabel(c.need) }}</b> من <b>{{ hoursLabel(c.have) }}</b></div>
           <div class="dp-cap-bar"><span :style="{ width: Math.min(100, c.have ? (c.need / c.have) * 100 : 100) + '%' }" /></div>
         </div>
       </div>
@@ -494,8 +495,8 @@ export default {
         durations: { diploma: 15, bachelor: 30 },
         // استراحة اختيارية من–إلى (لا مناقشات خلالها)
         breakOn: false, breakFrom: '12:30', breakTo: '13:00',
-        // تقسيم الأيام = الجنس × الدرجة معًا (فئة لكل تقاطع): يوم خاص لكل من طالبات/طلاب مقسومًا على الدبلوم/البكالوريوس
-        days: { 'female-diploma': '2027-01-24', 'female-bachelor': '2027-01-25', 'male-diploma': '2027-01-26', 'male-bachelor': '2027-01-27' },
+        // تقسيم الأيام حسب التخصّص × الجنس: تاريخ لكل (تخصّص، طلاب/طالبات)؛ تُملأ افتراضيًا من مجموعات القسم المستهدف ويمكن دمج تخصّصين بجعل تاريخيهما متساويين
+        days: {},
         rooms: { gaza: ['E504', 'E506', 'E304'], middle: [], south: ['S101', 'S102'] },
         // ساعات كل قاعة (تُملأ افتراضيًا بساعات مكانها عند إضافتها)
         roomHours: {
@@ -525,14 +526,21 @@ export default {
   },
 
   computed: {
-    /** فئات الأيام = الجنس × الدرجة معًا (أربع فئات) */
+    /**
+     * فئات الأيام = التخصّص × الجنس الموجودة فعلًا (بعد التوليد: من الجدول؛ قبله: من مجموعات القسم المستهدف).
+     * كل تخصّص يحصل على يومه، ويمكن دمج تخصّصين بجعل تاريخيهما متساويين.
+     */
     dayKeys() {
-      return [
-        { key: 'female-diploma', label: 'طالبات دبلوم' },
-        { key: 'female-bachelor', label: 'طالبات بكالوريوس' },
-        { key: 'male-diploma', label: 'طلاب دبلوم' },
-        { key: 'male-bachelor', label: 'طلاب بكالوريوس' }
-      ]
+      const scope = this.genDept
+      const source = this.plan.length
+        ? this.plan.map((r) => ({ specId: r.g.specId, spec: r.g.spec, gender: r.gender }))
+        : this.groups.filter((g) => !scope || g.dept === scope).map((g) => ({ specId: g.specId, spec: g.spec, gender: groupGender(g) }))
+      const seen = new Map()
+      for (const x of source) {
+        const key = `${x.gender}-s${x.specId ?? 'none'}`
+        if (!seen.has(key)) seen.set(key, { key, specId: x.specId ?? null, gender: x.gender, label: `${x.spec || 'تخصّص غير محدد'} — ${x.gender === 'female' ? 'طالبات' : 'طلاب'}` })
+      }
+      return [...seen.values()].sort((a, b) => a.label.localeCompare(b.label, 'ar'))
     },
 
     /** تبويبات فلتر اليوم: تواريخ فريدة (الفئات التي تشترك في تاريخ تُدمَج في تبويب واحد) */
@@ -780,6 +788,8 @@ export default {
     }
     this.supList = await loadSupervisors(this.groups)
     this.supView = this.supList[0]?.id ?? null
+    // تواريخ افتراضية لأيام تخصّصات المجموعات المحمّلة
+    this.ensureDayDefaults()
     // افتراضيًا كل المشرفين متاحون كمناقشين (اللجنة والخارجيون اختياريون يُفعَّلون بالشيك بوكس)
     this.examinerPicks = this.supList.map((s) => s.id)
     await this.loadExaminerPool()
@@ -795,6 +805,10 @@ export default {
     // تذكّر حالة لوحة الإعدادات (مفتوحة/مطوية) بين التحديثات
     settingsOpen(open) {
       try { localStorage.setItem('dp-settings-open', open ? '1' : '0') } catch { /* تجاهل */ }
+    },
+    // تغيير القسم المستهدف قد يُظهر تخصّصات جديدة تحتاج تواريخ افتراضية
+    genDept() {
+      this.ensureDayDefaults()
     }
   },
 
@@ -881,9 +895,9 @@ export default {
       return this.s.rooms[region] || []
     },
 
-    /** مفتاح فئة الصف = الجنس-الدرجة */
+    /** مفتاح فئة الصف = الجنس-التخصّص */
     dayKeyOf(row) {
-      return `${row.gender}-${row.g.degree}`
+      return `${row.gender}-s${row.g.specId ?? 'none'}`
     },
 
     dayOf(row) {
@@ -892,6 +906,32 @@ export default {
 
     dayLabelOf(row) {
       return this.dayKeys.find((d) => d.key === this.dayKeyOf(row))?.label || ''
+    },
+
+    /** صياغة مدة بالدقائق إلى ساعات ودقائق (مثل: 625 → «10 س 25 د») */
+    hoursLabel(min) {
+      const m = Math.max(0, Math.round(min))
+      const h = Math.floor(m / 60)
+      const r = m % 60
+      if (h && r) return `${h} س ${r} د`
+      if (h) return `${h} س`
+      return `${r} د`
+    },
+
+    /** يضمن تاريخًا افتراضيًا لكل فئة يوم ظهرت (تخصّص × جنس) دون المساس بما عدّله المستخدم */
+    ensureDayDefaults() {
+      // حساب بتوقيت UTC لتفادي انزياح اليوم في المناطق الزمنية الموجبة
+      const addDays = (iso, n) => {
+        const [y, m, d] = iso.split('-').map(Number)
+        return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10)
+      }
+      let last = Object.values(this.s.days).filter(Boolean).sort().pop() || '2027-01-23'
+      this.dayKeys.forEach((d) => {
+        if (!this.s.days[d.key]) {
+          last = addDays(last, 1)
+          this.s.days[d.key] = last
+        }
+      })
     },
 
     /** مدة مناقشة المجموعة: المدة المحفوظة مع الموعد أولًا (تطابق ما يفحصه الخادم)، وإلا حسب درجتها */
@@ -990,6 +1030,8 @@ export default {
      */
     generate() {
       if (this.badWindows.length) return this.$toast?.error(`ساعات المكان إلزامية — حدّدها لـ ${this.badWindows.map((k) => REGIONS[k]).join('، ')}`)
+      // تأكّد أن لكل تخصّص (طلاب/طالبات) تاريخ يوم قبل الجدولة
+      this.ensureDayDefaults()
       // قائمة المناقشين المتاحين = المحدَّدون بالشيك بوكس (مشرفون + لجنة + خارجيون)
       const picked = this.examinerAll.filter((e) => this.pickedSet.has(e.id))
       if (picked.length < 2) return this.$toast?.error('اختر مناقشَين على الأقل من قائمة «من يناقش؟»')
@@ -1058,7 +1100,8 @@ export default {
       }
 
       const inScopeGroups = this.groups.filter(inScope)
-      const bySection = (a, b) => a.degree.localeCompare(b.degree) || a.section.localeCompare(b.section, 'en', { numeric: true })
+      // الفرز حسب التخصّص ثم رقم الشعبة (بدل الدرجة) ليتجمّع كل تخصّص معًا داخل يومه
+      const bySection = (a, b) => (a.spec || '').localeCompare(b.spec || '', 'ar') || a.section.localeCompare(b.section, 'en', { numeric: true })
       // نولّد كل قسم على حدة بالتتابع (قسم واحد عند تحديده، وإلا كل الأقسام): كل قسم يحجز مواعيده
       // في نفس خريطة الـ busy فيتجنّبها القسم التالي — فلا تداخل بين الأقسام وكل جدول مستقل عن الآخر.
       const deptOrder = [...new Set(inScopeGroups.map((g) => g.dept || ''))]
