@@ -1040,17 +1040,20 @@ export default {
         row.date = this.dayOf(row)
         const dur = this.durOf(row)
         const d = row.date
-        for (const a of this.startsFor(row.region, dur)) {
-          const b = a + dur
-          const room = this.roomsOf(row.region).find((rm) => this.roomFits(rm, row.region, a, b) && free(`${d}|room:${rm}`, a, b))
-          // قاعدة التوليد: المناقش لا يناقش شعبته (x.id !== g.supId)، ويُفضَّل أقل المناقشين تحميلًا؛ المشرف لا يُحجز وقته لمجموعته
-          const ex = picked.filter((x) => x.id !== g.supId && free(`${d}|${x.id}`, a, b)).sort((x, y) => load[x.id] - load[y.id]).slice(0, 2).map((x) => x.id)
-          if (!room || ex.length < 2) continue
-          ex.forEach((pid) => take(`${d}|${pid}`, a, b))
-          take(`${d}|room:${room}`, a, b)
-          ex.forEach((id) => (load[id] += 1))
-          Object.assign(row, { time: fromMin(a), room, examiners: ex })
-          break
+        // ترتيب القاعة قبل الوقت: نملأ كل قاعة لآخرها قبل فتح التالية بدل توزيع المجموعات على قاعات كثيرة
+        place: for (const room of this.roomsOf(row.region)) {
+          for (const a of this.startsFor(row.region, dur)) {
+            const b = a + dur
+            if (!this.roomFits(room, row.region, a, b) || !free(`${d}|room:${room}`, a, b)) continue
+            // قاعدة التوليد: المناقش لا يناقش شعبته (x.id !== g.supId)، ويُفضَّل أقل المناقشين تحميلًا؛ المشرف لا يُحجز وقته لمجموعته
+            const ex = picked.filter((x) => x.id !== g.supId && free(`${d}|${x.id}`, a, b)).sort((x, y) => load[x.id] - load[y.id]).slice(0, 2).map((x) => x.id)
+            if (ex.length < 2) continue
+            ex.forEach((pid) => take(`${d}|${pid}`, a, b))
+            take(`${d}|room:${room}`, a, b)
+            ex.forEach((id) => (load[id] += 1))
+            Object.assign(row, { time: fromMin(a), room, examiners: ex })
+            break place
+          }
         }
         return row
       }
@@ -1077,16 +1080,19 @@ export default {
         const d = u.date
         const dur = this.durOf(u)
         for (let guard = 0; !u.time && guard < 300; guard += 1) {
-          for (const a of this.startsFor(u.region, dur)) {
-            const b = a + dur
-            const room = this.roomsOf(u.region).find((rm) => this.roomFits(rm, u.region, a, b) && free(`${d}|room:${rm}`, a, b))
-            const ex = picked.filter((x) => x.id !== u.g.supId && free(`${d}|${x.id}`, a, b)).sort((x, y) => load[x.id] - load[y.id]).slice(0, 2).map((x) => x.id)
-            if (!room || ex.length < 2) continue
-            ex.forEach((pid) => take(`${d}|${pid}`, a, b))
-            take(`${d}|room:${room}`, a, b)
-            ex.forEach((id) => (load[id] += 1))
-            Object.assign(u, { time: fromMin(a), room, examiners: ex })
-            break
+          // نفس ترتيب القاعة قبل الوقت: نملأ القاعة الأولى لآخرها قبل الانتقال للتالية
+          place: for (const room of this.roomsOf(u.region)) {
+            for (const a of this.startsFor(u.region, dur)) {
+              const b = a + dur
+              if (!this.roomFits(room, u.region, a, b) || !free(`${d}|room:${room}`, a, b)) continue
+              const ex = picked.filter((x) => x.id !== u.g.supId && free(`${d}|${x.id}`, a, b)).sort((x, y) => load[x.id] - load[y.id]).slice(0, 2).map((x) => x.id)
+              if (ex.length < 2) continue
+              ex.forEach((pid) => take(`${d}|${pid}`, a, b))
+              take(`${d}|room:${room}`, a, b)
+              ex.forEach((id) => (load[id] += 1))
+              Object.assign(u, { time: fromMin(a), room, examiners: ex })
+              break place
+            }
           }
           if (!u.time) {
             // مدّد نهاية ساعات المكان وقاعاته بمقدار مدة مناقشة لإتاحة فترة جديدة فاضية
