@@ -3133,6 +3133,7 @@ button.dp-sec:hover { background: color-mix(in srgb, var(--portal-cyan) 22%, var
 .dp-window .ev-input { width: 118px; flex: none; height: 40px; }
 .dp-note { display: block; margin-top: 10px; font-size: 12.5px; }
 .dp-note.is-bad { color: #E81E63; font-weight: 600; }
+.dp-head-note { display: block; margin-top: 3px; font-size: 12px; font-weight: 500; color: var(--color-text-500); }
 .dp-window.is-invalid .ev-input { border-color: #FF5B5B; background: color-mix(in srgb, #FF5B5B 6%, var(--color-surface)); }
 .dp-split { width: fit-content; margin-bottom: 12px; }
 /* ساعات كل قاعة */

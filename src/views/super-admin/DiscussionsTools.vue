@@ -279,7 +279,7 @@
     <!-- 3) جدول كل مشرف بعد النشر -->
     <section v-if="plan.length" class="dash-card">
       <div class="dash-card-head">
-        <h3>جدول مناقشات المشرف</h3>
+        <h3>جدول مناقشات الدكتور<small class="dp-head-note">المناقشات التي يحضرها مناقِشًا (لا تُعرض مجموعاته التي يُشرف عليها)</small></h3>
         <span class="dash-chip">{{ published ? `آخر نشر: ${published.at}` : 'لم يُنشر بعد' }}</span>
       </div>
       <template v-if="published">
@@ -724,8 +724,8 @@ export default {
         }
         const br = this.breakRange
         if (br && toMin(r.time) < br[1] && br[0] < toMin(r.time) + this.durOf(r)) add(r, `يتداخل مع الاستراحة (${fromMin(br[0])}–${fromMin(br[1])})`)
-        // كل شخص (مشرف المجموعة + المناقشون) في مكان واحد بفترات غير متداخلة — ولو بقاعتين مختلفتين
-        ;[r.g.supId, a, b].filter(Boolean).forEach((pid) => {
+        // المناقشون فقط يشغلون وقتهم؛ مشرف المجموعة غير حاضر مناقشة مجموعته فيبقى متفرّغًا ليناقش غيرها بنفس الوقت
+        ;[a, b].filter(Boolean).forEach((pid) => {
           const list = people.get(pid) || []
           list.forEach((o) => {
             if (overlap(o, r)) {
@@ -759,15 +759,16 @@ export default {
     supSchedule() {
       if (!this.published) return []
       const id = this.supView
+      // جدول الشخص = المجموعات التي يناقشها فقط؛ مجموعاته التي يشرف عليها لا تُعرض لأنه غير حاضر مناقشتها
       return this.published.rows
-        .filter((r) => (r.supId === id || r.examiners.includes(id)) && (!this.supRoom || r.room === this.supRoom))
+        .filter((r) => r.examiners.includes(id) && (!this.supRoom || r.room === this.supRoom))
         .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))
     },
-    /** قاعات مناقشات المشرف المختار (لفلتر القاعة) */
+    /** قاعات مناقشات الشخص المختار (لفلتر القاعة) — حيث يكون مناقِشًا */
     supRooms() {
       if (!this.published) return []
       const id = this.supView
-      return [...new Set(this.published.rows.filter((r) => r.supId === id || r.examiners.includes(id)).map((r) => r.room).filter(Boolean))].sort()
+      return [...new Set(this.published.rows.filter((r) => r.examiners.includes(id)).map((r) => r.room).filter(Boolean))].sort()
     }
   },
 
@@ -811,11 +812,12 @@ export default {
       const dur = this.durOf(row)
       const others = this.plan.filter((o) => o !== row && o.date === date && o.time)
       const busy = (a, b, test) => others.some((o) => test(o) && a < toMin(o.time) + this.durOf(o) && toMin(o.time) < b)
-      const people = [row.g.supId, ...row.examiners].filter(Boolean)
+      // المناقشون فقط يجب أن يكونوا متفرّغين؛ المشرف غير حاضر مناقشة مجموعته
+      const people = [...row.examiners].filter(Boolean)
       const out = []
       for (const a of this.startsFor(row.region, dur)) {
         const b = a + dur
-        if (busy(a, b, (o) => people.some((pid) => o.g.supId === pid || o.examiners.includes(pid)))) continue
+        if (busy(a, b, (o) => people.some((pid) => o.examiners.includes(pid)))) continue
         for (const room of this.roomsOf(row.region)) {
           if (this.roomFits(room, row.region, a, b) && !busy(a, b, (o) => o.room === room)) out.push({ time: fromMin(a), room, date })
           if (out.length >= 6) return out
@@ -948,7 +950,7 @@ export default {
     isBusy(pid, row) {
       if (!row.date || !row.time) return false
       const a = toMin(row.time)
-      return this.plan.some((o) => o !== row && o.date === row.date && o.time && (o.g.supId === pid || o.examiners.includes(pid)) && a < toMin(o.time) + this.durOf(o) && toMin(o.time) < a + this.durOf(row))
+      return this.plan.some((o) => o !== row && o.date === row.date && o.time && o.examiners.includes(pid) && a < toMin(o.time) + this.durOf(o) && toMin(o.time) < a + this.durOf(row))
     },
 
     cell(time, room) {
@@ -1040,12 +1042,11 @@ export default {
         const d = row.date
         for (const a of this.startsFor(row.region, dur)) {
           const b = a + dur
-          if (!free(`${d}|${g.supId}`, a, b)) continue
           const room = this.roomsOf(row.region).find((rm) => this.roomFits(rm, row.region, a, b) && free(`${d}|room:${rm}`, a, b))
-          // قاعدة التوليد: المناقش لا يناقش شعبته (x.id !== g.supId)، ويُفضَّل أقل المناقشين تحميلًا
+          // قاعدة التوليد: المناقش لا يناقش شعبته (x.id !== g.supId)، ويُفضَّل أقل المناقشين تحميلًا؛ المشرف لا يُحجز وقته لمجموعته
           const ex = picked.filter((x) => x.id !== g.supId && free(`${d}|${x.id}`, a, b)).sort((x, y) => load[x.id] - load[y.id]).slice(0, 2).map((x) => x.id)
           if (!room || ex.length < 2) continue
-          ;[g.supId, ...ex].forEach((pid) => take(`${d}|${pid}`, a, b))
+          ex.forEach((pid) => take(`${d}|${pid}`, a, b))
           take(`${d}|room:${room}`, a, b)
           ex.forEach((id) => (load[id] += 1))
           Object.assign(row, { time: fromMin(a), room, examiners: ex })
@@ -1078,11 +1079,10 @@ export default {
         for (let guard = 0; !u.time && guard < 300; guard += 1) {
           for (const a of this.startsFor(u.region, dur)) {
             const b = a + dur
-            if (!free(`${d}|${u.g.supId}`, a, b)) continue
             const room = this.roomsOf(u.region).find((rm) => this.roomFits(rm, u.region, a, b) && free(`${d}|room:${rm}`, a, b))
             const ex = picked.filter((x) => x.id !== u.g.supId && free(`${d}|${x.id}`, a, b)).sort((x, y) => load[x.id] - load[y.id]).slice(0, 2).map((x) => x.id)
             if (!room || ex.length < 2) continue
-            ;[u.g.supId, ...ex].forEach((pid) => take(`${d}|${pid}`, a, b))
+            ex.forEach((pid) => take(`${d}|${pid}`, a, b))
             take(`${d}|room:${room}`, a, b)
             ex.forEach((id) => (load[id] += 1))
             Object.assign(u, { time: fromMin(a), room, examiners: ex })
