@@ -2779,6 +2779,7 @@
 .sp-card .palert svg { flex-shrink: 0; margin-top: 4px; }
 .sp-form { display: flex; flex-direction: column; gap: 18px; }
 .sp-retry { align-self: flex-start; }
+.sp-open-proposal { align-self: flex-start; }
 .mt-meet-next { align-items: flex-start; margin: 0 0 14px; }
 .mt-meet-next svg { flex-shrink: 0; margin-top: 4px; }
 /* جدول الاجتماعات: كل قيمة في وسط عمودها تحت عنوانها */
