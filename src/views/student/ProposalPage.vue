@@ -139,7 +139,20 @@
     <section v-else class="dash-card sp-card">
       <div class="dash-card-head">
         <h3 class="portal-title">التقرير النهائي للمشروع</h3>
+        <span class="rv-pill is-approved">المقترح معتمد</span>
       </div>
+
+      <!-- المقترح المعتمد يبقى ظاهرًا بعد الاعتماد (لا يختفي): ملخّصه وزر فتح ملفه، ثم يليه مسار التقرير النهائي -->
+      <section class="tk-sec sp-approved">
+        <header class="tk-sec-head"><h4>المقترح المعتمد</h4><span class="pt-muted mono">{{ day(proposal.updated_at) }}</span></header>
+        <div class="tk-sec-body">
+          <dl class="tk-review">
+            <dt>اسم المشروع</dt><dd>{{ proposal.name || '—' }}</dd>
+            <dt>نوع المشروع</dt><dd>{{ projectTypes.join('، ') || '—' }}</dd>
+          </dl>
+          <button type="button" class="pbtn is-outline is-sm sp-open-proposal" @click="openProposal"><FileText :size="16" /> فتح ملف المقترح</button>
+        </div>
+      </section>
 
       <!-- رُفض التقرير: السبب + إعادة التسليم -->
       <p v-if="reportRejected && !reportEditing" class="palert is-error">
